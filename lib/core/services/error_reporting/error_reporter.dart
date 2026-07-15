@@ -18,6 +18,7 @@ import '../../config/app_config.dart';
 import '../../data/models/user_model.dart';
 import '../../network/api_service.dart';
 import '../../network/network_connectivity_service.dart';
+import '../../network/urls.dart';
 import '../../utils/app_logger.dart';
 import '../storage_service.dart';
 import 'models/error_constants.dart';
@@ -236,7 +237,7 @@ class ErrorReporter {
       final String errorBaseUrl = AppConfig.errorReportHost;
 
       final request = ApiRequest(
-        endpoint: "/api/v4/report-error",
+        endpoint: AppConfig.versionedApiPath(URLS.common.reportError),
         method: ApiMethod.multipart,
         customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,

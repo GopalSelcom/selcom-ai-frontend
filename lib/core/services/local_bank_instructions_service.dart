@@ -6,7 +6,7 @@ import '../utils/app_logger.dart';
 class LocalBankInstructionsService {
   dynamic _instructionsData;
 
-  /// Holds the response data from the `/v4/go_wallet/get_local_bank_instructions` API.
+  /// Holds the response data from the local-bank-instructions wallet API.
   dynamic get instructionsData => _instructionsData;
 
   /// Performs GET request to fetch the local bank instructions.

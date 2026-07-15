@@ -71,6 +71,8 @@ class _RideEndpoints {
   final pendingReview = "go/rides/pending-review";
   final reviewTags = "go/review-tags";
 
+  String rideDetails(String rideId) => "$base/$rideId";
+
   String cancelRide(String rideId) => "$base/$rideId/cancel";
 
   String rateRide(String rideId) => "$base/$rideId/rate";
@@ -84,6 +86,12 @@ class _RideEndpoints {
 
   String shareRide(String rideId) => "$base/$rideId/share";
 
+  String receipt(String rideId) => "$base/$rideId/receipt";
+
+  String feedback(String rideId) => "$base/$rideId/feedback";
+
+  String messages(String rideId) => "$base/$rideId/messages";
+
   String updateDestination(String rideId) => "$base/$rideId/update-destination";
 
   String updatePickup(String rideId) => "$base/$rideId/update-pickup";
@@ -95,6 +103,8 @@ class _RideEndpoints {
   String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
+
+  String callToken(String rideId) => "$base/$rideId/call/token";
 
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
 
@@ -111,6 +121,7 @@ class _ProfileEndpoints {
   final updateProfile = "edit_profile";
   final getProfile = "go/user/profile";
   final paymentMethods = "go/user/payment-methods";
+  final voipToken = "go/user/voip-token";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";
 }
@@ -137,6 +148,7 @@ class _CommonEndpoints {
   final termsAndConditions = "go/get_setting?type=2";
   final countries = "countries";
   final stateByCountry = "state-by-country";
+  final reportError = "report-error";
 }
 
 /// ─────────────────────────────────
@@ -162,6 +174,8 @@ class _AddressEndpoints {
   final savedPlaces = "go/user/saved-places";
   // final favouritePlaces = "go/user/saved-places/favourites";
   final saveRecentAsFavorite = "go/user/saved-places/from-recent";
+
+  String deleteSavedPlace(String id) => "$savedPlaces/$id";
 }
 
 /// ─────────────────────────────────

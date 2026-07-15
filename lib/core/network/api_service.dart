@@ -27,6 +27,7 @@ import 'connectivity_probe.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
 import 'retry_manager.dart';
+import 'urls.dart';
 
 // ─────────────────────────────────────────────────────────
 // Enums
@@ -103,7 +104,7 @@ class ApiRequest {
   ApiRequest({
     required this.endpoint,
     required this.method,
-    this.version = "v4",
+    this.version = AppConfig.apiVersion,
     this.route = "",
     this.body,
     this.customBaseUrl = "",
@@ -267,7 +268,7 @@ class ApiService {
     final stopwatch = Stopwatch()..start();
 
     // ── Build Endpoint ──
-    // Default route is `api` → `/api/v4/{endpoint}` on top of [AppConfig.apiHost].
+    // Default route is `api` → `/api/{apiVersion}/{endpoint}` on top of [AppConfig.apiHost].
     final String endpoint;
     if (request.customBaseUrl.isNotEmpty) {
       endpoint = request.endpoint;
@@ -1226,7 +1227,7 @@ class AuthInterceptor extends Interceptor {
       // Call refresh token API (skip auth interceptor to avoid loop)
       final response = await ApiService().call(
         request: ApiRequest(
-          endpoint: 'refresh_token',
+          endpoint: URLS.auth.refreshToken,
           method: ApiMethod.post,
           body: {'refresh_token': refreshToken},
           skipAuthInterceptor: true,

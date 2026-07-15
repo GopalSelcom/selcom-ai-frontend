@@ -154,7 +154,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<bool> deleteSavedPlace(String id) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.address.savedPlaces}/$id",
+        endpoint: URLS.address.deleteSavedPlace(id),
         method: ApiMethod.delete,
       ),
     );

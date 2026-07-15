@@ -1466,7 +1466,7 @@ class DriverAcceptedScreen extends StatelessWidget {
   }
 }
 
-/// Triggers `GET /v4/go/emergency-contacts` once when SCR-11 mounts (see controller).
+/// Triggers `GET` emergency-contacts once when SCR-11 mounts (see controller).
 class _DriverAcceptedEmergencyContactsBootstrap extends StatefulWidget {
   const _DriverAcceptedEmergencyContactsBootstrap({required this.child});
 

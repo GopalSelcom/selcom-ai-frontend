@@ -531,8 +531,7 @@ class ProfileController extends GetxController {
     _navigateAndResetWalletBalanceOnReturn(
       WebViewScreen.open(
         title: AppStrings.privacyPolicy.tr,
-        url:
-            '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.privacy}',
+        url: AppConfig.versionedApiUrl(URLS.common.privacy),
       ),
     );
   }
@@ -541,8 +540,7 @@ class ProfileController extends GetxController {
     _navigateAndResetWalletBalanceOnReturn(
       WebViewScreen.open(
         title: AppStrings.termsAndConditions.tr,
-        url:
-            '${AppConfig.apiHost}${AppConfig.apiPathPrefix}/v4/${URLS.common.termsAndConditions}',
+        url: AppConfig.versionedApiUrl(URLS.common.termsAndConditions),
       ),
     );
   }

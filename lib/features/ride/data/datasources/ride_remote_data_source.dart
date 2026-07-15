@@ -193,7 +193,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId",
+        endpoint: URLS.ride.rideDetails(rideId),
         method: ApiMethod.get,
       ),
     );
@@ -386,7 +386,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<ReceiptModel> getReceipt(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/receipt",
+        endpoint: URLS.ride.receipt(rideId),
         method: ApiMethod.get,
       ),
     );
@@ -406,7 +406,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> rateDriver(String rideId, int rating, String comment) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/rate",
+        endpoint: URLS.ride.rateRide(rideId),
         method: ApiMethod.post,
         body: {'rating': rating, 'comment': comment},
       ),
@@ -422,7 +422,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   ) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/feedback",
+        endpoint: URLS.ride.feedback(rideId),
         method: ApiMethod.post,
         body: {'category': category, 'message': message},
       ),
@@ -498,7 +498,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/messages",
+        endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.get,
         queryParams: {'page': page, 'limit': limit},
       ),
@@ -514,7 +514,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> sendChatMessage(String rideId, String message) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/messages",
+        endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.post,
         body: {'message': message},
       ),
@@ -564,7 +564,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> updateActivityToken(String rideId, String token) async {
     try {
       AppLogger.d(
-        "🚀 API Request: PATCH /v4/go/rides/$rideId/activity-token",
+        "🚀 API Request: PATCH ${URLS.ride.activityToken(rideId)}",
         tag: 'ORDER_TRACKING',
       );
       final response = await ApiService().call(

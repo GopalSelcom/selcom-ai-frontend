@@ -7,8 +7,8 @@ import 'environment.dart';
 /// values anywhere via `AppConfig.*`.
 ///
 /// **API URLs:** only [apiHost] is stored. [ApiService] prepends `/api` when
-/// building `/api/v4/...` paths. Callers outside [ApiService] (Agora, WebView)
-/// use [apiHost] + [apiPathPrefix] the same way.
+/// building `/api/{apiVersion}/...` paths. Callers outside [ApiService] (Agora,
+/// WebView) use [versionedApiPath] / [versionedApiUrl] the same way.
 class AppConfig {
   AppConfig._();
 
@@ -24,10 +24,16 @@ class AppConfig {
   /// Used as Dio [baseUrl] in [ApiService].
   static late String apiHost;
 
-  /// `/api` on dev & staging; empty on prod.
+  /// Single source of truth for the API version segment (e.g. `v4`).
+  ///
+  /// Used by [ApiRequest] defaults and by [versionedApiPath] / [versionedApiUrl]
+  /// for callers outside [ApiService] (Agora, WebView, error reporting).
+  static const String apiVersion = 'v4';
+
+  /// `/api` path prefix for all environments.
   ///
   /// Matches the segment [ApiService] adds when `ApiRequest.route` is empty.
-  /// Use with [apiHost] for Agora REST, in-app WebView, or any direct HTTP URL.
+  /// Prefer [versionedApiPath] / [versionedApiUrl] over composing this by hand.
   static String get apiPathPrefix {
     switch (environment) {
       case Environment.dev:
@@ -36,6 +42,17 @@ class AppConfig {
         return '/api';
     }
   }
+
+  /// Path after host: `/api/{apiVersion}/{endpoint}` (leading slash, no host).
+  static String versionedApiPath(String endpoint) {
+    final clean =
+        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    return '$apiPathPrefix/$apiVersion/$clean';
+  }
+
+  /// Absolute URL: `{apiHost}/api/{apiVersion}/{endpoint}`.
+  static String versionedApiUrl(String endpoint) =>
+      '$apiHost${versionedApiPath(endpoint)}';
 
   // ── Socket & error reporting ──────────────────────────────────────────────
 

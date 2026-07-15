@@ -199,7 +199,7 @@ void main() async {
 
       // Bridge native iOS PushKit/CallKit events into the calling package.
       // Token registration goes through `AgoraCalling.registerVoipToken`,
-      // which PATCHes `/v4/go/user/voip-token`.
+      // which PATCHes the voip-token path from [URLS.profile.voipToken].
       await VoipCallkitBridgeService.instance.initialize();
       VoipCallkitBridgeService.instance.setOnVoipTokenChanged(
         AgoraCalling.registerVoipToken,

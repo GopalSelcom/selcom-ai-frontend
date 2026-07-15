@@ -3,6 +3,7 @@ import 'package:agora_calling_package/agora_calling_package.dart';
 import '../config/app_config.dart';
 import '../network/api_constants.dart';
 import '../network/headers.dart';
+import '../network/urls.dart';
 import '../utils/app_logger.dart';
 import 'call_permission_prompt_service.dart';
 import 'session_auth_service.dart';
@@ -39,10 +40,11 @@ class AgoraCallingBootstrap {
             CallPermissionPromptService.ensureAndroidCallPermissions,
         endpoints: CallEndpoints(
           tokenPath: (rideId) =>
-              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/token',
+              AppConfig.versionedApiPath(URLS.ride.callToken(rideId)),
           cancelPath: (rideId) =>
-              '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/cancel',
-          voipTokenPath: '${AppConfig.apiPathPrefix}/v4/go/user/voip-token',
+              AppConfig.versionedApiPath(URLS.ride.cancelVoiceCall(rideId)),
+          voipTokenPath:
+              AppConfig.versionedApiPath(URLS.profile.voipToken),
         ),
       ),
     );
