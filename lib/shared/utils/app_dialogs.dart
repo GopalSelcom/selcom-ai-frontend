@@ -12,6 +12,7 @@ import '../../core/services/progress_indicator/loader.dart';
 import '../../core/services/session_expiry_service.dart';
 import '../../features/payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../features/payment/presentation/widgets/insufficient_wallet_balance_dialog.dart';
+import '../../features/payment/presentation/widgets/wallet_topup_success_dialog.dart';
 import '../widgets/animated_blur_dialog.dart';
 import '../widgets/app_cancel_flow_dialog.dart';
 import '../widgets/app_primary_button.dart';
@@ -413,6 +414,37 @@ class AppDialogs {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Animated wallet top-up success (Lottie check + confetti, payment dialog theme).
+  static void showWalletTopupSuccessDialog({
+    String? title,
+    String? message,
+    VoidCallback? onConfirm,
+    String? confirmLabel,
+    bool barrierDismissible = true,
+  }) {
+    var didHandleAction = false;
+    void handleAction() {
+      if (didHandleAction) return;
+      didHandleAction = true;
+      _dismissActiveDialog();
+      if (onConfirm != null) onConfirm();
+    }
+
+    showAnimatedDialog(
+      barrierDismissible: barrierDismissible,
+      barrierColor: AppColors.overlayBlack12,
+      child: PopScope(
+        canPop: barrierDismissible,
+        child: WalletTopupSuccessDialog(
+          title: title,
+          message: message,
+          confirmLabel: confirmLabel,
+          onConfirm: handleAction,
         ),
       ),
     );

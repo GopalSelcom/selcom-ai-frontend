@@ -150,8 +150,8 @@ class SavedCardsController extends GetxController {
 
               unawaited(WalletRefresh.afterBalanceChange());
 
-              AppDialogs.showSuccessDialog(
-                message: AppStrings.walletFundsReceivedTitle.tr,
+              AppDialogs.showWalletTopupSuccessDialog(
+                title: AppStrings.walletFundsReceivedTitle.tr,
                 confirmLabel: AppStrings.ok,
                 barrierDismissible: true,
               );
@@ -184,8 +184,8 @@ class SavedCardsController extends GetxController {
           unawaited(WalletRefresh.afterBalanceChange());
 
           if (success == true) {
-            AppDialogs.showSuccessDialog(
-              message: AppStrings.walletFundsReceivedTitle.tr,
+            AppDialogs.showWalletTopupSuccessDialog(
+              title: AppStrings.walletFundsReceivedTitle.tr,
               confirmLabel: AppStrings.ok,
               barrierDismissible: true,
             );

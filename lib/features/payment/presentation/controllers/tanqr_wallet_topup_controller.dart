@@ -308,7 +308,7 @@ class TanQrWalletTopupController extends GetxController {
       await Get.toNamed(AppRoutes.wallet);
     }
 
-    AppDialogs.showSuccessDialog(
+    AppDialogs.showWalletTopupSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
       message: message.trim().isNotEmpty
           ? message
