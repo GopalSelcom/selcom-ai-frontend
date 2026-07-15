@@ -57,8 +57,11 @@ dependencies:
   flutter_native_contact_picker: ^0.0.12
   agora_calling_package:
     path: ./packages/agora_calling_package
+  selcom_id_auth:
+    path: ./packages/sign_in_with_selcom
   card_swiper: ^3.0.1
-  app_links: ^7.0.0
+  qr_flutter: ^4.1.0
+  app_links: ^7.2.1
 
 dev_dependencies:
   flutter_test:

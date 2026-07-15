@@ -79,7 +79,7 @@ class SavedCardsController extends GetxController {
       await loadCards();
     }
     return result;
-  }
+  } 
 
   void selectCard(Datum card) {
     selectedCard.value = card;
