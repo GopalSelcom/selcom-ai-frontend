@@ -929,4 +929,39 @@ class AppStrings {
   static const String setAsDefaultConfirm = 'set_as_default_confirm';
   static const String defaultAccountSetSuccessfully =
       'default_account_set_successfully';
+
+  // Add card form
+  static const String cardInformation = 'card_information';
+  static const String firstName = 'first_name';
+  static const String lastName = 'last_name';
+  static const String billingDetails = 'billing_details';
+  static const String billingDetailsSubtitle = 'billing_details_subtitle';
+  static const String country = 'country';
+  static const String state = 'state';
+  static const String selectState = 'select_state';
+  static const String address = 'address';
+  static const String city = 'city';
+  static const String postalCode = 'postal_code';
+  static const String egUserEmail = 'eg_user_email';
+  static const String streetNameHouseNumber = 'street_name_house_number';
+  static const String egDarEsSalaam = 'eg_dar_es_salaam';
+  static const String egPostalCode = 'eg_postal_code';
+  static const String firstNameIsRequired = 'first_name_is_required';
+  static const String lastNameIsRequired = 'last_name_is_required';
+  static const String cardNumberIsRequired = 'card_number_is_required';
+  static const String enterValidCardNumber = 'enter_valid_card_number';
+  static const String expiryIsRequired = 'expiry_is_required';
+  static const String enterValidExpiryDate = 'enter_valid_expiry_date';
+  static const String cvvIsRequired = 'cvv_is_required';
+  static const String cvvMustBe3Digits = 'cvv_must_be_3_digits';
+  static const String countryIsRequired = 'country_is_required';
+  static const String stateIsRequired = 'state_is_required';
+  static const String phoneNumberIsRequired = 'phone_number_is_required';
+  static const String invalidPhoneNumberForCountry =
+      'invalid_phone_number_for_country';
+  static const String addressIsRequired = 'address_is_required';
+  static const String cityIsRequired = 'city_is_required';
+  static const String postalCodeIsRequired = 'postal_code_is_required';
+  static const String invalidSessionResponseFromServer =
+      'invalid_session_response_from_server';
 }

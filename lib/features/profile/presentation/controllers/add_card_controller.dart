@@ -34,6 +34,7 @@ class AddCardController extends GetxController {
   final emailController = TextEditingController();
   final addressController = TextEditingController();
   final cityController = TextEditingController();
+  final postalCodeController = TextEditingController();
 
   final fullNameFocus = FocusNode();
   final lastNameFocus = FocusNode();
@@ -46,6 +47,7 @@ class AddCardController extends GetxController {
   final emailFocus = FocusNode();
   final addressFocus = FocusNode();
   final cityFocus = FocusNode();
+  final postalCodeFocus = FocusNode();
 
   final isCvvHidden = true.obs;
   final isSubmitting = false.obs;
@@ -77,6 +79,7 @@ class AddCardController extends GetxController {
   final emailError = RxnString();
   final addressError = RxnString();
   final cityError = RxnString();
+  final postalCodeError = RxnString();
   final countryError = RxnString();
   final stateError = RxnString();
 
@@ -151,6 +154,7 @@ class AddCardController extends GetxController {
     emailController.dispose();
     addressController.dispose();
     cityController.dispose();
+    postalCodeController.dispose();
 
     fullNameFocus.dispose();
     lastNameFocus.dispose();
@@ -162,6 +166,7 @@ class AddCardController extends GetxController {
     emailFocus.dispose();
     addressFocus.dispose();
     cityFocus.dispose();
+    postalCodeFocus.dispose();
 
     super.onClose();
   }
@@ -222,6 +227,7 @@ class AddCardController extends GetxController {
     emailError.value = null;
     addressError.value = null;
     cityError.value = null;
+    postalCodeError.value = null;
     countryError.value = null;
     stateError.value = null;
 
@@ -265,6 +271,7 @@ class AddCardController extends GetxController {
     final email = emailController.text.trim();
     final address = addressController.text.trim();
     final city = cityController.text.trim();
+    final postalcode = postalCodeController.text.trim();
     final state = selectedState.value;
     final country = selectedCountry.value?.iso2Code;
 
@@ -282,6 +289,7 @@ class AddCardController extends GetxController {
         city: city,
         state: state,
         country: country,
+        postalcode: postalcode,
       );
 
       await result.fold(
@@ -293,7 +301,9 @@ class AddCardController extends GetxController {
 
           final datum = response.data?.firstOrNull;
           if (datum == null) {
-            AppDialogs.showErrorDialog(message: 'Invalid session response from server.');
+            AppDialogs.showErrorDialog(
+              message: AppStrings.invalidSessionResponseFromServer.tr,
+            );
             return;
           }
 
@@ -485,6 +495,7 @@ class AddCardController extends GetxController {
     final email = emailController.text.trim();
     final address = addressController.text.trim();
     final city = cityController.text.trim();
+    final postalcode = postalCodeController.text.trim();
 
     fullNameError.value = null;
     lastNameError.value = null;
@@ -496,85 +507,92 @@ class AddCardController extends GetxController {
     emailError.value = null;
     addressError.value = null;
     cityError.value = null;
+    postalCodeError.value = null;
     countryError.value = null;
     stateError.value = null;
 
     bool isValid = true;
 
     if (firstName.isEmpty) {
-      fullNameError.value = 'First Name is required';
+      fullNameError.value = AppStrings.firstNameIsRequired.tr;
       isValid = false;
     }
 
     if (lastName.isEmpty) {
-      lastNameError.value = 'Last Name is required';
+      lastNameError.value = AppStrings.lastNameIsRequired.tr;
       isValid = false;
     }
 
     if (cardNumber.isEmpty) {
-      cardNumberError.value = 'Card Number is required';
+      cardNumberError.value = AppStrings.cardNumberIsRequired.tr;
       isValid = false;
     } else if (!validateCardNum(cardNumber)) {
-      cardNumberError.value = 'Enter a valid card number';
+      cardNumberError.value = AppStrings.enterValidCardNumber.tr;
       isValid = false;
     }
 
     if (expiry.isEmpty) {
-      expiryError.value = 'Expiry is required';
+      expiryError.value = AppStrings.expiryIsRequired.tr;
       isValid = false;
     } else if (!validateExpiryDate(expiry)) {
-      expiryError.value = 'Enter a valid expiry date';
+      expiryError.value = AppStrings.enterValidExpiryDate.tr;
       isValid = false;
     }
 
     if (cvv.isEmpty) {
-      cvvError.value = 'CVV is required';
+      cvvError.value = AppStrings.cvvIsRequired.tr;
       isValid = false;
     } else if (cvv.length != 3) {
-      cvvError.value = 'CVV must be 3 digits';
+      cvvError.value = AppStrings.cvvMustBe3Digits.tr;
       isValid = false;
     }
 
     if (selectedCountry.value == null) {
-      countryError.value = 'Country is required';
+      countryError.value = AppStrings.countryIsRequired.tr;
       isValid = false;
     }
 
     if (selectedCountry.value != null &&
         statesList.isNotEmpty &&
         selectedStateResponse.value == null) {
-      stateError.value = 'State is required';
+      stateError.value = AppStrings.stateIsRequired.tr;
       isValid = false;
     }
 
     if (phone.isEmpty) {
-      phoneError.value = 'Phone Number is required';
+      phoneError.value = AppStrings.phoneNumberIsRequired.tr;
       isValid = false;
     } else {
       final phoneDigits = phone.replaceAll(RegExp(r'\D'), '');
       final iso = selectedPhoneCountry.value.code;
       if (!PhoneNationalRules.isCompleteValidNational(iso, phoneDigits)) {
-        phoneError.value =
-            'Invalid phone number for ${selectedPhoneCountry.value.name}';
+        phoneError.value = AppStrings.invalidPhoneNumberForCountry.trParams({
+          'country': selectedPhoneCountry.value.name,
+        });
         isValid = false;
       }
     }
 
     if (email.isEmpty) {
-      emailError.value = 'Email is required';
+      emailError.value = AppStrings.emailIsRequired.tr;
       isValid = false;
     } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      emailError.value = 'Enter a valid email';
+      emailError.value = AppStrings.pleaseEnterAValidEmail.tr;
       isValid = false;
     }
 
     if (address.isEmpty) {
-      addressError.value = 'Address is required';
+      addressError.value = AppStrings.addressIsRequired.tr;
       isValid = false;
     }
 
     if (city.isEmpty) {
-      cityError.value = 'City is required';
+      cityError.value = AppStrings.cityIsRequired.tr;
+      isValid = false;
+    }
+
+    if (postalcode.isEmpty) {
+      postalCodeError.value = AppStrings.postalCodeIsRequired.tr;
       isValid = false;
     }
 
@@ -593,6 +611,7 @@ class AddCardController extends GetxController {
     final email = emailController.text.trim();
     final address = addressController.text.trim();
     final city = cityController.text.trim();
+    final postalcode = postalCodeController.text.trim();
 
     if (firstName.isEmpty) return false;
     if (lastName.isEmpty) return false;
@@ -618,6 +637,7 @@ class AddCardController extends GetxController {
     }
     if (address.isEmpty) return false;
     if (city.isEmpty) return false;
+    if (postalcode.isEmpty) return false;
 
     return true;
   }

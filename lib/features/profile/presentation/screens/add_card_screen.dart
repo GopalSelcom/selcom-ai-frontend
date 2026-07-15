@@ -59,7 +59,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         children: [
                           // SECTION 1: Card Information
                           Text(
-                            "Card Information",
+                            AppStrings.cardInformation.tr,
                             style: AppTextStyles.cardTitle.copyWith(
                               fontSize: 16.h,
                               fontWeight: FontWeight.w700,
@@ -85,7 +85,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     Obx(
                                       () => Expanded(
                                         child: AppTextField(
-                                          label: "First Name",
+                                          label: AppStrings.firstName.tr,
                                           hintText: AppStrings.eGJohnDoe.tr,
                                           controller:
                                               controller.cardHolderController,
@@ -110,7 +110,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     Obx(
                                       () => Expanded(
                                         child: AppTextField(
-                                          label: "Last Name",
+                                          label: AppStrings.lastName.tr,
                                           hintText: AppStrings.eGJohnDoe.tr,
                                           controller:
                                               controller.lastNameController,
@@ -247,7 +247,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           Row(
                             children: [
                               Text(
-                                "Billing Details",
+                                AppStrings.billingDetails.tr,
                                 style: AppTextStyles.cardTitle.copyWith(
                                   fontSize: 16.h,
                                   fontWeight: FontWeight.w700,
@@ -259,7 +259,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             ],
                           ),
                           Text(
-                            "Please provide your billing address as per your bank records",
+                            AppStrings.billingDetailsSubtitle.tr,
                             style: AppTextStyles.cardTitle.copyWith(
                               fontSize: 12.h,
                               fontWeight: FontWeight.w400,
@@ -299,8 +299,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                   child: AbsorbPointer(
                                     child: Obx(
                                       () => AppTextField(
-                                        label: "Country",
-                                        hintText: "Select Country",
+                                        label: AppStrings.country.tr,
+                                        hintText: AppStrings.selectCountry.tr,
                                         controller: TextEditingController(
                                           text:
                                               controller
@@ -362,8 +362,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                         child: AbsorbPointer(
                                           child: Obx(
                                             () => AppTextField(
-                                              label: "State",
-                                              hintText: "Select State",
+                                              label: AppStrings.state.tr,
+                                              hintText:
+                                                  AppStrings.selectState.tr,
                                               controller: TextEditingController(
                                                 text:
                                                     controller
@@ -405,7 +406,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     key: ValueKey(
                                       'add-card-phone-$iso-$resetV',
                                     ),
-                                    label: "Phone Number",
+                                    label: AppStrings.phoneNumber.tr,
                                     hintText: PhoneNationalRules.hintForIso(
                                       iso,
                                     ),
@@ -450,8 +451,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 // Email field
                                 Obx(
                                   () => AppTextField(
-                                    label: "Email",
-                                    hintText: "e.g. user@example.com",
+                                    label: AppStrings.email.tr,
+                                    hintText: AppStrings.egUserEmail.tr,
                                     controller: controller.emailController,
                                     focusNode: controller.emailFocus,
                                     keyboardType: TextInputType.emailAddress,
@@ -473,8 +474,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 // Address field
                                 Obx(
                                   () => AppTextField(
-                                    label: "Address",
-                                    hintText: "Street name / House number",
+                                    label: AppStrings.address.tr,
+                                    hintText:
+                                        AppStrings.streetNameHouseNumber.tr,
                                     controller: controller.addressController,
                                     focusNode: controller.addressFocus,
                                     textInputAction: TextInputAction.next,
@@ -495,15 +497,41 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 // City field
                                 Obx(
                                   () => AppTextField(
-                                    label: "City",
-                                    hintText: "e.g. Dar es Salaam",
+                                    label: AppStrings.city.tr,
+                                    hintText: AppStrings.egDarEsSalaam.tr,
                                     controller: controller.cityController,
                                     focusNode: controller.cityFocus,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) => controller
+                                        .postalCodeFocus
+                                        .requestFocus(),
+                                    onChanged: (_) =>
+                                        controller.onFieldChanged(),
+                                    errorText: controller.cityError.value,
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor:
+                                        AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+
+                                // Postal code field
+                                Obx(
+                                  () => AppTextField(
+                                    label: AppStrings.postalCode.tr,
+                                    hintText: AppStrings.egPostalCode.tr,
+                                    controller:
+                                        controller.postalCodeController,
+                                    focusNode: controller.postalCodeFocus,
+                                    keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.done,
                                     onSubmitted: (_) => controller.submitCard(),
                                     onChanged: (_) =>
                                         controller.onFieldChanged(),
-                                    errorText: controller.cityError.value,
+                                    errorText:
+                                        controller.postalCodeError.value,
                                     fontSize: 15.h,
                                     fontWeight: FontWeight.w500,
                                     textFieldBackgroundColor:

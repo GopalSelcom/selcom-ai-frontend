@@ -890,6 +890,39 @@ class LanguageEn extends Languages {
     'set_as_default': 'Set as Default',
     'set_as_default_confirm': 'Make this your default account for transactions',
     'default_account_set_successfully': 'Default account updated successfully',
+    'card_information': 'Card Information',
+    'first_name': 'First Name',
+    'last_name': 'Last Name',
+    'billing_details': 'Billing Details',
+    'billing_details_subtitle':
+        'Please provide your billing address as per your bank records',
+    'country': 'Country',
+    'state': 'State',
+    'select_state': 'Select State',
+    'address': 'Address',
+    'city': 'City',
+    'postal_code': 'Postal Code',
+    'eg_user_email': 'e.g. user@example.com',
+    'street_name_house_number': 'Street name / House number',
+    'eg_dar_es_salaam': 'e.g. Dar es Salaam',
+    'eg_postal_code': 'e.g. 14110',
+    'first_name_is_required': 'First Name is required',
+    'last_name_is_required': 'Last Name is required',
+    'card_number_is_required': 'Card Number is required',
+    'enter_valid_card_number': 'Enter a valid card number',
+    'expiry_is_required': 'Expiry is required',
+    'enter_valid_expiry_date': 'Enter a valid expiry date',
+    'cvv_is_required': 'CVV is required',
+    'cvv_must_be_3_digits': 'CVV must be 3 digits',
+    'country_is_required': 'Country is required',
+    'state_is_required': 'State is required',
+    'phone_number_is_required': 'Phone Number is required',
+    'invalid_phone_number_for_country': 'Invalid phone number for @country',
+    'address_is_required': 'Address is required',
+    'city_is_required': 'City is required',
+    'postal_code_is_required': 'Postal code is required',
+    'invalid_session_response_from_server':
+        'Invalid session response from server.',
   };
 
   @override
@@ -3314,4 +3347,99 @@ class LanguageEn extends Languages {
 
   @override
   String get enterValidAmount => values['enter_valid_amount'] ?? '';
+
+  @override
+  String get cardInformation => values['card_information'] ?? '';
+
+  @override
+  String get firstName => values['first_name'] ?? '';
+
+  @override
+  String get lastName => values['last_name'] ?? '';
+
+  @override
+  String get billingDetails => values['billing_details'] ?? '';
+
+  @override
+  String get billingDetailsSubtitle => values['billing_details_subtitle'] ?? '';
+
+  @override
+  String get country => values['country'] ?? '';
+
+  @override
+  String get state => values['state'] ?? '';
+
+  @override
+  String get selectState => values['select_state'] ?? '';
+
+  @override
+  String get address => values['address'] ?? '';
+
+  @override
+  String get city => values['city'] ?? '';
+
+  @override
+  String get postalCode => values['postal_code'] ?? '';
+
+  @override
+  String get egUserEmail => values['eg_user_email'] ?? '';
+
+  @override
+  String get streetNameHouseNumber => values['street_name_house_number'] ?? '';
+
+  @override
+  String get egDarEsSalaam => values['eg_dar_es_salaam'] ?? '';
+
+  @override
+  String get egPostalCode => values['eg_postal_code'] ?? '';
+
+  @override
+  String get firstNameIsRequired => values['first_name_is_required'] ?? '';
+
+  @override
+  String get lastNameIsRequired => values['last_name_is_required'] ?? '';
+
+  @override
+  String get cardNumberIsRequired => values['card_number_is_required'] ?? '';
+
+  @override
+  String get enterValidCardNumber => values['enter_valid_card_number'] ?? '';
+
+  @override
+  String get expiryIsRequired => values['expiry_is_required'] ?? '';
+
+  @override
+  String get enterValidExpiryDate => values['enter_valid_expiry_date'] ?? '';
+
+  @override
+  String get cvvIsRequired => values['cvv_is_required'] ?? '';
+
+  @override
+  String get cvvMustBe3Digits => values['cvv_must_be_3_digits'] ?? '';
+
+  @override
+  String get countryIsRequired => values['country_is_required'] ?? '';
+
+  @override
+  String get stateIsRequired => values['state_is_required'] ?? '';
+
+  @override
+  String get phoneNumberIsRequired => values['phone_number_is_required'] ?? '';
+
+  @override
+  String get invalidPhoneNumberForCountry =>
+      values['invalid_phone_number_for_country'] ?? '';
+
+  @override
+  String get addressIsRequired => values['address_is_required'] ?? '';
+
+  @override
+  String get cityIsRequired => values['city_is_required'] ?? '';
+
+  @override
+  String get postalCodeIsRequired => values['postal_code_is_required'] ?? '';
+
+  @override
+  String get invalidSessionResponseFromServer =>
+      values['invalid_session_response_from_server'] ?? '';
 }
