@@ -1,5 +1,8 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../env/env.dart';
+import 'hive_secure_box.dart';
+
 /// Centralized storage keys to prevent typos and ensure consistency across the app.
 class StorageKeys {
   /// Legacy Hive key — prefer [StorageService.readAccessToken] / [writeAccessToken].
@@ -21,8 +24,8 @@ class StorageKeys {
 
 /// App-wide key/value persistence backed by Hive (app sandbox).
 ///
-/// Unlike iOS Keychain ([flutter_secure_storage]), Hive files are removed when
-/// the app is uninstalled on both iOS and Android.
+/// Values are encrypted at rest via [openSecureBox] (AES + SHA-256 password).
+/// Hive files are removed when the app is uninstalled on both iOS and Android.
 class StorageService {
   static final StorageService _instance = StorageService._internal();
 
@@ -36,7 +39,10 @@ class StorageService {
 
   Box<String>? _box;
 
-  /// Initializes Hive for Flutter and opens [boxName].
+  /// Initializes Hive for Flutter and opens [boxName] with encryption.
+  ///
+  /// Cipher key is SHA-256([Env.hiveBoxPassword]) — same password for encrypt
+  /// and decrypt. Not stored in platform secure storage by design.
   ///
   /// Safe to call multiple times (e.g. from [main] and lazily from reads).
   Future<void> init() async {
@@ -47,12 +53,10 @@ class StorageService {
       _hiveFlutterInitialized = true;
     }
 
-    if (Hive.isBoxOpen(boxName)) {
-      _box = Hive.box<String>(boxName);
-      return;
-    }
-
-    _box = await Hive.openBox<String>(boxName);
+    _box = await openSecureBox<String>(
+      boxName,
+      password: Env.hiveBoxPassword,
+    );
   }
 
   Future<Box<String>> _ensureBox() async {

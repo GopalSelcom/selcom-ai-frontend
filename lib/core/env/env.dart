@@ -64,4 +64,8 @@ abstract class Env {
     defaultValue: 'spd.selcommobile.com',
   )
   static final String selcomPesaDeepLinkHost = _Env.selcomPesaDeepLinkHost;
+
+  /// Password used to derive Hive AES key (SHA-256). Same value encrypts and decrypts.
+  @EnviedField(varName: 'HIVE_BOX_PASSWORD', obfuscate: true)
+  static final String hiveBoxPassword = _Env.hiveBoxPassword;
 }
