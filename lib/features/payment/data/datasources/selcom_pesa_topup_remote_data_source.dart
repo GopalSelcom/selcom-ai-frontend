@@ -44,17 +44,17 @@ class SelcomPesaTopupRemoteDataSourceImpl
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
         );
       }
 
       final result = SelcomPesaTopupResult.fromJson(data);
       if (result.transid.trim().isEmpty) {
-        throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+        throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
       }
 
       if (requireShortCode && result.shortCode.trim().isEmpty) {
-        throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+        throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
       }
 
       return result;

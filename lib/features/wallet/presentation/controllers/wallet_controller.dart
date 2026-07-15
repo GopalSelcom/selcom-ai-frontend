@@ -14,7 +14,6 @@ import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../profile/domain/usecases/profile_usecase.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
-import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
