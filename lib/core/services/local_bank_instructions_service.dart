@@ -10,6 +10,9 @@ class LocalBankInstructionsService {
   dynamic get instructionsData => _instructionsData;
 
   /// Performs GET request to fetch the local bank instructions.
+  ///
+  /// Requires auth. Splash warms this for logged-in cold starts; wallet flows
+  /// can call again if the cache is empty.
   Future<void> fetchInstructions() async {
     try {
       final response = await ApiService().call(

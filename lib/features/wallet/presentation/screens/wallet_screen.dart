@@ -34,10 +34,16 @@ class WalletScreen extends GetView<WalletController> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     WalletInfoCard(
-                      balanceText: controller.formattedBalance,
+                      // Masked by default; eye reveals balance + reserved from cache/API.
+                      balanceText: controller.displayBalanceText,
                       reservedBalanceText:
                           controller.formattedReservedBalanceLabel,
                       walletNumberText: controller.formattedWalletNumber,
+                      isBalanceVisible: controller.isBalanceVisible.value,
+                      isRefreshingBalance:
+                          controller.isRefreshingWalletBalance.value,
+                      onToggleBalanceVisibility:
+                          controller.toggleBalanceVisibility,
                       onCopyWalletNumber: controller.copyWalletNumber,
                       onAddMoney: controller.openAddMoney,
                       onEStatement: controller.openEStatement,

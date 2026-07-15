@@ -6,9 +6,13 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
+import 'package:dartz/dartz.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
+import '../../../wallet/data/models/model_status_msg.dart';
+import '../../../profile/presentation/screens/add_card_screen.dart';
 
 enum SavedCardsStep { cardList, amountEntry }
 
@@ -22,22 +26,22 @@ class SavedCardsController extends GetxController {
   final step = SavedCardsStep.cardList.obs;
   final isLoading = false.obs;
   final isSubmitting = false.obs;
-  final cards = <GoWalletCardModel>[].obs;
-  final selectedCard = Rxn<GoWalletCardModel>();
+  final cards = <Datum>[].obs;
+  final selectedCard = Rxn<Datum>();
   final amountError = RxnString();
   final apiError = RxnString();
 
-  final TextEditingController amountController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
-    loadCards();
+    amountController = TextEditingController();
   }
 
   @override
   void onClose() {
-    amountController.dispose();
+    amountController.clear();
     super.onClose();
   }
 
@@ -69,7 +73,15 @@ class SavedCardsController extends GetxController {
     );
   }
 
-  void selectCard(GoWalletCardModel card) {
+  Future<Either<Failure, ModelStatusMsg>> deleteCard(int id) async {
+    final result = await _walletRepository.deleteCard(id: id);
+    if (result.isRight()) {
+      await loadCards();
+    }
+    return result;
+  }
+
+  void selectCard(Datum card) {
     selectedCard.value = card;
     step.value = SavedCardsStep.amountEntry;
     amountError.value = null;
@@ -83,45 +95,14 @@ class SavedCardsController extends GetxController {
     apiError.value = null;
   }
 
-  void onAddCardPressed() {
-    selectedCard.value = null;
-    step.value = SavedCardsStep.amountEntry;
-    amountError.value = null;
-    apiError.value = null;
-  }
-
-  Future<void> startNewCardLinkFlow({required int amount}) async {
-    isLoading.value = true;
-    final addResult = await _walletRepository.goAddCardNew(
-      amount: amount,
-      newCard: 0,
+  Future<void> onAddCardPressed() async {
+    final result = await Get.to<dynamic>(
+      () => const AddCardScreen(),
+      arguments: {'amount': 100},
     );
-
-    await addResult.fold(
-      (failure) async {
-        isLoading.value = false;
-        AppDialogs.showErrorDialog(message: failure.message);
-      },
-      (response) async {
-        isLoading.value = false;
-
-        final success = await WebViewScreen.open<bool>(
-          url: response.url,
-          title: AppStrings.addNewCard.tr,
-        );
-
-        await loadCards(); // Refresh cards in profile
-        unawaited(WalletRefresh.afterBalanceChange());
-
-        if (success == true) {
-          AppDialogs.showSuccessDialog(
-            message: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
-            confirmLabel: AppStrings.ok,
-            barrierDismissible: true,
-          );
-        }
-      },
-    );
+    if (result == true) {
+      await loadCards();
+    }
   }
 
   Future<void> submitTopUp() async {
@@ -153,34 +134,29 @@ class SavedCardsController extends GetxController {
           isSubmitting.value = false;
         },
         (response) async {
-          if (response.isCardExists) {
-            final payResult = await _walletRepository.goPayByExistingCard(
-              transId: response.transId,
-              cardToken: selectedCard.value!.cardToken,
-            );
+          final payResult = await _walletRepository.goPayByExistingCard(
+            transId: response.transId,
+            cardToken: selectedCard.value!.cardToken ?? '',
+          );
 
-            payResult.fold(
-              (failure) {
-                apiError.value = failure.message;
-                isSubmitting.value = false;
-              },
-              (_) async {
-                isSubmitting.value = false;
-                Get.back<void>(); // close sheet
+          payResult.fold(
+            (failure) {
+              apiError.value = failure.message;
+              isSubmitting.value = false;
+            },
+            (_) async {
+              isSubmitting.value = false;
+              Get.back<void>(); // close sheet
 
-                unawaited(WalletRefresh.afterBalanceChange());
+              unawaited(WalletRefresh.afterBalanceChange());
 
-                AppDialogs.showSuccessDialog(
-                  message: AppStrings.walletFundsReceivedTitle.tr,
-                  confirmLabel: AppStrings.ok,
-                  barrierDismissible: true,
-                );
-              },
-            );
-          } else {
-            apiError.value = 'Expected card to exist, but it does not.';
-            isSubmitting.value = false;
-          }
+              AppDialogs.showWalletTopupSuccessDialog(
+                title: AppStrings.walletFundsReceivedTitle.tr,
+                confirmLabel: AppStrings.ok,
+                barrierDismissible: true,
+              );
+            },
+          );
         },
       );
     } else {
@@ -208,8 +184,8 @@ class SavedCardsController extends GetxController {
           unawaited(WalletRefresh.afterBalanceChange());
 
           if (success == true) {
-            AppDialogs.showSuccessDialog(
-              message: AppStrings.walletFundsReceivedTitle.tr,
+            AppDialogs.showWalletTopupSuccessDialog(
+              title: AppStrings.walletFundsReceivedTitle.tr,
               confirmLabel: AppStrings.ok,
               barrierDismissible: true,
             );

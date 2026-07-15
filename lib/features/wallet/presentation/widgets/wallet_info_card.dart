@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -15,6 +17,9 @@ class WalletInfoCard extends StatelessWidget {
     required this.balanceText,
     this.reservedBalanceText,
     required this.walletNumberText,
+    required this.isBalanceVisible,
+    required this.isRefreshingBalance,
+    this.onToggleBalanceVisibility,
     required this.onCopyWalletNumber,
     required this.onAddMoney,
     required this.onEStatement,
@@ -23,6 +28,10 @@ class WalletInfoCard extends StatelessWidget {
   final String balanceText;
   final String? reservedBalanceText;
   final String walletNumberText;
+  final bool isBalanceVisible;
+  final bool isRefreshingBalance;
+  final VoidCallback? onToggleBalanceVisibility;
+  /// Copy wallet number; iOS snackbar is shown from the controller layer.
   final VoidCallback onCopyWalletNumber;
   final VoidCallback onAddMoney;
   final VoidCallback onEStatement;
@@ -54,16 +63,55 @@ class WalletInfoCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        balanceText,
-                        style: AppTextStyles.homeTitle.copyWith(
-                          fontSize: 30.sp,
-                          letterSpacing: -0.3,
-                          height: 38 / 30,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              balanceText,
+                              style: AppTextStyles.homeTitle.copyWith(
+                                fontSize: 30.sp,
+                                letterSpacing: -0.3,
+                                height: 38 / 30,
+                              ),
+                            ),
+                          ),
+                          if (onToggleBalanceVisibility != null) ...[
+                            SizedBox(width: 8.w),
+                            GestureDetector(
+                              onTap: isRefreshingBalance
+                                  ? null
+                                  : onToggleBalanceVisibility,
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: EdgeInsets.all(2.w),
+                                child: SizedBox(
+                                  width: 22.w,
+                                  height: 22.w,
+                                  // Cupertino spinner while go_card_balance refresh runs.
+                                  child: isRefreshingBalance
+                                      ? CupertinoActivityIndicator(
+                                          radius: 11.r,
+                                          color: AppColors.black,
+                                        )
+                                      : Icon(
+                                          isBalanceVisible
+                                              ? Iconsax.eye_slash
+                                              : Iconsax.eye,
+                                          size: 22.w,
+                                          color: AppColors.textHeading
+                                              .withValues(alpha: 0.5),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       if (reservedBalanceText != null &&
                           reservedBalanceText!.isNotEmpty) ...[
+                        // Reserved amount visibility is driven by the controller
+                        // (masked/unmasked together with the main balance).
                         SizedBox(height: 4.h),
                         Text(
                           reservedBalanceText!,

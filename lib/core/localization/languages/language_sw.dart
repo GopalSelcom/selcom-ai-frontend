@@ -161,6 +161,8 @@ class LanguageSw extends Languages {
     'finding_driver_default_description': 'Dereva atakuchukua haraka iwezekanavyo baada ya kuthibitisha agizo lako',
     'finding_driver_minutes_remain': 'Zimebaki dakika @minutes na sekunde @seconds',
     'driver_will_arriving_in_minutes': 'Dereva atawasili baada ya dakika @minutes...',
+    'driver_finishing_nearby_trip':
+        'Dereva wako anakamilisha safari iliyo karibu na atakuchukua hivi karibuni.',
     'driver_assigned': 'Dereva Amepangwa',
     'driver_arriving': 'Dereva Anakuja',
     'driver_en_route': 'Dereva yuko Njiani',
@@ -497,6 +499,10 @@ class LanguageSw extends Languages {
     'selected_address': 'Anwani iliyochaguliwa',
     'searching_for_driver': 'Inamtafuta dereva...',
     'enable_location_service': 'Wezesha huduma ya eneo',
+    'enable_location_service_message':
+        'Tafadhali wezesha huduma ya eneo ili kupata eneo lako la sasa.',
+    'enable_location_service_message_ios':
+        'Huduma za Eneo zimezimwa kwenye kifaa chako.\n\nNenda Mipangilio → Faragha na Usalama → Huduma za Eneo na uzivute. Kisha rudi kwenye programu na uguse kitufe cha GPS ili kuruhusu eneo kwa Selcom Go.',
     'location_permission_denied': 'Ruhusa ya eneo imekataliwa',
     'location_access_required': 'Ufikiaji wa eneo unahitajika',
     'location_permission_denied_open_settings': 'Ruhusa ya eneo imekataliwa kabisa. Fungua Mipangilio ili kuruhusu eneo kwa ajili ya kuchukuliwa na kuona madereva wa karibu.',
@@ -589,6 +595,7 @@ class LanguageSw extends Languages {
     'visa': 'VISA',
     'wallet': 'Mkoba',
     'wallet_number_copied': 'Namba ya mkoba imenakiliwa',
+    'copied_to_clipboard': 'Imenakiliwa kwenye ubao wa kunakili',
     'wallet_number_label': 'Namba ya Mkoba',
     'wallet_reserved_balance': 'Imehifadhiwa: @amount',
     'recent_transactions': 'Miamala ya Hivi Karibuni',
@@ -800,6 +807,9 @@ class LanguageSw extends Languages {
     'add_new_card_text': '+ Ongeza kadi mpya',
     'amount_is_required': 'Kiasi kinahitajika',
     'enter_valid_amount': 'Tafadhali ingiza kiasi sahihi',
+    'set_as_default': 'Weka kama Chaguomsingi',
+    'set_as_default_confirm': 'Weka hii kama akaunti yako ya chaguomsingi',
+    'default_account_set_successfully': 'Akaunti ya chaguomsingi imesasishwa kwa mafanikio',
   };
 
   @override
@@ -1256,6 +1266,10 @@ class LanguageSw extends Languages {
   @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverFinishingNearbyTrip =>
+      values['driver_finishing_nearby_trip'] ?? '';
 
   @override
   String get driverAssigned => values['driver_assigned'] ?? '';
@@ -2338,6 +2352,14 @@ class LanguageSw extends Languages {
   String get enableLocationService => values['enable_location_service'] ?? '';
 
   @override
+  String get enableLocationServiceMessage =>
+      values['enable_location_service_message'] ?? '';
+
+  @override
+  String get enableLocationServiceMessageIos =>
+      values['enable_location_service_message_ios'] ?? '';
+
+  @override
   String get locationPermissionDenied =>
       values['location_permission_denied'] ?? '';
 
@@ -2584,6 +2606,9 @@ class LanguageSw extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get copiedToClipboard => values['copied_to_clipboard'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

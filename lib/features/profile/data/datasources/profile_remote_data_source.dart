@@ -24,8 +24,6 @@ abstract class ProfileRemoteDataSource {
 
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
 
-  Future<GetSavedPlacesResponseModel?> getFavoritePlaces();
-
   Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request);
 
   Future<bool> deleteSavedPlace(String id);
@@ -37,8 +35,6 @@ abstract class ProfileRemoteDataSource {
   Future<EmailSubjectResponseModel> getEmailSubjects();
 
   Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
-
-  Future<bool> toggleFavorite(String id, bool isFavorite);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -101,13 +97,14 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       return UserProfileUpdateResponse(
         statusCode: response.statusCode,
         message: null,
-        response: null,
+        data: null,
       );
     }
     throw Exception(response.data['message'] ?? 'Failed to update profile');
   }
 
   @override
+  /// `GET go/user/saved-places` — full list; `saved_places: []` when empty.
   Future<GetSavedPlacesResponseModel?> getSavedPlaces() async {
     try {
       final response = await ApiService().call(
@@ -118,10 +115,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        final savedResponse = GetSavedPlacesResponseModel.fromJson(
-          response.data,
+        return GetSavedPlacesResponseModel.fromJson(
+          response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : Map<String, dynamic>.from(response.data as Map),
         );
-        return savedResponse;
       }
       return null;
     } catch (e, stackTrace) {
@@ -132,6 +130,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
+  /// `POST go/user/saved-places/from-recent` — creates saved place (favourite by default).
   Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
@@ -151,6 +150,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
+  /// `DELETE go/user/saved-places/{id}` — remove saved place (no unfavourite-only API).
   Future<bool> deleteSavedPlace(String id) async {
     final response = await ApiService().call(
       request: ApiRequest(
@@ -279,35 +279,5 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
     }
     throw Exception('Failed to send email');
-  }
-
-  @override
-  Future<GetSavedPlacesResponseModel?> getFavoritePlaces() async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: "${URLS.address.savedPlaces}/favourites",
-        method: ApiMethod.get,
-        version: "v4",
-      ),
-    );
-    if (response.statusCode == 200) {
-      return GetSavedPlacesResponseModel.fromJson(response.data);
-    }
-    return null;
-  }
-
-  @override
-  Future<bool> toggleFavorite(String id, bool isFavorite) async {
-    final endpoint = isFavorite
-        ? "${URLS.address.savedPlaces}/$id/favourite"
-        : "${URLS.address.savedPlaces}/$id";
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: endpoint,
-        method: isFavorite ? ApiMethod.put : ApiMethod.delete,
-        version: "v4",
-      ),
-    );
-    return response.statusCode == 200;
   }
 }

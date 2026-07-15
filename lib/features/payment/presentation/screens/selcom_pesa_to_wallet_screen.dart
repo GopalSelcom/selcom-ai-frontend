@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -9,10 +10,11 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
+import '../../../../shared/widgets/app_skeleton_loader.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
+import '../widgets/selcom_pesa_account_action_bottom_sheet.dart';
 import '../widgets/selcom_pesa_another_number_bottom_sheet.dart';
 import '../widgets/selcom_pesa_self_bottom_sheet.dart';
 
@@ -107,6 +109,20 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
   }
 
   Widget _linkedAccountsHorizontalList(PaymentMethodsController paymentController) {
+    if (paymentController.isLoadingLinkedAccount.value) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Row(
+          children: [
+            AppSkeletonLoader(width: 280.w, height: 135.h, borderRadius: 16.r),
+            SizedBox(width: 12.w),
+            AppSkeletonLoader(width: 280.w, height: 135.h, borderRadius: 16.r),
+          ],
+        ),
+      );
+    }
+
     final accounts = paymentController.linkedAccountsList;
     if (accounts.isEmpty) {
       return _selcomCard(paymentController);
@@ -131,13 +147,14 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
 
   Widget _selcomCard(
     PaymentMethodsController paymentMethodsController, {
-    SelcomPesaLinkedAccountEntity? account,
+    Account? account,
   }) {
     final linked = account != null;
     final isSelected = linked && paymentMethodsController.isLinkedAccountSelected(account);
 
     return Container(
       width: 280.w,
+      // height: 135.h,
       decoration: BoxDecoration(
         color: AppColors.white,
         border: Border.all(
@@ -171,76 +188,76 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
 
   Widget _linkedSelcomCardContent(
     PaymentMethodsController paymentMethodsController,
-    SelcomPesaLinkedAccountEntity account,
+    Account account,
   ) {
     final phoneDisplay = paymentMethodsController.phoneDisplayFor(account);
-    final isSelected = paymentMethodsController.isLinkedAccountSelected(account);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                AppStrings.selcomPesa.tr,
-                style: AppTextStyles.homeSubtitle.copyWith(
-                  color: AppColors.black,
-                  fontWeight: FontWeight.w600,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    AppStrings.selcomPesa.tr,
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      color: AppColors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
+                if (account.isDefault ?? false) ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.successBadge,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      'Default',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                ],
+                GestureDetector(
+                  onTap: () => unawaited(
+                    SelcomPesaAccountActionBottomSheet.show(
+                      account: account,
+                      paymentMethodsController: paymentMethodsController,
+                    ),
+                  ),
+                  behavior: HitTestBehavior.opaque,
+                  child: Icon(
+                    Icons.more_vert,
+                    size: 20.sp,
+                    color: AppColors.textBody,
+                  ),
+                ),
+              ],
             ),
-            if (isSelected) ...[
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                decoration: BoxDecoration(
-                  color: AppColors.successBadge,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Text(
-                  'Default',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-            ],
-            GestureDetector(
-              onTap: () {
-                AppDialogs.showConfirmationDialog(
-                  title: AppStrings.removeAccountTitle.tr,
-                  message: AppStrings.removeAccountMessage.tr,
-                  confirmText: AppStrings.removeLabel.tr,
-                  confirmColor: AppColors.brandRed,
-                  onConfirm: () => unawaited(
-                    paymentMethodsController.unlinkLinkedAccount(account),
-                  ),
-                );
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Icon(
-                Icons.more_vert,
-                size: 20.sp,
+            SizedBox(height: 6.h),
+            Text(
+              phoneDisplay,
+              style: AppTextStyles.bodySecondary.copyWith(
                 color: AppColors.textBody,
+                fontSize: 14.sp,
               ),
             ),
           ],
         ),
-        SizedBox(height: 10.h),
-        Text(
-          phoneDisplay,
-          style: AppTextStyles.bodySecondary.copyWith(
-            color: AppColors.textBody,
-            fontSize: 14.sp,
-          ),
-        ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 10.0.sp,),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Obx(
@@ -269,20 +286,26 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                       ),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: EdgeInsets.all(4.w),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   child: loading
                       ? SizedBox(
                           width: 16.w,
                           height: 16.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
+                          // Cupertino spinner for Selcom Pesa main_balance eye reveal.
+                          child: CupertinoActivityIndicator(
+                            radius: 8.r,
+                            color: AppColors.black,
                           ),
                         )
-                      : Icon(
-                          Iconsax.eye,
-                          size: 18.sp,
-                          color: AppColors.textBody,
-                        ),
+                      : Obx(() {
+                          return Icon(
+                            _paymentController.isAmountVisible.value
+                                ? Iconsax.eye
+                                : Iconsax.eye_slash,
+                            size: 18.sp,
+                            color: AppColors.textBody,
+                          );
+                        }),
                 ),
               );
             }),
@@ -295,26 +318,31 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
   Widget _unlinkedSelcomCardContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          AppStrings.selcomPesa.tr,
-          style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.black,
-            fontWeight: FontWeight.w600,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.selcomPesa.tr,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
+              style: AppTextStyles.bodySecondary.copyWith(
+                color: AppColors.textBody,
+                fontSize: 12.sp,
+                height: 1.4,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
-        SizedBox(height: 6.h),
-        Text(
-          AppStrings.connectSelcomPesaRideChargesSubtitle.tr,
-          style: AppTextStyles.bodySecondary.copyWith(
-            color: AppColors.textBody,
-            fontSize: 12.sp,
-            height: 1.4,
-          ),
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(height: 10.h),
         Text(
           AppStrings.linkAccount.tr,
           style: AppTextStyles.homeSubtitle.copyWith(

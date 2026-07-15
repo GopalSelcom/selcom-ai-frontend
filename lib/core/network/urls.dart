@@ -47,6 +47,8 @@ class _AuthEndpoints {
   final logout = "logout";
 
   final firebaseLogin = "go/auth/firebase_login";
+  /// Saves display name after SSO when firebase_login returns needs_name.
+  final setName = "go/auth/set_name";
   final phoneSendOtp = "go/auth/phone/send_otp";
   final phoneResendOtp = "go/auth/phone/resend_otp";
   final phoneVerifyOtp = "go/auth/phone/verify_otp";
@@ -133,6 +135,8 @@ class _CommonEndpoints {
   final chatQuickReplies = "go/chat/quick-replies";
   final privacy = "go/get_setting?type=3";
   final termsAndConditions = "go/get_setting?type=2";
+  final countries = "countries";
+  final stateByCountry = "state-by-country";
 }
 
 /// ─────────────────────────────────
@@ -149,11 +153,14 @@ class _PaymentEndpoints {
 
 /// ─────────────────────────────────
 /// ADDRESS ENDPOINTS (Saved Places)
+/// Single list API — add via from-recent, remove via DELETE /{id}.
+/// No GET /favourites. See docs/SAVED-PLACES-FLOW.md.
 /// ─────────────────────────────────
 class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
+  // final favouritePlaces = "go/user/saved-places/favourites";
   final saveRecentAsFavorite = "go/user/saved-places/from-recent";
 }
 
@@ -174,7 +181,7 @@ class _PlacesEndpoints {
 class _WalletEndpoints {
   const _WalletEndpoints();
 
-  final details = "go_wallet/go_wallet_details";
+  // final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
   final walletTopUp = "go_wallet/wallet_push_ussd";
@@ -194,6 +201,9 @@ class _WalletEndpoints {
   final goAddCardNew = "go_wallet/go_add_card_new";
   final goPayByExistingCard = "go_wallet/go_pay_by_existing_card";
   final goInitCardSession = "go_wallet/go_init_card_session";
+  final deleteCard = "go_wallet/delete_card";
+
+  final securepay = "https://secureacceptance.cybersource.com/silent/pay";
 }
 
 /// ─────────────────────────────────
@@ -206,6 +216,7 @@ class _SelcomPesaEndpoints {
   final linkedAccounts = "go/selcom_pesa/linked_accounts";
   final mainBalance = "go/selcom_pesa/main_balance";
   final requestUnlink = "go/selcom_pesa/request_unlink";
+  final setDefaultAccount = "go/selcom_pesa/set_default_account";
 }
 
 /// ─────────────────────────────────

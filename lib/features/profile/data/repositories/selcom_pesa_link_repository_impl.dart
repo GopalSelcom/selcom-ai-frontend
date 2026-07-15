@@ -1,3 +1,5 @@
+import 'package:selcom_rides_frontend/features/profile/data/models/sp_link_response.dart';
+
 import '../../../../shared/utils/selcom_pesa_phone_utils.dart';
 import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
@@ -14,7 +16,7 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   final SelcomPesaLinkRemoteDataSource _remoteDataSource;
 
   @override
-  Future<SelcomPesaLinkedAccountEntity> sendLinkRequest({
+  Future<SpLinkResponse> sendLinkRequest({
     required String countryCode,
     required String mobileNumber,
   }) {
@@ -27,13 +29,13 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   }
 
   @override
-  Future<List<SelcomPesaLinkedAccountEntity>> getLinkedAccounts({
+  Future<SelcomPesaLinkedAccountsResult> getLinkedAccounts({
     SelcomPesaLinkStatus? statusFilter,
   }) async {
     final result = await _remoteDataSource.getLinkedAccounts(
       statusFilter: statusFilter,
     );
-    return result.accounts;
+    return result;
   }
 
   @override
@@ -46,7 +48,16 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
   }
 
   @override
-  Future<SelcomPesaBalanceEntity> getMainBalance({
+  Future<void> setDefaultAccount({required String mobileNumber}) {
+    return _remoteDataSource.setDefaultAccount(
+      SelcomPesaSetDefaultRequest(
+        spMobileNumber: mobileNumber,
+      ),
+    );
+  }
+
+  @override
+  Future<SpMainBalanceResponse> getMainBalance({
     required String mobileNumber,
     required String countryCode,
   }) async {
@@ -57,9 +68,6 @@ class SelcomPesaLinkRepositoryImpl implements SelcomPesaLinkRepository {
           : WalletPaymentPhoneCountry.dialCodeDigits,
     );
     final result = await _remoteDataSource.getMainBalance(request);
-    return SelcomPesaBalanceEntity(
-      balance: result.balance,
-      currency: result.currency,
-    );
+    return result;
   }
 }

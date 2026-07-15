@@ -44,9 +44,6 @@ class AgoraCallingBootstrap {
               '${AppConfig.apiPathPrefix}/v4/go/rides/$rideId/call/cancel',
           voipTokenPath: '${AppConfig.apiPathPrefix}/v4/go/user/voip-token',
         ),
-        // Rider only ever receives calls from drivers; this default keeps the
-        // CallKit / heads-up surface neutral when `caller_name` is missing.
-        peerNameResolver: (_) => 'Your Driver',
       ),
     );
   }

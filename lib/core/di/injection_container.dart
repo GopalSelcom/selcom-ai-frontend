@@ -50,7 +50,6 @@ import '../../features/payment/data/datasources/wallet_payment_remote_data_sourc
 import '../../features/wallet/data/datasources/wallet_remote_data_source.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
-import '../../features/wallet/domain/usecases/get_wallet_details_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../features/wallet/domain/usecases/email_wallet_statement_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
@@ -214,7 +213,6 @@ Future<void> init() async {
       selcomPesaTopupRemoteDataSource: sl(),
     ),
   );
-  sl.registerLazySingleton(() => GetWalletDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletTransactionsUseCase(sl()));
   sl.registerLazySingleton(() => EmailWalletStatementUseCase(sl()));

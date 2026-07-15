@@ -4,9 +4,15 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../wallet/data/models/go_wallet_card_model.dart';
 import '../../../wallet/data/models/go_add_card_response_model.dart';
+import '../../../wallet/data/models/go_init_card_session_response_model.dart' hide Datum;
+import '../../../wallet/data/models/model_status_msg.dart';
 import '../models/go_other_payment_methods_models.dart';
 
 abstract class WalletPaymentRemoteDataSource {
+  Future<ModelStatusMsg> deleteCard({
+    required int id,
+  });
+
   Future<WalletTopUpSession> initiateOtherPayment(
     GoOtherPaymentMethodsRequest request, {
     required bool requireQr,
@@ -26,7 +32,7 @@ abstract class WalletPaymentRemoteDataSource {
     required String paymentMethod,
   });
 
-  Future<List<GoWalletCardModel>> fetchCards();
+  Future<List<Datum>> fetchCards();
 
   Future<GoAddCardResponseModel> goAddCardNew({
     required int amount,
@@ -37,6 +43,23 @@ abstract class WalletPaymentRemoteDataSource {
     required String transId,
     required String cardToken,
   });
+
+  Future<InitSessionCardModel> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
+  });
+
 }
 
 class WalletPaymentRemoteDataSourceImpl
@@ -243,7 +266,7 @@ class WalletPaymentRemoteDataSourceImpl
   }
 
   @override
-  Future<List<GoWalletCardModel>> fetchCards() async {
+  Future<List<Datum>> fetchCards() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.wallet.fetchCards,
@@ -255,16 +278,11 @@ class WalletPaymentRemoteDataSourceImpl
     if (response.statusCode == 200 && response.data != null) {
       final data = response.data;
       if (data is Map<String, dynamic>) {
-        final resultcode = data['resultcode']?.toString();
-        if (resultcode == '404') {
+        final cardResponse = GoWalletCardModel.fromJson(data);
+        if (cardResponse.resultcode == '404') {
           return [];
         }
-        final list = data['data'];
-        if (list is List) {
-          return list
-              .map((e) => GoWalletCardModel.fromJson(Map<String, dynamic>.from(e)))
-              .toList();
-        }
+        return cardResponse.data ?? [];
       }
     }
 
@@ -288,6 +306,7 @@ class WalletPaymentRemoteDataSourceImpl
         method: ApiMethod.post,
         body: {
           'amount': amount,
+          'send_amount':0,
           'newCard': newCard,
         },
         errorPresentationType: ErrorPresentationType.none,
@@ -345,6 +364,86 @@ class WalletPaymentRemoteDataSourceImpl
 
     throw WalletPaymentException(
       _messageFromResponse(response.data) ?? 'Debit failed',
+    );
+  }
+
+  @override
+  Future<InitSessionCardModel> goInitCardSession({
+    required int amount,
+    required int newCard,
+    required String email,
+    required String mobileNumber,
+    required String countryCode,
+    required String cardBin,
+    String? fname,
+    String? lname,
+    String? address,
+    String? city,
+    String? state,
+    String? country,
+    String? postalcode,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.goInitCardSession,
+        method: ApiMethod.post,
+        body: {
+          'amount': "100",
+          'newCard': newCard,
+          'email': email,
+          'mobile_number': mobileNumber,
+          'country_code': countryCode,
+          'cardBin': cardBin,
+          if (fname != null) 'fname': fname,
+          if (lname != null) 'lname': lname,
+          if (address != null) 'address': address,
+          if (city != null) 'city': city,
+          if (state != null) 'state': state,
+          if (country != null) 'country': country,
+          if (postalcode != null) 'postalcode': postalcode,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final statusCode = data['status_code'] ?? data['status'];
+        if (statusCode == 200) {
+          return InitSessionCardModel.fromJson(data);
+        }
+        throw WalletPaymentException(
+          data['message']?.toString() ?? 'Failed to initialize card session',
+        );
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to initialize card session',
+    );
+  }
+
+  @override
+  Future<ModelStatusMsg> deleteCard({required int id}) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.wallet.deleteCard,
+        method: ApiMethod.post,
+        body: {'id': id},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return ModelStatusMsg.fromJson(data);
+      }
+    }
+
+    throw WalletPaymentException(
+      _messageFromResponse(response.data) ?? 'Failed to delete card',
     );
   }
 }

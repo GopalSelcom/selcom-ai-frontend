@@ -1,5 +1,7 @@
 import '../../constants/currency_code.dart';
 
+/// Saved place in `POST from-recent` response `data.place`.
+/// List screens use [SavedPlace] from get_saved_places_response.dart instead.
 class SavedPlaceModel {
   final String? id;
   final String? userId;
@@ -12,6 +14,8 @@ class SavedPlaceModel {
   final int? v;
   final String? createdAt;
   final String? updatedAt;
+  final bool? isFavourite;
+  final SavedPlaceGeoLocation? location;
 
   SavedPlaceModel({
     this.id,
@@ -25,28 +29,44 @@ class SavedPlaceModel {
     this.v,
     this.createdAt,
     this.updatedAt,
+    this.isFavourite,
+    this.location,
   });
 
   factory SavedPlaceModel.fromJson(Map<String, dynamic> json) {
-    final coords = json['location']?['coordinates'] as List?;
+    final rawLocation = json['location'];
+    SavedPlaceGeoLocation? location;
+    List? coords;
+    if (rawLocation is Map) {
+      location = SavedPlaceGeoLocation.fromJson(
+        Map<String, dynamic>.from(rawLocation),
+      );
+      coords = location.coordinates;
+    }
+
     return SavedPlaceModel(
-      id: json['_id'],
-      userId: json['user_id'],
-      label: json['label'] ?? '',
-      name: json['name'] ?? '',
-      address: json['address'],
-      placeId: json['place_id'],
+      id: json['_id']?.toString(),
+      userId: json['user_id']?.toString(),
+      label: json['label']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      address: json['address']?.toString(),
+      placeId: json['place_id']?.toString(),
       lat:
-          (json['lat'] ??
-                  (coords != null && coords.length > 1 ? coords[1] : 0.0))
-              .toDouble(),
+          (json['lat'] as num?)?.toDouble() ??
+          (coords != null && coords.length > 1
+              ? (coords[1] as num).toDouble()
+              : 0.0),
       lng:
-          (json['lng'] ??
-                  (coords != null && coords.isNotEmpty ? coords[0] : 0.0))
-              .toDouble(),
-      v: json['__v'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+          (json['lng'] as num?)?.toDouble() ??
+          (coords != null && coords.isNotEmpty
+              ? (coords[0] as num).toDouble()
+              : 0.0),
+      v: (json['__v'] as num?)?.toInt(),
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
+      isFavourite:
+          json['is_favourite'] as bool? ?? json['isFavourite'] as bool?,
+      location: location,
     );
   }
 
@@ -60,15 +80,41 @@ class SavedPlaceModel {
       'place_id': placeId,
       'lat': lat,
       'lng': lng,
-      'location': {
-        'type': 'Point',
-        'coordinates': [lng, lat],
-      },
+      'location': location?.toJson() ??
+          {
+            'type': 'Point',
+            'coordinates': [lng, lat],
+          },
       '__v': v,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'is_favourite': isFavourite,
     };
   }
+}
+
+class SavedPlaceGeoLocation {
+  final String? type;
+  final List<double>? coordinates;
+
+  const SavedPlaceGeoLocation({this.type, this.coordinates});
+
+  factory SavedPlaceGeoLocation.fromJson(Map<String, dynamic> json) =>
+      SavedPlaceGeoLocation(
+        type: json['type']?.toString(),
+        coordinates: json['coordinates'] == null
+            ? null
+            : List<double>.from(
+                (json['coordinates'] as List).map(
+                  (x) => (x as num).toDouble(),
+                ),
+              ),
+      );
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'coordinates': coordinates,
+  };
 }
 
 class WalletBalanceModel {

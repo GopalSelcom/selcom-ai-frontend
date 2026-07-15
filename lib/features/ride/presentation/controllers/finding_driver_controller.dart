@@ -150,6 +150,10 @@ class FindingDriverController extends GetxController {
   /// Search-timeout auto-cancel uses bottom sheet only — blocks duplicate dialog from socket.
   bool _searchTimeoutAutoCancelHandled = false;
 
+  /// Ride chaining: previous driver assignment was withdrawn; rider is searching again.
+  /// Uses the same searching title/description as a normal match (no special copy).
+  bool _chainBrokenReSearch = false;
+
   /// When false, hide search countdown/progress (driver matched or later).
   bool get isSearchingPhase =>
       isRideSearchingStatus(normalizedRideStatus.value);
@@ -163,6 +167,16 @@ class FindingDriverController extends GetxController {
     currentDescriptionLabel.value = RidePickupStatusLabels.descriptionFor(
       normalizedRideStatus.value,
     );
+  }
+
+  /// Clears assigned-driver map state and resumes normal searching UI.
+  void _applyChainBrokenReSearchState() {
+    _chainBrokenReSearch = true;
+    assignedDriverLocation.value = null;
+    activeRoutePoints.clear();
+    _hasReceivedTrackingUpdate = false;
+    routeTarget.value = 'pick_up';
+    _applyPickupStatusLabels('searching');
   }
 
   String _driverNameFromPayload(EventRiderStatusUpdateResponse payload) {
@@ -192,11 +206,17 @@ class FindingDriverController extends GetxController {
     final normalized = normalizeRideStatusString(rawStatus);
     if (normalized.isEmpty) return;
 
+    final previousStatus = normalizedRideStatus.value;
+
     // Refresh labels immediately so the user sees the right phase before navigation.
     _applyPickupStatusLabels(normalized);
 
     switch (normalized) {
       case 'searching':
+        if (shouldRevertToFindingDriverFromPickup(previousStatus) ||
+            _chainBrokenReSearch) {
+          _applyChainBrokenReSearchState();
+        }
         break;
       case 'driver_assigned':
       case 'accepted':
@@ -306,6 +326,9 @@ class FindingDriverController extends GetxController {
       onExpired: () => unawaited(_autoCancelRide()),
     );
     _parseArgs();
+    if (_chainBrokenReSearch) {
+      _applyChainBrokenReSearchState();
+    }
     _startCountdown();
     _initNearbyDriversSocket();
     _initRideRoomSocket();
@@ -322,6 +345,18 @@ class FindingDriverController extends GetxController {
       final rawStatus = rideStatusToApiValue(ride.status);
       final normalized = normalizeRideStatusString(rawStatus);
       if (isRideSearchingStatus(normalized)) {
+        if (_chainBrokenReSearch) {
+          _applyChainBrokenReSearchState();
+        }
+        _resyncCountdownFromRide(ride);
+        return;
+      }
+
+      // After chain break, ignore a stale HTTP "still assigned" snapshot so we
+      // stay on the searching sheet until a fresh socket assignment arrives
+      // (avoids bouncing back to SCR-11 while rematch is in progress).
+      if (_chainBrokenReSearch && isDriverPickupEnRouteStatus(normalized)) {
+        _applyChainBrokenReSearchState();
         _resyncCountdownFromRide(ride);
         return;
       }
@@ -474,7 +509,7 @@ class FindingDriverController extends GetxController {
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
-    rideId = (args['rideId'] as String?)?.trim() ?? '';
+    rideId = args['rideId']?.toString().trim() ?? '';
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -528,6 +563,8 @@ class FindingDriverController extends GetxController {
       args['cancel_time'],
     );
     _searchStartedAt = parseDriverSearchStartedAt(args['search_started_at']);
+
+    _chainBrokenReSearch = (args[kFindingDriverChainBrokenArg] as bool?) ?? false;
 
     activeRoutePoints.clear();
     routeTarget.value = 'pick_up';

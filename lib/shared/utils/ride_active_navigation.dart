@@ -7,6 +7,9 @@ import 'map_route_marker_utils.dart';
 import 'mid_ride_cancel_navigation.dart';
 import 'ride_status_normalizer.dart';
 
+/// Navigation arg: ride chaining broke and the rider is searching again.
+const kFindingDriverChainBrokenArg = 'chain_broken';
+
 /// Terminal / inactive rides — show details sheet instead of live ride UI.
 bool rideStatusIsOngoingActive(RideStatus status) {
   switch (status) {
@@ -117,7 +120,10 @@ bool shouldOpenFindingDriverForRide(RideModel ride) {
   return !_isRideTripStartedOrLater(normalized);
 }
 
-Map<String, dynamic> findingDriverArgumentsFromRide(RideModel ride) {
+Map<String, dynamic> findingDriverArgumentsFromRide(
+  RideModel ride, {
+  bool chainBroken = false,
+}) {
   final vehicleType =
       ride.vehicleSnapshot?.vehicleType.trim() ??
       ride.vehicleKey?.trim() ??
@@ -147,11 +153,16 @@ Map<String, dynamic> findingDriverArgumentsFromRide(RideModel ride) {
     if (ride.cancelTime != null) 'cancel_time': ride.cancelTime,
     if (ride.searchStartedAt != null)
       'search_started_at': ride.searchStartedAt!.toIso8601String(),
+    if (chainBroken) kFindingDriverChainBrokenArg: true,
   };
 }
 
-void navigateToFindingDriverForRide(RideModel ride, {bool replace = false}) {
-  final args = findingDriverArgumentsFromRide(ride);
+void navigateToFindingDriverForRide(
+  RideModel ride, {
+  bool replace = false,
+  bool chainBroken = false,
+}) {
+  final args = findingDriverArgumentsFromRide(ride, chainBroken: chainBroken);
   if (replace) {
     Get.offNamed(AppRoutes.findingDriver, arguments: args);
   } else {

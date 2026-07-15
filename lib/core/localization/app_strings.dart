@@ -191,6 +191,8 @@ class AppStrings {
       'finding_driver_minutes_remain';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
+  static const String driverFinishingNearbyTrip =
+      'driver_finishing_nearby_trip';
   static const String driverAssigned = 'driver_assigned';
   static const String driverArriving = 'driver_arriving';
   static const String driverEnRoute = 'driver_en_route';
@@ -623,6 +625,10 @@ class AppStrings {
   static const String selectedAddress = 'selected_address';
   static const String searchingForDriver = 'searching_for_driver';
   static const String enableLocationService = 'enable_location_service';
+  static const String enableLocationServiceMessage =
+      'enable_location_service_message';
+  static const String enableLocationServiceMessageIos =
+      'enable_location_service_message_ios';
   static const String locationPermissionDenied = 'location_permission_denied';
   static const String locationAccessRequired = 'location_access_required';
   static const String locationPermissionDeniedOpenSettings =
@@ -733,6 +739,7 @@ class AppStrings {
   static const String visa = 'visa';
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';
+  static const String copiedToClipboard = 'copied_to_clipboard';
   static const String walletNumberLabel = 'wallet_number_label';
   static const String walletReservedBalance = 'wallet_reserved_balance';
   static const String recentTransactions = 'recent_transactions';
@@ -918,4 +925,8 @@ class AppStrings {
   static const String addNewCardText = 'add_new_card_text';
   static const String amountIsRequired = 'amount_is_required';
   static const String enterValidAmount = 'enter_valid_amount';
+  static const String setAsDefault = 'set_as_default';
+  static const String setAsDefaultConfirm = 'set_as_default_confirm';
+  static const String defaultAccountSetSuccessfully =
+      'default_account_set_successfully';
 }

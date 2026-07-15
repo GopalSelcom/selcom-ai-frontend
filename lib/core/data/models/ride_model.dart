@@ -158,8 +158,8 @@ class RideModel extends RideEntity {
       pendingStopsUpdate: pendingStopsUpdate,
       isBookedForOther: json['is_booked_for_other'] ?? false,
       isBookAny: json['is_book_any'] == true,
-      passengerName: json['passenger_name'],
-      passengerPhone: json['passenger_phone'],
+      passengerName: _nullableTrimmedString(json['passenger_name']),
+      passengerPhone: _nullableTrimmedString(json['passenger_phone']),
       pdfLinks: pdfLinks,
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
@@ -262,6 +262,11 @@ class RideModel extends RideEntity {
     if (words.length == 1) return words[0];
     return words[0] +
         words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
+  }
+
+  static String? _nullableTrimmedString(Object? value) {
+    final trimmed = value?.toString().trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 }
 

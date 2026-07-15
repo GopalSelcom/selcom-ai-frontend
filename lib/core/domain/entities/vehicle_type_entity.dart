@@ -10,6 +10,10 @@ class VehicleTypeEntity {
   final int minimumFare;
   final int? cancellationFee;
   final int? cashbackPercent;
+  final int bookingFee;
+  final int waypointFee;
+  final int maxDistanceKm;
+  final bool bookAnyEligible;
   final bool isActive;
   final int sortOrder;
   final String? createdAt;
@@ -27,6 +31,10 @@ class VehicleTypeEntity {
     required this.minimumFare,
     this.cancellationFee,
     this.cashbackPercent,
+    this.bookingFee = 0,
+    this.waypointFee = 0,
+    this.maxDistanceKm = 0,
+    this.bookAnyEligible = false,
     required this.isActive,
     required this.sortOrder,
     this.createdAt,

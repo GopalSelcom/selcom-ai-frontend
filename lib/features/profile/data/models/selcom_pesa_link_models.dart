@@ -1,4 +1,4 @@
-import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
+import 'dart:convert';
 
 class SelcomPesaSendLinkRequest {
   const SelcomPesaSendLinkRequest({
@@ -17,6 +17,16 @@ class SelcomPesaSendLinkRequest {
 
 class SelcomPesaRequestUnlinkRequest {
   const SelcomPesaRequestUnlinkRequest({required this.spMobileNumber});
+
+  final String spMobileNumber;
+
+  Map<String, dynamic> toJson() => {
+    'sp_mobile_number': spMobileNumber.trim(),
+  };
+}
+
+class SelcomPesaSetDefaultRequest {
+  const SelcomPesaSetDefaultRequest({required this.spMobileNumber});
 
   final String spMobileNumber;
 
@@ -48,148 +58,230 @@ class SelcomPesaMainBalanceRequest {
   }
 }
 
+
+
+
+
+SelcomPesaLinkedAccountsResult selcomPesaLinkedAccountsResultFromJson(String str) => SelcomPesaLinkedAccountsResult.fromJson(json.decode(str));
+
+String selcomPesaLinkedAccountsResultToJson(SelcomPesaLinkedAccountsResult data) => json.encode(data.toJson());
+
 class SelcomPesaLinkedAccountsResult {
-  const SelcomPesaLinkedAccountsResult({
-    required this.count,
-    required this.accounts,
+  int? statusCode;
+  String? message;
+  Data? data;
+
+  SelcomPesaLinkedAccountsResult({
+    this.statusCode,
+    this.message,
+    this.data,
   });
 
-  final int count;
-  final List<SelcomPesaLinkedAccountEntity> accounts;
+  SelcomPesaLinkedAccountsResult copyWith({
+    int? statusCode,
+    String? message,
+    Data? data,
+  }) =>
+      SelcomPesaLinkedAccountsResult(
+        statusCode: statusCode ?? this.statusCode,
+        message: message ?? this.message,
+        data: data ?? this.data,
+      );
 
-  factory SelcomPesaLinkedAccountsResult.fromEnvelope(Map<String, dynamic> json) {
-    final data = json['data'];
-    final map = data is Map<String, dynamic> ? data : const <String, dynamic>{};
-    final rawAccounts = map['accounts'];
-    final accounts = <SelcomPesaLinkedAccountEntity>[];
-    if (rawAccounts is List) {
-      for (final item in rawAccounts) {
-        if (item is Map<String, dynamic>) {
-          accounts.add(SelcomPesaLinkedAccountEntityMapper.fromJson(item));
-        } else if (item is Map) {
-          accounts.add(
-            SelcomPesaLinkedAccountEntityMapper.fromJson(
-              Map<String, dynamic>.from(item),
-            ),
-          );
-        }
-      }
-    }
+  factory SelcomPesaLinkedAccountsResult.fromJson(Map<String, dynamic> json) => SelcomPesaLinkedAccountsResult(
+    statusCode: json["status_code"],
+    message: json["message"],
+    data: json["data"] == null ? null : Data.fromJson(json["data"]),
+  );
 
-    final countValue = map['count'];
-    return SelcomPesaLinkedAccountsResult(
-      count: countValue is int ? countValue : accounts.length,
-      accounts: accounts,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toJson(),
+  };
 }
 
-class SelcomPesaMainBalanceResult {
-  const SelcomPesaMainBalanceResult({
-    required this.balance,
-    required this.currency,
-    this.raw = const {},
+class Data {
+  int? count;
+  List<Account>? accounts;
+
+  Data({
+    this.count,
+    this.accounts,
   });
 
-  final double balance;
-  final String currency;
-  final Map<String, dynamic> raw;
+  Data copyWith({
+    int? count,
+    List<Account>? accounts,
+  }) =>
+      Data(
+        count: count ?? this.count,
+        accounts: accounts ?? this.accounts,
+      );
 
-  factory SelcomPesaMainBalanceResult.fromEnvelope(Map<String, dynamic> json) {
-    final data = _asMap(json['data']);
-    final spResponse = _asMap(data['sp_response']);
-    final balanceSource = spResponse.isNotEmpty
-        ? _asMap(spResponse['data'])
-        : data;
-    final source = balanceSource.isNotEmpty ? balanceSource : data;
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
+    count: json["count"],
+    accounts: json["accounts"] == null ? [] : List<Account>.from(json["accounts"]!.map((x) => Account.fromJson(x))),
+  );
 
-    return SelcomPesaMainBalanceResult(
-      balance: _readBalance(source),
-      currency: _readString(source, const [
-        'currency',
-        'currency_code',
-        'ccy',
-      ]),
-      raw: data,
-    );
-  }
-
-  /// When envelope `status_code` is 200 but SP payload reports failure.
-  static String? spResponseErrorMessage(Map<String, dynamic> envelope) {
-    final spResponse = _asMap(_asMap(envelope['data'])['sp_response']);
-    if (spResponse.isEmpty) return null;
-    if (spResponse['success'] == true) return null;
-
-    final message = spResponse['message']?.toString().trim();
-    if (message != null && message.isNotEmpty) return message;
-    return null;
-  }
-
-  static Map<String, dynamic> _asMap(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) return Map<String, dynamic>.from(value);
-    return const {};
-  }
-
-  static double _readBalance(Map<String, dynamic> map) {
-    for (final key in const [
-      'balance',
-      'main_balance',
-      'available_balance',
-      'available',
-      'amount',
-    ]) {
-      final value = map[key];
-      if (value is num) return value.toDouble();
-      if (value is String) {
-        final parsed = double.tryParse(value.replaceAll(',', '').trim());
-        if (parsed != null) return parsed;
-      }
-    }
-    return 0;
-  }
-
-  static String _readString(
-    Map<String, dynamic> map,
-    List<String> keys, {
-    String fallback = 'TZS',
-  }) {
-    for (final key in keys) {
-      final value = map[key]?.toString().trim() ?? '';
-      if (value.isNotEmpty) return value;
-    }
-    return fallback;
-  }
+  Map<String, dynamic> toJson() => {
+    "count": count,
+    "accounts": accounts == null ? [] : List<dynamic>.from(accounts!.map((x) => x.toJson())),
+  };
 }
 
-abstract final class SelcomPesaLinkedAccountEntityMapper {
-  static SelcomPesaLinkedAccountEntity fromJson(Map<String, dynamic> json) {
-    return SelcomPesaLinkedAccountEntity(
-      id: _readString(json, const ['id', '_id', 'link_id', 'account_id']),
-      status: SelcomPesaLinkStatus.fromApi(
-        _readString(json, const ['status', 'link_status']),
-      ),
-      countryCode: _readString(
-        json,
-        const ['sp_country_code', 'country_code'],
-        fallback: '255',
-      ),
-      mobileNumber: _readString(
-        json,
-        const ['sp_mobile_number', 'mobile_number'],
-      ),
-    );
-  }
+class Account {
+  String? userId;
+  String? spCountryCode;
+  String? spMobileNumber;
+  String? goCountryCode;
+  String? goMobileNumber;
+  String? senderName;
+  String? channel;
+  String? appLogo;
+  String? deviceType;
+  String? languageCode;
+  String? requestId;
+  String? status;
+  String? result;
+  String? resultCode;
+  String? resultMessage;
+  DateTime? linkedOn;
+  dynamic unlinkedOn;
+  String? id;
+  DateTime? createdOn;
+  DateTime? updatedOn;
+  int? v;
+  bool? isActive;
+  bool? isDefault;
 
-  static String _readString(
-    Map<String, dynamic> json,
-    List<String> keys, {
-    String fallback = '',
-  }) {
-    for (final key in keys) {
-      final value = json[key]?.toString().trim() ?? '';
-      if (value.isNotEmpty) return value;
-    }
-    return fallback;
-  }
+  Account({
+    this.userId,
+    this.spCountryCode,
+    this.spMobileNumber,
+    this.goCountryCode,
+    this.goMobileNumber,
+    this.senderName,
+    this.channel,
+    this.appLogo,
+    this.deviceType,
+    this.languageCode,
+    this.requestId,
+    this.status,
+    this.result,
+    this.resultCode,
+    this.resultMessage,
+    this.linkedOn,
+    this.unlinkedOn,
+    this.id,
+    this.createdOn,
+    this.updatedOn,
+    this.isActive,
+    this.isDefault,
+    this.v,
+  });
+
+  Account copyWith({
+    String? userId,
+    String? spCountryCode,
+    String? spMobileNumber,
+    String? goCountryCode,
+    String? goMobileNumber,
+    String? senderName,
+    String? channel,
+    String? appLogo,
+    String? deviceType,
+    String? languageCode,
+    String? requestId,
+    String? status,
+    String? result,
+    String? resultCode,
+    String? resultMessage,
+    DateTime? linkedOn,
+    dynamic unlinkedOn,
+    String? id,
+    DateTime? createdOn,
+    DateTime? updatedOn,
+    bool? isActive,
+    bool? isDefault,
+    int? v,
+  }) =>
+      Account(
+        userId: userId ?? this.userId,
+        spCountryCode: spCountryCode ?? this.spCountryCode,
+        spMobileNumber: spMobileNumber ?? this.spMobileNumber,
+        goCountryCode: goCountryCode ?? this.goCountryCode,
+        goMobileNumber: goMobileNumber ?? this.goMobileNumber,
+        senderName: senderName ?? this.senderName,
+        channel: channel ?? this.channel,
+        appLogo: appLogo ?? this.appLogo,
+        deviceType: deviceType ?? this.deviceType,
+        languageCode: languageCode ?? this.languageCode,
+        requestId: requestId ?? this.requestId,
+        status: status ?? this.status,
+        result: result ?? this.result,
+        resultCode: resultCode ?? this.resultCode,
+        resultMessage: resultMessage ?? this.resultMessage,
+        linkedOn: linkedOn ?? this.linkedOn,
+        unlinkedOn: unlinkedOn ?? this.unlinkedOn,
+        id: id ?? this.id,
+        createdOn: createdOn ?? this.createdOn,
+        updatedOn: updatedOn ?? this.updatedOn,
+        v: v ?? this.v,
+        isActive: isActive??this.isActive,
+        isDefault: isDefault??this.isDefault,
+      );
+
+  factory Account.fromJson(Map<String, dynamic> json) => Account(
+    userId: json["user_id"],
+    spCountryCode: json["sp_country_code"],
+    spMobileNumber: json["sp_mobile_number"],
+    goCountryCode: json["go_country_code"],
+    goMobileNumber: json["go_mobile_number"],
+    senderName: json["sender_name"],
+    channel: json["channel"],
+    appLogo: json["app_logo"],
+    deviceType: json["device_type"],
+    languageCode: json["language_code"],
+    requestId: json["request_id"],
+    status: json["status"],
+    result: json["result"],
+    resultCode: json["result_code"],
+    resultMessage: json["result_message"],
+    linkedOn: json["linked_on"] == null ? null : DateTime.parse(json["linked_on"]),
+    unlinkedOn: json["unlinked_on"],
+    id: json["_id"],
+    createdOn: json["created_on"] == null ? null : DateTime.parse(json["created_on"]),
+    updatedOn: json["updated_on"] == null ? null : DateTime.parse(json["updated_on"]),
+    isActive: json['is_active'],
+    isDefault: json['is_default'],
+    v: json["__v"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "user_id": userId,
+    "sp_country_code": spCountryCode,
+    "sp_mobile_number": spMobileNumber,
+    "go_country_code": goCountryCode,
+    "go_mobile_number": goMobileNumber,
+    "sender_name": senderName,
+    "channel": channel,
+    "app_logo": appLogo,
+    "device_type": deviceType,
+    "language_code": languageCode,
+    "request_id": requestId,
+    "status": status,
+    "result": result,
+    "result_code": resultCode,
+    "result_message": resultMessage,
+    "linked_on": linkedOn?.toIso8601String(),
+    "unlinked_on": unlinkedOn,
+    "_id": id,
+    "created_on": createdOn?.toIso8601String(),
+    "updated_on": updatedOn?.toIso8601String(),
+    'is_active': isActive,
+    'is_default': isDefault,
+    "__v": v,
+  };
 }
+

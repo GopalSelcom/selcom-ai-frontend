@@ -38,6 +38,7 @@ import '../../../../shared/utils/active_ride_vehicle_image_resolver.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../profile/data/cache/user_profile_cache.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
@@ -48,6 +49,8 @@ import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -153,6 +156,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
+    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
     homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
@@ -285,10 +289,27 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   /// Returns true when location permission is granted and services are on.
+  ///
+  /// GPS button (`showLocationSettingsDialogIfBlocked: true`): check device
+  /// Location Services first so we open the correct settings, then app permission.
+  /// Startup / silent refresh: keep previous order (app permission first) so we
+  /// still grant permission and enable the map blue-dot without blocking on a
+  /// transient device-service false while [force] is off.
   Future<bool> _ensureLocationPermission({
     bool requestPermissionIfDenied = false,
     bool showLocationSettingsDialogIfBlocked = false,
   }) async {
+    if (showLocationSettingsDialogIfBlocked) {
+      final serviceEnabled = await LocationService.instance
+          .checkLocationService(force: true);
+      if (!serviceEnabled) {
+        hasLocationPermission.value = false;
+        deviceGpsLocation.value = null;
+        currentMapAddress.value = AppStrings.enableLocationService.tr;
+        return false;
+      }
+    }
+
     final hasPermission = await LocationService.instance.checkPermission(
       force: showLocationSettingsDialogIfBlocked,
       precise: true,
@@ -426,12 +447,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Handle Saved Places
       results[2].fold((_) => null, (response) {
         final res = response as GetSavedPlacesResponseModel?;
-        if (res?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(
-            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces!),
-          );
-          _syncSelectedPickupAfterSavedPlacesLoad();
-        }
+        savedPlaces.assignAll(
+          SavedPlacesOrdering.sortForDisplay(
+            res?.data?.savedPlaces ?? const [],
+          ),
+        );
+        _syncSelectedPickupAfterSavedPlacesLoad();
       });
 
       // Handle Active Ride
@@ -1574,15 +1595,16 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Reload from `GET go/user/saved-places`; always applies API list including `[]`.
   Future<void> loadSavedPlaces() async {
     final result = await profileRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
-      if (response?.data?.savedPlaces != null) {
-        savedPlaces.assignAll(
-          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces!),
-        );
-        _syncSelectedPickupAfterSavedPlacesLoad();
-      }
+      savedPlaces.assignAll(
+        SavedPlacesOrdering.sortForDisplay(
+          response?.data?.savedPlaces ?? const [],
+        ),
+      );
+      _syncSelectedPickupAfterSavedPlacesLoad();
     });
   }
 
@@ -1799,13 +1821,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> openProfile() async {
     await Get.to(() => ProfileScreen());
     if (SessionExpiryService.isHandling) return;
-    await refreshProfileImage();
+    // No GET on return — avatar syncs from cache only after profile edit.
+    _syncProfileImageFromCacheIfChanged();
   }
 
-  Future<void> refreshProfileImage() async {
-    if (SessionExpiryService.isHandling) return;
-    final result = await profileRepository.getProfile();
-    result.fold((_) {}, _applyProfileImage);
+  /// Updates the home header avatar from session cache after profile edit only.
+  void _syncProfileImageFromCacheIfChanged() {
+    if (!UserProfileCache.consumeChanged()) return;
+    final user = UserProfileCache.user;
+    if (user != null) _applyProfileImage(user);
   }
 
   void _applyProfileImage(UserModel user) {
@@ -2221,9 +2245,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Saved place = favourite in product terms (no separate favourites list).
   bool isPlaceFavorite(String address, String? placeId) {
-    final saved = getSavedPlaceFor(address, placeId);
-    return saved?.isFavourite ?? false;
+    return getSavedPlaceFor(address, placeId) != null;
   }
 
   Future<void> toggleAddAddressBottomSheet(Prediction item) async {
@@ -2304,6 +2328,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// `DELETE go/user/saved-places/{id}` after user confirms.
   Future<void> _confirmAndDeleteSavedPlace(SavedPlace place) async {
     final savedPlaceId = place.id?.trim();
     if (savedPlaceId == null || savedPlaceId.isEmpty) return;

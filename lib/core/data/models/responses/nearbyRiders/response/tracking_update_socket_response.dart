@@ -18,12 +18,18 @@ class TrackingUpdateSocketResponse {
   RouteGeometry? routeGeometry;
   String? routeTarget;
 
+  /// Chained assignment: driver is still finishing another nearby trip.
+  /// Defaults to `false` when the socket omits the field or sends null
+  /// (`json["driver_finishing_nearby"] == true` is the only truthy path).
+  bool driverFinishingNearby;
+
   TrackingUpdateSocketResponse({
     this.rideId,
     this.status,
     this.eta,
     this.routeGeometry,
     this.routeTarget,
+    this.driverFinishingNearby = false,
   });
 
   factory TrackingUpdateSocketResponse.fromJson(Map<String, dynamic> json) =>
@@ -37,6 +43,7 @@ class TrackingUpdateSocketResponse {
                 json["route_geometry"] ?? json["routeGeometry"],
               ),
         routeTarget: json["route_target"] ?? json["routeTarget"],
+        driverFinishingNearby: json["driver_finishing_nearby"] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +52,7 @@ class TrackingUpdateSocketResponse {
     "eta": eta,
     "route_geometry": routeGeometry?.toJson(),
     "route_target": routeTarget,
+    "driver_finishing_nearby": driverFinishingNearby,
   };
 }
 

@@ -75,7 +75,7 @@ class LanguageEn extends Languages {
         'Payment received, processing your top-up. Contact support if your balance does not update.',
     'wallet_account_unavailable':
         'Your Go wallet is not available. Please try again later.',
-    'download_app': 'Download app',
+    'download_app': 'Download',
     'mobile_money_phone_value': '+255 711 410 410',
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',
@@ -173,6 +173,8 @@ class LanguageEn extends Languages {
         'The driver will pick you up as soon as possible after they confirm your order',
     'finding_driver_minutes_remain': '@minutes min @seconds sec remaining',
     'driver_will_arriving_in_minutes': 'Driver will arrive in @minutes min...',
+    'driver_finishing_nearby_trip':
+        'Your driver is finishing a nearby trip and will pick you up soon.',
     'driver_assigned': 'Driver Assigned',
     'driver_arriving': 'Driver Arriving',
     'driver_en_route': 'Driver En Route',
@@ -549,6 +551,10 @@ class LanguageEn extends Languages {
     'selected_address': 'Selected address',
     'searching_for_driver': 'Searching for driver...',
     'enable_location_service': 'Enable location service',
+    'enable_location_service_message':
+        'Please enable your location service to get your current location.',
+    'enable_location_service_message_ios':
+        'Location Services are turned off on your device.\n\nGo to Settings → Privacy & Security → Location Services and turn it on. Then return to the app and tap the GPS button again to allow location for Selcom Go.',
     'location_permission_denied': 'Location permission denied',
     'location_access_required': 'Location access required',
     'location_permission_denied_open_settings':
@@ -653,6 +659,7 @@ class LanguageEn extends Languages {
     'visa': 'VISA',
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
+    'copied_to_clipboard': 'Copied to clipboard',
     'wallet_number_label': 'Wallet Number',
     'wallet_reserved_balance': 'Reserved: @amount',
     'recent_transactions': 'Recent Transactions',
@@ -880,6 +887,9 @@ class LanguageEn extends Languages {
     'add_new_card_text': '+ Add new card',
     'amount_is_required': 'Amount is required',
     'enter_valid_amount': 'Please enter a valid amount',
+    'set_as_default': 'Set as Default',
+    'set_as_default_confirm': 'Make this your default account for transactions',
+    'default_account_set_successfully': 'Default account updated successfully',
   };
 
   @override
@@ -1336,6 +1346,10 @@ class LanguageEn extends Languages {
   @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverFinishingNearbyTrip =>
+      values['driver_finishing_nearby_trip'] ?? '';
 
   @override
   String get driverAssigned => values['driver_assigned'] ?? '';
@@ -2417,6 +2431,14 @@ class LanguageEn extends Languages {
   String get enableLocationService => values['enable_location_service'] ?? '';
 
   @override
+  String get enableLocationServiceMessage =>
+      values['enable_location_service_message'] ?? '';
+
+  @override
+  String get enableLocationServiceMessageIos =>
+      values['enable_location_service_message_ios'] ?? '';
+
+  @override
   String get locationPermissionDenied =>
       values['location_permission_denied'] ?? '';
 
@@ -2663,6 +2685,9 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get copiedToClipboard => values['copied_to_clipboard'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';

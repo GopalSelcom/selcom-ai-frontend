@@ -145,6 +145,7 @@ abstract class Languages {
   String get findingDriverDefaultDescription;
   String get findingDriverMinutesRemain;
   String get driverWillArrivingInMinutes;
+  String get driverFinishingNearbyTrip;
   String get driverAssigned;
   String get driverArriving;
   String get driverEnRoute;
@@ -477,6 +478,8 @@ abstract class Languages {
   String get selectedAddress;
   String get searchingForDriver;
   String get enableLocationService;
+  String get enableLocationServiceMessage;
+  String get enableLocationServiceMessageIos;
   String get locationPermissionDenied;
   String get locationAccessRequired;
   String get locationPermissionDeniedOpenSettings;
@@ -550,6 +553,7 @@ abstract class Languages {
   String get visa;
   String get wallet;
   String get walletNumberCopied;
+  String get copiedToClipboard;
   String get walletNumberLabel;
   String get walletReservedBalance;
   String get recentTransactions;

@@ -63,12 +63,12 @@ class _OptionsContent extends StatelessWidget {
           subtitle: AppStrings.addMoneyMobileMoneySubtitle.tr,
           onTap: _onMobileMoneyTap,
         ),
-        // SizedBox(height: 12.h),
-        // _AddMoneyOptionTile(
-        //   title: AppStrings.savedCardLabel.tr,
-        //   subtitle: AppStrings.savedCardSubtitle.tr,
-        //   onTap: _onSavedCardTap,
-        // ),
+        SizedBox(height: 12.h),
+        _AddMoneyOptionTile(
+          title: AppStrings.savedCardLabel.tr,
+          subtitle: AppStrings.savedCardSubtitle.tr,
+          onTap: _onSavedCardTap,
+        ),
         SizedBox(height: 8.h),
       ],
     );

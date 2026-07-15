@@ -3,6 +3,7 @@ import UIKit
 import GoogleMaps
 import PushKit
 import CallKit
+import FBSDKCoreKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate, CXProviderDelegate {
@@ -26,6 +27,10 @@ import CallKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    ApplicationDelegate.shared.application(
+      application,
+      didFinishLaunchingWithOptions: launchOptions
+    )
     GMSServices.provideAPIKey("AIzaSyDUQgp46JDap_b1isDkCV371GSmH355qPg")
     GeneratedPluginRegistrant.register(with: self)
     guard let registrar = self.registrar(forPlugin: "SelcomGoVoipBridge") else {
@@ -78,6 +83,19 @@ import CallKit
     configurePushKit()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    let handled = ApplicationDelegate.shared.application(
+      app,
+      open: url,
+      options: options
+    )
+    return handled || super.application(app, open: url, options: options)
   }
 
   // MARK: - PushKit setup
@@ -241,11 +259,11 @@ import CallKit
     if let name = data["caller_name"] as? String, !name.isEmpty { return name }
     if let role = (data["caller_role"] as? String)?.lowercased() {
       switch role {
-      case "rider":  return "Your Rider"
-      case "driver": return "Your Driver"
+      case "rider":  return "Your Passenger"
+      case "driver": return "Your Rider"
       default: break
       }
     }
-    return "Caller"
+    return "Your Rider"
   }
 }

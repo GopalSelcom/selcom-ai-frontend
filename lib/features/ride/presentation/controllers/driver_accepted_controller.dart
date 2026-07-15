@@ -138,6 +138,12 @@ class DriverAcceptedController extends GetxController
   final arrivalLabel = AppStrings.driverWillArrivingInMinutes.trParams({
     'minutes': '1',
   }).obs;
+
+  /// Chained ride: driver is still finishing another nearby trip.
+  /// Drives finishing-nearby sheet copy, hides the map ETA chip, and faces the
+  /// driver marker along the drawn route until the flag clears.
+  final isDriverFinishingNearby = false.obs;
+
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
 
@@ -632,6 +638,13 @@ class DriverAcceptedController extends GetxController
     stopIcons.assignAll(icons);
   }
 
+  /// Stops ride fallback polling when the session is invalidated.
+  void onSessionExpired() {
+    isUpdatingStops.value = false;
+    isUpdatingDestination.value = false;
+    stopUpdateProgressStep.value = 0;
+  }
+
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -677,7 +690,8 @@ class DriverAcceptedController extends GetxController
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
-    rideId = (args['rideId'] as String?)?.trim() ?? '';
+    // Prefer toString — socket/nav args may not always be a Dart [String].
+    rideId = args['rideId']?.toString().trim() ?? '';
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -849,11 +863,18 @@ class DriverAcceptedController extends GetxController
       _setRideLoadFailure(AppStrings.rideDetailsAreMissing.tr);
       return;
     }
+    if (_navigatedAway) return;
     isLoadingRide.value = true;
     rideLoadError.value = null;
     final result = await rideRepository.getRideDetails(rideId);
+    if (_navigatedAway) {
+      isLoadingRide.value = false;
+      return;
+    }
     await result.fold(
       (f) async {
+        // Don't paint the error sheet if we already left for rematch/searching.
+        if (_navigatedAway) return;
         // Generic localized copy for UI; technical detail stays in logs only.
         _setRideLoadFailure(AppStrings.failedToLoadRideDetails.tr);
         AppLogger.w(
@@ -862,11 +883,23 @@ class DriverAcceptedController extends GetxController
         );
       },
       (r) async {
-        if (shouldOpenFindingDriverForRide(r)) {
-          _skipRideRoomLeaveOnClose = true;
-          navigateToFindingDriverForRide(r, replace: true);
+        if (_navigatedAway) return;
+
+        final normalized = normalizeRideStatusString(
+          rideStatusToApiValue(r.status),
+        );
+        // Only rematch on an explicit searching status — not the broader
+        // [shouldOpenFindingDriverForRide] helper (that also matches incomplete
+        // / error-fallback ride payloads and was leaving this screen empty).
+        if (isRideSearchingStatus(normalized)) {
+          if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+            return;
+          }
+          ride.value = r;
+          _navigateBackToFindingDriverAfterChainBroken();
           return;
         }
+
         if (rideNeedsMidRideCancelScreen(r)) {
           final block = _midRideCancelModelFromRide(r);
           if (block != null) {
@@ -928,7 +961,9 @@ class DriverAcceptedController extends GetxController
         }
       },
     );
-    isLoadingRide.value = false;
+    if (!_navigatedAway) {
+      isLoadingRide.value = false;
+    }
     // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
@@ -951,6 +986,7 @@ class DriverAcceptedController extends GetxController
   }
 
   void _setRideLoadFailure(String message) {
+    if (_navigatedAway) return;
     rideLoadError.value = message;
     _clearRideDriverFields();
     isLoadingRide.value = false;
@@ -1097,6 +1133,18 @@ class DriverAcceptedController extends GetxController
         return;
       }
 
+      if (normalized == 'searching') {
+        if (_navigatedAway) return;
+        // On driver-accepted during pickup (including chained assignment),
+        // searching means the chain broke / rematch started — always return to
+        // the finding-driver searching sheet.
+        if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+          return;
+        }
+        _navigateBackToFindingDriverAfterChainBroken();
+        return;
+      }
+
       if (_navigatedAway) return;
       _applyBottomSheetStateForStatus(status);
       _applyStatusPayload(payload);
@@ -1169,21 +1217,23 @@ class DriverAcceptedController extends GetxController
           _lastDriverRotationSamplePosition ??
           mapWidgetKey.currentState?.currentAnimatedPosition;
 
-      assignedDriverHeading.value = MapVehicleMarkerUtils.resolveMarkerRotation(
-        previousPosition: rotationFrom,
+      assignedDriverHeading.value = _resolveAssignedDriverHeading(
         currentPosition: rawPos,
+        previousPosition: rotationFrom,
         headingDegrees: parsedHeading,
         previousRotation: assignedDriverHeading.value,
         speedMps: speed,
       );
 
-      if (rotationFrom != null) {
-        final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
-        if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+      if (!isDriverFinishingNearby.value) {
+        if (rotationFrom != null) {
+          final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
+          if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+            _lastDriverRotationSamplePosition = rawPos;
+          }
+        } else {
           _lastDriverRotationSamplePosition = rawPos;
         }
-      } else {
-        _lastDriverRotationSamplePosition = rawPos;
       }
 
       mapWidgetKey.currentState?.updateRiderPosition(
@@ -1405,6 +1455,79 @@ class DriverAcceptedController extends GetxController
         onConfirm: () => Get.offAllNamed(AppRoutes.home),
       );
     });
+  }
+
+  /// Ride chaining broke: assigned driver no longer available — resume driver search.
+  ///
+  /// Replaces SCR-11 (driver accepted) with SCR-10 (finding driver) using the
+  /// same searching labels as a normal match. Sets [_navigatedAway] so in-flight
+  /// [getRideDetails] responses do not paint the "unable to open ride details"
+  /// error sheet after we leave.
+  void _navigateBackToFindingDriverAfterChainBroken() {
+    if (_navigatedAway) return;
+    _navigatedAway = true;
+    _skipRideRoomLeaveOnClose = true;
+    isDriverFinishingNearby.value = false;
+
+    AppLogger.d(
+      'Chain broken → navigating to finding-driver (searching) for ride $rideId',
+      tag: 'ORDER_TRACKING',
+    );
+
+    final currentRide = ride.value;
+    if (currentRide != null) {
+      navigateToFindingDriverForRide(
+        currentRide.copyWith(status: RideStatus.searching),
+        replace: true,
+        chainBroken: true,
+      );
+      return;
+    }
+
+    final fareBreakdown =
+        (_seedRideCharge != null ||
+            _seedBookingFee != null ||
+            _seedTotalAmount != null)
+        ? {
+            if (_seedRideCharge != null) 'ride_charge': _seedRideCharge,
+            if (_seedBookingFee != null) 'booking_fee': _seedBookingFee,
+            if (_seedTotalAmount != null) 'total_amount': _seedTotalAmount,
+          }
+        : null;
+
+    final destinations = routeDestinations.isNotEmpty
+        ? routeDestinations
+              .map(
+                (e) => {
+                  'lat': e.lat,
+                  'lng': e.lng,
+                  'address': e.address,
+                },
+              )
+              .toList()
+        : [
+            {
+              'lat': destinationLatLng.latitude,
+              'lng': destinationLatLng.longitude,
+              'address': destinationAddress,
+            },
+          ];
+
+    Get.offNamed(
+      AppRoutes.findingDriver,
+      arguments: {
+        'rideId': rideId,
+        'pickupLat': pickupLatLng.latitude,
+        'pickupLng': pickupLatLng.longitude,
+        'pickupAddress': pickupAddress,
+        'destinationLat': destinationLatLng.latitude,
+        'destinationLng': destinationLatLng.longitude,
+        'destinationAddress': destinationAddress,
+        'destinations': destinations,
+        if (fareBreakdown != null) 'fareBreakdown': fareBreakdown,
+        kFindingDriverChainBrokenArg: true,
+      },
+    );
   }
 
   Future<void> _handleRideCancelledFromTracking() async {
@@ -1713,6 +1836,8 @@ class DriverAcceptedController extends GetxController
     }
 
     final rootEta = payload.etaSeconds;
+    // Apply finishing flag first so ETA labels restore correctly when it becomes false.
+    _setDriverFinishingNearby(payload.driverFinishingNearby);
     if (rootEta != null && rootEta.toDouble() > 0) {
       _applySocketEtaSecondsToLabels(rootEta.toDouble(), skipIfArrived: true);
     }
@@ -1794,6 +1919,13 @@ class DriverAcceptedController extends GetxController
 
     rideBottomSheetState.value = nextState;
     _syncSheetLayoutForCurrentStatus();
+    if (_isDriverArrivedAtPickupStatus(normalizedStatus) ||
+        nextState == RideBottomSheetState.rideStarted) {
+      // Driver is free / trip started — no longer "finishing nearby".
+      if (isDriverFinishingNearby.value) {
+        isDriverFinishingNearby.value = false;
+      }
+    }
     if (_isDriverArrivedAtPickupStatus(normalizedStatus)) {
       _syncDriverArrivedPickupMessages();
     }
@@ -1812,6 +1944,7 @@ class DriverAcceptedController extends GetxController
 
   /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
   void _syncDriverArrivedPickupMessages() {
+    isDriverFinishingNearby.value = false;
     assignedDriverSpeed.value = 0;
     arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
     etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
@@ -2032,11 +2165,15 @@ class DriverAcceptedController extends GetxController
     if (etaSeconds <= 0) return;
     currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
-    etaLabel.value = AppStrings.minutesShortCount.trParams({
-      'count': '$minutes',
-    });
+    // Keep ETA in state, but do not show the minutes chip while finishing nearby.
+    if (!isDriverFinishingNearby.value) {
+      etaLabel.value = AppStrings.minutesShortCount.trParams({
+        'count': '$minutes',
+      });
+    }
     final rideStatus = normalizeRideStatusString(currentRideStatus.value);
-    if (_isDriverHeadingToPickupForEta(rideStatus)) {
+    if (_isDriverHeadingToPickupForEta(rideStatus) &&
+        !isDriverFinishingNearby.value) {
       arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
@@ -2049,6 +2186,10 @@ class DriverAcceptedController extends GetxController
     if (st == 'driver_arrived') {
       return arrivalLabel.value;
     }
+    if (isDriverFinishingNearby.value &&
+        _isDriverHeadingToPickupForEta(st)) {
+      return AppStrings.driverFinishingNearbyTrip.tr;
+    }
     final secs = currentEtaSeconds.value;
     if (secs > 0 && _isDriverHeadingToPickupForEta(st)) {
       final minutes = (secs / 60).ceil();
@@ -2059,6 +2200,15 @@ class DriverAcceptedController extends GetxController
     return arrivalLabel.value;
   }
 
+  /// Map ETA chip — hidden while the chained driver is finishing another trip.
+  bool get shouldShowMapEtaChip {
+    if (hasRideLoadError) return false;
+    if (isDriverFinishingNearby.value) return false;
+    final st = normalizeRideStatusString(currentRideStatus.value);
+    if (st == 'driver_arrived') return true;
+    return currentEtaSeconds.value > 0 || etaLabel.value.trim().isNotEmpty;
+  }
+
   bool get shouldShowRideEtaBadge {
     final status = currentRideStatus.value;
     if (rideEtaMinutes <= 0) return false;
@@ -2067,11 +2217,115 @@ class DriverAcceptedController extends GetxController
         status == 'near_destination';
   }
 
+  void _setDriverFinishingNearby(bool finishing) {
+    final wasFinishing = isDriverFinishingNearby.value;
+    isDriverFinishingNearby.value = finishing;
+    if (finishing) {
+      // Replaces "Driver will arrive in X min..." while the prior trip is active.
+      arrivalLabel.value = AppStrings.driverFinishingNearbyTrip.tr;
+      _lastDriverRotationSamplePosition = null;
+      _syncDriverHeadingFromActiveRoute(animate: true);
+      return;
+    }
+    if (!wasFinishing) return;
+    _lastDriverRotationSamplePosition = null;
+    _restorePickupArrivalLabelsAfterFinishingNearby();
+  }
+
+  /// When chaining ends (`driver_finishing_nearby` → false), always drop the
+  /// finishing-trip copy. Prefer cached ETA minutes; otherwise show arriving.
+  void _restorePickupArrivalLabelsAfterFinishingNearby() {
+    final st = normalizeRideStatusString(currentRideStatus.value);
+    if (!_isDriverHeadingToPickupForEta(st)) return;
+
+    final secs = currentEtaSeconds.value;
+    if (secs > 0) {
+      final minutes = (secs / 60).ceil();
+      etaLabel.value = AppStrings.minutesShortCount.trParams({
+        'count': '$minutes',
+      });
+      arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+        'minutes': '$minutes',
+      });
+      return;
+    }
+
+    // No ETA cached yet — clear finishing text so the old arrival line can show.
+    etaLabel.value = AppStrings.arriving.tr;
+    arrivalLabel.value = AppStrings.driverIsArriving.tr;
+  }
+
+  /// During chained pickup, GPS movement can point away from the drawn route.
+  /// Prefer the active polyline bearing so the marker faces the route line.
+  double _resolveAssignedDriverHeading({
+    required LatLng currentPosition,
+    LatLng? previousPosition,
+    double? headingDegrees,
+    required double previousRotation,
+    double speedMps = 0,
+  }) {
+    if (isDriverFinishingNearby.value && routePoints.length >= 2) {
+      final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
+        routePoints,
+        currentPosition,
+      );
+      if (routeBearing != null) {
+        return routeBearing;
+      }
+    }
+
+    return MapVehicleMarkerUtils.resolveMarkerRotation(
+      previousPosition: previousPosition,
+      currentPosition: currentPosition,
+      headingDegrees: headingDegrees,
+      previousRotation: previousRotation,
+      speedMps: speedMps,
+    );
+  }
+
+  void _syncDriverHeadingFromActiveRoute({bool animate = false}) {
+    if (!isDriverFinishingNearby.value || routePoints.length < 2) return;
+
+    final driverPos =
+        assignedDriverLocation.value ??
+        mapWidgetKey.currentState?.currentAnimatedPosition;
+    if (driverPos == null) return;
+
+    final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
+      routePoints,
+      driverPos,
+    );
+    if (routeBearing == null) return;
+
+    assignedDriverHeading.value = routeBearing;
+    if (animate) {
+      mapWidgetKey.currentState?.updateRiderPosition(
+        driverPos,
+        rotation: routeBearing,
+        duration: const Duration(milliseconds: 800),
+      );
+    }
+  }
+
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
+    _setDriverFinishingNearby(payload.driverFinishingNearby);
+
     final trackingStatus = (payload.status ?? '')
         .toString()
         .trim()
         .toLowerCase();
+    final normalizedTracking = normalizeRideStatusString(trackingStatus);
+
+    // Chain break can also arrive on tracking before/without a status event.
+    if (normalizedTracking == 'searching') {
+      if (_navigatedAway) return;
+      if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+        return;
+      }
+      _navigateBackToFindingDriverAfterChainBroken();
+      return;
+    }
+
     if (trackingStatus.isNotEmpty) {
       // Only trigger state updates from tracking payloads if it's a major transition.
       // High-frequency tracking often contains stale 'assigned' statuses.
@@ -2100,6 +2354,7 @@ class DriverAcceptedController extends GetxController
 
     final isPickupArrived = _isDriverArrivedAtPickupStatus(trackingStatus);
     if (isPickupArrived) {
+      _setDriverFinishingNearby(false);
       _syncDriverArrivedPickupMessages();
     }
 
@@ -2114,10 +2369,13 @@ class DriverAcceptedController extends GetxController
         final inRide =
             statusForEta.contains('progress') ||
             statusForEta.contains('started');
-        etaLabel.value = inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
-        arrivalLabel.value = inRide
-            ? AppStrings.youAreAlmostThere.tr
-            : AppStrings.driverIsArriving.tr;
+        if (!isDriverFinishingNearby.value) {
+          etaLabel.value =
+              inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
+          arrivalLabel.value = inRide
+              ? AppStrings.youAreAlmostThere.tr
+              : AppStrings.driverIsArriving.tr;
+        }
       }
     }
 
@@ -2177,6 +2435,7 @@ class DriverAcceptedController extends GetxController
             nextPoints.length >= 2) {
           _fitRouteBounds();
         }
+        _syncDriverHeadingFromActiveRoute(animate: true);
         return;
     }
   }

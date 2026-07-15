@@ -26,7 +26,7 @@ class CallApiService {
         final headers = await config.getAuthHeaders();
         options.headers.addAll(headers);
         if (_isCallSignalingPath(options.path)) {
-          agoraCallLog(
+          AgoraCallLogger.d(
             '[AGORA_API] onRequest ${options.method} ${options.path} '
             'access_token=${_tokenDebugLabel(headers['access_token'])}',
           );
@@ -51,18 +51,18 @@ class CallApiService {
     String? intent,
   }) async {
     final path = config.endpoints.tokenPath(rideId);
-    agoraCallLog(
+    AgoraCallLogger.d(
       '[AGORA_API] POST $path (mintToken rideId=$rideId intent=$intent)',
     );
     try {
       final body = intent != null ? <String, dynamic>{'intent': intent} : null;
       final res = await _dio.post(path, data: body);
-      agoraCallLog('[AGORA_API] POST $path -> ${res.statusCode}');
+      AgoraCallLogger.d('[AGORA_API] POST $path -> ${res.statusCode}');
       return TokenMintResponse.fromJson(_unwrapData(res));
     } on DioException catch (e) {
       final sentToken =
           e.requestOptions.headers['access_token']?.toString() ?? '';
-      agoraCallLog(
+      AgoraCallLogger.d(
         '[AGORA_API] POST $path FAILED status=${e.response?.statusCode} '
         'type=${e.type} body=${e.response?.data} '
         'sent_access_token=${_tokenDebugLabel(sentToken)}',
@@ -77,11 +77,11 @@ class CallApiService {
   /// regardless of API outcome (so cancel failures never strand the user).
   Future<void> cancelCall(String rideId) async {
     final path = config.endpoints.cancelPath(rideId);
-    agoraCallLog('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
+    AgoraCallLogger.d('[AGORA_API] POST $path (cancelCall rideId=$rideId)');
     try {
       await _dio.post(path);
     } on DioException catch (e) {
-      agoraCallLog(
+      AgoraCallLogger.d(
         '[AGORA_API] POST $path FAILED status=${e.response?.statusCode}',
       );
       rethrow;
@@ -92,14 +92,14 @@ class CallApiService {
   Future<void> registerVoipToken(String token) async {
     if (token.isEmpty) return;
     final path = config.endpoints.voipTokenPath;
-    agoraCallLog(
+    AgoraCallLogger.d(
       '[AGORA_API] PATCH $path (registerVoipToken tokenLen=${token.length})',
     );
     try {
       final authHeaders = await config.getAuthHeaders();
       final accessToken = authHeaders['access_token']?.trim() ?? '';
       if (accessToken.isEmpty) {
-        agoraCallLog(
+        AgoraCallLogger.d(
           '[AGORA_API] PATCH $path skipped — missing access_token '
           '(likely pre-login/fresh-user flow)',
         );
@@ -118,9 +118,9 @@ class CallApiService {
           },
         ),
       );
-      agoraCallLog('[AGORA_API] PATCH $path -> ${res.statusCode}');
+      AgoraCallLogger.d('[AGORA_API] PATCH $path -> ${res.statusCode}');
     } on DioException catch (e) {
-      agoraCallLog(
+      AgoraCallLogger.d(
         '[AGORA_API] PATCH $path FAILED status=${e.response?.statusCode} '
         'type=${e.type} body=${e.response?.data}',
       );

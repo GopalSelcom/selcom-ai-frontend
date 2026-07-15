@@ -8,6 +8,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
@@ -16,7 +17,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
-import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
@@ -237,7 +238,7 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<void> submitSelectedLinkedAccountTopUp({
-    required SelcomPesaLinkedAccountEntity account,
+    required Account account,
     required bool closeSheetFirst,
   }) async {
     if (isSubmitting.value) return;
@@ -539,7 +540,41 @@ class SelcomPesaTopupController extends GetxController {
     _activeFlow = null;
     _session = null;
 
-    AppDialogs.showSuccessDialog(
+    String? landedRoute;
+    Get.until((route) {
+      final name = route.settings.name;
+      if (name == AppRoutes.wallet) {
+        landedRoute = AppRoutes.wallet;
+        return true;
+      }
+      if (name == AppRoutes.booking ||
+          name == AppRoutes.driverAccepted ||
+          name == AppRoutes.findingDriver ||
+          name == AppRoutes.confirmPickup ||
+          name == AppRoutes.home) {
+        landedRoute = name;
+        return true;
+      }
+      if (route.isFirst) {
+        landedRoute = name;
+        return true;
+      }
+      return false;
+    });
+
+    final isRideRoute = landedRoute == AppRoutes.booking ||
+        landedRoute == AppRoutes.driverAccepted ||
+        landedRoute == AppRoutes.findingDriver ||
+        landedRoute == AppRoutes.confirmPickup ||
+        landedRoute == AppRoutes.home;
+
+    final isWalletRoute = landedRoute == AppRoutes.wallet;
+
+    if (!isWalletRoute && !isRideRoute) {
+      await Get.toNamed(AppRoutes.wallet);
+    }
+
+    AppDialogs.showWalletTopupSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
       message: AppStrings.walletFundsReceivedSubtitle.tr,
       onConfirm: _disposeRegisteredController,
@@ -695,10 +730,10 @@ class SelcomPesaTopupController extends GetxController {
     return '$countryDialCode$digits';
   }
 
-  String _buildLinkedAccountUssdPhone(SelcomPesaLinkedAccountEntity account) {
-    final digits = account.normalizedMobileDigits;
-    final code = account.countryCode.trim().isNotEmpty
-        ? account.countryCode.replaceAll(RegExp(r'\D'), '')
+  String _buildLinkedAccountUssdPhone(Account account) {
+    final digits = account.spMobileNumber;
+    final code = (account.spCountryCode??"").trim().isNotEmpty
+        ? (account.spCountryCode??"").replaceAll(RegExp(r'\D'), '')
         : countryDialCode;
     return '$code$digits';
   }

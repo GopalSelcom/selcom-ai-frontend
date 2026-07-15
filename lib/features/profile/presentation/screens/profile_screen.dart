@@ -175,11 +175,19 @@ class ProfileScreen extends StatelessWidget {
                     : controller.openWallet,
                 child: SizedBox(
                   height: ProfileScreenLayout.walletCardHeight,
+                  // Balance hidden by default; eye reveals + silent refresh.
                   child: WalletSummaryCard(
                     balance: balance,
                     walletNumber: walletNum,
                     currencyCode: controller.walletCurrency.value,
                     isLoading: controller.isLoadingWallet.value,
+                    isRefreshingBalance:
+                        controller.isRefreshingWalletBalance.value,
+                    isBalanceVisible: controller.isBalanceVisible.value,
+                    onToggleBalanceVisibility:
+                        controller.toggleWalletBalanceVisibility,
+                    // Copy + iOS snackbar handled in ProfileController.
+                    onCopyWalletNumber: controller.copyWalletNumber,
                   ),
                 ),
               ),
@@ -347,11 +355,11 @@ class ProfileScreen extends StatelessWidget {
               title: AppStrings.savedLocations.tr,
               onTap: controller.openFavoriteLocations,
             ),
-            // MenuItemWidget(
-            //   icon: Iconsax.card,
-            //   title: "Saved Cards",
-            //   onTap: controller.openPaymentMethods,
-            // ),
+            MenuItemWidget(
+              icon: Iconsax.card,
+              title: "Saved Cards",
+              onTap: controller.openPaymentMethods,
+            ),
             MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,

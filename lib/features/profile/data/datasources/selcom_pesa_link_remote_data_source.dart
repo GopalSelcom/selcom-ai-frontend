@@ -1,13 +1,16 @@
+import 'package:selcom_rides_frontend/features/profile/data/models/sp_link_response.dart';
+
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/selcom_pesa_link_headers.dart';
 import '../../../../core/network/urls.dart';
+import '../../domain/entities/selcom_pesa_balance_entity.dart';
 import '../../domain/entities/selcom_pesa_linked_account_entity.dart';
 import '../models/selcom_pesa_link_models.dart';
 
 abstract class SelcomPesaLinkRemoteDataSource {
-  Future<SelcomPesaLinkedAccountEntity> sendLinkRequest(
+  Future<SpLinkResponse> sendLinkRequest(
     SelcomPesaSendLinkRequest request,
   );
 
@@ -15,11 +18,13 @@ abstract class SelcomPesaLinkRemoteDataSource {
     SelcomPesaLinkStatus? statusFilter,
   });
 
-  Future<SelcomPesaMainBalanceResult> getMainBalance([
+  Future<SpMainBalanceResponse> getMainBalance([
     SelcomPesaMainBalanceRequest? request,
   ]);
 
   Future<void> requestUnlink(SelcomPesaRequestUnlinkRequest request);
+
+  Future<void> setDefaultAccount(SelcomPesaSetDefaultRequest request);
 }
 
 class SelcomPesaLinkException implements Exception {
@@ -31,11 +36,12 @@ class SelcomPesaLinkException implements Exception {
   String toString() => message;
 }
 
-class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSource {
+class SelcomPesaLinkRemoteDataSourceImpl
+    implements SelcomPesaLinkRemoteDataSource {
   SelcomPesaLinkRemoteDataSourceImpl();
 
   @override
-  Future<SelcomPesaLinkedAccountEntity> sendLinkRequest(
+  Future<SpLinkResponse> sendLinkRequest(
     SelcomPesaSendLinkRequest request,
   ) async {
     final linkHeaders = await selcomPesaLinkRequestHeaders();
@@ -48,34 +54,22 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
-
     if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
       final data = Map<String, dynamic>.from(response.data as Map);
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw SelcomPesaLinkException(
-          _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
-
-      final payload = data['data'];
-      if (payload is Map<String, dynamic>) {
-        return SelcomPesaLinkedAccountEntityMapper.fromJson(payload);
-      }
-      if (payload is Map) {
-        return SelcomPesaLinkedAccountEntityMapper.fromJson(
-          Map<String, dynamic>.from(payload),
-        );
-      }
-
-      throw SelcomPesaLinkException(
-        _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
-      );
+      return SpLinkResponse.fromJson(data);
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw SelcomPesaLinkException(
-        _messageFromResponse(response.data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
       );
     }
 
@@ -87,8 +81,7 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
     SelcomPesaLinkStatus? statusFilter,
   }) async {
     final queryParams = <String, dynamic>{};
-    if (statusFilter != null &&
-        statusFilter != SelcomPesaLinkStatus.unknown) {
+    if (statusFilter != null && statusFilter != SelcomPesaLinkStatus.unknown) {
       queryParams['status'] = statusFilter.name.toUpperCase();
     }
 
@@ -106,15 +99,17 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw SelcomPesaLinkException(
-          _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
-      return SelcomPesaLinkedAccountsResult.fromEnvelope(data);
+      return SelcomPesaLinkedAccountsResult.fromJson(data);
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw SelcomPesaLinkException(
-        _messageFromResponse(response.data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
       );
     }
 
@@ -139,15 +134,23 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw SelcomPesaLinkException(
-          _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
       return;
     }
+    if(response.statusCode==400){
+      throw SelcomPesaLinkException(
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
+      );
+    }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw SelcomPesaLinkException(
-        _messageFromResponse(response.data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
       );
     }
 
@@ -155,7 +158,42 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
   }
 
   @override
-  Future<SelcomPesaMainBalanceResult> getMainBalance([
+  Future<void> setDefaultAccount(SelcomPesaSetDefaultRequest request) async {
+    final linkHeaders = await selcomPesaLinkRequestHeaders();
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.selcomPesa.setDefaultAccount,
+        method: ApiMethod.post,
+        body: request.toJson(),
+        headers: linkHeaders,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw SelcomPesaLinkException(
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
+        );
+      }
+      return;
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      throw SelcomPesaLinkException(
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
+      );
+    }
+
+    throw SelcomPesaLinkException(AppStrings.somethingWentWrongPleaseTryAgain);
+  }
+
+  @override
+  Future<SpMainBalanceResponse> getMainBalance([
     SelcomPesaMainBalanceRequest? request,
   ]) async {
     final body = request?.toJson() ?? const <String, dynamic>{};
@@ -180,21 +218,17 @@ class SelcomPesaLinkRemoteDataSourceImpl implements SelcomPesaLinkRemoteDataSour
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw SelcomPesaLinkException(
-          _messageFromResponse(data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+          _messageFromResponse(data) ??
+              AppStrings.somethingWentWrongPleaseTryAgain,
         );
       }
-
-      final spError = SelcomPesaMainBalanceResult.spResponseErrorMessage(data);
-      if (spError != null) {
-        throw SelcomPesaLinkException(spError);
-      }
-
-      return SelcomPesaMainBalanceResult.fromEnvelope(data);
+      return SpMainBalanceResponse.fromJson(data);
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw SelcomPesaLinkException(
-        _messageFromResponse(response.data) ?? AppStrings.somethingWentWrongPleaseTryAgain,
+        _messageFromResponse(response.data) ??
+            AppStrings.somethingWentWrongPleaseTryAgain,
       );
     }
 

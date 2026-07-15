@@ -85,10 +85,9 @@ class SelcomPesaAppLauncherService {
   }
 
   List<Uri> _pcodeLaunchUris(String shortCode) {
-    final host = AppConfig.selcomPesaDeepLinkHost;
+    const host = AppConfig.selcomPesaDeepLinkHostDefault;
     final httpsPath = '$host/pcode/$shortCode';
     final uris = <Uri>[
-      Uri.parse('selcompesa://pcode/$shortCode'),
       Uri.parse('https://$httpsPath'),
     ];
 

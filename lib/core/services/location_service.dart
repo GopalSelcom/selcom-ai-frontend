@@ -28,7 +28,10 @@ class LocationService extends GetxController {
 
   void checkServiceContinuously() async {
     try {
-      _isLocationServiceEnabled.value = await checkLocationService();
+      // Silent check — do not show settings dialogs from the background listener.
+      _isLocationServiceEnabled.value = await checkLocationService(
+        force: false,
+      );
       getLocationContinuously();
 
       Geolocator.getServiceStatusStream().listen((event) {
@@ -252,14 +255,10 @@ class LocationService extends GetxController {
     }
   }
 
+  /// Device Location Services / GPS toggle only.
+  /// Does not request app permission — callers handle app permission separately.
   Future<bool> checkLocationService({bool force = true}) async {
     try {
-      var req = await requestPermission(force: true, precise: true);
-
-      if (req == false) {
-        return req;
-      }
-
       bool serviceStatus = await Geolocator.isLocationServiceEnabled();
 
       if (serviceStatus) {
@@ -397,12 +396,7 @@ class LocationService extends GetxController {
       if (Platform.isIOS) {
         bool isServiceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!isServiceEnabled) {
-          await handlePermanentlyDenied(
-            forLocationService: true,
-            msg: "",
-            customMsg:
-                "Location Services are turned off on your device.\n\nGo to Settings → Privacy & Security → Location Services and turn it on.",
-          );
+          await handlePermanentlyDenied(forLocationService: true);
           _pendingRequest!.complete(false);
           return false;
         }
@@ -513,7 +507,7 @@ class LocationService extends GetxController {
     if (forLocationPermission) {
       await LocationUtils.giveLocationPermissionDialog(msg: customMsg);
     } else if (forLocationService) {
-      await LocationUtils.enableLocationServicenDialog();
+      await LocationUtils.enableLocationServicenDialog(customMsg: customMsg);
     }
   }
 
@@ -589,27 +583,37 @@ class LocationUtils {
     }
   }
 
-  static Future<void> enableLocationServicenDialog() async {
+  static Future<void> enableLocationServicenDialog({String customMsg = ''}) async {
     if (!LocationService.instance.isDialogOpen) {
       LocationService.instance.isDialogOpen = true;
 
       final Completer<void> completer = Completer<void>();
+      final isIos = Platform.isIOS;
+      final message = customMsg.isNotEmpty
+          ? customMsg
+          : (isIos
+                ? AppStrings.enableLocationServiceMessageIos.tr
+                : AppStrings.enableLocationServiceMessage.tr);
 
-      AppDialogs.showConfirmationDialog(
+      await AppDialogs.showPermissionDialog(
         title: AppStrings.enableLocationService.tr,
-        message:
-            "Please enable your location service to get your current location.",
-        confirmText: "Open Settings",
-        cancelText: "Cancel",
-        onConfirm: () async {
-          await Geolocator.openLocationSettings();
+        message: message,
+        settingsButtonLabel: isIos ? AppStrings.gotIt.tr : null,
+        onOpenSettings: () async {
+          // iOS cannot deep-link to device Location Services; Android can.
+          if (!isIos) {
+            await Geolocator.openLocationSettings();
+          }
           if (!completer.isCompleted) completer.complete();
         },
         onCancel: () {
           if (!completer.isCompleted) completer.complete();
         },
+        icon: Icons.location_off_outlined,
+        secondaryIcon: Icons.location_on_outlined,
       );
 
+      if (!completer.isCompleted) completer.complete();
       await completer.future;
       LocationService.instance.isDialogOpen = false;
     }

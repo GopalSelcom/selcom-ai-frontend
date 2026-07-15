@@ -8,7 +8,8 @@ import '../../core/theme/app_colors.dart';
 abstract final class AppModalBlurTokens {
   static const Duration duration = Duration(milliseconds: 300);
   static const Curve curve = Cubic(0.15, 0.85, 0.2, 1.0);
-  static const double scaleBegin = 1.15;
+  /// Slight grow-in (small → large). Previously 1.15 (large → settle).
+  static const double scaleBegin = 0.96;
   static const double blurSigmaEnd = 5.0;
 }
 

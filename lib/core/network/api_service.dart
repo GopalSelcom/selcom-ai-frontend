@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
-import '../../features/wallet/presentation/utils/wallet_session.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../constants/app_assets.dart';
 import '../localization/app_strings.dart';
@@ -486,6 +485,25 @@ class ApiService {
 
   // ── Logging ──
 
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+  }
+
+  int _calculatePayloadSize(dynamic data) {
+    if (data == null) return 0;
+    try {
+      if (data is String) {
+        return utf8.encode(data).length;
+      }
+      if (data is Map || data is List) {
+        return utf8.encode(jsonEncode(data)).length;
+      }
+    } catch (_) {}
+    return 0;
+  }
+
   void _logRequest(
     String fullUrl,
     ApiRequest request,
@@ -496,8 +514,14 @@ class ApiService {
     final safeHeaders = _redactSensitiveMap(headers);
     final safeQuery = _redactSensitiveMap(request.queryParams);
     final safeBody = _redactSensitiveMap(body);
+
+    final headersBytes = _calculatePayloadSize(headers);
+    final queryBytes = _calculatePayloadSize(request.queryParams);
+    final bodyBytes = _calculatePayloadSize(body);
+    final totalRequestBytes = headersBytes + queryBytes + bodyBytes;
+
     AppLogger.d(
-      "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl",
+      "🚀 REQUEST >> ${request.method.name.toUpperCase()} $fullUrl | Size: ${_formatBytes(totalRequestBytes)} (Headers: ${_formatBytes(headersBytes)}, Query: ${_formatBytes(queryBytes)}, Body: ${_formatBytes(bodyBytes)})",
       tag: 'ApiService',
     );
     AppLogger.d(
@@ -514,7 +538,7 @@ class ApiService {
     );
 
     ErrorReporter.instance.addLog(
-      "🚀 API REQUEST: ${request.method.name.toUpperCase()} $fullUrl | Query: ${jsonEncode(safeQuery)} | Body: ${jsonEncode(safeBody)}",
+      "🚀 API REQUEST: ${request.method.name.toUpperCase()} $fullUrl | Size: ${_formatBytes(totalRequestBytes)} | Query: ${jsonEncode(safeQuery)} | Body: ${jsonEncode(safeBody)}",
       tag: 'API',
     );
   }
@@ -528,9 +552,10 @@ class ApiService {
     String? errorMessage,
   }) {
     if (!AppLogger.enabled) return;
+    final responseBytes = _calculatePayloadSize(data);
     final prefix = isError ? '❌ ERROR' : '✅ SUCCESS';
     AppLogger.d(
-      "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms",
+      "$prefix >> $fullUrl | ${statusCode ?? 'N/A'} | ${duration}ms | Payload Size: ${_formatBytes(responseBytes)}",
       tag: 'ApiService',
     );
     if (isError && errorMessage != null) {
@@ -542,7 +567,7 @@ class ApiService {
     );
 
     ErrorReporter.instance.addLog(
-      "✅ API RESPONSE: $fullUrl | Status: ${statusCode ?? 'N/A'} | Error: $isError | Message: ${errorMessage ?? 'None'}",
+      "✅ API RESPONSE: $fullUrl | Status: ${statusCode ?? 'N/A'} | Size: ${_formatBytes(responseBytes)} | Error: $isError | Message: ${errorMessage ?? 'None'}",
       tag: 'API',
     );
   }
@@ -643,6 +668,14 @@ class ApiService {
         requestOptions: e.requestOptions,
         statusCode: statusCode,
         data: e.response?.data ?? {'message': AppStrings.badRequest.tr},
+      );
+    }
+
+    if (statusCode == 404) {
+      return Response(
+        requestOptions: e.requestOptions,
+        statusCode: statusCode,
+        data: e.response?.data ?? {'message': e.response?.data['message']??AppStrings.badRequest.tr},
       );
     }
 
@@ -819,8 +852,10 @@ class ApiService {
   // ── Session Expired Popup ──
 
   void showLogoutPopup() {
-    if (SessionExpiryService.isHandling) return;
-    if (AuthInterceptor.isLoggingOutDueToAuthFailure) return;
+    // This method may be reached from multiple 401 / auth-error paths.
+    // The session coordinator owns the "show exactly once" rule so the same
+    // popup does not stack while the first one is already visible.
+    if (!SessionExpiryService.tryMarkSessionExpiredDialogShown()) return;
     AuthInterceptor.isLoggingOutDueToAuthFailure = true;
 
     AppDialogs.showAnimatedDialog(
@@ -862,15 +897,13 @@ class ApiService {
               ),
               SizedBox(height: 32.h),
 
-              // Login Button
+              // Login only navigates now.
+              // Local session wipe already happened in `handleSessionExpired()`
+              // before the dialog was shown, so this button just acknowledges
+              // the dialog and routes to the login screen.
               InkWell(
                 onTap: () async {
-                  // Same wallet teardown as profile logout — prevent stale balance
-                  // if the user signs in again from this dialog.
-                  WalletSession.teardownOnLogout();
-                  SessionExpiryService.teardownOnLogout();
-                  await StorageService().deleteAll();
-                  SessionExpiryService.resetOnLogin();
+                  SessionExpiryService.acknowledgeExpiredSessionForReLogin();
                   Get.back();
                   Get.offAllNamed(AppRoutes.login);
                 },
@@ -939,6 +972,24 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final skipAuth = options.headers['skip-auth-interceptor'] == 'true';
+    // Once session teardown starts, block any new authenticated request from
+    // leaving the app. Pre-login and refresh endpoints explicitly opt out with
+    // `skip-auth-interceptor`.
+    if (SessionExpiryService.isHandling && !skipAuth) {
+      AppLogger.d(
+        '⏭️ Session ended — blocking authenticated request',
+        tag: 'AuthInterceptor',
+      );
+      return handler.reject(
+        DioException(
+          requestOptions: options,
+          type: DioExceptionType.cancel,
+          message: 'Session expired',
+        ),
+      );
+    }
+
     final token = await StorageService().readAccessToken();
 
     final currentAuth = options.headers['Authorization'];
@@ -956,6 +1007,9 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     AppLogger.d("dioError => ${err.error}", tag: 'AuthInterceptor');
 
+    // After session teardown starts, do not attempt token refresh or open a
+    // second dialog. Resolve the request as expired and let the coordinator
+    // finish the flow already in progress.
     if (SessionExpiryService.isHandling) {
       AppLogger.d(
         "⏭️ Session already ended — skipping auth refresh",
@@ -1113,7 +1167,7 @@ class AuthInterceptor extends Interceptor {
           tag: 'AuthInterceptor',
         );
 
-        apiService.showLogoutPopup();
+        unawaited(SessionExpiryService.handleSessionExpired());
 
         return handler.resolve(
           Response(
@@ -1129,7 +1183,7 @@ class AuthInterceptor extends Interceptor {
         tag: 'AuthInterceptor',
       );
 
-      apiService.showLogoutPopup();
+      unawaited(SessionExpiryService.handleSessionExpired());
 
       return handler.resolve(
         Response(
