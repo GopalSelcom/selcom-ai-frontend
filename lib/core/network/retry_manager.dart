@@ -29,6 +29,9 @@ class RetryManager {
   DateTime? _lastPopupClosedAt;
   StreamSubscription<bool>? _connectivitySubscription;
 
+  /// Coalesces parallel `showRetryPopup` calls so only one dialog is presented.
+  Future<void>? _showPopupInFlight;
+
   /// Whether a retry popup is currently showing
   bool get isPopupShowing => _isPopupShowing;
 
@@ -64,8 +67,33 @@ class RetryManager {
     });
   }
 
+  /// Single entry point for ApiService — safe to call from many failing requests.
+  void requestRetryPopup() {
+    unawaited(showRetryPopup());
+  }
+
   /// Show retry popup using GetX dialog
-  Future<void> showRetryPopup() async {
+  Future<void> showRetryPopup() {
+    // Multiple API failures can arrive at once; share one in-flight show.
+    final inFlight = _showPopupInFlight;
+    if (inFlight != null) {
+      AppLogger.d(
+        "⚠️ Retry popup show already in flight, coalescing",
+        tag: 'RetryManager',
+      );
+      return inFlight;
+    }
+
+    final show = _showRetryPopupInternal();
+    _showPopupInFlight = show;
+    return show.whenComplete(() {
+      if (identical(_showPopupInFlight, show)) {
+        _showPopupInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _showRetryPopupInternal() async {
     if (_isPopupShowing) {
       AppLogger.d("⚠️ Popup already showing, skipping", tag: 'RetryManager');
       return;
@@ -87,72 +115,74 @@ class RetryManager {
       tag: 'RetryManager',
     );
 
-    await AppDialogs.showAnimatedDialog(
-      child: Dialog(
-        backgroundColor: AppColors.cardBackground,
-        surfaceTintColor: AppColors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 24.r,
-                backgroundColor: AppColors.primaryLight,
-                child: const Icon(
-                  Icons.wifi_off_rounded,
-                  color: AppColors.primary,
-                  size: 28,
+    try {
+      await AppDialogs.showAnimatedDialog(
+        child: Dialog(
+          backgroundColor: AppColors.cardBackground,
+          surfaceTintColor: AppColors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 24.r,
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(
+                    Icons.wifi_off_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                AppStrings.connectionError.tr,
-                style: AppTextStyles.homeTitle,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "We couldn't complete your request. Please try again.",
-                style: AppTextStyles.onboardingSubtitle.copyWith(
-                  fontSize: 14.sp,
-                  height: 20 / 14,
+                const SizedBox(height: 16),
+                Text(
+                  AppStrings.connectionError.tr,
+                  style: AppTextStyles.homeTitle,
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: AppPrimaryButton(
-                  label: AppStrings.retry.tr,
-                  onPressed: () {
-                    Get.back();
-                    retryAll();
-                  },
-                  height: 52.h,
-                  borderRadius: 14.r,
+                const SizedBox(height: 12),
+                Text(
+                  "We couldn't complete your request. Please try again.",
+                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 14.sp,
+                    height: 20 / 14,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppPrimaryButton(
+                    label: AppStrings.retry.tr,
+                    onPressed: () {
+                      // Dismiss the showGeneralDialog route (not a GetX dialog).
+                      AppDialogs.dismissTopOverlay();
+                      retryAll();
+                    },
+                    height: 52.h,
+                    borderRadius: 14.r,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      barrierDismissible: false,
-    );
-
-    _isPopupShowing = false;
-    // Track close time for cooldown checks above.
-    _lastPopupClosedAt = DateTime.now();
+        barrierDismissible: false,
+      );
+    } finally {
+      _isPopupShowing = false;
+      // Track close time for cooldown checks above.
+      _lastPopupClosedAt = DateTime.now();
+    }
   }
 
   /// Dismiss popup if showing
   void dismissPopup() {
     if (_isPopupShowing) {
       _isPopupShowing = false;
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      // Connection retry uses showGeneralDialog — dismiss via navigator, not Get.back.
+      AppDialogs.dismissTopOverlay();
       _lastPopupClosedAt = DateTime.now();
     }
   }

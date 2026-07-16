@@ -249,10 +249,11 @@ class ApiService {
 
       if (request.shouldQueue && !request.skipAuthInterceptor) {
         final completer = Completer<Response>();
-        await FailedRequestQueue.instance.add(request, completer);
+        final added = await FailedRequestQueue.instance.add(request, completer);
 
-        if (!RetryManager.instance.isPopupShowing) {
-          RetryManager.instance.showRetryPopup();
+        // Only surface one connection dialog per burst of failures.
+        if (added) {
+          RetryManager.instance.requestRetryPopup();
         }
 
         return completer.future;
@@ -770,10 +771,7 @@ class ApiService {
       final added = await FailedRequestQueue.instance.add(request, completer);
 
       if (added) {
-        if (!RetryManager.instance.isPopupShowing) {
-          AppLogger.d("📱 Showing retry popup", tag: 'ApiService');
-          unawaited(RetryManager.instance.showRetryPopup());
-        }
+        RetryManager.instance.requestRetryPopup();
       }
 
       return completer.future;
