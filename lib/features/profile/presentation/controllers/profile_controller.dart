@@ -22,7 +22,6 @@ import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
-import '../../../ride/presentation/screens/my_rides_screen.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/domain/entities/wallet_summary_entity.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
@@ -503,7 +502,7 @@ class ProfileController extends GetxController {
 
   void openMyRides() {
     _navigateAndResetWalletBalanceOnReturn(
-      Get.to(() => const MyRidesScreen()),
+      Get.toNamed(AppRoutes.myRides),
     );
   }
 

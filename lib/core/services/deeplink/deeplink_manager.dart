@@ -43,7 +43,7 @@ class DeepLinkManager {
     //
     // // Read query parameters (e.g., ?transaction_id=123)
     // Map<String, String> params = uri.queryParameters;
-    // Get.to(() => ProfileScreen());
+    // Get.toNamed(AppRoutes.profile);
   }
 
   void dispose() {

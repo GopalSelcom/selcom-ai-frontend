@@ -14,6 +14,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -21,6 +22,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
@@ -40,7 +42,6 @@ import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../profile/data/cache/user_profile_cache.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
@@ -49,8 +50,6 @@ import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/local_bank_instructions_service.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -1831,7 +1830,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> openProfile() async {
-    await Get.to(() => ProfileScreen());
+    await Get.toNamed(AppRoutes.profile);
     if (SessionExpiryService.isHandling) return;
     // No GET on return — avatar syncs from cache only after profile edit.
     _syncProfileImageFromCacheIfChanged();

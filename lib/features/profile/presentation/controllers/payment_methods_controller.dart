@@ -23,7 +23,6 @@ import '../../data/models/sp_link_response.dart';
 import '../../domain/entities/payment_card.dart';
 import '../../domain/repositories/selcom_pesa_link_repository.dart';
 import '../screens/add_card_screen.dart';
-import '../screens/card_details_screen.dart';
 import '../widgets/payment_card_action_bottom_sheet.dart';
 import '../widgets/selcom_pesa_flow_bottom_sheet.dart';
 
@@ -515,9 +514,5 @@ class PaymentMethodsController extends GetxController {
         barrierDismissible: true,
       );
     }
-  }
-
-  void openCardDetails(PaymentCard card) {
-    Get.to(() => CardDetailsScreen(card: card));
   }
 }
