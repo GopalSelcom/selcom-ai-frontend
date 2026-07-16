@@ -201,21 +201,27 @@ class AppSocketService {
 
     _socket?.dispose();
 
-    _socket = io.io(
-      baseUrl,
-      io.OptionBuilder()
-          .setTransports(['websocket'])
-          .enableReconnection()
-          // .setPath('/socket.io')
-          .setReconnectionAttempts(_maxReconnectAttempts)
-          .setReconnectionDelay(1000)
-          .setTimeout(12000)
-          .setQuery({'token': token})
-          .setExtraHeaders({'Authorization': 'Bearer $token'})
-          .disableAutoConnect()
-          .build(),
+    var options = io.OptionBuilder()
+        .setTransports(['websocket'])
+        .enableReconnection()
+        .setReconnectionAttempts(_maxReconnectAttempts)
+        .setReconnectionDelay(1000)
+        .setTimeout(12000)
+        .setQuery({'token': token})
+        .setExtraHeaders({'Authorization': 'Bearer $token'})
+        .disableAutoConnect();
+
+    // Dev/staging only: /go-socket.io. Prod leaves library default (no setPath).
+    final socketPath = AppConfig.socketPath;
+    if (socketPath.isNotEmpty) {
+      options = options.setPath(socketPath);
+    }
+
+    _socket = io.io(baseUrl, options.build());
+    AppLogger.d(
+      'SOCKET URL ----->  $baseUrl path=${socketPath.isEmpty ? '(default)' : socketPath}',
+      tag: 'Socket',
     );
-    AppLogger.d('SOCKET URL ----->  $baseUrl', tag: 'Socket');
 
     if (AppLogger.enabled) {
       _socket?.onAny((event, data) {

@@ -66,8 +66,20 @@ class AppConfig {
 
   // ── Socket & error reporting ──────────────────────────────────────────────
 
-  /// Socket.IO origin (`/go-socket.io` path is set in [AppSocketService]).
+  /// Socket.IO origin (path comes from [socketPath]).
   static late String socketBaseUrl;
+
+  /// Socket.IO engine path: `/go-socket.io` in dev/staging; empty in prod
+  /// (library default — no custom `.setPath`).
+  static String get socketPath {
+    switch (environment) {
+      case Environment.dev:
+      case Environment.staging:
+        return '/go-socket.io';
+      case Environment.prod:
+        return '';
+    }
+  }
 
   /// Host for multipart error-report uploads (separate from main API).
   static late String errorReportHost;
