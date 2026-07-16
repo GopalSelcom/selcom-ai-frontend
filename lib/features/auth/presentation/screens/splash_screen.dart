@@ -8,6 +8,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/device_security_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
@@ -39,6 +40,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToNext() async {
+    // Release builds: block rooted / mock GPS / developer-option devices.
+    final security = DeviceSecurityService.instance;
+    final blocked = await security.enforceOrBlock();
+    if (blocked || !mounted) return;
+
+    // Only monitor after the gate has passed — never while blocked.
+    security.startMonitoring();
+
     // Warm public app settings during splash (no auth required).
     unawaited(sl<AppSettingsService>().preload());
     await Future.delayed(const Duration(milliseconds: 2500));

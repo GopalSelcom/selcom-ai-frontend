@@ -139,6 +139,28 @@ class LanguageSw extends Languages {
     'default': 'Chaguomsingi',
     'default_currency_tzs': 'TZS',
     'delete_card': 'Futa kadi',
+    'device_security_try_again': 'Jaribu tena',
+    'device_security_close_app': 'Funga programu',
+    'device_security_mock_location_title': 'GPS bandia imegunduliwa',
+    'device_security_mock_location_subtitle':
+        'Mahali bandia (Mock location) yamewashwa kwenye kifaa hiki. Selcom Go haiwezi kuendeshwa wakati programu za Fake GPS au mock location zinatumika.',
+    'device_security_mock_location_guidance':
+        'Zima Mock Location / Fake GPS katika mipangilio ya kifaa, ondoa programu zozote za GPS bandia, kisha gusa Jaribu tena.',
+    'device_security_developer_options_title': 'Chaguo za msanidi programu zimewashwa',
+    'device_security_developer_options_subtitle':
+        'Chaguo za msanidi programu (mipangilio ya majaribio) zimewashwa. Selcom Go haiwezi kuendeshwa katika toleo la uzinduzi wakati hizi zimewashwa.',
+    'device_security_developer_options_guidance':
+        'Fungua Mipangilio → Chaguo za msanidi programu na zima Developer options, kisha gusa Jaribu tena.',
+    'device_security_jailbreak_title': 'Kifaa hakikubaliwi',
+    'device_security_jailbreak_subtitle':
+        'Inaonekana kifaa hiki kina root au jailbreak. Kwa usalama wako, Selcom Go haiwezi kuendeshwa kwenye vifaa vyenye udhibiti kamili wa mfumo.',
+    'device_security_jailbreak_guidance':
+        'Tumia kifaa rasmi kisichobadilishwa bila root au jailbreak, kisha gusa Jaribu tena.',
+    'device_security_route_spoofing_title': 'Udanganyifu wa eneo umegunduliwa',
+    'device_security_route_spoofing_subtitle':
+        'Njia ya mwendo bandia imegunduliwa. Selcom Go haiwezi kuendeshwa wakati sindano ya njia ya GPS au ufuatiliaji bandia wa mwendo unatumika.',
+    'device_security_route_spoofing_guidance':
+        'Zima programu au zana yoyote inayobandika njia au eneo lako la GPS, kisha gusa Jaribu tena.',
     'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage':
         'Usishiriki maelezo yako binafsi na msafiri. Kuwa salama na uangalie mizigo yako kila wakati.',
     'done': 'Tayari',
@@ -1222,6 +1244,62 @@ class LanguageSw extends Languages {
 
   @override
   String get deleteCard => values['delete_card'] ?? '';
+
+  @override
+  String get deviceSecurityTryAgain =>
+      values['device_security_try_again'] ?? '';
+
+  @override
+  String get deviceSecurityCloseApp =>
+      values['device_security_close_app'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationTitle =>
+      values['device_security_mock_location_title'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationSubtitle =>
+      values['device_security_mock_location_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationGuidance =>
+      values['device_security_mock_location_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsTitle =>
+      values['device_security_developer_options_title'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsSubtitle =>
+      values['device_security_developer_options_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsGuidance =>
+      values['device_security_developer_options_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakTitle =>
+      values['device_security_jailbreak_title'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakSubtitle =>
+      values['device_security_jailbreak_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakGuidance =>
+      values['device_security_jailbreak_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingTitle =>
+      values['device_security_route_spoofing_title'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingSubtitle =>
+      values['device_security_route_spoofing_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingGuidance =>
+      values['device_security_route_spoofing_guidance'] ?? '';
 
   @override
   String

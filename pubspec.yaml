@@ -59,6 +59,7 @@ dependencies:
     path: ./packages/agora_calling_package
   card_swiper: ^3.0.1
   app_links: ^7.2.1
+  safe_device: ^1.4.1
 
 dev_dependencies:
   flutter_test:

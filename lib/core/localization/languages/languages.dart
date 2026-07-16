@@ -123,6 +123,20 @@ abstract class Languages {
   String get defaultLabel;
   String get defaultCurrencyTzs;
   String get deleteCard;
+  String get deviceSecurityTryAgain;
+  String get deviceSecurityCloseApp;
+  String get deviceSecurityMockLocationTitle;
+  String get deviceSecurityMockLocationSubtitle;
+  String get deviceSecurityMockLocationGuidance;
+  String get deviceSecurityDeveloperOptionsTitle;
+  String get deviceSecurityDeveloperOptionsSubtitle;
+  String get deviceSecurityDeveloperOptionsGuidance;
+  String get deviceSecurityJailbreakTitle;
+  String get deviceSecurityJailbreakSubtitle;
+  String get deviceSecurityJailbreakGuidance;
+  String get deviceSecurityRouteSpoofingTitle;
+  String get deviceSecurityRouteSpoofingSubtitle;
+  String get deviceSecurityRouteSpoofingGuidance;
   String
   get doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage;
   String get done;

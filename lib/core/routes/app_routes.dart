@@ -11,6 +11,7 @@ import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/security/presentation/screens/device_security_blocked_screen.dart';
 import '../../features/home/presentation/bindings/confirm_location_binding.dart';
 import '../../features/home/presentation/bindings/home_binding.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -50,6 +51,7 @@ import '../../features/wallet/presentation/screens/wallet_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
+  static const String deviceSecurityBlocked = '/device-security-blocked';
   static const String onboarding = '/onboarding';
   static const String login = '/auth/login';
   static const String loginSupport = '/auth/login-support';
@@ -85,6 +87,10 @@ class AppRoutes {
   static List<GetPage> get pages => [
     ...AgoraCalling.routes(),
     GetPage(name: splash, page: () => const SplashScreen()),
+    GetPage(
+      name: deviceSecurityBlocked,
+      page: () => const DeviceSecurityBlockedScreen(),
+    ),
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),

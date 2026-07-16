@@ -160,6 +160,32 @@ class AppStrings {
   static const String defaultLabel = 'default';
   static const String defaultCurrencyTzs = 'default_currency_tzs';
   static const String deleteCard = 'delete_card';
+  static const String deviceSecurityTryAgain = 'device_security_try_again';
+  static const String deviceSecurityCloseApp = 'device_security_close_app';
+  static const String deviceSecurityMockLocationTitle =
+      'device_security_mock_location_title';
+  static const String deviceSecurityMockLocationSubtitle =
+      'device_security_mock_location_subtitle';
+  static const String deviceSecurityMockLocationGuidance =
+      'device_security_mock_location_guidance';
+  static const String deviceSecurityDeveloperOptionsTitle =
+      'device_security_developer_options_title';
+  static const String deviceSecurityDeveloperOptionsSubtitle =
+      'device_security_developer_options_subtitle';
+  static const String deviceSecurityDeveloperOptionsGuidance =
+      'device_security_developer_options_guidance';
+  static const String deviceSecurityJailbreakTitle =
+      'device_security_jailbreak_title';
+  static const String deviceSecurityJailbreakSubtitle =
+      'device_security_jailbreak_subtitle';
+  static const String deviceSecurityJailbreakGuidance =
+      'device_security_jailbreak_guidance';
+  static const String deviceSecurityRouteSpoofingTitle =
+      'device_security_route_spoofing_title';
+  static const String deviceSecurityRouteSpoofingSubtitle =
+      'device_security_route_spoofing_subtitle';
+  static const String deviceSecurityRouteSpoofingGuidance =
+      'device_security_route_spoofing_guidance';
   static const String
   doNotShareYourPersonalDetailsWithRiderBeSafeAndAlwaysCheckYourLuggage =
       'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage';

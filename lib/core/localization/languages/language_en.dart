@@ -147,6 +147,28 @@ class LanguageEn extends Languages {
     'default': 'Default',
     'default_currency_tzs': 'TZS',
     'delete_card': 'Delete card',
+    'device_security_try_again': 'Try again',
+    'device_security_close_app': 'Close app',
+    'device_security_mock_location_title': 'Fake GPS detected',
+    'device_security_mock_location_subtitle':
+        'Mock location is enabled on this device. Selcom Go cannot run while Fake GPS or mock location apps are active.',
+    'device_security_mock_location_guidance':
+        'Turn off Mock Location / Fake GPS in your device settings, uninstall any fake GPS apps, then tap Try again.',
+    'device_security_developer_options_title': 'Developer options enabled',
+    'device_security_developer_options_subtitle':
+        'Developer options (hidden testing settings) are turned on. Selcom Go cannot run in release mode while these are enabled.',
+    'device_security_developer_options_guidance':
+        'Open Settings → Developer options and turn Developer options off, then tap Try again.',
+    'device_security_jailbreak_title': 'Device not supported',
+    'device_security_jailbreak_subtitle':
+        'This device appears to be rooted or jailbroken. For your safety, Selcom Go cannot run on devices with full system control.',
+    'device_security_jailbreak_guidance':
+        'Use an official, unmodified device without root or jailbreak access, then tap Try again.',
+    'device_security_route_spoofing_title': 'Location spoofing detected',
+    'device_security_route_spoofing_subtitle':
+        'A spoofed movement path was detected. Selcom Go cannot run while GPS route injection or fake movement tracking is active.',
+    'device_security_route_spoofing_guidance':
+        'Disable any app or tool that fakes your route or GPS path, then tap Try again.',
     'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage':
         'Do not share your personal Details with rider Be safe and always check your luggage',
     'done': 'Done',
@@ -1301,7 +1323,64 @@ class LanguageEn extends Languages {
   String get defaultCurrencyTzs => values['default_currency_tzs'] ?? '';
 
   @override
+  @override
   String get deleteCard => values['delete_card'] ?? '';
+
+  @override
+  String get deviceSecurityTryAgain =>
+      values['device_security_try_again'] ?? '';
+
+  @override
+  String get deviceSecurityCloseApp =>
+      values['device_security_close_app'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationTitle =>
+      values['device_security_mock_location_title'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationSubtitle =>
+      values['device_security_mock_location_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityMockLocationGuidance =>
+      values['device_security_mock_location_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsTitle =>
+      values['device_security_developer_options_title'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsSubtitle =>
+      values['device_security_developer_options_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityDeveloperOptionsGuidance =>
+      values['device_security_developer_options_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakTitle =>
+      values['device_security_jailbreak_title'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakSubtitle =>
+      values['device_security_jailbreak_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityJailbreakGuidance =>
+      values['device_security_jailbreak_guidance'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingTitle =>
+      values['device_security_route_spoofing_title'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingSubtitle =>
+      values['device_security_route_spoofing_subtitle'] ?? '';
+
+  @override
+  String get deviceSecurityRouteSpoofingGuidance =>
+      values['device_security_route_spoofing_guidance'] ?? '';
 
   @override
   String
