@@ -991,10 +991,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _searchPlaces(String input) async {
     isSearching.value = true;
-    final result = await homeRepository.autocomplete(
-      input: input,
-      sessionToken: 'session_token_123',
-    );
+    final result = await homeRepository.autocomplete(input: input);
     result.fold((failure) => suggestions.clear(), (list) {
       suggestions
         ..clear()
