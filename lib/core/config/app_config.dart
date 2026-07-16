@@ -99,14 +99,6 @@ class AppConfig {
   static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
-  // ── Feature toggles (in-memory, not from `.env`) ──────────────────────────
-
-  /// When true, ride payment endpoints skip the `_new` production suffix.
-  static bool ridePaymentBypass = false;
-
-  /// When true, Selcom Pesa top-up skips the real app handoff (QA only).
-  static bool selcomPesaBypass = false;
-
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   /// Loads all values from `.env` ([Env]). Call once before `di.init()`.
@@ -123,12 +115,6 @@ class AppConfig {
     selcomPesaDeepLinkHost = Env.selcomPesaDeepLinkHost.trim();
     if (selcomPesaDeepLinkHost.isEmpty) {
       selcomPesaDeepLinkHost = selcomPesaDeepLinkHostDefault;
-    }
-
-    // Production builds must use real payment flows.
-    if (env == Environment.prod) {
-      ridePaymentBypass = false;
-      selcomPesaBypass = false;
     }
   }
 

@@ -7,8 +7,7 @@ import 'models/insufficient_wallet_balance_details.dart';
 ///    `go/wallet/check-ride-payment`) returning `PAY_INSUFFICIENT_FUNDS` with
 ///    `current_balance`, `required_amount`, `amount_needed`.
 /// 2. Prefer server amounts over [fromClientCheck]; remove client compare when stable.
-/// 3. Replace [walletDummyPaymentRequest] dev bypass with real wallet debit callback.
-/// 4. Wire top-up to the production wallet load / Selcom Pesa flow (not only profile).
+/// 3. Wire top-up to the production wallet load / Selcom Pesa flow (not only profile).
 class WalletRideBalanceGuard {
   const WalletRideBalanceGuard._();
 

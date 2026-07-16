@@ -12,10 +12,6 @@ abstract class SelcomPesaTopupRemoteDataSource {
     required bool requireShortCode,
   });
 
-  Future<SelcomPesaTopupStatusResult> simulateTopUp(
-    SelcomPesaTopupRequest request,
-  );
-
   Future<SelcomPesaTopupStatusResult> checkTopUpStatus({
     required String transid,
   });
@@ -57,48 +53,6 @@ class SelcomPesaTopupRemoteDataSourceImpl
         throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
       }
 
-      return result;
-    }
-
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      throw WalletPaymentException(
-        _messageFromResponse(response.data) ??
-            AppStrings.walletTopUpRequestFailed,
-      );
-    }
-
-    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
-  }
-
-  @override
-  Future<SelcomPesaTopupStatusResult> simulateTopUp(
-    SelcomPesaTopupRequest request,
-  ) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.wallet.simulateSelcomPesaTopUp,
-        method: ApiMethod.post,
-        body: request.toJson(),
-        errorPresentationType: ErrorPresentationType.none,
-      ),
-    );
-
-    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-      final data = Map<String, dynamic>.from(response.data as Map);
-      final statusCode = data['status_code'];
-      if (statusCode is int && statusCode != 200) {
-        throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
-        );
-      }
-      final result = SelcomPesaTopupStatusResult.fromEnvelope(data);
-      if (!result.isPaid) {
-        throw WalletPaymentException(
-          result.message.trim().isNotEmpty
-              ? result.message.trim()
-              : AppStrings.selcomPesaPaymentProcessing,
-        );
-      }
       return result;
     }
 

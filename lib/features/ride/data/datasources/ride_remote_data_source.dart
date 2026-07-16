@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
@@ -59,8 +58,6 @@ abstract class RideRemoteDataSource {
   Future<bool> submitFeedback(String rideId, String category, String message);
 
   Future<String> validateRidePayment(ValidateRidePaymentRequest request);
-
-  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request);
 
   Future<Map<String, dynamic>> getChatMessages(
     String rideId, {
@@ -543,21 +540,6 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
     }
     return const [];
-  }
-
-  @override
-  Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request) async {
-    if (!AppConfig.ridePaymentBypass) {
-      return false;
-    }
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.payment.devPaymentCallback,
-        method: ApiMethod.post,
-        body: request.toJson(),
-      ),
-    );
-    return response.statusCode == 200;
   }
 
   @override

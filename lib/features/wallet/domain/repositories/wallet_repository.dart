@@ -56,10 +56,6 @@ abstract class WalletRepository {
     required bool requireShortCode,
   });
 
-  Future<SelcomPesaTopupStatusResult> simulateSelcomPesaTopUp(
-    SelcomPesaTopupRequest request,
-  );
-
   Future<SelcomPesaTopupStatusResult> checkSelcomPesaTopUpStatus({
     required String transid,
   });

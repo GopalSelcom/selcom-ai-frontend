@@ -1,17 +1,14 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
-import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -983,59 +980,8 @@ class VehicleSelectionController extends GetxController {
           //   await _socketService.connect();
           // }
 
-          var blockValidationId = validationId;
+          final blockValidationId = validationId;
           Loader.instance.show();
-          while (true) {
-            String? roomValidationId;
-            if (AppConfig.ridePaymentBypass) {
-              roomValidationId = blockValidationId;
-              _socketService.joinPaymentRoom(validationId: roomValidationId);
-            }
-            final paymentConfirmed = AppConfig.ridePaymentBypass
-                ? await _confirmDevPaymentCallback(roomValidationId ?? "")
-                : true;
-
-            if (paymentConfirmed) {
-              break;
-            }
-
-            Loader.instance.hide();
-            final shouldRetry = await _offerPaymentBlockRetry();
-            if (!shouldRetry) {
-              return;
-            }
-            Loader.instance.show();
-
-            final reValidation = await rideRepository.validateRidePayment(
-              validateRequest,
-            );
-            final nextId = reValidation.fold<String?>(
-              (f) {
-                if (_handlePaymentValidationFailure(f)) return null;
-                AppDialogs.showErrorDialog(
-                  title: AppStrings.paymentValidationFailed.tr,
-                  message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
-                );
-                return null;
-              },
-              (id) {
-                final t = id.trim();
-                if (t.isEmpty) {
-                  AppDialogs.showErrorDialog(
-                    title: AppStrings.paymentValidationFailed.tr,
-                    message:
-                        AppStrings.validationIdMissingFromServerResponse.tr,
-                  );
-                  return null;
-                }
-                return t;
-              },
-            );
-            if (nextId == null) {
-              return;
-            }
-            blockValidationId = nextId;
-          }
 
           // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).
           var bookingSubmitInFlight = false;
@@ -1176,10 +1122,6 @@ class VehicleSelectionController extends GetxController {
   ///
   /// See [WalletRideBalanceGuard] TODOs for backend migration.
   Future<bool> _guardWalletBalanceBeforePayment(int requiredAmount) async {
-    if (AppConfig.ridePaymentBypass) {
-      return true;
-    }
-
     final walletResult = await profileRepository.getWalletBalance();
     return walletResult.fold((_) => true, (wallet) {
       final details = WalletRideBalanceGuard.insufficientDetails(
@@ -1279,89 +1221,6 @@ class VehicleSelectionController extends GetxController {
       message: AppStrings.bookedForOtherNoMultiStop.tr,
     );
     return false;
-  }
-
-  String generateTransactionId() {
-    final random = Random();
-    int randomNumber = random.nextInt(100000); // 0 to 99999
-
-    // pad with leading zeros if needed
-    String formattedNumber = randomNumber.toString().padLeft(5, '0');
-
-    return 'DEV-BLOCK-$formattedNumber';
-  }
-
-  Future<bool> _offerPaymentBlockRetry() {
-    final completer = Completer<bool>();
-    AppDialogs.showConfirmationDialog(
-      title: AppStrings.paymentNotConfirmed.tr,
-      message: AppStrings.weCouldNotConfirmYourPaymentBlockPleaseTryAgain.tr,
-      confirmText: AppStrings.retry,
-      cancelText: AppStrings.cancel,
-      onConfirm: () {
-        if (!completer.isCompleted) {
-          completer.complete(true);
-        }
-      },
-      onCancel: () {
-        if (!completer.isCompleted) {
-          completer.complete(false);
-        }
-      },
-    );
-    return completer.future;
-  }
-
-  /// Dev bypass: join room, await `payment_callback`, then allow book ride.
-  Future<bool> _confirmDevPaymentCallback(String validationId) async {
-    // Brief pause so `join_payment_room` can register before the callback.
-    await Future.delayed(const Duration(milliseconds: 800));
-    final txnId = generateTransactionId();
-    final result = await rideRepository.walletDummyPaymentRequest(
-      DummyPaymentRequest(
-        result: 'SUCCESS',
-        transId: txnId,
-        validationId: validationId,
-      ),
-    );
-    return result.fold((_) => false, (ok) => ok);
-  }
-
-  Future<bool> _waitForPaymentBlockStatus({
-    Duration timeout = const Duration(seconds: 300),
-  }) async {
-    final completer = Completer<bool>();
-    late StreamSubscription<PaymentStatusUpdateResponse> sub;
-
-    sub = _socketService.paymentStatusStream.listen((event) {
-      final outcome = _paymentBlockOutcome(event);
-      if (outcome == null) return;
-      if (!completer.isCompleted) completer.complete(outcome);
-    });
-
-    try {
-      return await completer.future.timeout(timeout, onTimeout: () => false);
-    } finally {
-      await sub.cancel();
-    }
-  }
-
-  bool? _paymentBlockOutcome(PaymentStatusUpdateResponse event) {
-    final phase = (event.phase ?? '').toString().toLowerCase();
-    final status = (event.status ?? '').toString().toLowerCase();
-
-    // Accept both documented shapes:
-    // - { phase: "block", status: "confirmed|failed" }
-    // - { status: "completed|failed" } (without phase)
-    if (phase.isNotEmpty && phase != 'block') return null;
-
-    if (status == 'confirmed') {
-      return true;
-    }
-    if (status == 'failed') {
-      return false;
-    }
-    return null;
   }
 
   Future<void> _initNearbyDriversSocket() async {

@@ -272,19 +272,6 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> walletDummyPaymentRequest(
-    DummyPaymentRequest request,
-  ) async {
-    try {
-      final result = await remoteDataSource.walletDummyPaymentRequest(request);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, bool>> updateActivityToken(
     String rideId,
     String token,

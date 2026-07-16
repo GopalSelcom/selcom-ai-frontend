@@ -65,10 +65,6 @@ abstract class RideRepository {
     ValidateRidePaymentRequest request,
   );
 
-  Future<Either<Failure, bool>> walletDummyPaymentRequest(
-    DummyPaymentRequest request,
-  );
-
   Future<Either<Failure, bool>> updateActivityToken(
     String rideId,
     String token,

@@ -1,15 +1,13 @@
 import '../network/urls.dart';
-import 'app_config.dart';
 
 /// Resolves ride payment / mutation API paths from [URLS].
 ///
-/// Bypass (`true`): canonical paths as defined in [URLS].
-/// Production (`false`): same paths with `_new` appended (real wallet preauth).
+/// Always uses the `_new` production suffix (real wallet preauth).
 abstract final class RidePaymentEndpoints {
   static const _productionSuffix = '_new';
 
   static String _forPaymentMode(String endpoint) =>
-      AppConfig.ridePaymentBypass ? endpoint : '$endpoint$_productionSuffix';
+      '$endpoint$_productionSuffix';
 
   static String get validateRidePayment =>
       _forPaymentMode(URLS.payment.validateRidePayment);

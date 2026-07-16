@@ -10,10 +10,8 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart' as di;
-import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/driver_location_socker_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_stops_update_response.dart';
@@ -2947,15 +2945,6 @@ class DriverAcceptedController extends GetxController
       }
       _socketService.joinPaymentRoom(validationId: validationId);
       _joinRideRoomIfNeeded();
-      if (AppConfig.ridePaymentBypass) {
-        await rideRepository.walletDummyPaymentRequest(
-          DummyPaymentRequest(
-            result: 'SUCCESS',
-            transId: 'TXN-${const Uuid().v4()}',
-            validationId: validationId,
-          ),
-        );
-      }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2; // Jump to route update (silent payment)
       unawaited(_ensureRideRealtimeAfterLocationUpdate());
@@ -3190,15 +3179,6 @@ class DriverAcceptedController extends GetxController
       }
       _socketService.joinPaymentRoom(validationId: validationId);
       _joinRideRoomIfNeeded();
-      if (AppConfig.ridePaymentBypass) {
-        await rideRepository.walletDummyPaymentRequest(
-          DummyPaymentRequest(
-            result: 'SUCCESS',
-            transId: 'TXN-${const Uuid().v4()}',
-            validationId: validationId,
-          ),
-        );
-      }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2;
       unawaited(_ensureRideRealtimeAfterLocationUpdate());
