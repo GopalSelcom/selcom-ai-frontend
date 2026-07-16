@@ -32,34 +32,13 @@ abstract class RideRepository {
     String? reason,
   });
 
-  Future<Either<Failure, bool>> cancelVoiceCall(String rideId);
-
   Future<Either<Failure, DestinationUpdatePreviewModel>>
   previewUpdateDestination(String rideId, Map<String, dynamic> destination);
 
   Future<Either<Failure, DestinationUpdateAppliedModel>>
   confirmUpdateDestination(String rideId, Map<String, dynamic> destination);
 
-  Future<Either<Failure, bool>> updatePickup(
-    String rideId,
-    Map<String, dynamic> pickup,
-  );
-
-  Future<Either<Failure, bool>> increaseFare(String rideId, int newFare);
-
   Future<Either<Failure, ReceiptModel>> getReceipt(String rideId);
-
-  Future<Either<Failure, bool>> rateDriver(
-    String rideId,
-    int rating,
-    String comment,
-  );
-
-  Future<Either<Failure, bool>> submitFeedback(
-    String rideId,
-    String category,
-    String message,
-  );
 
   Future<Either<Failure, String>> validateRidePayment(
     ValidateRidePaymentRequest request,
@@ -80,8 +59,6 @@ abstract class RideRepository {
     bool confirm = false,
     required String idempotencyKey,
   });
-
-  Future<Either<Failure, void>> cancelPendingStops(String rideId);
 
   Future<Either<Failure, CheckBookModeResult>> checkBookMode({
     required double riderLat,

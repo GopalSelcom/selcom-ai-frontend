@@ -118,17 +118,6 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> cancelVoiceCall(String rideId) async {
-    try {
-      final result = await remoteDataSource.cancelVoiceCall(rideId);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, DestinationUpdatePreviewModel>>
   previewUpdateDestination(
     String rideId,
@@ -173,68 +162,9 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> updatePickup(
-    String rideId,
-    Map<String, dynamic> pickup,
-  ) async {
-    try {
-      final result = await remoteDataSource.updatePickup(rideId, pickup);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> increaseFare(String rideId, int newFare) async {
-    try {
-      final result = await remoteDataSource.increaseFare(rideId, newFare);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, ReceiptModel>> getReceipt(String rideId) async {
     try {
       final result = await remoteDataSource.getReceipt(rideId);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> rateDriver(
-    String rideId,
-    int rating,
-    String comment,
-  ) async {
-    try {
-      final result = await remoteDataSource.rateDriver(rideId, rating, comment);
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> submitFeedback(
-    String rideId,
-    String category,
-    String message,
-  ) async {
-    try {
-      final result = await remoteDataSource.submitFeedback(
-        rideId,
-        category,
-        message,
-      );
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
@@ -337,17 +267,6 @@ class RideRepositoryImpl implements RideRepository {
       return raw;
     }
     return error.toString();
-  }
-
-  @override
-  Future<Either<Failure, void>> cancelPendingStops(String rideId) async {
-    try {
-      await remoteDataSource.cancelPendingStops(rideId);
-      return const Right(null);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
   }
 
   @override
