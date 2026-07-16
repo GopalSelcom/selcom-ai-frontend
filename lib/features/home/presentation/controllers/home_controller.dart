@@ -111,6 +111,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+
+  /// True after the first [_loadHomeData] attempt finishes (success or partial).
+  /// Location selection uses this to reuse in-memory recent/saved places.
+  bool hasCompletedInitialHomeLoad = false;
+
   final isLoadingRecentLocationsScreen = false.obs;
   final profileImageUrl = ''.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
@@ -469,11 +474,21 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         });
       }
     } finally {
+      hasCompletedInitialHomeLoad = true;
       if (!SessionExpiryService.isHandling) {
         isLoadingHomeData.value = false;
         invalidateHomeSheetMeasurement();
       }
     }
+  }
+
+  /// Reloads recent destinations into the Home list (not the dedicated screen list).
+  Future<void> reloadRecentDestinations() async {
+    final result = await rideRepository.getRecentDestinations();
+    result.fold((_) => null, (destinations) {
+      recentDestinations.assignAll(destinations);
+      invalidateHomeSheetMeasurement();
+    });
   }
 
   List<RecentDestinationModel> get recentDestinationsPreview {
