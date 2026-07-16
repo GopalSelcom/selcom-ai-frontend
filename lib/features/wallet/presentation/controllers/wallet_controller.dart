@@ -230,13 +230,12 @@ class WalletController extends GetxController {
       summary.value?.walletNumber.replaceAll(RegExp(r'\s+'), '') ?? '';
 
   Future<void> refreshWallet() {
-    final fetchBalance = isBalanceVisible.value;
-    if (fetchBalance) {
-      sl<WalletRepository>().invalidateStatementCache();
-    }
+    // Pull-to-refresh must always re-fetch the statement. Balance is only
+    // re-fetched when the amount is currently revealed (eye open).
+    sl<WalletRepository>().invalidateStatementCache();
     return loadWallet(
       showLoading: false,
-      fetchBalance: fetchBalance,
+      fetchBalance: isBalanceVisible.value,
     );
   }
 

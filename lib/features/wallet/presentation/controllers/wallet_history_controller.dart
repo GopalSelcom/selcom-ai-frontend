@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/constants/currency_code.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
@@ -59,8 +61,13 @@ class WalletHistoryController extends GetxController {
   }
 
   Future<void> _fetchTransactions() async {
+    // Reuse session currency so history never needs go_card_balance.
+    final currency = ProfileWalletCache.currency.trim().isNotEmpty
+        ? ProfileWalletCache.currency.trim()
+        : CommonValues.currencyCode;
     final transactions = await _getWalletTransactionsUseCase(
       filter: WalletTransactionFilter.all,
+      currencyOverride: currency,
     );
     transactionsByFilter.assignAll(groupWalletTransactionsByFilter(transactions));
   }

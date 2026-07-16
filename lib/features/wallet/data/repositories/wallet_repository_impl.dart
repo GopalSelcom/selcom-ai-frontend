@@ -155,15 +155,12 @@ class WalletRepositoryImpl implements WalletRepository {
     }
 
     final (startDate, endDate) = defaultWalletStatementDateRange();
-    final resolvedBalance = balance ??
-        (currencyOverride == null
-            ? await _remoteDataSource.getCardBalance()
-            : null);
-    // Prefer explicit currency when profile cache already has balance (skip re-fetch).
+    // Never call go_card_balance just to resolve currency for statements.
+    // Callers that already fetched balance pass it; otherwise use override/default.
     final currency = currencyOverride?.trim().isNotEmpty == true
         ? currencyOverride!.trim()
-        : resolvedBalance?.currency.trim().isNotEmpty == true
-            ? resolvedBalance!.currency.trim()
+        : balance?.currency.trim().isNotEmpty == true
+            ? balance!.currency.trim()
             : 'TZS';
     final transactions = await _remoteDataSource.getCardStatement(
       startDate: startDate,
