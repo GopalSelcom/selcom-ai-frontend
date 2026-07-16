@@ -234,7 +234,9 @@ class ApiService {
   // ── Main API Call ──
 
   Future<Response> call({required ApiRequest request}) async {
-    final String route = request.route.isEmpty ? "api" : request.route;
+    final String route = request.route.isEmpty
+        ? AppConfig.apiRouteSegment
+        : request.route;
     final client = _getClient(request);
 
     // ── No Internet ──
@@ -269,7 +271,8 @@ class ApiService {
     final stopwatch = Stopwatch()..start();
 
     // ── Build Endpoint ──
-    // Default route is `api` → `/api/{apiVersion}/{endpoint}` on top of [AppConfig.apiHost].
+    // Default route from [AppConfig.apiRouteSegment] → prod: `/api/v4/...`,
+    // dev/staging: `/v4/...` on top of [AppConfig.apiHost].
     final String endpoint;
     if (request.customBaseUrl.isNotEmpty) {
       endpoint = request.endpoint;

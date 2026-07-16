@@ -6,9 +6,10 @@ import 'environment.dart';
 /// **Startup:** call [init] once in `main` with [resolveAppEnvironment], then read
 /// values anywhere via `AppConfig.*`.
 ///
-/// **API URLs:** only [apiHost] is stored. [ApiService] prepends `/api` when
-/// building `/api/{apiVersion}/...` paths. Callers outside [ApiService] (Agora,
-/// WebView) use [versionedApiPath] / [versionedApiUrl] the same way.
+/// **API URLs:** only [apiHost] is stored. [ApiService] prepends [apiRouteSegment]
+/// when building `/{route}/{apiVersion}/...` paths (prod uses `api`; dev/staging
+/// omit it). Callers outside [ApiService] (Agora, WebView) use [versionedApiPath]
+/// / [versionedApiUrl] the same way.
 class AppConfig {
   AppConfig._();
 
@@ -30,27 +31,36 @@ class AppConfig {
   /// for callers outside [ApiService] (Agora, WebView, error reporting).
   static const String apiVersion = 'v4';
 
-  /// `/api` path prefix for all environments.
+  /// Route segment before version: `api` in prod, empty in dev/staging.
   ///
-  /// Matches the segment [ApiService] adds when `ApiRequest.route` is empty.
-  /// Prefer [versionedApiPath] / [versionedApiUrl] over composing this by hand.
-  static String get apiPathPrefix {
+  /// Used as [ApiRequest.route] default in [ApiService].
+  static String get apiRouteSegment {
     switch (environment) {
       case Environment.dev:
       case Environment.staging:
+        return 'api';
       case Environment.prod:
-        return '/api';
+        return 'api';
     }
   }
 
-  /// Path after host: `/api/{apiVersion}/{endpoint}` (leading slash, no host).
+  /// Leading path prefix derived from [apiRouteSegment] (`/api` or empty).
+  ///
+  /// Prefer [versionedApiPath] / [versionedApiUrl] over composing this by hand.
+  static String get apiPathPrefix =>
+      apiRouteSegment.isEmpty ? '' : '/$apiRouteSegment';
+
+  /// Path after host: `/{apiRouteSegment}/{apiVersion}/{endpoint}` (leading slash).
   static String versionedApiPath(String endpoint) {
     final clean =
         endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-    return '$apiPathPrefix/$apiVersion/$clean';
+    if (apiRouteSegment.isEmpty) {
+      return '/$apiVersion/$clean';
+    }
+    return '/$apiRouteSegment/$apiVersion/$clean';
   }
 
-  /// Absolute URL: `{apiHost}/api/{apiVersion}/{endpoint}`.
+  /// Absolute URL: `{apiHost}{versionedApiPath}`.
   static String versionedApiUrl(String endpoint) =>
       '$apiHost${versionedApiPath(endpoint)}';
 
