@@ -40,7 +40,7 @@ import 'package:screenshot/screenshot.dart';
 /// Same idea as `ApiEnvironment` in our other apps — one line to flip QA target.
 /// Release CI can still pass `--dart-define=ENV=prod` (overrides when set).
 /// const Environment kAppEnvironment = Environment.prod;
-const Environment kAppEnvironment = Environment.prod;
+const Environment kAppEnvironment = Environment.staging;
 
 void _registerKillCallLogSink() {
   // AgoraCallLogger matches AppLogger: debug-only by default.
