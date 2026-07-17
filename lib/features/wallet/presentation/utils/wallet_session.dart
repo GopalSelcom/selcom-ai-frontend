@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/services/local_bank_instructions_service.dart';
+import '../../../home/data/repositories/home_repository_impl.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
@@ -28,6 +29,8 @@ abstract final class WalletSession {
     sl<ProfileRepository>().invalidateProfileCache();
     // Local-bank instructions are wallet-number scoped; clear for next login.
     sl<LocalBankInstructionsService>().clear();
+    // Vehicle catalog session cache — refetch next login (config may change).
+    HomeRepositoryImpl.invalidateVehicleTypesCache();
 
     // Clear observables and null the WalletController factory singleton.
     WalletController.resetForLogout();

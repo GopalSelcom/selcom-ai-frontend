@@ -19,14 +19,41 @@ class HomeRepositoryImpl implements HomeRepository {
 
   HomeRepositoryImpl({required this.remoteDataSource});
 
+  /// Session cache for `GET go/vehicles/types` — the catalog rarely changes,
+  /// but Home load and every vehicle-selection estimate refresh ask for it.
+  /// Static because bindings may create multiple repository instances.
+  /// Empty results and failures are not cached, so the next call retries.
+  static List<VehicleTypeModel>? _vehicleTypesCache;
+
+  /// Shared in-flight fetch so parallel callers reuse one request.
+  static Future<List<VehicleTypeModel>>? _vehicleTypesInFlight;
+
+  /// Drops the cached catalog (logout / session expiry) so the next session
+  /// refetches — pricing config may change between users.
+  static void invalidateVehicleTypesCache() {
+    _vehicleTypesCache = null;
+    _vehicleTypesInFlight = null;
+  }
+
   @override
   Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes() async {
+    final cached = _vehicleTypesCache;
+    if (cached != null && cached.isNotEmpty) {
+      return Right(cached);
+    }
     try {
-      final result = await remoteDataSource.getVehicleTypes();
+      final inFlight = _vehicleTypesInFlight ??=
+          remoteDataSource.getVehicleTypes();
+      final result = await inFlight;
+      if (result.isNotEmpty) {
+        _vehicleTypesCache = result;
+      }
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
+    } finally {
+      _vehicleTypesInFlight = null;
     }
   }
 
