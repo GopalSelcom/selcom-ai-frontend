@@ -41,9 +41,6 @@ abstract class Languages {
   String get addMoney;
   String get amount;
   String get back;
-  String get addMoneySelcomPesaSubtitle;
-  String get addMoneyMobileMoneySubtitle;
-  String get addMoneyLocalBanksSubtitle;
   String get walletFundsReceivedTitle;
   String get walletFundsReceivedSubtitle;
   String get topUpRequestSentTitle;
@@ -735,7 +732,6 @@ abstract class Languages {
   String get removeAccountMessage;
   String get removeLabel;
   String get savedCardLabel;
-  String get savedCardSubtitle;
   String get noSavedCardsFound;
   String get addNewCardText;
   String get amountIsRequired;

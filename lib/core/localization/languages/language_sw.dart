@@ -31,9 +31,6 @@ class LanguageSw extends Languages {
     'add_money': 'Ongeza Pesa',
     'amount': 'Kiasi',
     'back': 'Nyuma',
-    'add_money_selcom_pesa_subtitle': 'Omba pesa kutoka SelcomPesa',
-    'add_money_mobile_money_subtitle': 'Ongeza Pesa ukitumia Pesa ya Mtandao',
-    'add_money_local_banks_subtitle': 'Ongeza Pesa ukitumia benki za ndani',
     'wallet_funds_received_title': 'Mkoba wako umepokea fedha',
     'wallet_funds_received_subtitle':
         'Sasa unaweza kutumia mkoba wako kuweka nafasi ya safari.',
@@ -802,7 +799,6 @@ class LanguageSw extends Languages {
     'remove_account_message': 'Je, una uhakika unataka kuondoa akaunti hii ya SelcomPesa?',
     'remove_label': 'Ondoa',
     'saved_card_label': 'Kadi iliyohifadhiwa',
-    'saved_card_subtitle': 'Ongeza salio ukitumia kadi zilizohifadhiwa',
     'no_saved_cards_found': 'Hakuna kadi zilizohifadhiwa',
     'add_new_card_text': '+ Ongeza kadi mpya',
     'amount_is_required': 'Kiasi kinahitajika',
@@ -935,18 +931,6 @@ class LanguageSw extends Languages {
 
   @override
   String get back => values['back'] ?? '';
-
-  @override
-  String get addMoneySelcomPesaSubtitle =>
-      values['add_money_selcom_pesa_subtitle'] ?? '';
-
-  @override
-  String get addMoneyMobileMoneySubtitle =>
-      values['add_money_mobile_money_subtitle'] ?? '';
-
-  @override
-  String get addMoneyLocalBanksSubtitle =>
-      values['add_money_local_banks_subtitle'] ?? '';
 
   @override
   String get walletFundsReceivedTitle =>
@@ -3252,9 +3236,6 @@ class LanguageSw extends Languages {
 
   @override
   String get savedCardLabel => values['saved_card_label'] ?? '';
-
-  @override
-  String get savedCardSubtitle => values['saved_card_subtitle'] ?? '';
 
   @override
   String get noSavedCardsFound => values['no_saved_cards_found'] ?? '';

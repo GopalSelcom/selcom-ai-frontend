@@ -34,9 +34,6 @@ class LanguageEn extends Languages {
     'add_money': 'Add Money',
     'amount': 'Amount',
     'back': 'Back',
-    'add_money_selcom_pesa_subtitle': 'Request money from SelcomPesa',
-    'add_money_mobile_money_subtitle': 'Add money using Mobile Money',
-    'add_money_local_banks_subtitle': 'Add money using local banks',
     'wallet_funds_received_title': 'Your wallet has received funds',
     'wallet_funds_received_subtitle':
         'You can now use your wallet to book rides.',
@@ -882,7 +879,6 @@ class LanguageEn extends Languages {
     'remove_account_message': 'Are you sure you want to remove this SelcomPesa account?',
     'remove_label': 'Remove',
     'saved_card_label': 'Saved card',
-    'saved_card_subtitle': 'Top up using saved debit/credit cards',
     'no_saved_cards_found': 'No saved cards found',
     'add_new_card_text': '+ Add new card',
     'amount_is_required': 'Amount is required',
@@ -1015,18 +1011,6 @@ class LanguageEn extends Languages {
 
   @override
   String get back => values['back'] ?? '';
-
-  @override
-  String get addMoneySelcomPesaSubtitle =>
-      values['add_money_selcom_pesa_subtitle'] ?? '';
-
-  @override
-  String get addMoneyMobileMoneySubtitle =>
-      values['add_money_mobile_money_subtitle'] ?? '';
-
-  @override
-  String get addMoneyLocalBanksSubtitle =>
-      values['add_money_local_banks_subtitle'] ?? '';
 
   @override
   String get walletFundsReceivedTitle =>
@@ -3332,9 +3316,6 @@ class LanguageEn extends Languages {
 
   @override
   String get savedCardLabel => values['saved_card_label'] ?? '';
-
-  @override
-  String get savedCardSubtitle => values['saved_card_subtitle'] ?? '';
 
   @override
   String get noSavedCardsFound => values['no_saved_cards_found'] ?? '';

@@ -6,18 +6,25 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_standard_bottom_sheet.dart';
+import '../../../settings/data/models/settings_models.dart';
 import '../screens/selcom_pesa_to_wallet_screen.dart';
 import 'local_bank_instructions_bottom_sheet.dart';
 import 'mobile_money_topup_bottom_sheet.dart';
 import 'saved_cards_bottom_sheet.dart';
 
 /// Add-money options after insufficient-balance "Top up Wallet" (Figma sheet).
+///
+/// Option list, titles, subtitles, order, and visibility come from
+/// `/go/settings` → `topup_methods` (via [AppSettingsService.enabledTopupMethods]).
+/// Each entry's `key` maps to an existing top-up flow in this app.
 class AddMoneyToWalletBottomSheet extends StatelessWidget {
   const AddMoneyToWalletBottomSheet({super.key});
 
@@ -41,34 +48,60 @@ class AddMoneyToWalletBottomSheet extends StatelessWidget {
 class _OptionsContent extends StatelessWidget {
   const _OptionsContent();
 
+  /// Builds tiles from enabled, ordered API methods with a known flow key.
+  /// Skips disabled entries, empty titles, and unknown keys.
+  List<_AddMoneyOption> _resolveOptions() {
+    return sl<AppSettingsService>()
+        .enabledTopupMethods
+        .map(_optionFromApiMethod)
+        .whereType<_AddMoneyOption>()
+        .toList(growable: false);
+  }
+
+  _AddMoneyOption? _optionFromApiMethod(TopupMethodSettings method) {
+    final title = method.title.trim();
+    if (title.isEmpty) return null;
+
+    final onTap = _flowForKey(method.key);
+    if (onTap == null) return null;
+
+    return _AddMoneyOption(
+      title: title,
+      subtitle: method.subtitle.trim(),
+      onTap: onTap,
+    );
+  }
+
+  /// Maps `/go/settings` `topup_methods[].key` → in-app top-up flow.
+  VoidCallback? _flowForKey(String key) {
+    switch (key) {
+      case TopupMethodSettings.keySelcomPesa:
+        return _onSelcomPesaTap;
+      case TopupMethodSettings.keyLocalBank:
+        return _onLocalBanksTap;
+      case TopupMethodSettings.keyMobileMoney:
+        return _onMobileMoneyTap;
+      case TopupMethodSettings.keyCard:
+        return _onSavedCardTap;
+    }
+    // Unknown key from a newer backend — no flow in this app version.
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final options = _resolveOptions();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _AddMoneyOptionTile(
-          title: AppStrings.selcomPesa.tr,
-          subtitle: AppStrings.addMoneySelcomPesaSubtitle.tr,
-          onTap: _onSelcomPesaTap,
-        ),
-        SizedBox(height: 12.h),
-        _AddMoneyOptionTile(
-          title: 'Local banks to Wallet',
-          subtitle: AppStrings.addMoneyLocalBanksSubtitle.tr,
-          onTap: _onLocalBanksTap,
-        ),
-        SizedBox(height: 12.h),
-        _AddMoneyOptionTile(
-          title: AppStrings.mobileMoney.tr,
-          subtitle: AppStrings.addMoneyMobileMoneySubtitle.tr,
-          onTap: _onMobileMoneyTap,
-        ),
-        SizedBox(height: 12.h),
-        _AddMoneyOptionTile(
-          title: AppStrings.savedCardLabel.tr,
-          subtitle: AppStrings.savedCardSubtitle.tr,
-          onTap: _onSavedCardTap,
-        ),
+        for (var i = 0; i < options.length; i++) ...[
+          if (i > 0) SizedBox(height: 12.h),
+          _AddMoneyOptionTile(
+            title: options[i].title,
+            subtitle: options[i].subtitle,
+            onTap: options[i].onTap,
+          ),
+        ],
         SizedBox(height: 8.h),
       ],
     );
@@ -89,11 +122,22 @@ class _OptionsContent extends StatelessWidget {
     unawaited(MobileMoneyTopupBottomSheet.show());
   }
 
-  // ignore: unused_element
   void _onSavedCardTap() {
     Get.back<void>();
     unawaited(SavedCardsBottomSheet.show());
   }
+}
+
+class _AddMoneyOption {
+  const _AddMoneyOption({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 }
 
 class _AddMoneyOptionTile extends StatelessWidget {
@@ -135,8 +179,10 @@ class _AddMoneyOptionTile extends StatelessWidget {
                         letterSpacing: -0.4,
                       ),
                     ),
-                    SizedBox(height: 6.h),
-                    Text(subtitle, style: AppTextStyles.homeSubtitle),
+                    if (subtitle.isNotEmpty) ...[
+                      SizedBox(height: 6.h),
+                      Text(subtitle, style: AppTextStyles.homeSubtitle),
+                    ],
                   ],
                 ),
               ),

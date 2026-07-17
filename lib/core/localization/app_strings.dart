@@ -38,12 +38,6 @@ class AppStrings {
   static const String addMoney = 'add_money';
   static const String amount = 'amount';
   static const String back = 'back';
-  static const String addMoneySelcomPesaSubtitle =
-      'add_money_selcom_pesa_subtitle';
-  static const String addMoneyMobileMoneySubtitle =
-      'add_money_mobile_money_subtitle';
-  static const String addMoneyLocalBanksSubtitle =
-      'add_money_local_banks_subtitle';
   static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
   static const String walletFundsReceivedSubtitle =
       'wallet_funds_received_subtitle';
@@ -920,7 +914,6 @@ class AppStrings {
   static const String removeAccountMessage = 'remove_account_message';
   static const String removeLabel = 'remove_label';
   static const String savedCardLabel = 'saved_card_label';
-  static const String savedCardSubtitle = 'saved_card_subtitle';
   static const String noSavedCardsFound = 'no_saved_cards_found';
   static const String addNewCardText = 'add_new_card_text';
   static const String amountIsRequired = 'amount_is_required';
