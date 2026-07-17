@@ -16,10 +16,7 @@ import '../models/places_models.dart';
 abstract class HomeRemoteDataSource {
   Future<List<VehicleTypeModel>> getVehicleTypes();
 
-  Future<AutocompletePredictionModel?> autocomplete({
-    required String input,
-    required String sessionToken,
-  });
+  Future<AutocompletePredictionModel?> autocomplete({required String input});
 
   Future<ReverseGeocodeModel?> reverseGeocode({
     required double lat,
@@ -68,13 +65,12 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<AutocompletePredictionModel?> autocomplete({
     required String input,
-    required String sessionToken,
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.places.autocomplete,
         method: ApiMethod.get,
-        queryParams: {'input': input, 'session_token': sessionToken},
+        queryParams: {'input': input},
       ),
     );
 

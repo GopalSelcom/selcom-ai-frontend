@@ -7,6 +7,7 @@ import '../../../../core/constants/currency_code.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/balance_visibility_policy.dart';
@@ -182,6 +183,8 @@ class WalletController extends GetxController {
       reservedValue: walletSummary.reserved,
     );
     ProfileWalletCache.isBalanceVisible = isBalanceVisible.value;
+    // Once per session while wallet number exists (service dedupes).
+    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
   }
 
   String get formattedBalance {

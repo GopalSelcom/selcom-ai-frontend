@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
@@ -25,6 +26,8 @@ abstract final class WalletSession {
     sl<WalletRepository>().invalidateStatementCache();
     // Profile GET cache — avoid showing the previous user's name/avatar.
     sl<ProfileRepository>().invalidateProfileCache();
+    // Local-bank instructions are wallet-number scoped; clear for next login.
+    sl<LocalBankInstructionsService>().clear();
 
     // Clear observables and null the WalletController factory singleton.
     WalletController.resetForLogout();

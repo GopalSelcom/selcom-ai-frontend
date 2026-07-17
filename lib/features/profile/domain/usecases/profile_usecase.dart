@@ -2,7 +2,6 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../data/models/request/update_profile_request.dart';
@@ -27,10 +26,6 @@ class ProfileUseCase {
 
   Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance() {
     return repository.getWalletBalance();
-  }
-
-  Future<Either<Failure, List<PaymentMethodModel>>> getPaymentMethods() {
-    return repository.getPaymentMethods();
   }
 
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() {

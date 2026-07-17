@@ -5,15 +5,19 @@ import '../utils/app_logger.dart';
 
 class LocalBankInstructionsService {
   dynamic _instructionsData;
+  bool _fetchInFlight = false;
 
   /// Holds the response data from the local-bank-instructions wallet API.
   dynamic get instructionsData => _instructionsData;
 
-  /// Performs GET request to fetch the local bank instructions.
+  /// Fetches local bank instructions once per session while a wallet is linked.
   ///
-  /// Requires auth. Splash warms this for logged-in cold starts; wallet flows
-  /// can call again if the cache is empty.
+  /// Subsequent calls are no-ops until [clear] (logout). Triggered after a
+  /// successful wallet-balance load that includes a wallet number — not from
+  /// Home startup.
   Future<void> fetchInstructions() async {
+    if (_instructionsData != null || _fetchInFlight) return;
+    _fetchInFlight = true;
     try {
       final response = await ApiService().call(
         request: ApiRequest(
@@ -43,7 +47,15 @@ class LocalBankInstructionsService {
         error: e,
         stackTrace: stackTrace,
       );
+    } finally {
+      _fetchInFlight = false;
     }
+  }
+
+  /// Clears the session cache so the next login can fetch again.
+  void clear() {
+    _instructionsData = null;
+    _fetchInFlight = false;
   }
 }
 

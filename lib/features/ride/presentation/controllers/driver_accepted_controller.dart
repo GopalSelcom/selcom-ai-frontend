@@ -51,7 +51,6 @@ import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_google_map.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../data/models/destination_update_models.dart';
@@ -171,6 +170,7 @@ class DriverAcceptedController extends GetxController
   GoogleMapController? mapController;
   LatLng? _lastDriverRotationSamplePosition;
   bool _navigatedAway = false;
+
   /// Suppresses cancel dialog when the user completed [CancelRideFlow] (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
   DateTime? _lastCameraUpdate;
@@ -1495,13 +1495,7 @@ class DriverAcceptedController extends GetxController
 
     final destinations = routeDestinations.isNotEmpty
         ? routeDestinations
-              .map(
-                (e) => {
-                  'lat': e.lat,
-                  'lng': e.lng,
-                  'address': e.address,
-                },
-              )
+              .map((e) => {'lat': e.lat, 'lng': e.lng, 'address': e.address})
               .toList()
         : [
             {
@@ -2184,8 +2178,7 @@ class DriverAcceptedController extends GetxController
     if (st == 'driver_arrived') {
       return arrivalLabel.value;
     }
-    if (isDriverFinishingNearby.value &&
-        _isDriverHeadingToPickupForEta(st)) {
+    if (isDriverFinishingNearby.value && _isDriverHeadingToPickupForEta(st)) {
       return AppStrings.driverFinishingNearbyTrip.tr;
     }
     final secs = currentEtaSeconds.value;
@@ -2368,8 +2361,9 @@ class DriverAcceptedController extends GetxController
             statusForEta.contains('progress') ||
             statusForEta.contains('started');
         if (!isDriverFinishingNearby.value) {
-          etaLabel.value =
-              inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
+          etaLabel.value = inRide
+              ? AppStrings.nearby.tr
+              : AppStrings.arriving.tr;
           arrivalLabel.value = inRide
               ? AppStrings.youAreAlmostThere.tr
               : AppStrings.driverIsArriving.tr;
@@ -2466,10 +2460,6 @@ class DriverAcceptedController extends GetxController
     return '';
   }
 
-  void openProfile() {
-    Get.to(() => ProfileScreen());
-  }
-
   /// Places an in-app voice call to the assigned driver using the Agora
   /// calling package. Falls back to the system phone dialer when the package
   /// flow isn't available (no Agora App ID, ride id missing, etc.).
@@ -2511,7 +2501,11 @@ class DriverAcceptedController extends GetxController
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      AppLogger.e('Error launching dialer', tag: 'DriverAcceptedController', error: e);
+      AppLogger.e(
+        'Error launching dialer',
+        tag: 'DriverAcceptedController',
+        error: e,
+      );
       AppDialogs.showErrorDialog(
         title: errorDialogTitle,
         message: AppStrings.errorOpeningPhoneDialer.tr,

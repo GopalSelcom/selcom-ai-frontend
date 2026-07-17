@@ -1,5 +1,3 @@
-import '../../constants/currency_code.dart';
-
 /// Saved place in `POST from-recent` response `data.place`.
 /// List screens use [SavedPlace] from get_saved_places_response.dart instead.
 class SavedPlaceModel {
@@ -115,51 +113,4 @@ class SavedPlaceGeoLocation {
     'type': type,
     'coordinates': coordinates,
   };
-}
-
-class WalletBalanceModel {
-  final double balance;
-  final String currency;
-
-  WalletBalanceModel({required this.balance, required this.currency});
-
-  factory WalletBalanceModel.fromJson(Map<String, dynamic> json) {
-    return WalletBalanceModel(
-      balance: (json['balance'] ?? 0.0).toDouble(),
-      currency: json['currency'] ?? CurrencyCode.tzs,
-    );
-  }
-}
-
-class PaymentMethodModel {
-  final String id;
-  final String label;
-  final String type; // wallet, card
-  final String? icon;
-  final bool isAvailable;
-
-  PaymentMethodModel({
-    required this.id,
-    required this.label,
-    required this.type,
-    this.icon,
-    this.isAvailable = true,
-  });
-
-  factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
-    final rawAvail = json['is_available'];
-    final bool available = rawAvail == null
-        ? true
-        : rawAvail is bool
-        ? rawAvail
-        : rawAvail == 1 || rawAvail.toString().trim().toLowerCase() == 'true';
-
-    return PaymentMethodModel(
-      id: json['id'] ?? json['type'] ?? '',
-      label: json['label'] ?? '',
-      type: json['type'] ?? '',
-      icon: json['icon'],
-      isAvailable: available,
-    );
-  }
 }

@@ -34,7 +34,6 @@ import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../utils/cancel_ride_flow.dart';
@@ -546,7 +545,11 @@ class FindingDriverController extends GetxController {
           );
         }
       } catch (e) {
-        AppLogger.e('Error parsing destinations', tag: 'FindingDriverController', error: e);
+        AppLogger.e(
+          'Error parsing destinations',
+          tag: 'FindingDriverController',
+          error: e,
+        );
       }
     }
 
@@ -564,7 +567,8 @@ class FindingDriverController extends GetxController {
     );
     _searchStartedAt = parseDriverSearchStartedAt(args['search_started_at']);
 
-    _chainBrokenReSearch = (args[kFindingDriverChainBrokenArg] as bool?) ?? false;
+    _chainBrokenReSearch =
+        (args[kFindingDriverChainBrokenArg] as bool?) ?? false;
 
     activeRoutePoints.clear();
     routeTarget.value = 'pick_up';
@@ -849,10 +853,6 @@ class FindingDriverController extends GetxController {
   void onMapCreated(GoogleMapController c) {
     mapController = c;
     _fitRouteBounds();
-  }
-
-  void openProfile() {
-    Get.to(() => ProfileScreen());
   }
 
   void recenterMap() {

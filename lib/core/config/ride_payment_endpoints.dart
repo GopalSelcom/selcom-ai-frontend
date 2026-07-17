@@ -17,12 +17,6 @@ abstract final class RidePaymentEndpoints {
   static String updateDestination(String rideId) =>
       _forPaymentMode(URLS.ride.updateDestination(rideId));
 
-  static String updatePickup(String rideId) =>
-      _forPaymentMode(URLS.ride.updatePickup(rideId));
-
-  static String increaseFare(String rideId) =>
-      _forPaymentMode(URLS.ride.increaseFare(rideId));
-
   static String updateStops(String rideId) =>
       _forPaymentMode(URLS.ride.updateStops(rideId));
 }

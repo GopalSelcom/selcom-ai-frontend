@@ -3,7 +3,6 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
@@ -125,17 +124,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance() async {
     try {
       final result = await remoteDataSource.getWalletBalance();
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<PaymentMethodModel>>> getPaymentMethods() async {
-    try {
-      final result = await remoteDataSource.getPaymentMethods();
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

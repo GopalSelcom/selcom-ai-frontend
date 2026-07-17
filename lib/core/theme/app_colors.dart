@@ -31,7 +31,6 @@ class AppColors {
   static const Color bgVerificationSurface = Color(0xFFF2F5F9);
   static const Color bgUnreadNotification = Color(0xFFF0F9FF);
   static const Color bgAvatarLightPink = Color(0xFFFFD2DE);
-  static const Color bgCardDetailsSurface = Color(0xFFF1F3F7);
   static const Color bgInfoLight = Color(0xFFE0F2FE);
   static const Color bgPurpleLight = Color(0xFFEDE9FE);
   static const Color bgWarningLight = Color(0xFFFEF3C7);

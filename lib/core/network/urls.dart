@@ -88,24 +88,18 @@ class _RideEndpoints {
 
   String receipt(String rideId) => "$base/$rideId/receipt";
 
-  String feedback(String rideId) => "$base/$rideId/feedback";
-
   String messages(String rideId) => "$base/$rideId/messages";
 
   String updateDestination(String rideId) => "$base/$rideId/update-destination";
 
-  String updatePickup(String rideId) => "$base/$rideId/update-pickup";
-
-  String increaseFare(String rideId) => "$base/$rideId/increase-fare";
-
   String updateStops(String rideId) => "$base/$rideId/stops";
 
-  String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
 
   String callToken(String rideId) => "$base/$rideId/call/token";
 
+  /// Used by Agora calling bootstrap (not RideRepository).
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
 
   String disputeCharge(String rideId) => "$base/$rideId/dispute-charge";
@@ -120,7 +114,6 @@ class _ProfileEndpoints {
 
   final updateProfile = "edit_profile";
   final getProfile = "go/user/profile";
-  final paymentMethods = "go/user/payment-methods";
   final voipToken = "go/user/voip-token";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";

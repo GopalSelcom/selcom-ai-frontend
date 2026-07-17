@@ -242,6 +242,10 @@ class LocationSelectionController extends GetxController {
             validationFailure = validation;
             return null;
           }
+          if (validation.estimate != null) {
+            built['initialFareEstimate'] = validation.estimate;
+            built['initialFareEstimateAt'] = validation.estimatedAt;
+          }
           return built;
         });
       } finally {
@@ -366,8 +370,15 @@ class LocationSelectionController extends GetxController {
         await Future<void>.delayed(const Duration(milliseconds: 40));
         if (_isDisposed) return;
       }
+
+      // Home already fetched recent + saved in [_loadHomeData] — reuse that cache.
+      if (homeController.hasCompletedInitialHomeLoad) {
+        return;
+      }
+
+      // Fallback when Home never completed its initial load (rare race / cold path).
       await Future.wait<void>([
-        homeController.refreshRecentDestinations(),
+        homeController.reloadRecentDestinations(),
         homeController.loadSavedPlaces(),
       ]);
     } finally {

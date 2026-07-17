@@ -1,10 +1,10 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,10 +17,8 @@ import '../widgets/profile_screen_layout.dart';
 import '../widgets/profile_screen_shimmer.dart';
 import '../widgets/wallet_summary_card.dart';
 
-class ProfileScreen extends StatelessWidget {
-  ProfileScreen({super.key});
-
-  final ProfileController controller = Get.put(sl<ProfileController>());
+class ProfileScreen extends GetView<ProfileController> {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

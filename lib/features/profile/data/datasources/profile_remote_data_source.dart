@@ -3,7 +3,6 @@ import '../../../../core/data/models/requests/save_recent_as_favorite_request.da
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -29,8 +28,6 @@ abstract class ProfileRemoteDataSource {
   Future<bool> deleteSavedPlace(String id);
 
   Future<GoCardBalanceResponseModel> getWalletBalance();
-
-  Future<List<PaymentMethodModel>> getPaymentMethods();
 
   Future<EmailSubjectResponseModel> getEmailSubjects();
 
@@ -184,54 +181,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     return GoCardBalanceResponseModel(
       response: GoCardBalanceData(balance: "0", currency: CurrencyCode.tzs),
     );
-  }
-
-  @override
-  Future<List<PaymentMethodModel>> getPaymentMethods() async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.profile.paymentMethods,
-        method: ApiMethod.get,
-      ),
-    );
-
-    if (response.statusCode == 200 && response.data != null) {
-      // API shape (go/user/payment-methods):
-      // { "data": { "default": "wallet", "methods": [ { "type", "label", ... } ] } }
-      // Legacy: { "data": [ { ... }, ... ] }
-      final rawData = response.data['data'];
-      final List<dynamic> rows;
-      if (rawData is List) {
-        rows = rawData;
-      } else if (rawData is Map) {
-        final methods = rawData['methods'];
-        rows = methods is List ? methods : <dynamic>[];
-      } else {
-        rows = <dynamic>[];
-      }
-      final models = rows
-          .map((e) {
-            if (e is! Map) {
-              return null;
-            }
-            return PaymentMethodModel.fromJson(Map<String, dynamic>.from(e));
-          })
-          .whereType<PaymentMethodModel>()
-          .toList();
-
-      if (rawData is Map) {
-        final def = rawData['default']?.toString().trim();
-        if (def != null && def.isNotEmpty) {
-          final idx = models.indexWhere((m) => m.type == def || m.id == def);
-          if (idx > 0) {
-            models.insert(0, models.removeAt(idx));
-          }
-        }
-      }
-
-      return models;
-    }
-    return [];
   }
 
   @override

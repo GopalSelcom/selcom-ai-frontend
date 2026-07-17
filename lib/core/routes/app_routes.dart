@@ -8,7 +8,6 @@ import '../../features/auth/presentation/screens/phone_input_screen.dart';
 import '../../features/auth/presentation/bindings/login_support_binding.dart';
 import '../../features/auth/presentation/screens/login_support_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
-import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/bindings/confirm_location_binding.dart';
@@ -20,9 +19,11 @@ import '../../features/home/presentation/screens/select_saved_location_screen.da
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/bindings/contact_us_binding.dart';
 import '../../features/profile/presentation/bindings/favorite_locations_binding.dart';
+import '../../features/profile/presentation/bindings/profile_binding.dart';
 import '../../features/profile/presentation/screens/contact_us_screen.dart';
 import '../../features/profile/presentation/screens/favorite_locations_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/payment/presentation/bindings/selcom_pesa_to_wallet_binding.dart';
 import '../../features/payment/presentation/screens/selcom_pesa_to_wallet_screen.dart';
 import '../../features/profile/presentation/settings/bindings/safety_binding.dart';
@@ -33,11 +34,13 @@ import '../../features/promotions/presentation/bindings/promo_code_binding.dart'
 import '../../features/promotions/presentation/screens/promo_code_screen.dart';
 import '../../features/ride/presentation/bindings/driver_accepted_binding.dart';
 import '../../features/ride/presentation/bindings/finding_driver_binding.dart';
+import '../../features/ride/presentation/bindings/my_rides_binding.dart';
 import '../../features/ride/presentation/bindings/ride_message_binding.dart';
 import '../../features/ride/presentation/bindings/vehicle_selection_binding.dart';
 import '../../shared/widgets/confirm_location_screen.dart';
 import '../../features/ride/presentation/screens/driver_accepted_screen.dart';
 import '../../features/ride/presentation/screens/finding_driver_screen.dart';
+import '../../features/ride/presentation/screens/my_rides_screen.dart';
 import '../../features/ride/presentation/screens/ride_message_screen.dart';
 import '../../features/ride/presentation/bindings/stop_editor_binding.dart';
 import '../../features/ride/presentation/screens/stop_editor_screen.dart';
@@ -56,7 +59,6 @@ class AppRoutes {
   static const String phone = '/auth/phone';
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
-  static const String signUp = '/auth/sign-up';
   static const String home = '/home';
   static const String locationSelection = '/location-selection';
   static const String booking = '/booking';
@@ -71,6 +73,8 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String rideMessage = '/ride/message';
   static const String paymentMethods = '/payment-methods';
+  static const String profile = '/profile';
+  static const String myRides = '/my-rides';
   static const String selcomPesaToWallet = '/selcom-pesa-to-wallet';
   static const String settings = '/settings';
   static const String safety = '/safety';
@@ -109,11 +113,6 @@ class AppRoutes {
     GetPage(
       name: profileLoading,
       page: () => const ProfileLoadingScreen(),
-      binding: AuthBinding(),
-    ),
-    GetPage(
-      name: signUp,
-      page: () => const SignUpScreen(),
       binding: AuthBinding(),
     ),
     GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
@@ -164,6 +163,16 @@ class AppRoutes {
       binding: RideMessageBinding(),
     ),
     GetPage(name: paymentMethods, page: () => const PaymentMethodsScreen()),
+    GetPage(
+      name: profile,
+      page: () => const ProfileScreen(),
+      binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: myRides,
+      page: () => const MyRidesScreen(),
+      binding: MyRidesBinding(),
+    ),
     GetPage(
       name: selcomPesaToWallet,
       page: () => const SelcomPesaToWalletScreen(),

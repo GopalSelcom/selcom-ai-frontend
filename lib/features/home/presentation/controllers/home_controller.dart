@@ -40,7 +40,6 @@ import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../profile/data/cache/user_profile_cache.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
@@ -49,8 +48,6 @@ import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
 import 'location_selection_controller.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../../core/services/local_bank_instructions_service.dart';
 
 class HomeController extends GetxController with WidgetsBindingObserver {
   static const String _currentLocationPlaceId = '__current_location__';
@@ -111,6 +108,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+
+  /// True after the first [_loadHomeData] attempt finishes (success or partial).
+  /// Location selection uses this to reuse in-memory recent/saved places.
+  bool hasCompletedInitialHomeLoad = false;
+
   final isLoadingRecentLocationsScreen = false.obs;
   final profileImageUrl = ''.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
@@ -156,7 +158,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
-    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
     homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
@@ -469,11 +470,21 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         });
       }
     } finally {
+      hasCompletedInitialHomeLoad = true;
       if (!SessionExpiryService.isHandling) {
         isLoadingHomeData.value = false;
         invalidateHomeSheetMeasurement();
       }
     }
+  }
+
+  /// Reloads recent destinations into the Home list (not the dedicated screen list).
+  Future<void> reloadRecentDestinations() async {
+    final result = await rideRepository.getRecentDestinations();
+    result.fold((_) => null, (destinations) {
+      recentDestinations.assignAll(destinations);
+      invalidateHomeSheetMeasurement();
+    });
   }
 
   List<RecentDestinationModel> get recentDestinationsPreview {
@@ -991,10 +1002,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _searchPlaces(String input) async {
     isSearching.value = true;
-    final result = await homeRepository.autocomplete(
-      input: input,
-      sessionToken: 'session_token_123',
-    );
+    final result = await homeRepository.autocomplete(input: input);
     result.fold((failure) => suggestions.clear(), (list) {
       suggestions
         ..clear()
@@ -1202,7 +1210,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           message: parsed.message,
           errorCode: parsed.errorCode,
         );
-      }, (_) => EstimateValidationOutcome.success());
+      }, (model) => EstimateValidationOutcome.success(estimate: model));
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
@@ -1405,6 +1413,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1485,6 +1497,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1591,6 +1607,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destination': destAddr,
         'destinationLat': loc.lat,
         'destinationLng': loc.lng,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1819,7 +1839,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> openProfile() async {
-    await Get.to(() => ProfileScreen());
+    await Get.toNamed(AppRoutes.profile);
     if (SessionExpiryService.isHandling) return;
     // No GET on return — avatar syncs from cache only after profile edit.
     _syncProfileImageFromCacheIfChanged();
@@ -1959,6 +1979,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             'preferredVehicleTypeId': preferredVehicleTypeId,
           if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
             'preferredVehicleName': preferredVehicleName,
+          if (validation.estimate != null) ...{
+            'initialFareEstimate': validation.estimate,
+            'initialFareEstimateAt': validation.estimatedAt,
+          },
         };
       });
     } finally {
@@ -2507,14 +2531,25 @@ class EstimateValidationOutcome {
     required this.canProceed,
     this.errorMessage,
     this.errorCode,
+    this.estimate,
+    this.estimatedAt,
   });
 
   final bool canProceed;
   final String? errorMessage;
   final String? errorCode;
 
-  factory EstimateValidationOutcome.success() {
-    return const EstimateValidationOutcome._(canProceed: true);
+  /// Fare estimate returned by the validation call; passed to vehicle
+  /// selection so the same route is not estimated twice.
+  final FareEstimateModel? estimate;
+  final DateTime? estimatedAt;
+
+  factory EstimateValidationOutcome.success({FareEstimateModel? estimate}) {
+    return EstimateValidationOutcome._(
+      canProceed: true,
+      estimate: estimate,
+      estimatedAt: estimate != null ? DateTime.now() : null,
+    );
   }
 
   factory EstimateValidationOutcome.failure({
