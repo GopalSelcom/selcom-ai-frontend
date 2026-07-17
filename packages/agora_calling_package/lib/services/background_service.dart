@@ -60,7 +60,7 @@ class CallBackgroundService {
         'body': 'Connected with $peerName',
       });
     } else {
-      agoraCallLog('[AGORA_BG] failed to start foreground service');
+      AgoraCallLogger.d('[AGORA_BG] failed to start foreground service');
     }
   }
 

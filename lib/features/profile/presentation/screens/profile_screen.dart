@@ -1,10 +1,10 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,10 +17,8 @@ import '../widgets/profile_screen_layout.dart';
 import '../widgets/profile_screen_shimmer.dart';
 import '../widgets/wallet_summary_card.dart';
 
-class ProfileScreen extends StatelessWidget {
-  ProfileScreen({super.key});
-
-  final ProfileController controller = Get.put(sl<ProfileController>());
+class ProfileScreen extends GetView<ProfileController> {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -175,11 +173,19 @@ class ProfileScreen extends StatelessWidget {
                     : controller.openWallet,
                 child: SizedBox(
                   height: ProfileScreenLayout.walletCardHeight,
+                  // Balance hidden by default; eye reveals + silent refresh.
                   child: WalletSummaryCard(
                     balance: balance,
                     walletNumber: walletNum,
                     currencyCode: controller.walletCurrency.value,
                     isLoading: controller.isLoadingWallet.value,
+                    isRefreshingBalance:
+                        controller.isRefreshingWalletBalance.value,
+                    isBalanceVisible: controller.isBalanceVisible.value,
+                    onToggleBalanceVisibility:
+                        controller.toggleWalletBalanceVisibility,
+                    // Copy + iOS snackbar handled in ProfileController.
+                    onCopyWalletNumber: controller.copyWalletNumber,
                   ),
                 ),
               ),
@@ -343,6 +349,16 @@ class ProfileScreen extends StatelessWidget {
               onTap: controller.openMyRides,
             ),
             MenuItemWidget(
+              icon: Iconsax.heart,
+              title: AppStrings.savedLocations.tr,
+              onTap: controller.openFavoriteLocations,
+            ),
+            MenuItemWidget(
+              icon: Iconsax.card,
+              title: "Saved Cards",
+              onTap: controller.openPaymentMethods,
+            ),
+            MenuItemWidget(
               icon: Iconsax.message_question,
               title: AppStrings.help.tr,
               onTap: controller.openContactUs,
@@ -353,11 +369,7 @@ class ProfileScreen extends StatelessWidget {
                 title: AppStrings.safety.tr,
                 onTap: controller.openSafety,
               ),
-            MenuItemWidget(
-              icon: Iconsax.heart,
-              title: AppStrings.savedLocations.tr,
-              onTap: controller.openFavoriteLocations,
-            ),
+
             MenuItemWidget(
               icon: Iconsax.shield_tick,
               title: AppStrings.privacyPolicy.tr,

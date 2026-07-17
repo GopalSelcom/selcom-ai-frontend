@@ -3,6 +3,7 @@ import 'dart:convert';
 GeocodeResponse geocodeResponseFromJson(String str) =>
     GeocodeResponse.fromJson(json.decode(str));
 
+/// Body for `GET go/places/geocode` (`results` + `status`, no envelope).
 class GeocodeResponse {
   final List<GeocodeResult>? results;
   final String? status;
@@ -86,18 +87,27 @@ class GeocodeAddressComponent {
 }
 
 class GeocodeGeometry {
+  final GeocodeViewport? bounds;
   final GeocodeLocation? location;
   final String? locationType;
   final GeocodeViewport? viewport;
 
-  GeocodeGeometry({this.location, this.locationType, this.viewport});
+  GeocodeGeometry({
+    this.bounds,
+    this.location,
+    this.locationType,
+    this.viewport,
+  });
 
   factory GeocodeGeometry.fromJson(Map<String, dynamic> json) =>
       GeocodeGeometry(
+        bounds: json["bounds"] == null
+            ? null
+            : GeocodeViewport.fromJson(json["bounds"]),
         location: json["location"] == null
             ? null
             : GeocodeLocation.fromJson(json["location"]),
-        locationType: json["location_type"],
+        locationType: json["location_type"]?.toString(),
         viewport: json["viewport"] == null
             ? null
             : GeocodeViewport.fromJson(json["viewport"]),
@@ -112,8 +122,8 @@ class GeocodeLocation {
 
   factory GeocodeLocation.fromJson(Map<String, dynamic> json) =>
       GeocodeLocation(
-        lat: json["lat"]?.toDouble(),
-        lng: json["lng"]?.toDouble(),
+        lat: (json["lat"] as num?)?.toDouble(),
+        lng: (json["lng"] as num?)?.toDouble(),
       );
 }
 
@@ -159,8 +169,8 @@ class GeocodeNavLocation {
 
   factory GeocodeNavLocation.fromJson(Map<String, dynamic> json) =>
       GeocodeNavLocation(
-        latitude: json["latitude"]?.toDouble(),
-        longitude: json["longitude"]?.toDouble(),
+        latitude: (json["latitude"] as num?)?.toDouble(),
+        longitude: (json["longitude"] as num?)?.toDouble(),
       );
 }
 

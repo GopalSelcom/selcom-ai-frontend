@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/utils/balance_visibility_policy.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+
+/// Masked wallet balance label — currency visible, amount hidden (e.g. `TZS ••••••`).
+String formatHiddenWalletBalance(
+  String? apiCurrencyCode, {
+  String maskedAmount = BalanceVisibilityPolicy.hiddenBalancePlaceholder,
+}) {
+  final code = apiCurrencyCode?.trim();
+  final symbol = (code != null && code.isNotEmpty)
+      ? code
+      : CurrencyFormatter.displaySymbol;
+  return '$symbol $maskedAmount';
+}
 
 /// Formats wallet account numbers in spaced groups of three (11 digits → 3 3 3 2).
 String formatWalletAccountNumber(String account, {int groupSize = 3}) {

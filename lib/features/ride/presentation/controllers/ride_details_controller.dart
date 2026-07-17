@@ -22,6 +22,7 @@ import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../../data/models/ride_management_models.dart';
 import '../../domain/utils/receipt_image_generator.dart';
 import '../../domain/utils/receipt_pdf_generator.dart';
 import '../widgets/receipt_options_bottom_sheet.dart';
@@ -200,7 +201,7 @@ class RideDetailsController extends GetxController {
       }
 
       final file = await ReceiptImageGenerator.generateReceiptImage(
-        receipt: receiptModel,
+        receipt: _receiptForDisplay(receiptModel),
       );
 
       final hasAccess = await Gal.hasAccess(toAlbum: true);
@@ -255,7 +256,7 @@ class RideDetailsController extends GetxController {
         }
 
         final pdfFile = await ReceiptPdfGenerator.generateReceiptPdf(
-          receipt: receiptModel,
+          receipt: _receiptForDisplay(receiptModel),
         );
 
         // Upload the generated PDF
@@ -304,6 +305,14 @@ class RideDetailsController extends GetxController {
     }
   }
 
+  ReceiptModel _receiptForDisplay(ReceiptModel receipt) {
+    final fallback = ride.transactionId.trim();
+    if (receipt.transactionId.trim().isNotEmpty || fallback.isEmpty) {
+      return receipt;
+    }
+    return receipt.copyWith(transactionId: fallback);
+  }
+
   // Map ride details into the rating module contract.
   RideRatingRideEntity _toRatingEntity(RideEntity source) {
     final fareValue =
@@ -312,7 +321,9 @@ class RideDetailsController extends GetxController {
         source.fareEstimate;
     return RideRatingRideEntity(
       rideId: source.id,
-      transactionId: source.id,
+      transactionId: source.transactionId.trim().isNotEmpty
+          ? source.transactionId.trim()
+          : source.id,
       driverName: source.driverSnapshot?.name ?? '',
       driverImage: source.driverSnapshot?.avatarUrl ?? '',
       vehicleType: vehicleTypeForImage,

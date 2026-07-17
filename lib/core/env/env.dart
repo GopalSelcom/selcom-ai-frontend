@@ -17,7 +17,7 @@ abstract class Env {
   @EnviedField(varName: 'API_HOST_DEV', obfuscate: true, defaultValue: '')
   static final String apiHostDev = _Env.apiHostDev;
 
-  // Socket.IO origins (/go-socket.io path is set in AppSocketService)
+  // Socket.IO origins (path: /go-socket.io in AppConfig for dev/staging)
   @EnviedField(varName: 'SOCKET_BASE_URL_PRODUCTION', obfuscate: true)
   static final String socketBaseUrlProduction = _Env.socketBaseUrlProduction;
 

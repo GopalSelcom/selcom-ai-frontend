@@ -132,11 +132,18 @@ class ReceiptImageGenerator {
               ),
               const SizedBox(height: 6),
               receiptDateTimeRow(dateTime: completedAt, style: dateStyle),
-              const SizedBox(height: 2),
-              Text(
-                AppStrings.refWithId.trParams({'id': receipt.rideId}).tr,
-                style: const TextStyle(fontSize: 9, color: AppColors.receiptTextMuted),
-              ),
+              if (receipt.transactionId.trim().isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  AppStrings.transactionIdWithValue
+                      .trParams({'id': receipt.transactionId.trim()})
+                      .tr,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: AppColors.receiptTextMuted,
+                  ),
+                ),
+              ],
             ],
           ),
           SizedBox(
@@ -231,10 +238,7 @@ class ReceiptImageGenerator {
                   height: _routePinSlotHeight,
                   width: _routeIconColumnWidth,
                   child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: icon,
-                    ),
+                    child: FittedBox(fit: BoxFit.contain, child: icon),
                   ),
                 ),
                 if (showConnectorBelow)
@@ -262,11 +266,17 @@ class ReceiptImageGenerator {
                 children: [
                   Text(
                     label.toUpperCase(),
-                    style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: AppColors.receiptTextMuted,
+                    ),
                   ),
                   Text(
                     address.isEmpty ? AppStrings.emDash.tr : address,
-                    style: const TextStyle(fontSize: 12, color: AppColors.receiptTextDark),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.receiptTextDark,
+                    ),
                   ),
                 ],
               ),
@@ -322,7 +332,10 @@ class ReceiptImageGenerator {
           children: [
             Text(
               label.toUpperCase(),
-              style: const TextStyle(fontSize: 8, color: AppColors.receiptTextMuted),
+              style: const TextStyle(
+                fontSize: 8,
+                color: AppColors.receiptTextMuted,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -457,7 +470,13 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.receiptTextMid,
+            ),
+          ),
           Text(
             CurrencyFormatter.formatWithApiCurrency(amount, currency),
             style: TextStyle(fontSize: 12, color: valueColor),
@@ -470,13 +489,18 @@ class ReceiptImageGenerator {
   static Widget _buildFooter() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.receiptDivider, width: 1)),
+        border: Border(
+          top: BorderSide(color: AppColors.receiptDivider, width: 1),
+        ),
       ),
       padding: const EdgeInsets.only(top: 16),
       child: Center(
         child: Text(
           AppStrings.thankYouForRidingWithSelcomGo.tr,
-          style: const TextStyle(fontSize: 11, color: AppColors.receiptTextMuted),
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.receiptTextMuted,
+          ),
         ),
       ),
     );
@@ -502,7 +526,13 @@ class ReceiptImageGenerator {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.receiptTextMid)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.receiptTextMid,
+            ),
+          ),
           Text(
             value,
             style: const TextStyle(

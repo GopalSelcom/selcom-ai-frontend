@@ -3,10 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 
 /// Maps backend mid-ride cancel reason codes to localized copy.
-String midRideCancelReasonLabel({
-  required String? reason,
-  String? reasonText,
-}) {
+String midRideCancelReasonLabel({required String? reason, String? reasonText}) {
   switch ((reason ?? '').trim().toLowerCase()) {
     case 'vehicle_breakdown':
       return AppStrings.midRideReasonVehicleBreakdown.tr;

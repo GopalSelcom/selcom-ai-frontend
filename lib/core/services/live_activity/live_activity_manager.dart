@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +8,7 @@ import 'package:live_activities/models/activity_update.dart';
 
 import '../../../features/ride/domain/repositories/ride_repository.dart';
 import '../../di/injection_container.dart';
+import '../../utils/app_logger.dart';
 import '../error_reporting/error_reporter.dart';
 import '../storage_service.dart';
 import 'android_order_tracking_manager.dart';
@@ -47,7 +47,7 @@ class LiveActivityManager {
   static const String _merchantNameKey = 'live_activity_order_to_merchant';
 
   Future<void> init() async {
-    developer.log("🎬 LiveActivityManager.init()", name: 'LIVE_ACTIVITY');
+    AppLogger.d("🎬 LiveActivityManager.init()", tag: 'LIVE_ACTIVITY');
     try {
       final String? activitiesData = await StorageService().read(
         _activityIdKey,
@@ -66,10 +66,7 @@ class LiveActivityManager {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
-        "❌ Error loading persisted state: $e",
-        name: 'LIVE_ACTIVITY',
-      );
+      AppLogger.d("❌ Error loading persisted state: $e", tag: 'LIVE_ACTIVITY');
     }
 
     if (_isIOS) {
@@ -93,9 +90,9 @@ class LiveActivityManager {
         }
         for (final activeId in activeIds) {
           if (!_orderToActivityId.values.contains(activeId)) {
-            developer.log(
+            AppLogger.d(
               "🧹 Ending dangling activity: $activeId",
-              name: 'LIVE_ACTIVITY',
+              tag: 'LIVE_ACTIVITY',
             );
             await _liveActivitiesPlugin
                 .endActivity(activeId)
@@ -110,9 +107,9 @@ class LiveActivityManager {
         );
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-        developer.log(
+        AppLogger.d(
           "❌ Error initializing ActivityKit: $e",
-          name: 'LIVE_ACTIVITY',
+          tag: 'LIVE_ACTIVITY',
         );
       }
     }
@@ -130,7 +127,7 @@ class LiveActivityManager {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("❌ Error saving state: $e", name: 'LIVE_ACTIVITY');
+      AppLogger.d("❌ Error saving state: $e", tag: 'LIVE_ACTIVITY');
     }
   }
 
@@ -302,9 +299,9 @@ class LiveActivityManager {
         };
 
         activityModel.removeWhere((key, value) => value == null);
-        developer.log(
+        AppLogger.d(
           "📦 Creation Payload: $activityModel",
-          name: 'LIVE_ACTIVITY',
+          tag: 'LIVE_ACTIVITY',
         );
 
         final activityId = await _liveActivitiesPlugin
@@ -313,9 +310,9 @@ class LiveActivityManager {
 
         if (activityId != null) {
           _orderToActivityId[orderId] = activityId;
-          developer.log(
+          AppLogger.d(
             "✨ Activity created! ID: $activityId",
-            name: 'LIVE_ACTIVITY',
+            tag: 'LIVE_ACTIVITY',
           );
           await _saveState();
           _syncPushTokenWithBackend(orderId, activityId);
@@ -324,7 +321,7 @@ class LiveActivityManager {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("❌ Error starting tracking: $e", name: 'LIVE_ACTIVITY');
+      AppLogger.d("❌ Error starting tracking: $e", tag: 'LIVE_ACTIVITY');
     }
     return null;
   }
@@ -345,61 +342,55 @@ class LiveActivityManager {
     String activityId,
   ) async {
     if (!_isIOS) return;
-    developer.log(
+    AppLogger.d(
       "🔑 Starting Push Token sync for $orderId",
-      name: 'LIVE_ACTIVITY',
+      tag: 'LIVE_ACTIVITY',
     );
     String? token;
     for (int i = 0; i < 10; i++) {
       try {
-        developer.log(
+        AppLogger.d(
           "⏳ Polling token attempt ${i + 1}/10...",
-          name: 'LIVE_ACTIVITY',
+          tag: 'LIVE_ACTIVITY',
         );
         token = await _liveActivitiesPlugin.getPushToken(activityId);
         if (token != null && token.isNotEmpty) {
-          developer.log("✅ Token received from OS!", name: 'LIVE_ACTIVITY');
+          AppLogger.d("✅ Token received from OS!", tag: 'LIVE_ACTIVITY');
           break;
         }
       } catch (e) {
-        developer.log("⚠️ Token poll error: $e", name: 'LIVE_ACTIVITY');
+        AppLogger.d("⚠️ Token poll error: $e", tag: 'LIVE_ACTIVITY');
       }
       await Future.delayed(const Duration(seconds: 3));
     }
 
     if (token != null && token.isNotEmpty) {
       try {
-        developer.log(
+        AppLogger.d(
           "📡 Sending token to backend for $orderId",
-          name: 'LIVE_ACTIVITY',
+          tag: 'LIVE_ACTIVITY',
         );
         final result = await sl<RideRepository>().updateActivityToken(
           orderId,
           token,
         );
         result.fold(
-          (f) => developer.log(
+          (f) => AppLogger.d(
             "❌ Failed to sync token with backend: $f",
-            name: 'LIVE_ACTIVITY',
+            tag: 'LIVE_ACTIVITY',
           ),
           (s) {
-            developer.log(
-              "🎊 Token synced successfully!",
-              name: 'LIVE_ACTIVITY',
-            );
+            AppLogger.d("🎊 Token synced successfully!", tag: 'LIVE_ACTIVITY');
             _lastSyncedTokens[orderId] = token!;
           },
         );
       } catch (e) {
-        developer.log(
-          "❌ Exception during token sync: $e",
-          name: 'LIVE_ACTIVITY',
-        );
+        AppLogger.d("❌ Exception during token sync: $e", tag: 'LIVE_ACTIVITY');
       }
     } else {
-      developer.log(
+      AppLogger.d(
         "🚫 Failed to get token after 10 attempts",
-        name: 'LIVE_ACTIVITY',
+        tag: 'LIVE_ACTIVITY',
       );
     }
   }
@@ -428,9 +419,9 @@ class LiveActivityManager {
       if (!isStatusChange &&
           lastUpdate != null &&
           now.difference(lastUpdate).inMilliseconds < 1500) {
-        developer.log(
+        AppLogger.d(
           "⏳ Throttling update for $orderId (Status: $status)",
-          name: 'LIVE_ACTIVITY',
+          tag: 'LIVE_ACTIVITY',
         );
         return;
       }
@@ -478,23 +469,20 @@ class LiveActivityManager {
       };
 
       updateData.removeWhere((key, value) => value == null);
-      developer.log(
+      AppLogger.d(
         "📦 Update Payload (Merged): $updateData",
-        name: 'LIVE_ACTIVITY',
+        tag: 'LIVE_ACTIVITY',
       );
 
       await _liveActivitiesPlugin
           .updateActivity(activityId, updateData)
           .timeout(const Duration(seconds: 4), onTimeout: () {});
-      developer.log(
-        "📡 Activity updated! Status: $status",
-        name: 'LIVE_ACTIVITY',
-      );
+      AppLogger.d("📡 Activity updated! Status: $status", tag: 'LIVE_ACTIVITY');
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
+      AppLogger.e(
         "❌ Error in updateActivity: $e",
-        name: 'LIVE_ACTIVITY',
+        tag: 'LIVE_ACTIVITY',
         stackTrace: stackTrace,
       );
     }

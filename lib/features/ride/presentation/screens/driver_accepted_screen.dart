@@ -141,7 +141,8 @@ class DriverAcceptedScreen extends StatelessWidget {
             ),
             Obx(() {
               // ETA badge is meaningless until ride details load successfully.
-              if (c.hasRideLoadError) {
+              // Also hide while a chained driver is still finishing another trip.
+              if (!c.shouldShowMapEtaChip) {
                 return const SizedBox.shrink();
               }
               final eta = c.etaLabel.value;
@@ -1465,7 +1466,7 @@ class DriverAcceptedScreen extends StatelessWidget {
   }
 }
 
-/// Triggers `GET /v4/go/emergency-contacts` once when SCR-11 mounts (see controller).
+/// Triggers `GET` emergency-contacts once when SCR-11 mounts (see controller).
 class _DriverAcceptedEmergencyContactsBootstrap extends StatefulWidget {
   const _DriverAcceptedEmergencyContactsBootstrap({required this.child});
 

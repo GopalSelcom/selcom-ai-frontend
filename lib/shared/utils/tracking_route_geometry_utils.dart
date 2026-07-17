@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../core/utils/map_math_utils.dart';
+
 /// How to interpret `route_geometry` from tracking/status socket payloads.
 enum TrackingRouteGeometryKind {
   /// Missing or unparseable coordinates.
@@ -107,5 +109,67 @@ abstract final class TrackingRouteGeometryUtils {
       }
     }
     return true;
+  }
+
+  /// Bearing (degrees, clockwise from north) along the route segment nearest
+  /// [position]. Used when GPS heading disagrees with the drawn polyline
+  /// (e.g. chained rides: driver still finishing another trip while the
+  /// rider sees the path toward their pickup).
+  static double? bearingAlongRouteAt(List<LatLng> route, LatLng position) {
+    if (route.length < 2) return null;
+
+    var bestSegmentStart = 0;
+    var bestDist = double.infinity;
+    for (var i = 0; i < route.length - 1; i++) {
+      final dist = _distancePointToSegmentMeters(
+        position,
+        route[i],
+        route[i + 1],
+      );
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestSegmentStart = i;
+      }
+    }
+
+    return MapMathUtils.calculateBearing(
+      route[bestSegmentStart],
+      route[bestSegmentStart + 1],
+    );
+  }
+
+  static double _distancePointToSegmentMeters(
+    LatLng point,
+    LatLng segmentStart,
+    LatLng segmentEnd,
+  ) {
+    final segLen = haversineMeters(segmentStart, segmentEnd);
+    if (segLen <= 0.5) {
+      return haversineMeters(point, segmentStart);
+    }
+
+    final t = _projectPointOntoSegmentFraction(point, segmentStart, segmentEnd)
+        .clamp(0.0, 1.0);
+    final projected = LatLng(
+      segmentStart.latitude +
+          t * (segmentEnd.latitude - segmentStart.latitude),
+      segmentStart.longitude +
+          t * (segmentEnd.longitude - segmentStart.longitude),
+    );
+    return haversineMeters(point, projected);
+  }
+
+  static double _projectPointOntoSegmentFraction(
+    LatLng point,
+    LatLng segmentStart,
+    LatLng segmentEnd,
+  ) {
+    final dx = segmentEnd.longitude - segmentStart.longitude;
+    final dy = segmentEnd.latitude - segmentStart.latitude;
+    final lenSq = dx * dx + dy * dy;
+    if (lenSq == 0) return 0;
+    final px = point.longitude - segmentStart.longitude;
+    final py = point.latitude - segmentStart.latitude;
+    return (px * dx + py * dy) / lenSq;
   }
 }

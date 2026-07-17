@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-
+import '../utils/app_logger.dart';
 import 'storage_service.dart';
 
 /// Keeps auth tokens warm for Agora call-signaling when the app wakes from a
@@ -21,12 +20,11 @@ class SessionAuthService {
   Future<void> preloadFromStorage() async {
     final storage = StorageService();
     _accessToken = await storage.readAccessToken();
-    if (kDebugMode) {
-      debugPrint(
-        '[USER_AUTH] preloadFromStorage: '
-        'access_token=${_tokenDebugLabel(_accessToken)}',
-      );
-    }
+    AppLogger.d(
+      '[USER_AUTH] preloadFromStorage: '
+      'access_token=${_tokenDebugLabel(_accessToken)}',
+      tag: 'USER_AUTH',
+    );
   }
 
   /// Reloads tokens from disk when the in-memory cache is still empty.
@@ -34,12 +32,23 @@ class SessionAuthService {
     if ((_accessToken ?? '').trim().isNotEmpty) return;
 
     await preloadFromStorage();
-    if (kDebugMode) {
-      debugPrint(
-        '[USER_AUTH] ensureAccessTokenLoaded after storage read: '
-        'access_token=${_tokenDebugLabel(_accessToken)}',
-      );
-    }
+    AppLogger.d(
+      '[USER_AUTH] ensureAccessTokenLoaded after storage read: '
+      'access_token=${_tokenDebugLabel(_accessToken)}',
+      tag: 'USER_AUTH',
+    );
+  }
+
+  /// Drops the in-memory JWT cache after [StorageService.deleteAll].
+  ///
+  /// Without this, Agora/auth helpers could still read a stale token until
+  /// process restart even though Hive was cleared.
+  void clearInMemorySession() {
+    _accessToken = null;
+    AppLogger.d(
+      '[USER_AUTH] clearInMemorySession: access_token cleared',
+      tag: 'USER_AUTH',
+    );
   }
 
   static String _tokenDebugLabel(String? token) {

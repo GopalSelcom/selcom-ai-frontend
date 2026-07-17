@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -26,10 +28,16 @@ class WebViewScreen extends StatelessWidget {
     String? url,
     String? htmlData,
     String? language,
+    String? baseUrl,
   }) async {
     final controllerTag = 'app_web_view_${DateTime.now().microsecondsSinceEpoch}';
     Get.put(
-      AppWebViewController(url: url, htmlData: htmlData, language: language),
+      AppWebViewController(
+        url: url,
+        htmlData: htmlData,
+        language: language,
+        baseUrl: baseUrl,
+      ),
       tag: controllerTag,
     );
 
@@ -46,22 +54,30 @@ class WebViewScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _onBack(BuildContext context) async {
+    final shouldPop = await controller.handleWillPop();
+    if (shouldPop && context.mounted) {
+      // Manual leave (including from result page) — no success result.
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldPop = await controller.handleWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.of(context).pop();
-        }
+        await _onBack(context);
       },
       child: Scaffold(
         backgroundColor: AppColors.pageBackground,
         body: Column(
           children: [
-            AppProfileHeader(title: title),
+            AppProfileHeader(
+              title: title,
+              onBack: () => unawaited(_onBack(context)),
+            ),
             Expanded(
               child: Stack(
                 children: [

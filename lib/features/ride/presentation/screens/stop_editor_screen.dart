@@ -89,8 +89,9 @@ class StopEditorScreen extends GetView<StopEditorController> {
 
                   return AppPrimaryButton(
                     label: controller.saveButtonLabel,
-                    onPressed:
-                        controller.isSaving.value ? null : controller.onSave,
+                    onPressed: controller.isSaving.value
+                        ? null
+                        : controller.onSave,
                     isLoading: controller.isSaving.value,
                   );
                 }),
@@ -124,10 +125,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
             itemCount: stops.length,
             onReorder: controller.reorderStops,
             proxyDecorator: (widget, index, animation) {
-              return Material(
-                color: AppColors.transparent,
-                child: widget,
-              );
+              return Material(color: AppColors.transparent, child: widget);
             },
             itemBuilder: (context, index) {
               final stop = stops[index];

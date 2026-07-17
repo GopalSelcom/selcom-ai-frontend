@@ -1,5 +1,5 @@
-import '../../constants/currency_code.dart';
-
+/// Saved place in `POST from-recent` response `data.place`.
+/// List screens use [SavedPlace] from get_saved_places_response.dart instead.
 class SavedPlaceModel {
   final String? id;
   final String? userId;
@@ -12,6 +12,8 @@ class SavedPlaceModel {
   final int? v;
   final String? createdAt;
   final String? updatedAt;
+  final bool? isFavourite;
+  final SavedPlaceGeoLocation? location;
 
   SavedPlaceModel({
     this.id,
@@ -25,28 +27,44 @@ class SavedPlaceModel {
     this.v,
     this.createdAt,
     this.updatedAt,
+    this.isFavourite,
+    this.location,
   });
 
   factory SavedPlaceModel.fromJson(Map<String, dynamic> json) {
-    final coords = json['location']?['coordinates'] as List?;
+    final rawLocation = json['location'];
+    SavedPlaceGeoLocation? location;
+    List? coords;
+    if (rawLocation is Map) {
+      location = SavedPlaceGeoLocation.fromJson(
+        Map<String, dynamic>.from(rawLocation),
+      );
+      coords = location.coordinates;
+    }
+
     return SavedPlaceModel(
-      id: json['_id'],
-      userId: json['user_id'],
-      label: json['label'] ?? '',
-      name: json['name'] ?? '',
-      address: json['address'],
-      placeId: json['place_id'],
+      id: json['_id']?.toString(),
+      userId: json['user_id']?.toString(),
+      label: json['label']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      address: json['address']?.toString(),
+      placeId: json['place_id']?.toString(),
       lat:
-          (json['lat'] ??
-                  (coords != null && coords.length > 1 ? coords[1] : 0.0))
-              .toDouble(),
+          (json['lat'] as num?)?.toDouble() ??
+          (coords != null && coords.length > 1
+              ? (coords[1] as num).toDouble()
+              : 0.0),
       lng:
-          (json['lng'] ??
-                  (coords != null && coords.isNotEmpty ? coords[0] : 0.0))
-              .toDouble(),
-      v: json['__v'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+          (json['lng'] as num?)?.toDouble() ??
+          (coords != null && coords.isNotEmpty
+              ? (coords[0] as num).toDouble()
+              : 0.0),
+      v: (json['__v'] as num?)?.toInt(),
+      createdAt: json['createdAt']?.toString(),
+      updatedAt: json['updatedAt']?.toString(),
+      isFavourite:
+          json['is_favourite'] as bool? ?? json['isFavourite'] as bool?,
+      location: location,
     );
   }
 
@@ -60,60 +78,39 @@ class SavedPlaceModel {
       'place_id': placeId,
       'lat': lat,
       'lng': lng,
-      'location': {
-        'type': 'Point',
-        'coordinates': [lng, lat],
-      },
+      'location': location?.toJson() ??
+          {
+            'type': 'Point',
+            'coordinates': [lng, lat],
+          },
       '__v': v,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'is_favourite': isFavourite,
     };
   }
 }
 
-class WalletBalanceModel {
-  final double balance;
-  final String currency;
+class SavedPlaceGeoLocation {
+  final String? type;
+  final List<double>? coordinates;
 
-  WalletBalanceModel({required this.balance, required this.currency});
+  const SavedPlaceGeoLocation({this.type, this.coordinates});
 
-  factory WalletBalanceModel.fromJson(Map<String, dynamic> json) {
-    return WalletBalanceModel(
-      balance: (json['balance'] ?? 0.0).toDouble(),
-      currency: json['currency'] ?? CurrencyCode.tzs,
-    );
-  }
-}
+  factory SavedPlaceGeoLocation.fromJson(Map<String, dynamic> json) =>
+      SavedPlaceGeoLocation(
+        type: json['type']?.toString(),
+        coordinates: json['coordinates'] == null
+            ? null
+            : List<double>.from(
+                (json['coordinates'] as List).map(
+                  (x) => (x as num).toDouble(),
+                ),
+              ),
+      );
 
-class PaymentMethodModel {
-  final String id;
-  final String label;
-  final String type; // wallet, card
-  final String? icon;
-  final bool isAvailable;
-
-  PaymentMethodModel({
-    required this.id,
-    required this.label,
-    required this.type,
-    this.icon,
-    this.isAvailable = true,
-  });
-
-  factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
-    final rawAvail = json['is_available'];
-    final bool available = rawAvail == null
-        ? true
-        : rawAvail is bool
-        ? rawAvail
-        : rawAvail == 1 || rawAvail.toString().trim().toLowerCase() == 'true';
-
-    return PaymentMethodModel(
-      id: json['id'] ?? json['type'] ?? '',
-      label: json['label'] ?? '',
-      type: json['type'] ?? '',
-      icon: json['icon'],
-      isAvailable: available,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'coordinates': coordinates,
+  };
 }

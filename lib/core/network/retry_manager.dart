@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,6 +8,7 @@ import '../../shared/utils/app_dialogs.dart';
 import '../../shared/widgets/app_primary_button.dart';
 import '../localization/app_strings.dart';
 import '../services/error_reporting/error_reporter.dart';
+import '../utils/app_logger.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'api_service.dart';
@@ -29,6 +29,9 @@ class RetryManager {
   DateTime? _lastPopupClosedAt;
   StreamSubscription<bool>? _connectivitySubscription;
 
+  /// Coalesces parallel `showRetryPopup` calls so only one dialog is presented.
+  Future<void>? _showPopupInFlight;
+
   /// Whether a retry popup is currently showing
   bool get isPopupShowing => _isPopupShowing;
 
@@ -40,7 +43,7 @@ class RetryManager {
     // Begin passive connectivity tracking so retries can resume on reconnect.
     _connectivity.startMonitoring();
     _setupAutoRetry();
-    developer.log("🔄 RetryManager initialized", name: 'RetryManager');
+    AppLogger.d("🔄 RetryManager initialized", tag: 'RetryManager');
   }
 
   /// Setup auto-retry when connection is restored
@@ -51,9 +54,9 @@ class RetryManager {
       isOnline,
     ) {
       if (isOnline && _queue.isNotEmpty) {
-        developer.log(
+        AppLogger.d(
           "🌐 Connection restored, auto-retrying ${_queue.size} requests",
-          name: 'RetryManager',
+          tag: 'RetryManager',
         );
 
         // Wait 1 second before retrying (debounce)
@@ -64,95 +67,122 @@ class RetryManager {
     });
   }
 
+  /// Single entry point for ApiService — safe to call from many failing requests.
+  void requestRetryPopup() {
+    unawaited(showRetryPopup());
+  }
+
   /// Show retry popup using GetX dialog
-  Future<void> showRetryPopup() async {
+  Future<void> showRetryPopup() {
+    // Multiple API failures can arrive at once; share one in-flight show.
+    final inFlight = _showPopupInFlight;
+    if (inFlight != null) {
+      AppLogger.d(
+        "⚠️ Retry popup show already in flight, coalescing",
+        tag: 'RetryManager',
+      );
+      return inFlight;
+    }
+
+    final show = _showRetryPopupInternal();
+    _showPopupInFlight = show;
+    return show.whenComplete(() {
+      if (identical(_showPopupInFlight, show)) {
+        _showPopupInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _showRetryPopupInternal() async {
     if (_isPopupShowing) {
-      developer.log("⚠️ Popup already showing, skipping", name: 'RetryManager');
+      AppLogger.d("⚠️ Popup already showing, skipping", tag: 'RetryManager');
       return;
     }
     // Cooldown guard: prevents rapid popup reopen loops after dismissal/retry.
     final lastClosed = _lastPopupClosedAt;
     if (lastClosed != null &&
         DateTime.now().difference(lastClosed) < const Duration(seconds: 8)) {
-      developer.log(
+      AppLogger.d(
         "⏱️ Retry popup cooldown active, skipping reopen",
-        name: 'RetryManager',
+        tag: 'RetryManager',
       );
       return;
     }
 
     _isPopupShowing = true;
-    developer.log(
+    AppLogger.d(
       "📱 Showing retry popup for ${_queue.size} queued requests",
-      name: 'RetryManager',
+      tag: 'RetryManager',
     );
 
-    await AppDialogs.showAnimatedDialog(
-      child: Dialog(
-        backgroundColor: AppColors.cardBackground,
-        surfaceTintColor: AppColors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 24.r,
-                backgroundColor: AppColors.primaryLight,
-                child: const Icon(
-                  Icons.wifi_off_rounded,
-                  color: AppColors.primary,
-                  size: 28,
+    try {
+      await AppDialogs.showAnimatedDialog(
+        child: Dialog(
+          backgroundColor: AppColors.cardBackground,
+          surfaceTintColor: AppColors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 24.r,
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(
+                    Icons.wifi_off_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                AppStrings.connectionError.tr,
-                style: AppTextStyles.homeTitle,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "We couldn't complete your request. Please try again.",
-                style: AppTextStyles.onboardingSubtitle.copyWith(
-                  fontSize: 14.sp,
-                  height: 20 / 14,
+                const SizedBox(height: 16),
+                Text(
+                  AppStrings.connectionError.tr,
+                  style: AppTextStyles.homeTitle,
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: AppPrimaryButton(
-                  label: AppStrings.retry.tr,
-                  onPressed: () {
-                    Get.back();
-                    retryAll();
-                  },
-                  height: 52.h,
-                  borderRadius: 14.r,
+                const SizedBox(height: 12),
+                Text(
+                  "We couldn't complete your request. Please try again.",
+                  style: AppTextStyles.onboardingSubtitle.copyWith(
+                    fontSize: 14.sp,
+                    height: 20 / 14,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppPrimaryButton(
+                    label: AppStrings.retry.tr,
+                    onPressed: () {
+                      // Dismiss the showGeneralDialog route (not a GetX dialog).
+                      AppDialogs.dismissTopOverlay();
+                      retryAll();
+                    },
+                    height: 52.h,
+                    borderRadius: 14.r,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      barrierDismissible: false,
-    );
-
-    _isPopupShowing = false;
-    // Track close time for cooldown checks above.
-    _lastPopupClosedAt = DateTime.now();
+        barrierDismissible: false,
+      );
+    } finally {
+      _isPopupShowing = false;
+      // Track close time for cooldown checks above.
+      _lastPopupClosedAt = DateTime.now();
+    }
   }
 
   /// Dismiss popup if showing
   void dismissPopup() {
     if (_isPopupShowing) {
       _isPopupShowing = false;
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+      // Connection retry uses showGeneralDialog — dismiss via navigator, not Get.back.
+      AppDialogs.dismissTopOverlay();
       _lastPopupClosedAt = DateTime.now();
     }
   }
@@ -160,24 +190,24 @@ class RetryManager {
   /// Retry all queued requests in batches
   Future<void> retryAll() async {
     if (_isRetrying) {
-      developer.log(
+      AppLogger.d(
         "⚠️ Retry already in progress, skipping",
-        name: 'RetryManager',
+        tag: 'RetryManager',
       );
       return;
     }
 
     final requests = _queue.getAll();
     if (requests.isEmpty) {
-      developer.log("ℹ️ No requests to retry", name: 'RetryManager');
+      AppLogger.d("ℹ️ No requests to retry", tag: 'RetryManager');
       dismissPopup();
       return;
     }
 
     _isRetrying = true;
-    developer.log(
+    AppLogger.d(
       "🔄 Starting batch retry for ${requests.length} requests",
-      name: 'RetryManager',
+      tag: 'RetryManager',
     );
 
     const batchSize = 5;
@@ -199,9 +229,9 @@ class RetryManager {
 
     _isRetrying = false;
 
-    developer.log(
+    AppLogger.d(
       "✅ Retry completed: $successCount succeeded, $failureCount failed",
-      name: 'RetryManager',
+      tag: 'RetryManager',
     );
 
     // Dismiss popup if all succeeded
@@ -210,9 +240,9 @@ class RetryManager {
     } else {
       // Intentionally avoid immediate reopen here.
       // A new popup is shown only on the next actual failure trigger.
-      developer.log(
+      AppLogger.d(
         "⚠️ $failureCount requests still failed, waiting for next trigger",
-        name: 'RetryManager',
+        tag: 'RetryManager',
       );
     }
   }
@@ -225,9 +255,9 @@ class RetryManager {
     await Future.wait(
       batch.map((failedRequest) async {
         try {
-          developer.log(
+          AppLogger.d(
             "🔄 Retrying: ${failedRequest.request.endpoint}",
-            name: 'RetryManager',
+            tag: 'RetryManager',
           );
 
           // Create a modified request that won't be queued if it fails again
@@ -263,25 +293,25 @@ class RetryManager {
             _queue.remove(failedRequest.id);
             successCount++;
 
-            developer.log(
+            AppLogger.d(
               "✅ Retry succeeded: ${failedRequest.request.endpoint}",
-              name: 'RetryManager',
+              tag: 'RetryManager',
             );
           } else {
             // Failed - keep in queue
             failureCount++;
-            developer.log(
+            AppLogger.d(
               "❌ Retry failed (${response.statusCode}): ${failedRequest.request.endpoint}",
-              name: 'RetryManager',
+              tag: 'RetryManager',
             );
           }
         } catch (e, stackTrace) {
           ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
           // Error during retry - keep in queue
           failureCount++;
-          developer.log(
+          AppLogger.d(
             "❌ Retry error: ${failedRequest.request.endpoint} - $e",
-            name: 'RetryManager',
+            tag: 'RetryManager',
           );
         }
       }),
@@ -295,6 +325,6 @@ class RetryManager {
     _connectivitySubscription?.cancel();
     _queue.clear();
     dismissPopup();
-    developer.log("🔄 RetryManager disposed", name: 'RetryManager');
+    AppLogger.d("🔄 RetryManager disposed", tag: 'RetryManager');
   }
 }

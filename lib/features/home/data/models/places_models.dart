@@ -168,6 +168,7 @@ class Term {
 //
 //     final reverseGeocodeModel = reverseGeocodeModelFromJson(jsonString);
 
+/// Envelope for `GET go/places/reverse-geocode`.
 ReverseGeocodeModel reverseGeocodeModelFromJson(String str) =>
     ReverseGeocodeModel.fromJson(json.decode(str));
 
@@ -182,8 +183,14 @@ class ReverseGeocodeModel {
 
   factory ReverseGeocodeModel.fromJson(Map<String, dynamic> json) =>
       ReverseGeocodeModel(
-        statusCode: json["status_code"],
-        data: json["data"] == null ? null : DataReverse.fromJson(json["data"]),
+        statusCode: (json["status_code"] as num?)?.toInt(),
+        data: json["data"] == null
+            ? null
+            : DataReverse.fromJson(
+                json["data"] is Map<String, dynamic>
+                    ? json["data"] as Map<String, dynamic>
+                    : Map<String, dynamic>.from(json["data"] as Map),
+              ),
       );
 
   Map<String, dynamic> toJson() => {
@@ -382,11 +389,17 @@ class NortheastClass {
   Map<String, dynamic> toJson() => {"lat": lat, "lng": lng};
 }
 
-enum LocationType { APPROXIMATE, GEOMETRIC_CENTER, ROOFTOP }
+enum LocationType {
+  APPROXIMATE,
+  GEOMETRIC_CENTER,
+  RANGE_INTERPOLATED,
+  ROOFTOP,
+}
 
 final locationTypeValues = EnumValues({
   "APPROXIMATE": LocationType.APPROXIMATE,
   "GEOMETRIC_CENTER": LocationType.GEOMETRIC_CENTER,
+  "RANGE_INTERPOLATED": LocationType.RANGE_INTERPOLATED,
   "ROOFTOP": LocationType.ROOFTOP,
 });
 

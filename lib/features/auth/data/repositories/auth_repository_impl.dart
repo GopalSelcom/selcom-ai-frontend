@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../../../core/data/models/requests/firebase_login_request.dart';
@@ -8,9 +9,12 @@ import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/errors/error_mapper.dart';
+import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/set_name_response.dart';
+import '../../../../core/data/models/responses/firebase_login_response.dart';
+import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
@@ -44,7 +48,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AppleAuthLocalDataSource appleAuthLocalDataSource;
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> firebaseLogin({
+  Future<Either<Failure, FirebaseLoginResponseModel?>> firebaseLogin({
     required FirebaseLoginRequest request,
   }) async {
     try {
@@ -65,7 +69,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> exchangeFirebaseSession({
+  Future<Either<Failure, FirebaseLoginResponseModel?>> exchangeFirebaseSession({
     String? name,
     double? latitude,
     double? longitude,
@@ -118,7 +122,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, VerifyOtpResponseModel?>> verifyPhoneOtp({
+  Future<Either<Failure, PhoneVerifyOtpResponseModel?>> verifyPhoneOtp({
     required GoPhoneVerifyOtpRequest request,
   }) async {
     try {
@@ -126,6 +130,27 @@ class AuthRepositoryImpl implements AuthRepository {
       if (result == null) {
         return const Left(
           ServerFailure('Phone verification failed. Please try again.'),
+        );
+      }
+      return Right(result);
+    } on DioException catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ErrorMapper.mapDioExceptionToFailure(e));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SetNameResponseModel?>> setName({
+    required SetNameRequest request,
+  }) async {
+    try {
+      final result = await remoteDataSource.setName(request: request);
+      if (result == null) {
+        return const Left(
+          ServerFailure('Failed to save name. Please try again.'),
         );
       }
       return Right(result);
@@ -488,8 +513,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, SocialAuthUser>> signInWithFacebook() async {
     try {
-      final facebookToken = await facebookSignInService.signIn();
-      final oauthCredential = FacebookAuthProvider.credential(facebookToken.tokenString);
+      final facebookSignInResult = await facebookSignInService.signIn();
+      final oauthCredential = _buildFacebookCredential(facebookSignInResult);
 
       final userCredential = await _signInOrLinkFacebookCredential(oauthCredential);
       final firebaseUser = userCredential.user;
@@ -524,6 +549,29 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Left(
         FacebookSignInFailure('Facebook Sign-In failed. Please try again.'),
       );
+    }
+  }
+
+  /// Maps flutter_facebook_auth tokens to the Firebase credential shape each type
+  /// requires. Using [FacebookAuthProvider.credential] for a [LimitedToken] JWT
+  /// causes Firebase `invalid-credential` / Facebook error 190 (bad signature).
+  AuthCredential _buildFacebookCredential(FacebookSignInResult result) {
+    final accessToken = result.accessToken;
+
+    switch (accessToken.type) {
+      case AccessTokenType.limited:
+        // iOS Limited Login: OIDC id token + the raw nonce from sign-in.
+        final token = accessToken as LimitedToken;
+        return OAuthCredential(
+          providerId: 'facebook.com',
+          signInMethod: 'oauth',
+          idToken: token.tokenString,
+          rawNonce: result.rawNonce,
+        );
+      case AccessTokenType.classic:
+        // Android / classic iOS: standard Facebook access token.
+        final token = accessToken as ClassicToken;
+        return FacebookAuthProvider.credential(token.tokenString);
     }
   }
 

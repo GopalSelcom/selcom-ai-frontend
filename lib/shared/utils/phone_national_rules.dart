@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 
 import '../data/countries_phone_data.dart';
 import 'grouped_phone_number_formatter.dart';
+import 'phone_formatter.dart';
 
 /// Phone rules aligned with `duka_direct_4_flutter`: [Countries] + [GroupedPhoneNumberFormatter].
 class PhoneNationalRules {
@@ -76,5 +77,36 @@ class PhoneNationalRules {
       country.format,
     );
     return '${country.dialCode} $grouped';
+  }
+
+  /// Formats E.164 digits from booking / ride APIs (no `+`), e.g. `255712345678`,
+  /// `919876543210`, using the matching country dial code and national grouping.
+  static String formatE164DigitsForDisplay(String e164Digits) {
+    final digits = e164Digits.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return '';
+
+    final countriesByDialLength = List<CountryData>.from(Countries.all)
+      ..sort(
+        (a, b) => b.dialCode.replaceAll('+', '').length.compareTo(
+          a.dialCode.replaceAll('+', '').length,
+        ),
+      );
+
+    for (final country in countriesByDialLength) {
+      final dialDigits = country.dialCode.replaceAll('+', '');
+      if (dialDigits.isEmpty) continue;
+      if (!digits.startsWith(dialDigits)) continue;
+      if (digits.length <= dialDigits.length) continue;
+
+      final national = digits.substring(dialDigits.length);
+      final grouped = GroupedPhoneNumberFormatter.formatDigits(
+        national,
+        country.format,
+      );
+      return '${country.dialCode} $grouped';
+    }
+
+    // Legacy/local TZ numbers without a stored country prefix.
+    return TanzaniaPhoneFormatter.formatInternational(digits);
   }
 }

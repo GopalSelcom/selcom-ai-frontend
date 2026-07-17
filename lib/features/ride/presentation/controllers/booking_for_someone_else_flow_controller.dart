@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/grouped_phone_number_formatter.dart';
@@ -172,7 +173,7 @@ class BookingForSomeoneElseFlowController extends GetxController {
       phoneError.value = null;
       _refreshCanConfirm();
     } catch (e) {
-      debugPrint('Error picking contact: $e');
+      AppLogger.e('Error picking contact', tag: 'BookingForSomeoneElse', error: e);
     }
   }
 

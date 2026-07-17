@@ -33,7 +33,7 @@ class MyRidesController extends GetxController {
     try {
       _page.value = 1;
       hasMoreData.value = true;
-      isLoading.value = isLoader??true;
+      isLoading.value = isLoader ?? true;
       final result = await rideUseCase.getRideHistory(
         page: _page.value,
         limit: _limit,

@@ -4,16 +4,19 @@ import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
 import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
+import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
+import '../../../../core/data/models/responses/set_name_response.dart';
+import '../../../../core/data/models/responses/firebase_login_response.dart';
+import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/responses/verify_otp_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<VerifyOtpResponseModel?> firebaseLogin({
+  Future<FirebaseLoginResponseModel?> firebaseLogin({
     required FirebaseLoginRequest request,
   });
 
@@ -25,8 +28,12 @@ abstract class AuthRemoteDataSource {
     required GoPhoneOtpRequest request,
   });
 
-  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+  Future<PhoneVerifyOtpResponseModel?> verifyPhoneOtp({
     required GoPhoneVerifyOtpRequest request,
+  });
+
+  Future<SetNameResponseModel?> setName({
+    required SetNameRequest request,
   });
 
   Future<UserModel> saveUserAdditionalDetails({
@@ -45,7 +52,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl();
 
   @override
-  Future<VerifyOtpResponseModel?> firebaseLogin({
+  Future<FirebaseLoginResponseModel?> firebaseLogin({
     required FirebaseLoginRequest request,
   }) async {
     final response = await ApiService().call(
@@ -58,7 +65,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return VerifyOtpResponseModel.fromJson(
+      return FirebaseLoginResponseModel.fromJson(
         _responseMap(response.data),
       );
     }
@@ -113,7 +120,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<VerifyOtpResponseModel?> verifyPhoneOtp({
+  Future<PhoneVerifyOtpResponseModel?> verifyPhoneOtp({
     required GoPhoneVerifyOtpRequest request,
   }) async {
     final response = await ApiService().call(
@@ -125,12 +132,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return VerifyOtpResponseModel.fromJson(
+      return PhoneVerifyOtpResponseModel.fromJson(
         _responseMap(response.data),
       );
     }
 
     _throwIfErrorResponse(response, URLS.auth.phoneVerifyOtp);
+  }
+
+  @override
+  /// Auth required — uses the access token from firebase_login.
+  Future<SetNameResponseModel?> setName({
+    required SetNameRequest request,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.auth.setName,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return SetNameResponseModel.fromJson(_responseMap(response.data));
+    }
+
+    _throwIfErrorResponse(response, URLS.auth.setName);
   }
 
   @override

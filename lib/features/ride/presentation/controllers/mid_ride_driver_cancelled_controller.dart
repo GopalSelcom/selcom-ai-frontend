@@ -69,7 +69,9 @@ class MidRideDriverCancelledController extends GetxController {
   }
 
   void _subscribeToChargeEvents() {
-    _chargeSettledSub = _socketService.rideChargeSettledStream.listen((payload) {
+    _chargeSettledSub = _socketService.rideChargeSettledStream.listen((
+      payload,
+    ) {
       if (payload.rideId.trim() != rideId) return;
       _applyChargeSettled(payload);
     });
@@ -114,8 +116,7 @@ class MidRideDriverCancelledController extends GetxController {
       message: payload.message,
       capturedAmount: payload.capturedAmount,
       netRefund: payload.netRefund,
-      captureStatus:
-          payload.captureStatus ?? MidRideCaptureStatus.captured,
+      captureStatus: payload.captureStatus ?? MidRideCaptureStatus.captured,
       canDispute: false,
     );
     unawaited(WalletRefresh.afterBalanceChange());
@@ -129,8 +130,7 @@ class MidRideDriverCancelledController extends GetxController {
     midRideCancel.value = current.merge(
       message: payload.message,
       releasedAmount: payload.releasedAmount,
-      captureStatus:
-          payload.captureStatus ?? MidRideCaptureStatus.disputed,
+      captureStatus: payload.captureStatus ?? MidRideCaptureStatus.disputed,
       canDispute: false,
     );
     unawaited(WalletRefresh.afterBalanceChange());
@@ -218,7 +218,8 @@ class MidRideDriverCancelledController extends GetxController {
             midRideCancel.value = current.merge(
               message: data.message,
               releasedAmount: data.releasedAmount,
-              captureStatus: midRideCaptureStatusFromApi(data.status) ??
+              captureStatus:
+                  midRideCaptureStatusFromApi(data.status) ??
                   MidRideCaptureStatus.disputed,
               canDispute: false,
             );

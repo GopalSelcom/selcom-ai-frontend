@@ -1,3 +1,4 @@
+import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/entities/mid_ride_cancel_entity.dart';
 import '../../domain/entities/ride_entity.dart';
@@ -40,7 +41,10 @@ class RideModel extends RideEntity {
     super.pdfLinks,
     super.promoCode,
     super.promoDiscount,
+    super.transactionId = '',
     super.midRideCancel,
+    super.cancelTime,
+    super.searchStartedAt,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -154,12 +158,17 @@ class RideModel extends RideEntity {
       pendingStopsUpdate: pendingStopsUpdate,
       isBookedForOther: json['is_booked_for_other'] ?? false,
       isBookAny: json['is_book_any'] == true,
-      passengerName: json['passenger_name'],
-      passengerPhone: json['passenger_phone'],
+      passengerName: _nullableTrimmedString(json['passenger_name']),
+      passengerPhone: _nullableTrimmedString(json['passenger_phone']),
       pdfLinks: pdfLinks,
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
+      transactionId: (json['transid'] ?? json['trans_id'] ?? '')
+          .toString()
+          .trim(),
       midRideCancel: midRideCancel,
+      cancelTime: (json['cancel_time'] as num?)?.toInt(),
+      searchStartedAt: parseDriverSearchStartedAt(json['search_started_at']),
     );
   }
 
@@ -200,7 +209,10 @@ class RideModel extends RideEntity {
     List<PdfLinkEntity>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    String? transactionId,
     MidRideCancelEntity? midRideCancel,
+    int? cancelTime,
+    DateTime? searchStartedAt,
   }) {
     return RideModel(
       id: id ?? this.id,
@@ -238,7 +250,10 @@ class RideModel extends RideEntity {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      transactionId: transactionId ?? this.transactionId,
       midRideCancel: midRideCancel ?? this.midRideCancel,
+      cancelTime: cancelTime ?? this.cancelTime,
+      searchStartedAt: searchStartedAt ?? this.searchStartedAt,
     );
   }
 
@@ -247,6 +262,11 @@ class RideModel extends RideEntity {
     if (words.length == 1) return words[0];
     return words[0] +
         words.skip(1).map((w) => w[0].toUpperCase() + w.substring(1)).join('');
+  }
+
+  static String? _nullableTrimmedString(Object? value) {
+    final trimmed = value?.toString().trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 }
 

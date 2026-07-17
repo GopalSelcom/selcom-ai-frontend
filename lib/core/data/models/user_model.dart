@@ -119,4 +119,45 @@ class UserModel extends UserEntity {
       'firebase_uid': firebaseUid,
     };
   }
+
+  /// Phone verify returns a partial `user` — keep existing session fields when null.
+  UserModel mergeSessionPatch(UserModel patch) {
+    return UserModel(
+      id: patch.id.isNotEmpty ? patch.id : id,
+      countryCode: patch.countryCode ?? countryCode,
+      mobileNumber: patch.mobileNumber ?? mobileNumber,
+      emailId: patch.emailId ?? emailId,
+      name: patch.name ?? name,
+      image: patch.image ?? image,
+      dob: patch.dob ?? dob,
+      selectedLanguage: patch.selectedLanguage ?? selectedLanguage,
+      activeToken: patch.activeToken ?? activeToken,
+      accessToken: patch.accessToken ?? accessToken,
+      isVerify: patch.isVerify ?? isVerify,
+      isBlocked: patch.isBlocked ?? isBlocked,
+      personId: patch.personId ?? personId,
+      tin: patch.tin ?? tin,
+      tinNumber: patch.tinNumber ?? tinNumber,
+      nidaNumber: patch.nidaNumber ?? nidaNumber,
+      lat: patch.lat ?? lat,
+      lng: patch.lng ?? lng,
+      pushNotification: patch.pushNotification ?? pushNotification,
+      smsNotification: patch.smsNotification ?? smsNotification,
+      emailNotification: patch.emailNotification ?? emailNotification,
+      subscribeForNewsletter:
+          patch.subscribeForNewsletter ?? subscribeForNewsletter,
+      totalOrders: patch.totalOrders ?? totalOrders,
+      isCodEnable: patch.isCodEnable ?? isCodEnable,
+      isEmailOtpVerify: patch.isEmailOtpVerify ?? isEmailOtpVerify,
+      appUuid: patch.appUuid ?? appUuid,
+      accountNumber: patch.accountNumber ?? accountNumber,
+      uniqueId: patch.uniqueId ?? uniqueId,
+      goRidePinEnabled: patch.goRidePinEnabled ?? goRidePinEnabled,
+      goAvgRating: patch.goAvgRating ?? goAvgRating,
+      goRatingCount: patch.goRatingCount ?? goRatingCount,
+      lastUsedPaymentMethod:
+          patch.lastUsedPaymentMethod ?? lastUsedPaymentMethod,
+      firebaseUid: patch.firebaseUid ?? firebaseUid,
+    );
+  }
 }

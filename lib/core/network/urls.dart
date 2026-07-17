@@ -47,6 +47,8 @@ class _AuthEndpoints {
   final logout = "logout";
 
   final firebaseLogin = "go/auth/firebase_login";
+  /// Saves display name after SSO when firebase_login returns needs_name.
+  final setName = "go/auth/set_name";
   final phoneSendOtp = "go/auth/phone/send_otp";
   final phoneResendOtp = "go/auth/phone/resend_otp";
   final phoneVerifyOtp = "go/auth/phone/verify_otp";
@@ -69,6 +71,8 @@ class _RideEndpoints {
   final pendingReview = "go/rides/pending-review";
   final reviewTags = "go/review-tags";
 
+  String rideDetails(String rideId) => "$base/$rideId";
+
   String cancelRide(String rideId) => "$base/$rideId/cancel";
 
   String rateRide(String rideId) => "$base/$rideId/rate";
@@ -82,18 +86,20 @@ class _RideEndpoints {
 
   String shareRide(String rideId) => "$base/$rideId/share";
 
+  String receipt(String rideId) => "$base/$rideId/receipt";
+
+  String messages(String rideId) => "$base/$rideId/messages";
+
   String updateDestination(String rideId) => "$base/$rideId/update-destination";
-
-  String updatePickup(String rideId) => "$base/$rideId/update-pickup";
-
-  String increaseFare(String rideId) => "$base/$rideId/increase-fare";
 
   String updateStops(String rideId) => "$base/$rideId/stops";
 
-  String cancelPendingStops(String rideId) => "$base/$rideId/stops/pending";
   final checkBookMode = "go/check-book-mode";
   final emergencyContacts = "go/emergency-contacts";
 
+  String callToken(String rideId) => "$base/$rideId/call/token";
+
+  /// Used by Agora calling bootstrap (not RideRepository).
   String cancelVoiceCall(String rideId) => "$base/$rideId/call/cancel";
 
   String disputeCharge(String rideId) => "$base/$rideId/dispute-charge";
@@ -108,7 +114,7 @@ class _ProfileEndpoints {
 
   final updateProfile = "edit_profile";
   final getProfile = "go/user/profile";
-  final paymentMethods = "go/user/payment-methods";
+  final voipToken = "go/user/voip-token";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";
 }
@@ -132,8 +138,10 @@ class _CommonEndpoints {
   final onboardingBanner = "go/banner";
   final chatQuickReplies = "go/chat/quick-replies";
   final privacy = "go/get_setting?type=3";
-  /// todo: url need to update
-  final termsAndConditions = "go/get_setting?type=1";
+  final termsAndConditions = "go/get_setting?type=2";
+  final countries = "countries";
+  final stateByCountry = "state-by-country";
+  final reportError = "report-error";
 }
 
 /// ─────────────────────────────────
@@ -150,12 +158,17 @@ class _PaymentEndpoints {
 
 /// ─────────────────────────────────
 /// ADDRESS ENDPOINTS (Saved Places)
+/// Single list API — add via from-recent, remove via DELETE /{id}.
+/// No GET /favourites. See docs/SAVED-PLACES-FLOW.md.
 /// ─────────────────────────────────
 class _AddressEndpoints {
   const _AddressEndpoints();
 
   final savedPlaces = "go/user/saved-places";
+  // final favouritePlaces = "go/user/saved-places/favourites";
   final saveRecentAsFavorite = "go/user/saved-places/from-recent";
+
+  String deleteSavedPlace(String id) => "$savedPlaces/$id";
 }
 
 /// ─────────────────────────────────
@@ -175,7 +188,7 @@ class _PlacesEndpoints {
 class _WalletEndpoints {
   const _WalletEndpoints();
 
-  final details = "go_wallet/go_wallet_details";
+  // final details = "go_wallet/go_wallet_details";
   final cardBalance = "go_wallet/go_card_balance";
   final otherPaymentMethods = "go_wallet/go_other_payment_methods";
   final walletTopUp = "go_wallet/wallet_push_ussd";
@@ -189,6 +202,15 @@ class _WalletEndpoints {
   final checkSelcomPesaTopUpStatus = "go_wallet/check_selcom_pesa_status";
   final cardStatement = "go_wallet/go_card_statement";
   final emailCardStatement = "go_wallet/go_email_card_statement";
+  final getLocalBankInstructions = "go_wallet/get_local_bank_instructions";
+
+  final fetchCards = "go_wallet/fetch_cards";
+  final goAddCardNew = "go_wallet/go_add_card_new";
+  final goPayByExistingCard = "go_wallet/go_pay_by_existing_card";
+  final goInitCardSession = "go_wallet/go_init_card_session";
+  final deleteCard = "go_wallet/delete_card";
+
+  final securepay = "https://secureacceptance.cybersource.com/silent/pay";
 }
 
 /// ─────────────────────────────────
@@ -201,6 +223,7 @@ class _SelcomPesaEndpoints {
   final linkedAccounts = "go/selcom_pesa/linked_accounts";
   final mainBalance = "go/selcom_pesa/main_balance";
   final requestUnlink = "go/selcom_pesa/request_unlink";
+  final setDefaultAccount = "go/selcom_pesa/set_default_account";
 }
 
 /// ─────────────────────────────────

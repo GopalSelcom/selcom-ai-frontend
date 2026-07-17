@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -29,6 +27,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -39,8 +38,8 @@ import '../../../../shared/utils/active_ride_vehicle_image_resolver.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
+import '../../../profile/data/cache/user_profile_cache.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
@@ -109,6 +108,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+
+  /// True after the first [_loadHomeData] attempt finishes (success or partial).
+  /// Location selection uses this to reuse in-memory recent/saved places.
+  bool hasCompletedInitialHomeLoad = false;
+
   final isLoadingRecentLocationsScreen = false.obs;
   final profileImageUrl = ''.obs;
   final mapCenter = const LatLng(-6.7924, 39.2083).obs;
@@ -144,6 +148,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool _isResolvingLocationPermission = false;
   double _cachedMapZoom = 16;
   Timer? _sheetCameraSettleTimer;
+  bool _isClosed = false;
 
   final pickupMarkerIcon = Rxn<BitmapDescriptor>();
 
@@ -170,9 +175,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       try {
         await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
       } catch (e, stackTrace) {
-        developer.log(
+        AppLogger.e(
           'Pending review prompt failed: $e',
-          name: 'HomeController',
+          tag: 'HomeController',
           stackTrace: stackTrace,
         );
       }
@@ -278,7 +283,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-
   void _applyLocationPermissionDenied() {
     hasLocationPermission.value = false;
     deviceGpsLocation.value = null;
@@ -286,10 +290,27 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   /// Returns true when location permission is granted and services are on.
+  ///
+  /// GPS button (`showLocationSettingsDialogIfBlocked: true`): check device
+  /// Location Services first so we open the correct settings, then app permission.
+  /// Startup / silent refresh: keep previous order (app permission first) so we
+  /// still grant permission and enable the map blue-dot without blocking on a
+  /// transient device-service false while [force] is off.
   Future<bool> _ensureLocationPermission({
     bool requestPermissionIfDenied = false,
     bool showLocationSettingsDialogIfBlocked = false,
   }) async {
+    if (showLocationSettingsDialogIfBlocked) {
+      final serviceEnabled = await LocationService.instance
+          .checkLocationService(force: true);
+      if (!serviceEnabled) {
+        hasLocationPermission.value = false;
+        deviceGpsLocation.value = null;
+        currentMapAddress.value = AppStrings.enableLocationService.tr;
+        return false;
+      }
+    }
+
     final hasPermission = await LocationService.instance.checkPermission(
       force: showLocationSettingsDialogIfBlocked,
       precise: true,
@@ -427,17 +448,18 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Handle Saved Places
       results[2].fold((_) => null, (response) {
         final res = response as GetSavedPlacesResponseModel?;
-        if (res?.data?.savedPlaces != null) {
-          savedPlaces.assignAll(
-            SavedPlacesOrdering.sortForDisplay(res!.data!.savedPlaces!),
-          );
-          _syncSelectedPickupAfterSavedPlacesLoad();
-        }
+        savedPlaces.assignAll(
+          SavedPlacesOrdering.sortForDisplay(
+            res?.data?.savedPlaces ?? const [],
+          ),
+        );
+        _syncSelectedPickupAfterSavedPlacesLoad();
       });
 
       // Handle Active Ride
       results[3].fold((_) => null, (response) {
-        final activeRideResponse = response as active_ride_api.ActiveRideResponseModel?;
+        final activeRideResponse =
+            response as active_ride_api.ActiveRideResponseModel?;
         _applyActiveRideResponse(activeRideResponse);
       });
 
@@ -448,11 +470,21 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         });
       }
     } finally {
+      hasCompletedInitialHomeLoad = true;
       if (!SessionExpiryService.isHandling) {
         isLoadingHomeData.value = false;
         invalidateHomeSheetMeasurement();
       }
     }
+  }
+
+  /// Reloads recent destinations into the Home list (not the dedicated screen list).
+  Future<void> reloadRecentDestinations() async {
+    final result = await rideRepository.getRecentDestinations();
+    result.fold((_) => null, (destinations) {
+      recentDestinations.assignAll(destinations);
+      invalidateHomeSheetMeasurement();
+    });
   }
 
   List<RecentDestinationModel> get recentDestinationsPreview {
@@ -539,6 +571,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   void onHomeVisible() {
     if (SessionExpiryService.isHandling) return;
+    // HomeScreen can stay mounted under ongoing-ride routes; only release the
+    // ride room when Home is actually the active route.
+    if (Get.currentRoute != AppRoutes.home) return;
     // Release ride socket room when user is on Home (one room at a time).
     _socketService.leaveJoinedRideRoom();
     if (_skipNextVisibleRefresh) {
@@ -697,10 +732,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
-        '❌ Error syncing Live Activity: $e',
-        name: 'HOME_CONTROLLER',
-      );
+      AppLogger.d('❌ Error syncing Live Activity: $e', tag: 'HOME_CONTROLLER');
     }
   }
 
@@ -761,9 +793,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void _onHomeSheetChanged() {
+    if (_isClosed) return;
     if (!homeSheetController.isAttached) return;
     final size = homeSheetController.size;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isClosed) return;
       if (!homeSheetController.isAttached) return;
       // Avoid map/sheet relayout fighting with modal sheets (e.g. add favourite).
       if (Get.isDialogOpen ?? false) return;
@@ -870,6 +904,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   bool get homeSheetShouldSnap => homeSheetSnapSizes.length > 1;
 
   void syncHomeSheetToDefault({bool animated = false}) {
+    if (_isClosed) return;
     final max = homeSheetMaxChildSize;
     var target = homeSheetInitialSize;
     if (homeSheetController.isAttached) {
@@ -881,6 +916,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     sheetSize.value = target;
     if (!homeSheetController.isAttached) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isClosed) return;
         syncHomeSheetToDefault(animated: animated);
       });
       return;
@@ -950,9 +986,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
+    _isClosed = true;
     _sheetCameraSettleTimer?.cancel();
     homeSheetController.removeListener(_onHomeSheetChanged);
-    homeSheetController.dispose();
+    // Don't call homeSheetController.dispose() here because the old HomeScreen widget
+    // might still be in the widget tree (e.g. animating out) during a route transition,
+    // and disposing it now would crash the animating-out sheet.
+    // Instead, removing the listener above is sufficient, and the controller will be
+    // garbage-collected when the view is unmounted.
     WidgetsBinding.instance.removeObserver(this);
     stopActiveRidePolling();
     _socketService.dispose();
@@ -961,10 +1002,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _searchPlaces(String input) async {
     isSearching.value = true;
-    final result = await homeRepository.autocomplete(
-      input: input,
-      sessionToken: 'session_token_123',
-    );
+    final result = await homeRepository.autocomplete(input: input);
     result.fold((failure) => suggestions.clear(), (list) {
       suggestions
         ..clear()
@@ -1064,7 +1102,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await _reverseGeocodeAtCenter();
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("📍 Location Fetch Error: $e", name: 'HomeController');
+      AppLogger.d("📍 Location Fetch Error: $e", tag: 'HomeController');
       // Even if GPS fails, try geocoding the current map center (which might be the default Dar Lat/Lng)
       await _reverseGeocodeAtCenter();
     }
@@ -1083,9 +1121,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       result.fold(
         (failure) {
-          developer.log(
+          AppLogger.d(
             "📍 Reverse Geocode Failure: ${failure.message}",
-            name: 'HomeController',
+            tag: 'HomeController',
           );
           if (currentMapAddress.value == AppStrings.locating.tr) {
             currentMapAddress.value = AppStrings.currentLocation.tr;
@@ -1098,23 +1136,20 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             }
             return;
           }
-          developer.log(
+          AppLogger.d(
             "📍 Reverse Geocode Success. Status: ${data.data?.status}, Results: ${data.data?.results?.length}",
-            name: 'HomeController',
+            tag: 'HomeController',
           );
           final firstResult = data.data?.results?.firstOrNull;
           final formatted = (firstResult?.formattedAddress ?? "").trim();
           if (formatted.isNotEmpty) {
-            developer.log(
+            AppLogger.d(
               "📍 Resolved Address: $formatted",
-              name: 'HomeController',
+              tag: 'HomeController',
             );
             currentMapAddress.value = formatted;
           } else {
-            developer.log(
-              "📍 Resolved Address is EMPTY",
-              name: 'HomeController',
-            );
+            AppLogger.d("📍 Resolved Address is EMPTY", tag: 'HomeController');
             if (currentMapAddress.value == AppStrings.locating.tr) {
               currentMapAddress.value = AppStrings.currentLocation.tr;
             }
@@ -1122,14 +1157,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         },
       );
     } catch (e) {
-      developer.log("📍 Reverse Geocode Exception: $e", name: 'HomeController');
+      AppLogger.d("📍 Reverse Geocode Exception: $e", tag: 'HomeController');
     } finally {
       isResolvingAddress.value = false;
     }
   }
 
   SavedPlace? getSavedPlaceByLabel(String label) {
-    return SavedPlacesOrdering.placeForCanonicalLabel(savedPlaces, label);
+    return SavedPlacesOrdering.placeForLabel(savedPlaces, label);
   }
 
   /// Saved places not bound to a preset chip (custom labels or duplicate presets).
@@ -1175,7 +1210,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           message: parsed.message,
           errorCode: parsed.errorCode,
         );
-      }, (_) => EstimateValidationOutcome.success());
+      }, (model) => EstimateValidationOutcome.success(estimate: model));
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
@@ -1378,6 +1413,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1458,6 +1497,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1564,19 +1607,24 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destination': destAddr,
         'destinationLat': loc.lat,
         'destinationLng': loc.lng,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
 
+  /// Reload from `GET go/user/saved-places`; always applies API list including `[]`.
   Future<void> loadSavedPlaces() async {
     final result = await profileRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
-      if (response?.data?.savedPlaces != null) {
-        savedPlaces.assignAll(
-          SavedPlacesOrdering.sortForDisplay(response!.data!.savedPlaces!),
-        );
-        _syncSelectedPickupAfterSavedPlacesLoad();
-      }
+      savedPlaces.assignAll(
+        SavedPlacesOrdering.sortForDisplay(
+          response?.data?.savedPlaces ?? const [],
+        ),
+      );
+      _syncSelectedPickupAfterSavedPlacesLoad();
     });
   }
 
@@ -1791,15 +1839,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> openProfile() async {
-    await Get.to(() => ProfileScreen());
+    await Get.toNamed(AppRoutes.profile);
     if (SessionExpiryService.isHandling) return;
-    await refreshProfileImage();
+    // No GET on return — avatar syncs from cache only after profile edit.
+    _syncProfileImageFromCacheIfChanged();
   }
 
-  Future<void> refreshProfileImage() async {
-    if (SessionExpiryService.isHandling) return;
-    final result = await profileRepository.getProfile();
-    result.fold((_) {}, _applyProfileImage);
+  /// Updates the home header avatar from session cache after profile edit only.
+  void _syncProfileImageFromCacheIfChanged() {
+    if (!UserProfileCache.consumeChanged()) return;
+    final user = UserProfileCache.user;
+    if (user != null) _applyProfileImage(user);
   }
 
   void _applyProfileImage(UserModel user) {
@@ -1821,16 +1871,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     String? preferredVehicleTypeId,
     String? preferredVehicleName,
   }) async {
-    if (kDebugMode) {
-      debugPrint(
-        '[LocationSelection] BookRide tapped: '
-        'pickupTextLen=${pickup.trim().length}, '
-        'destinationTextLen=${destinations.isNotEmpty ? destinations.last.trim().length : 0}, '
-        'routePickup=($routePickupLat,$routePickupLng), '
-        'routeDestination=($routeDestinationLat,$routeDestinationLng), '
-        'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
-      );
-    }
+    AppLogger.d(
+      '[LocationSelection] BookRide tapped: '
+      'pickupTextLen=${pickup.trim().length}, '
+      'destinationTextLen=${destinations.isNotEmpty ? destinations.last.trim().length : 0}, '
+      'routePickup=($routePickupLat,$routePickupLng), '
+      'routeDestination=($routeDestinationLat,$routeDestinationLng), '
+      'destinationPlaceIdPresent=${(destinationPlaceId ?? '').trim().isNotEmpty}',
+      tag: 'HomeController',
+    );
     final List<String> items = destinations
         .map((d) => d.trim())
         .where((d) => d.isNotEmpty)
@@ -1913,13 +1962,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           return null;
         }
 
-        if (kDebugMode) {
-          debugPrint(
-            '[LocationSelection] Navigate booking args => '
-            'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
-            'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
-          );
-        }
+        AppLogger.d(
+          '[LocationSelection] Navigate booking args => '
+          'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
+          'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
+          tag: 'HomeController',
+        );
 
         return {
           'pickup': pickup,
@@ -1931,6 +1979,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             'preferredVehicleTypeId': preferredVehicleTypeId,
           if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
             'preferredVehicleName': preferredVehicleName,
+          if (validation.estimate != null) ...{
+            'initialFareEstimate': validation.estimate,
+            'initialFareEstimateAt': validation.estimatedAt,
+          },
         };
       });
     } finally {
@@ -2080,36 +2132,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  bool applySavedLabelToLocationSelection({
-    required String label,
-    required int activeSegmentIndex,
-    required TextEditingController pickupController,
-    required TextEditingController destinationController,
-    required List<TextEditingController> extraDestinationControllers,
-    required RxBool pickupEditedByUser,
-    required RxnDouble routePickupLat,
-    required RxnDouble routePickupLng,
-    required RxnDouble routeDestinationLat,
-    required RxnDouble routeDestinationLng,
-    required RxnString destinationPlaceId,
-  }) {
-    final savedPlace = getSavedPlaceByLabel(label);
-    if (savedPlace == null) return false;
-    return applySavedPlaceToLocationSelection(
-      savedPlace: savedPlace,
-      activeSegmentIndex: activeSegmentIndex,
-      pickupController: pickupController,
-      destinationController: destinationController,
-      extraDestinationControllers: extraDestinationControllers,
-      pickupEditedByUser: pickupEditedByUser,
-      routePickupLat: routePickupLat,
-      routePickupLng: routePickupLng,
-      routeDestinationLat: routeDestinationLat,
-      routeDestinationLng: routeDestinationLng,
-      destinationPlaceId: destinationPlaceId,
-    );
-  }
-
   bool applySavedPlaceToLocationSelection({
     required SavedPlace savedPlace,
     required int activeSegmentIndex,
@@ -2247,9 +2269,9 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// Saved place = favourite in product terms (no separate favourites list).
   bool isPlaceFavorite(String address, String? placeId) {
-    final saved = getSavedPlaceFor(address, placeId);
-    return saved?.isFavourite ?? false;
+    return getSavedPlaceFor(address, placeId) != null;
   }
 
   Future<void> toggleAddAddressBottomSheet(Prediction item) async {
@@ -2330,6 +2352,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
+  /// `DELETE go/user/saved-places/{id}` after user confirms.
   Future<void> _confirmAndDeleteSavedPlace(SavedPlace place) async {
     final savedPlaceId = place.id?.trim();
     if (savedPlaceId == null || savedPlaceId.isEmpty) return;
@@ -2508,14 +2531,25 @@ class EstimateValidationOutcome {
     required this.canProceed,
     this.errorMessage,
     this.errorCode,
+    this.estimate,
+    this.estimatedAt,
   });
 
   final bool canProceed;
   final String? errorMessage;
   final String? errorCode;
 
-  factory EstimateValidationOutcome.success() {
-    return const EstimateValidationOutcome._(canProceed: true);
+  /// Fare estimate returned by the validation call; passed to vehicle
+  /// selection so the same route is not estimated twice.
+  final FareEstimateModel? estimate;
+  final DateTime? estimatedAt;
+
+  factory EstimateValidationOutcome.success({FareEstimateModel? estimate}) {
+    return EstimateValidationOutcome._(
+      canProceed: true,
+      estimate: estimate,
+      estimatedAt: estimate != null ? DateTime.now() : null,
+    );
   }
 
   factory EstimateValidationOutcome.failure({

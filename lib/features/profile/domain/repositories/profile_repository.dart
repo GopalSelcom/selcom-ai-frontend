@@ -3,7 +3,6 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/user_model.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../data/models/contact_us_models.dart';
@@ -11,15 +10,17 @@ import '../../data/models/request/update_profile_request.dart';
 import '../../data/models/update_profile_response.dart';
 
 abstract class ProfileRepository {
-  Future<Either<Failure, UserModel>> getProfile();
+  /// Returns [UserProfileCache] when loaded; pass [forceRefresh] to bypass cache.
+  Future<Either<Failure, UserModel>> getProfile({bool forceRefresh = false});
+
+  /// Drops cached profile (logout / session expiry).
+  void invalidateProfileCache();
 
   Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(
     UserProfileUpdateRequest profileRequest,
   );
 
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
-
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getFavoritePlaces();
 
   Future<Either<Failure, bool>> saveRecentAsFavorite(
     SaveRecentAsFavoriteRequest request,
@@ -29,13 +30,9 @@ abstract class ProfileRepository {
 
   Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance();
 
-  Future<Either<Failure, List<PaymentMethodModel>>> getPaymentMethods();
-
   Future<Either<Failure, EmailSubjectResponseModel>> getEmailSubjects();
 
   Future<Either<Failure, SendEmailResponseModel>> sendEmail(
     SendEmailRequestModel request,
   );
-
-  Future<Either<Failure, bool>> toggleFavorite(String id, bool isFavorite);
 }

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -131,7 +132,7 @@ class RideDriverCallOptionsSheet extends StatelessWidget {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('Error launching dialer: $e');
+      AppLogger.e('Error launching dialer', tag: 'RideDriverCallOptions', error: e);
       AppDialogs.showErrorDialog(
         title: AppStrings.callDriver.tr,
         message: AppStrings.errorOpeningPhoneDialer.tr,

@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:dio/dio.dart';
 
 import '../../../../core/config/app_config.dart';
@@ -15,6 +13,7 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/session_expiry_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
@@ -37,8 +36,6 @@ abstract class RideRemoteDataSource {
 
   Future<DisputeChargeResult> disputeCharge(String rideId, {String? reason});
 
-  Future<bool> cancelVoiceCall(String rideId);
-
   Future<DestinationUpdatePreviewModel> previewUpdateDestination(
     String rideId,
     Map<String, dynamic> destination,
@@ -49,15 +46,7 @@ abstract class RideRemoteDataSource {
     Map<String, dynamic> destination,
   );
 
-  Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup);
-
-  Future<bool> increaseFare(String rideId, int newFare);
-
   Future<ReceiptModel> getReceipt(String rideId);
-
-  Future<bool> rateDriver(String rideId, int rating, String comment);
-
-  Future<bool> submitFeedback(String rideId, String category, String message);
 
   Future<String> validateRidePayment(ValidateRidePaymentRequest request);
 
@@ -81,8 +70,6 @@ abstract class RideRemoteDataSource {
     bool confirm = false,
     required String idempotencyKey,
   });
-
-  Future<void> cancelPendingStops(String rideId);
 
   Future<CheckBookModeResult> checkBookMode({
     required double riderLat,
@@ -164,8 +151,11 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List data = response.data['data']?['destinations'] ?? [];
-      return data.map((e) => RecentDestinationModel.fromJson(e)).toList();
+      final body = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : Map<String, dynamic>.from(response.data as Map);
+      final parsed = RecentDestinationsResponseModel.fromJson(body);
+      return parsed.data?.destinations ?? [];
     }
     return [];
   }
@@ -191,7 +181,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<RideModel> getRideDetails(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId",
+        endpoint: URLS.ride.rideDetails(rideId),
         method: ApiMethod.get,
       ),
     );
@@ -267,17 +257,6 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       throw Exception('dispute_window_closed');
     }
     throw Exception('Failed to dispute charge');
-  }
-
-  @override
-  Future<bool> cancelVoiceCall(String rideId) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.ride.cancelVoiceCall(rideId),
-        method: ApiMethod.post,
-      ),
-    );
-    return response.statusCode == 200 || response.statusCode == 201;
   }
 
   @override
@@ -357,34 +336,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<bool> updatePickup(String rideId, Map<String, dynamic> pickup) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: RidePaymentEndpoints.updatePickup(rideId),
-        method: ApiMethod.put,
-        body: {'pickup': pickup},
-      ),
-    );
-    return response.statusCode == 200;
-  }
-
-  @override
-  Future<bool> increaseFare(String rideId, int newFare) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: RidePaymentEndpoints.increaseFare(rideId),
-        method: ApiMethod.put,
-        body: {'new_fare': newFare},
-      ),
-    );
-    return response.statusCode == 200;
-  }
-
-  @override
   Future<ReceiptModel> getReceipt(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/receipt",
+        endpoint: URLS.ride.receipt(rideId),
         method: ApiMethod.get,
       ),
     );
@@ -398,34 +353,6 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       return ReceiptModel.fromJson({'ride_id': rideId});
     }
     throw Exception('Failed to get receipt');
-  }
-
-  @override
-  Future<bool> rateDriver(String rideId, int rating, String comment) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/rate",
-        method: ApiMethod.post,
-        body: {'rating': rating, 'comment': comment},
-      ),
-    );
-    return response.statusCode == 200;
-  }
-
-  @override
-  Future<bool> submitFeedback(
-    String rideId,
-    String category,
-    String message,
-  ) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/feedback",
-        method: ApiMethod.post,
-        body: {'category': category, 'message': message},
-      ),
-    );
-    return response.statusCode == 200;
   }
 
   @override
@@ -461,7 +388,11 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       final statusCode = response.statusCode;
 
       // Business rejections from validate payment (400/409) — never return empty validation_id.
-      if (_isValidateRidePaymentBusinessRejection(statusCode, errorCode, message)) {
+      if (_isValidateRidePaymentBusinessRejection(
+        statusCode,
+        errorCode,
+        message,
+      )) {
         final payload = body['data'];
         throw RidePaymentValidationException(
           errorCode: errorCode.isNotEmpty
@@ -492,7 +423,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/messages",
+        endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.get,
         queryParams: {'page': page, 'limit': limit},
       ),
@@ -508,7 +439,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   Future<bool> sendChatMessage(String rideId, String message) async {
     final response = await ApiService().call(
       request: ApiRequest(
-        endpoint: "${URLS.ride.base}/$rideId/messages",
+        endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.post,
         body: {'message': message},
       ),
@@ -557,9 +488,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   @override
   Future<bool> updateActivityToken(String rideId, String token) async {
     try {
-      developer.log(
-        "🚀 API Request: PATCH /v4/go/rides/$rideId/activity-token",
-        name: 'ORDER_TRACKING',
+      AppLogger.d(
+        "🚀 API Request: PATCH ${URLS.ride.activityToken(rideId)}",
+        tag: 'ORDER_TRACKING',
       );
       final response = await ApiService().call(
         request: ApiRequest(
@@ -568,22 +499,22 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
           body: {'ios_activity_token': token},
         ),
       );
-      developer.log(
+      AppLogger.d(
         "✅ API Response: ${response.statusCode} for ride $rideId",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       if (e is DioException) {
-        developer.log(
+        AppLogger.d(
           "❌ API Error: ${e.response?.statusCode} - ${e.response?.data} while updating token for ride $rideId",
-          name: 'ORDER_TRACKING',
+          tag: 'ORDER_TRACKING',
         );
       } else {
-        developer.log(
+        AppLogger.d(
           "❌ Unexpected Error: $e while updating token for ride $rideId",
-          name: 'ORDER_TRACKING',
+          tag: 'ORDER_TRACKING',
         );
       }
       return false;
@@ -642,21 +573,6 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       return '$errorCode|$message';
     }
     return message;
-  }
-
-  @override
-  Future<void> cancelPendingStops(String rideId) async {
-    try {
-      await apiService.call(
-        request: ApiRequest(
-          endpoint: URLS.ride.cancelPendingStops(rideId),
-          method: ApiMethod.delete,
-        ),
-      );
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log("Error cancelling pending stops: $e");
-    }
   }
 
   @override
@@ -768,8 +684,9 @@ Map<String, dynamic>? _apiResponseMap(dynamic raw) {
 void _throwIfInsufficientWalletBalance(dynamic raw) {
   final body = _apiResponseMap(raw);
   if (body == null) return;
-  final insufficient =
-      InsufficientWalletBalanceDetails.tryParseFromApiResponse(body);
+  final insufficient = InsufficientWalletBalanceDetails.tryParseFromApiResponse(
+    body,
+  );
   if (insufficient != null) {
     throw InsufficientWalletBalanceException(insufficient);
   }

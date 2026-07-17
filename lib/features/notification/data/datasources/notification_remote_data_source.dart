@@ -54,7 +54,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.notification.readById(notificationId),
-        method: ApiMethod.put,
+        method: ApiMethod.post,
       ),
     );
 
@@ -66,21 +66,10 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.notification.readAll,
-        method: ApiMethod.put,
-      ),
-    );
-
-    if (_isSuccess(response.statusCode)) {
-      return true;
-    }
-
-    // Some backends expose read-all as POST.
-    final fallback = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.notification.readAll,
         method: ApiMethod.post,
       ),
     );
-    return _isSuccess(fallback.statusCode);
+
+    return _isSuccess(response.statusCode);
   }
 }

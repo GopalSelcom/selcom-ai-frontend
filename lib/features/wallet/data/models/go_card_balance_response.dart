@@ -1,5 +1,8 @@
 import '../../domain/entities/wallet_card_balance_entity.dart';
 
+/// Envelope for `go_wallet/go_card_balance`.
+///
+/// Top-level `response` holds card metadata plus a `data[]` balance line list.
 class GoCardBalanceResponseModel {
   GoCardBalanceResponseModel({
     this.statusCode,
@@ -26,6 +29,7 @@ class GoCardBalanceResponseModel {
       statusCode == 200 && response != null && response!.isSuccessful;
 }
 
+/// Wallet card balance payload from `go_wallet/go_card_balance`.
 class GoCardBalanceData {
   GoCardBalanceData({
     this.result,
@@ -35,6 +39,10 @@ class GoCardBalanceData {
     this.phone,
     this.cardNumber,
     this.accountType,
+    this.dealer,
+    this.group,
+    this.records,
+    this.data = const [],
     this.currency,
     this.available,
     this.reserved,
@@ -49,6 +57,12 @@ class GoCardBalanceData {
   final String? phone;
   final String? cardNumber;
   final String? accountType;
+  final String? dealer;
+  final String? group;
+  final int? records;
+  final List<GoCardBalanceLineItem> data;
+
+  /// Flattened from the primary ACTIVE balance line for legacy callers.
   final String? currency;
   final String? available;
   final String? reserved;
@@ -56,7 +70,8 @@ class GoCardBalanceData {
   final String? status;
 
   factory GoCardBalanceData.fromJson(Map<String, dynamic> json) {
-    final line = _primaryBalanceLine(json);
+    final lines = _parseBalanceLines(json['data']);
+    final line = _primaryBalanceLine(lines);
 
     return GoCardBalanceData(
       result: json['result']?.toString(),
@@ -66,13 +81,15 @@ class GoCardBalanceData {
       phone: json['phone']?.toString(),
       cardNumber: json['card_number']?.toString(),
       accountType: json['account_type']?.toString(),
-      currency: _stringOrNull(line?['currency']) ?? json['currency']?.toString(),
-      available:
-          _amountAsString(line?['available']) ?? json['available']?.toString(),
-      reserved:
-          _amountAsString(line?['reserved']) ?? json['reserved']?.toString(),
-      balance: _amountAsString(line?['balance']) ?? json['balance']?.toString(),
-      status: line?['status']?.toString() ?? json['status']?.toString(),
+      dealer: json['dealer']?.toString(),
+      group: json['group']?.toString(),
+      records: _parseInt(json['records']),
+      data: lines,
+      currency: line?.currency ?? json['currency']?.toString(),
+      available: line?.available ?? json['available']?.toString(),
+      reserved: line?.reserved ?? json['reserved']?.toString(),
+      balance: line?.balance ?? json['balance']?.toString(),
+      status: line?.status ?? json['status']?.toString(),
     );
   }
 
@@ -83,39 +100,88 @@ class GoCardBalanceData {
   }
 
   WalletCardBalanceEntity toEntity() {
-    final availableAmount = _parseAmount(available);
-    final balanceAmount = _parseAmount(balance);
-    final hasAvailableField =
-        available != null && available!.trim().isNotEmpty;
+    final primary = primaryBalanceLine;
+    final availableAmount = _parseAmount(primary?.available ?? available);
+    final balanceAmount = _parseAmount(primary?.balance ?? balance);
+    final hasAvailableField = (primary?.available ?? available)
+            ?.trim()
+            .isNotEmpty ==
+        true;
     return WalletCardBalanceEntity(
       available: hasAvailableField ? availableAmount : balanceAmount,
-      reserved: _parseAmount(reserved),
-      currency: currency?.trim().isNotEmpty == true ? currency!.trim() : 'TZS',
+      reserved: _parseAmount(primary?.reserved ?? reserved),
+      currency: (primary?.currency ?? currency)?.trim().isNotEmpty == true
+          ? (primary?.currency ?? currency)!.trim()
+          : 'TZS',
       pan: pan?.trim() ?? '',
       holderName: name?.trim().isNotEmpty == true ? name!.trim() : null,
     );
   }
 
-  static Map<String, dynamic>? _primaryBalanceLine(Map<String, dynamic> json) {
-    final data = json['data'];
-    if (data is! List || data.isEmpty) return null;
+  GoCardBalanceLineItem? get primaryBalanceLine => _primaryBalanceLine(data);
 
-    Map<String, dynamic>? first;
-    for (final item in data) {
+  static List<GoCardBalanceLineItem> _parseBalanceLines(dynamic raw) {
+    if (raw is! List) return const [];
+
+    final lines = <GoCardBalanceLineItem>[];
+    for (final item in raw) {
       if (item is! Map<String, dynamic>) continue;
-      first ??= item;
-      final status = item['status']?.toString().trim().toUpperCase();
-      if (status == 'ACTIVE') {
+      lines.add(GoCardBalanceLineItem.fromJson(item));
+    }
+    return lines;
+  }
+
+  static GoCardBalanceLineItem? _primaryBalanceLine(
+    List<GoCardBalanceLineItem> lines,
+  ) {
+    if (lines.isEmpty) return null;
+
+    for (final item in lines) {
+      if (item.status?.trim().toUpperCase() == 'ACTIVE') {
         return item;
       }
     }
-    return first;
+    return lines.first;
   }
 
-  static String? _stringOrNull(dynamic value) {
+  static int? _parseInt(dynamic value) {
     if (value == null) return null;
-    final text = value.toString().trim();
-    return text.isEmpty ? null : text;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static double _parseAmount(String? value) {
+    if (value == null || value.trim().isEmpty) return 0;
+    return double.tryParse(value.trim()) ?? 0;
+  }
+}
+
+class GoCardBalanceLineItem {
+  const GoCardBalanceLineItem({
+    this.id,
+    this.currency,
+    this.balance,
+    this.reserved,
+    this.available,
+    this.status,
+  });
+
+  final int? id;
+  final String? currency;
+  final String? balance;
+  final String? reserved;
+  final String? available;
+  final String? status;
+
+  factory GoCardBalanceLineItem.fromJson(Map<String, dynamic> json) {
+    return GoCardBalanceLineItem(
+      id: GoCardBalanceData._parseInt(json['id']),
+      currency: json['currency']?.toString(),
+      balance: _amountAsString(json['balance']),
+      reserved: _amountAsString(json['reserved']),
+      available: _amountAsString(json['available']),
+      status: json['status']?.toString(),
+    );
   }
 
   static String? _amountAsString(dynamic value) {
@@ -123,10 +189,5 @@ class GoCardBalanceData {
     if (value is num) return value.toString();
     final text = value.toString().trim();
     return text.isEmpty ? null : text;
-  }
-
-  static double _parseAmount(String? value) {
-    if (value == null || value.trim().isEmpty) return 0;
-    return double.tryParse(value.trim()) ?? 0;
   }
 }

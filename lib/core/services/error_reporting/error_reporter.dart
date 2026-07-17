@@ -18,6 +18,8 @@ import '../../config/app_config.dart';
 import '../../data/models/user_model.dart';
 import '../../network/api_service.dart';
 import '../../network/network_connectivity_service.dart';
+import '../../network/urls.dart';
+import '../../utils/app_logger.dart';
 import '../storage_service.dart';
 import 'models/error_constants.dart';
 import 'models/error_report.dart';
@@ -71,10 +73,10 @@ class ErrorReporter {
         }
       });
 
-      debugPrint("🚨 ErrorReporter initialized");
+      AppLogger.i('ErrorReporter initialized', tag: 'ErrorReporter');
       sync();
     } catch (e) {
-      debugPrint("🚨 ErrorReporter initialization failed: $e");
+      AppLogger.e('ErrorReporter initialization failed', tag: 'ErrorReporter', error: e);
     } finally {
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
@@ -121,12 +123,14 @@ class ErrorReporter {
 
       await _waitUntilInitialized.timeout(
         const Duration(seconds: 5),
-        onTimeout: () =>
-            debugPrint("🚨 ErrorReporter: Init timeout, proceeding anyway"),
+        onTimeout: () => AppLogger.w(
+          'ErrorReporter: Init timeout, proceeding anyway',
+          tag: 'ErrorReporter',
+        ),
       );
 
       final id = _uuid.v4();
-      debugPrint("🚨 ErrorReporter: Capturing error report $id");
+      AppLogger.i('Capturing error report $id', tag: 'ErrorReporter');
 
       // 1. Capture Screenshot
       String? screenshotPath;
@@ -144,7 +148,11 @@ class ErrorReporter {
           screenshotPath = path;
         }
       } catch (e) {
-        debugPrint("🚨 ErrorReporter: Failed to capture screenshot: $e");
+        AppLogger.w(
+          'Failed to capture screenshot',
+          tag: 'ErrorReporter',
+        );
+        AppLogger.d('$e', tag: 'ErrorReporter');
       }
 
       // 2. Gather Context
@@ -183,15 +191,14 @@ class ErrorReporter {
           );
         }
       } catch (e) {
-        debugPrint("ErrorReporter: Crashlytics mirroring failed: $e");
+        AppLogger.w('Crashlytics mirroring failed: $e', tag: 'ErrorReporter');
       }
 
       // 5. Trigger Sync
       sync();
     } catch (e, st) {
-      debugPrint("🚨 ErrorReporter critical failure: $e\n$st");
-      // Fallback print for the original error
-      debugPrint("🚨 Original error that failed to report: $error");
+      AppLogger.e('ErrorReporter critical failure', tag: 'ErrorReporter', error: e, stackTrace: st);
+      AppLogger.e('Original error that failed to report', tag: 'ErrorReporter', error: error);
     }
   }
 
@@ -211,12 +218,15 @@ class ErrorReporter {
         if (success) {
           await _deleteReportLocally(report);
         } else {
-          debugPrint("🚨 ErrorReporter: Upload failed for ${report.id}");
+          AppLogger.w(
+            'Upload failed for ${report.id}',
+            tag: 'ErrorReporter',
+          );
           continue;
         }
       }
     } catch (e) {
-      debugPrint("🚨 ErrorReporter: Sync failed: $e");
+      AppLogger.e('Sync failed', tag: 'ErrorReporter', error: e);
     } finally {
       _isSyncing = false;
     }
@@ -227,7 +237,7 @@ class ErrorReporter {
       final String errorBaseUrl = AppConfig.errorReportHost;
 
       final request = ApiRequest(
-        endpoint: "/api/v4/report-error",
+        endpoint: AppConfig.versionedApiPath(URLS.common.reportError),
         method: ApiMethod.multipart,
         customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,
@@ -264,7 +274,7 @@ class ErrorReporter {
           response.statusCode! >= 200 &&
           response.statusCode! < 300;
     } catch (e) {
-      debugPrint("🚨 ErrorReporter: Upload failed: $e");
+      AppLogger.e('Upload failed', tag: 'ErrorReporter', error: e);
       return false;
     }
   }

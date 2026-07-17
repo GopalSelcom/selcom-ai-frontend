@@ -16,7 +16,6 @@ abstract class HomeRepository {
 
   Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,
-    required String sessionToken,
   });
 
   Future<Either<Failure, ReverseGeocodeModel?>> reverseGeocode({

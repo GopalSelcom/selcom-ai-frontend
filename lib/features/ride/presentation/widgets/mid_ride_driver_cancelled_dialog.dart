@@ -76,11 +76,7 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
   Widget? _buildChargeMessage(MidRideDriverCancelledController c) {
     final message = c.chargeMessage;
     if (message == null || message.isEmpty) return null;
-    return Text(
-      message,
-      textAlign: TextAlign.center,
-      style: _messageStyle(c),
-    );
+    return Text(message, textAlign: TextAlign.center, style: _messageStyle(c));
   }
 
   @override

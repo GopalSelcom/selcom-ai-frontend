@@ -32,10 +32,6 @@ class RideUseCase {
     return repository.cancelRide(rideId, reason);
   }
 
-  Future<Either<Failure, bool>> cancelVoiceCall(String rideId) {
-    return repository.cancelVoiceCall(rideId);
-  }
-
   Future<Either<Failure, DestinationUpdatePreviewModel>>
   previewUpdateDestination(String rideId, Map<String, dynamic> destination) {
     return repository.previewUpdateDestination(rideId, destination);
@@ -46,35 +42,8 @@ class RideUseCase {
     return repository.confirmUpdateDestination(rideId, destination);
   }
 
-  Future<Either<Failure, bool>> updatePickup(
-    String rideId,
-    Map<String, dynamic> pickup,
-  ) {
-    return repository.updatePickup(rideId, pickup);
-  }
-
-  Future<Either<Failure, bool>> increaseFare(String rideId, int newFare) {
-    return repository.increaseFare(rideId, newFare);
-  }
-
   Future<Either<Failure, ReceiptModel>> getReceipt(String rideId) {
     return repository.getReceipt(rideId);
-  }
-
-  Future<Either<Failure, bool>> rateDriver(
-    String rideId,
-    int rating,
-    String comment,
-  ) {
-    return repository.rateDriver(rideId, rating, comment);
-  }
-
-  Future<Either<Failure, bool>> submitFeedback(
-    String rideId,
-    String category,
-    String message,
-  ) {
-    return repository.submitFeedback(rideId, category, message);
   }
 
   Future<Either<Failure, String>> validateRidePayment(

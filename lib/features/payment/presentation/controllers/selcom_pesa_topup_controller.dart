@@ -8,6 +8,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
@@ -16,7 +17,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
-import '../../../profile/domain/entities/selcom_pesa_linked_account_entity.dart';
+import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
 import '../../../wallet/domain/entities/wallet_details_entity.dart';
@@ -70,6 +71,7 @@ class SelcomPesaTopupController extends GetxController {
   late final PaymentCountdownTimer _paymentCountdown;
   Timer? _pollTimer;
   bool _pendingDialogVisible = false;
+  bool _dialogRouteOpen = false;
   bool _paymentHandled = false;
   bool _statusPollInFlight = false;
   bool _retainForFollowUpSheet = false;
@@ -125,7 +127,11 @@ class SelcomPesaTopupController extends GetxController {
     _paymentCountdown = PaymentCountdownTimer(
       onTick: (remaining) => pendingCountdown.value = remaining,
       onExpired: _onPaymentTimeoutExpired,
-      onResumed: () => unawaited(_pollSelcomPesaStatus()),
+      onResumed: () {
+        _ensurePendingDialogVisible();
+        unawaited(_pollSelcomPesaStatus());
+        _restartPollTimerIfNeeded();
+      },
     );
   }
 
@@ -147,7 +153,6 @@ class SelcomPesaTopupController extends GetxController {
   @override
   void onClose() {
     _stopTimers();
-    pendingCountdown.dispose();
     if (!_textFieldsDisposed) {
       disposeTextFields();
     }
@@ -233,7 +238,7 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<void> submitSelectedLinkedAccountTopUp({
-    required SelcomPesaLinkedAccountEntity account,
+    required Account account,
     required bool closeSheetFirst,
   }) async {
     if (isSubmitting.value) return;
@@ -347,7 +352,7 @@ class SelcomPesaTopupController extends GetxController {
         AppDialogs.showErrorDialog(message: message);
       }
     } catch (_) {
-      final message = AppStrings.tanQrPaymentRequestFailed.tr;
+      final message = AppStrings.walletTopUpRequestFailed.tr;
       if (closeSheetFirst) {
         apiError.value = message;
       } else {
@@ -366,18 +371,21 @@ class SelcomPesaTopupController extends GetxController {
         .requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide
         .tr;
 
+    await _beginAwaitingPayment();
+
     final launchResult = await _selcomPesaLauncher.openPcodePayment(
       result.shortCode,
     );
     if (!launchResult.launched) {
+      _paymentHandled = true;
+      _stopTimers();
+      await _dismissPendingDialogAndWait();
       AppDialogs.showErrorDialog(
         message: AppStrings.selcomPesaHandoffFailed.tr,
       );
       _finishFlow();
       return;
     }
-
-    await _beginAwaitingPayment();
   }
 
   Future<void> _startOtherFlow(SelcomPesaTopupResult result) async {
@@ -400,9 +408,29 @@ class SelcomPesaTopupController extends GetxController {
 
   void _showPaymentPendingDialog() {
     _pendingDialogVisible = true;
+    _presentPaymentPendingDialog();
+  }
 
+  void _ensurePendingDialogVisible() {
+    if (!_pendingDialogVisible || _paymentHandled) return;
+    _presentPaymentPendingDialog();
+  }
+
+  void _presentPaymentPendingDialog() {
+    if (!_pendingDialogVisible || _paymentHandled || _dialogRouteOpen) return;
+
+    final context = Get.context;
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _presentPaymentPendingDialog();
+      });
+      return;
+    }
+
+    _dialogRouteOpen = true;
     AppDialogs.showAnimatedDialog<void>(
       barrierDismissible: false,
+      useRootNavigator: true,
       child: PopScope(
         canPop: false,
         child: Obx(
@@ -415,13 +443,17 @@ class SelcomPesaTopupController extends GetxController {
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      _dialogRouteOpen = false;
+    });
   }
 
   void _dismissPendingDialog() {
     if (!_pendingDialogVisible) return;
     _pendingDialogVisible = false;
-    AppDialogs.dismissTopOverlay();
+    if (_dialogRouteOpen) {
+      AppDialogs.dismissTopOverlay();
+    }
   }
 
   void _startPaymentPolling(int durationSeconds) {
@@ -486,8 +518,8 @@ class SelcomPesaTopupController extends GetxController {
     _dismissPendingDialog();
 
     AppDialogs.showConfirmationDialog(
-      title: AppStrings.tanQrTimerExpiredTitle.tr,
-      message: AppStrings.tanQrTimerExpiredMessage.tr,
+      title: AppStrings.walletTopUpTimerExpiredTitle.tr,
+      message: AppStrings.walletTopUpTimerExpiredMessage.tr,
       confirmText: AppStrings.retry,
       cancelText: AppStrings.cancel,
       onConfirm: _activeFlow == SelcomPesaTopupFlow.other
@@ -508,7 +540,41 @@ class SelcomPesaTopupController extends GetxController {
     _activeFlow = null;
     _session = null;
 
-    AppDialogs.showSuccessDialog(
+    String? landedRoute;
+    Get.until((route) {
+      final name = route.settings.name;
+      if (name == AppRoutes.wallet) {
+        landedRoute = AppRoutes.wallet;
+        return true;
+      }
+      if (name == AppRoutes.booking ||
+          name == AppRoutes.driverAccepted ||
+          name == AppRoutes.findingDriver ||
+          name == AppRoutes.confirmPickup ||
+          name == AppRoutes.home) {
+        landedRoute = name;
+        return true;
+      }
+      if (route.isFirst) {
+        landedRoute = name;
+        return true;
+      }
+      return false;
+    });
+
+    final isRideRoute = landedRoute == AppRoutes.booking ||
+        landedRoute == AppRoutes.driverAccepted ||
+        landedRoute == AppRoutes.findingDriver ||
+        landedRoute == AppRoutes.confirmPickup ||
+        landedRoute == AppRoutes.home;
+
+    final isWalletRoute = landedRoute == AppRoutes.wallet;
+
+    if (!isWalletRoute && !isRideRoute) {
+      await Get.toNamed(AppRoutes.wallet);
+    }
+
+    AppDialogs.showWalletTopupSuccessDialog(
       title: AppStrings.walletFundsReceivedTitle.tr,
       message: AppStrings.walletFundsReceivedSubtitle.tr,
       onConfirm: _disposeRegisteredController,
@@ -637,16 +703,16 @@ class SelcomPesaTopupController extends GetxController {
   String? _validateAmount({required bool showEmptyError}) {
     final digits = amountRaw.value.replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) {
-      return showEmptyError ? AppStrings.tanQrAmountRequired.tr : null;
+      return showEmptyError ? AppStrings.walletTopUpAmountRequired.tr : null;
     }
 
     final amount = int.tryParse(digits);
     if (amount == null || amount <= 0) {
-      return AppStrings.tanQrAmountMustBeGreaterThanZero.tr;
+      return AppStrings.walletTopUpAmountMustBeGreaterThanZero.tr;
     }
 
     if (amount > WalletTopUpLimits.maxTopUpAmount) {
-      return AppStrings.tanQrAmountExceedsMax.trParams({
+      return AppStrings.walletTopUpAmountExceedsMax.trParams({
         'max': ThousandsSeparatorInputFormatter.formatDigits(
           WalletTopUpLimits.maxTopUpAmount.toString(),
         ),
@@ -664,10 +730,10 @@ class SelcomPesaTopupController extends GetxController {
     return '$countryDialCode$digits';
   }
 
-  String _buildLinkedAccountUssdPhone(SelcomPesaLinkedAccountEntity account) {
-    final digits = account.normalizedMobileDigits;
-    final code = account.countryCode.trim().isNotEmpty
-        ? account.countryCode.replaceAll(RegExp(r'\D'), '')
+  String _buildLinkedAccountUssdPhone(Account account) {
+    final digits = account.spMobileNumber;
+    final code = (account.spCountryCode??"").trim().isNotEmpty
+        ? (account.spCountryCode??"").replaceAll(RegExp(r'\D'), '')
         : countryDialCode;
     return '$code$digits';
   }
@@ -698,6 +764,14 @@ class SelcomPesaTopupController extends GetxController {
     _paymentCountdown.stop();
     _pollTimer?.cancel();
     _pollTimer = null;
+  }
+
+  void _restartPollTimerIfNeeded() {
+    if (_paymentHandled || _session == null) return;
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(pollInterval, (_) {
+      unawaited(_pollSelcomPesaStatus());
+    });
   }
 }
 

@@ -43,7 +43,8 @@
                 <string>Editor</string>
                 <key>CFBundleURLSchemes</key>
                 <array>
-                    <string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+                    <string>com.googleusercontent.apps.235920604285-bk28ard68qaleas80g3onqei5afag197</string>
+                    <string>fb1807922700591416</string>
                 </array>
             </dict>
         </array>
@@ -52,6 +53,10 @@
             <string>tel</string>
             <string>sms</string>
             <string>selcompesa</string>
+            <string>fbapi</string>
+            <string>fb-messenger-share-api</string>
+            <string>fbauth2</string>
+            <string>fbshareextension</string>
         </array>
         <key>LSRequiresIPhoneOS</key>
         <true />
@@ -117,5 +122,7 @@
         <array>
             <string>UIInterfaceOrientationPortrait</string>
         </array>
+        <key>FlutterDeepLinkingEnabled</key>
+        <false/>
     </dict>
 </plist>

@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 
 import '../localization/app_strings.dart';
+import '../utils/app_logger.dart';
 import 'api_service.dart';
 
 /// Represents a failed API request waiting for retry
@@ -52,9 +52,9 @@ class FailedRequestQueue {
   Future<bool> add(ApiRequest request, Completer<Response> completer) async {
     // Check queue size limit
     if (_queue.length >= _maxQueueSize) {
-      developer.log(
+      AppLogger.w(
         "⚠️ Queue is full (${_queue.length}/$_maxQueueSize), rejecting request",
-        name: 'FailedRequestQueue',
+        tag: 'FailedRequestQueue',
       );
       completer.completeError(
         DioException(
@@ -73,9 +73,9 @@ class FailedRequestQueue {
     // same outcome as the queued request instead of surfacing a user-facing error.
     final existing = _firstWithHash(hash);
     if (existing != null) {
-      developer.log(
+      AppLogger.d(
         "🔄 Duplicate request coalesced with queued: ${request.endpoint}",
-        name: 'FailedRequestQueue',
+        tag: 'FailedRequestQueue',
       );
       unawaited(
         existing.completer.future.then<void>(
@@ -103,9 +103,9 @@ class FailedRequestQueue {
     );
 
     _queue.add(failedRequest);
-    developer.log(
+    AppLogger.d(
       "➕ Added to queue (${_queue.length}/$_maxQueueSize): ${request.endpoint}",
-      name: 'FailedRequestQueue',
+      tag: 'FailedRequestQueue',
     );
 
     return true;
@@ -116,9 +116,9 @@ class FailedRequestQueue {
     final index = _queue.indexWhere((req) => req.id == id);
     if (index != -1) {
       final removed = _queue.removeAt(index);
-      developer.log(
+      AppLogger.d(
         "➖ Removed from queue: ${removed.request.endpoint}",
-        name: 'FailedRequestQueue',
+        tag: 'FailedRequestQueue',
       );
       return true;
     }
@@ -134,9 +134,9 @@ class FailedRequestQueue {
 
   /// Clear all requests from queue
   void clear() {
-    developer.log(
+    AppLogger.d(
       "🗑️ Clearing queue (${_queue.length} requests)",
-      name: 'FailedRequestQueue',
+      tag: 'FailedRequestQueue',
     );
 
     // Complete all pending requests with error

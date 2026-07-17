@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -30,6 +27,7 @@ import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
 import '../../../../shared/utils/address_display_utils.dart';
@@ -42,11 +40,11 @@ import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../home/data/models/home_models.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
-import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
@@ -64,13 +62,14 @@ class VehicleSelectionController extends GetxController {
     required this.homeRepository,
     required this.profileRepository,
     required this.rideRepository,
-    required this.paymentMethodController,
   });
 
   final HomeRepository homeRepository;
   final ProfileRepository profileRepository;
   final RideRepository rideRepository;
-  final PaymentMethodController paymentMethodController;
+
+  /// Ride booking currently always charges Go Wallet.
+  static const String _walletPaymentMethodType = 'wallet';
 
   final estimates = <FareEstimateItem>[].obs;
   final selectedVehicleIndex = 0.obs;
@@ -105,6 +104,13 @@ class VehicleSelectionController extends GetxController {
 
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
+  bool _forceRefreshActiveRides = false;
+
+  /// Estimate already fetched by the pre-navigation validation call; consumed
+  /// once (if fresh) to avoid estimating the same route twice.
+  FareEstimateModel? _initialFareEstimate;
+  DateTime? _initialFareEstimateAt;
+  static const _initialFareEstimateMaxAge = Duration(seconds: 30);
   final _vehicleTypes = <VehicleTypeModel>[];
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
@@ -130,28 +136,14 @@ class VehicleSelectionController extends GetxController {
   final stopIcons = <BitmapDescriptor>[].obs;
   final Map<String, BitmapDescriptor> _nearbyDriverIconCache = {};
 
-  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
-    id: 'wallet',
-    label: AppStrings.wallet.tr,
-    type: 'wallet',
-  );
-
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
-    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
-
-  void _ensureWalletPaymentSelected() {
-    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
-  }
-
-  PaymentMethodModel get _walletPayment =>
-      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -188,20 +180,17 @@ class VehicleSelectionController extends GetxController {
 
   void _parseArguments() {
     final raw = Get.arguments;
-    if (kDebugMode) {
-      debugPrint('[VehicleSelection] Raw Get.arguments => $raw');
-    }
+    AppLogger.d('[VehicleSelection] Raw Get.arguments => $raw', tag: 'VehicleSelection');
 
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
 
     if (args.isEmpty) {
-      if (kDebugMode) {
-        debugPrint(
-          '[VehicleSelection] WARNING: Arguments are empty or not a Map.',
-        );
-      }
+      AppLogger.w(
+        '[VehicleSelection] Arguments are empty or not a Map.',
+        tag: 'VehicleSelection',
+      );
     }
 
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
@@ -228,20 +217,26 @@ class VehicleSelectionController extends GetxController {
       destinations.assignAll([destinationEntity]);
     }
 
-    if (kDebugMode) {
-      debugPrint(
-        '[VehicleSelection] Parsed args => '
-        'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
-        'destinationsCount=${destinations.length}, '
-        'finalDestination=(${destinationEntity.lat},${destinationEntity.lng})',
-      );
-    }
+    AppLogger.d(
+      '[VehicleSelection] Parsed args => '
+      'pickup=(${pickupEntity.lat},${pickupEntity.lng}), '
+      'destinationsCount=${destinations.length}, '
+      'finalDestination=(${destinationEntity.lat},${destinationEntity.lng})',
+      tag: 'VehicleSelection',
+    );
 
     _preferredVehicleTypeId = (args['preferredVehicleTypeId'] as String?)
         ?.trim();
     _preferredVehicleName = (args['preferredVehicleName'] as String?)
         ?.trim()
         .toLowerCase();
+    _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
+
+    final initialEstimate = args['initialFareEstimate'];
+    if (initialEstimate is FareEstimateModel) {
+      _initialFareEstimate = initialEstimate;
+      _initialFareEstimateAt = args['initialFareEstimateAt'] as DateTime?;
+    }
 
     isRouteReady.value = false;
     update(['route_header']);
@@ -287,72 +282,25 @@ class VehicleSelectionController extends GetxController {
       ..clear()
       ..addAll(vehicleTypes);
 
-    final result = await homeRepository.estimateFare(req);
-    result.fold(
-      (f) {
-        if (kDebugMode) {
-          debugPrint('[VehicleSelection] Fare estimate error: $f');
-        }
+    final initialEstimate = _takeFreshInitialEstimate();
+    if (initialEstimate != null) {
+      AppLogger.d(
+        '[VehicleSelection] Reusing pre-navigation fare estimate '
+        '(skipping duplicate estimate call).',
+        tag: 'VehicleSelection',
+      );
+      _applyEstimateModel(initialEstimate, vehicleTypes);
+    } else {
+      final result = await homeRepository.estimateFare(req);
+      result.fold((f) {
+        AppLogger.w(
+          '[VehicleSelection] Fare estimate error: $f',
+          tag: 'VehicleSelection',
+        );
         estimates.assignAll(_dummyEstimates(vehicleTypes));
         isRouteReady.value = false;
-      },
-      (model) {
-        if (kDebugMode) {
-          debugPrint(
-            '[VehicleSelection] Fare estimate success => '
-            'estimates=${model.estimates.length}, '
-            'routeGeometry=${model.routeGeometry != null}, '
-            'points=${model.routeGeometry?.coordinates?.length ?? 0}',
-          );
-        }
-        if (model.estimates.isEmpty) {
-          estimates.assignAll(_dummyEstimates(vehicleTypes));
-        } else {
-          final normalized = model.estimates
-              .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
-              .toList();
-          estimates.assignAll(
-            _estimatesWithBookAny(normalized, model.bookAny),
-          );
-          final pending = _pendingPromoApplyResult;
-          if (pending != null) {
-            _applyPromoValidationToEstimates(pending);
-          }
-          if (appliedPromoCode.value.trim().isNotEmpty) {
-            promoValidatedAt.value = DateTime.now();
-          }
-
-          if (model.routeGeometry?.coordinates != null &&
-              model.routeGeometry!.coordinates!.isNotEmpty) {
-            final coords = model.routeGeometry!.coordinates!;
-            final mapped = coords
-                .map((c) {
-                  if (c.length >= 2) return LatLng(c[1], c[0]);
-                  return null;
-                })
-                .whereType<LatLng>()
-                .toList();
-
-            if (mapped.length >= 2) {
-              routePoints.assignAll(mapped);
-              isRouteReady.value = true;
-              if (kDebugMode) {
-                debugPrint(
-                  '[VehicleSelection] API route geometry applied => '
-                  'points=${mapped.length}, '
-                  'first=${mapped.first.latitude},${mapped.first.longitude}, '
-                  'last=${mapped.last.latitude},${mapped.last.longitude}',
-                );
-              }
-            } else {
-              _useStraightLineFallback();
-            }
-          } else {
-            _useStraightLineFallback();
-          }
-        }
-      },
-    );
+      }, (model) => _applyEstimateModel(model, vehicleTypes));
+    }
     isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
 
@@ -364,6 +312,78 @@ class VehicleSelectionController extends GetxController {
     _scheduleFitBoundsMicrotask();
   }
 
+  /// Returns the pre-navigation estimate exactly once, and only when it is
+  /// still fresh and no promo code is applied (a promo changes the request).
+  FareEstimateModel? _takeFreshInitialEstimate() {
+    final estimate = _initialFareEstimate;
+    final estimatedAt = _initialFareEstimateAt;
+    _initialFareEstimate = null;
+    _initialFareEstimateAt = null;
+
+    if (estimate == null || estimatedAt == null) return null;
+    if (appliedPromoCode.value.trim().isNotEmpty) return null;
+    final age = DateTime.now().difference(estimatedAt);
+    if (age > _initialFareEstimateMaxAge) return null;
+    return estimate;
+  }
+
+  void _applyEstimateModel(
+    FareEstimateModel model,
+    List<VehicleTypeModel> vehicleTypes,
+  ) {
+    AppLogger.d(
+      '[VehicleSelection] Fare estimate applied => '
+      'estimates=${model.estimates.length}, '
+      'routeGeometry=${model.routeGeometry != null}, '
+      'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+      tag: 'VehicleSelection',
+    );
+    if (model.estimates.isEmpty) {
+      estimates.assignAll(_dummyEstimates(vehicleTypes));
+      return;
+    }
+
+    final normalized = model.estimates
+        .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
+        .toList();
+    estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
+    final pending = _pendingPromoApplyResult;
+    if (pending != null) {
+      _applyPromoValidationToEstimates(pending);
+    }
+    if (appliedPromoCode.value.trim().isNotEmpty) {
+      promoValidatedAt.value = DateTime.now();
+    }
+
+    if (model.routeGeometry?.coordinates != null &&
+        model.routeGeometry!.coordinates!.isNotEmpty) {
+      final coords = model.routeGeometry!.coordinates!;
+      final mapped = coords
+          .map((c) {
+            if (c.length >= 2) return LatLng(c[1], c[0]);
+            return null;
+          })
+          .whereType<LatLng>()
+          .toList();
+
+      if (mapped.length >= 2) {
+        routePoints.assignAll(mapped);
+        isRouteReady.value = true;
+        AppLogger.d(
+          '[VehicleSelection] API route geometry applied => '
+          'points=${mapped.length}, '
+          'first=${mapped.first.latitude},${mapped.first.longitude}, '
+          'last=${mapped.last.latitude},${mapped.last.longitude}',
+          tag: 'VehicleSelection',
+        );
+      } else {
+        _useStraightLineFallback();
+      }
+    } else {
+      _useStraightLineFallback();
+    }
+  }
+
   void _useStraightLineFallback() {
     final list = [
       LatLng(pickupEntity.lat, pickupEntity.lng),
@@ -371,11 +391,10 @@ class VehicleSelectionController extends GetxController {
     ];
     routePoints.assignAll(list);
     isRouteReady.value = true;
-    if (kDebugMode) {
-      debugPrint(
-        '[VehicleSelection] Using straight-line fallback for routePoints.',
-      );
-    }
+    AppLogger.d(
+      '[VehicleSelection] Using straight-line fallback for routePoints.',
+      tag: 'VehicleSelection',
+    );
   }
 
   Future<void> loadDriverIcon() async {
@@ -429,9 +448,11 @@ class VehicleSelectionController extends GetxController {
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      if (kDebugMode) {
-        debugPrint('[VehicleSelection] Error loading markers: $e');
-      }
+      AppLogger.e(
+        '[VehicleSelection] Error loading markers',
+        tag: 'VehicleSelection',
+        error: e,
+      );
     }
     isLocationIconsReady.value = pickupIcon != null && dropIcon != null;
   }
@@ -778,8 +799,6 @@ class VehicleSelectionController extends GetxController {
       );
       return;
     }
-    _ensureWalletPaymentSelected();
-    final pay = _walletPayment;
     final isBookAny = est.isBookAnyOption;
 
     isBooking.value = true;
@@ -803,6 +822,7 @@ class VehicleSelectionController extends GetxController {
           'pickupLat': pickupEntity.lat,
           'pickupLng': pickupEntity.lng,
           'pickupAddress': pickupEntity.address,
+          if (_forceRefreshActiveRides) 'forceRefreshActiveRides': true,
         },
       );
       Loader.instance.show();
@@ -864,9 +884,7 @@ class VehicleSelectionController extends GetxController {
           final normalized = model.estimates
               .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
               .toList();
-          estimates.assignAll(
-            _estimatesWithBookAny(normalized, model.bookAny),
-          );
+          estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
 
           _restoreVehicleSelectionAfterRefresh(
             wasBookAny: isBookAny,
@@ -937,7 +955,9 @@ class VehicleSelectionController extends GetxController {
         return;
       }
 
-      if (!await _guardBookForOtherMultiStop(isBookedForOther: isBookedForOther)) {
+      if (!await _guardBookForOtherMultiStop(
+        isBookedForOther: isBookedForOther,
+      )) {
         return;
       }
 
@@ -945,7 +965,7 @@ class VehicleSelectionController extends GetxController {
       final validateRequest = bookingBookAny
           ? ValidateRidePaymentRequest(
               bookAny: true,
-              paymentMethod: pay.type,
+              paymentMethod: _walletPaymentMethodType,
               pickup: pickupEntity,
               destination: destinationEntity,
               stops: routeStops,
@@ -955,7 +975,7 @@ class VehicleSelectionController extends GetxController {
             )
           : ValidateRidePaymentRequest(
               fareEstimate: requiredFare,
-              paymentMethod: pay.type,
+              paymentMethod: _walletPaymentMethodType,
               vehicleTypeId: resolvedVehicleTypeId,
               pickup: pickupEntity,
               destination: destinationEntity,
@@ -999,7 +1019,7 @@ class VehicleSelectionController extends GetxController {
               _socketService.joinPaymentRoom(validationId: roomValidationId);
             }
             final paymentConfirmed = AppConfig.ridePaymentBypass
-                ? await _confirmDevPaymentCallback(roomValidationId??"")
+                ? await _confirmDevPaymentCallback(roomValidationId ?? "")
                 : true;
 
             if (paymentConfirmed) {
@@ -1059,7 +1079,7 @@ class VehicleSelectionController extends GetxController {
                       destination: destinationEntity,
                       stops: routeStops,
                       bookAny: true,
-                      paymentMethod: pay.type,
+                      paymentMethod: _walletPaymentMethodType,
                       isBookedForOther: isBookedForOther,
                       passengerName: isBookedForOther ? passengerName : null,
                       passengerPhone: isBookedForOther ? passengerPhone : null,
@@ -1073,7 +1093,7 @@ class VehicleSelectionController extends GetxController {
                       destination: destinationEntity,
                       stops: routeStops,
                       vehicleTypeId: resolvedVehicleTypeId,
-                      paymentMethod: pay.type,
+                      paymentMethod: _walletPaymentMethodType,
                       isBookedForOther: isBookedForOther,
                       passengerName: isBookedForOther ? passengerName : null,
                       passengerPhone: isBookedForOther ? passengerPhone : null,
@@ -1119,7 +1139,7 @@ class VehicleSelectionController extends GetxController {
 
                   if (!rideBookResponseIndicatesPaymentApplied(
                     ride,
-                    pay.type,
+                    _walletPaymentMethodType,
                   )) {
                     AppDialogs.showConfirmationDialog(
                       title: AppStrings.bookRidePaymentNotAppliedTitle.tr,
@@ -1149,6 +1169,9 @@ class VehicleSelectionController extends GetxController {
                       'passengerName': passengerName,
                       'passengerPhone': passengerPhone,
                       'cancel_time': ride.cancelTime,
+                      if (ride.searchStartedAt != null)
+                        'search_started_at':
+                            ride.searchStartedAt!.toIso8601String(),
                     },
                   );
                 },
@@ -1273,7 +1296,9 @@ class VehicleSelectionController extends GetxController {
   }
 
   /// Book-for-other cannot include intermediate stops (backend: `BOOKED_FOR_OTHER_NO_MULTI_STOP`).
-  Future<bool> _guardBookForOtherMultiStop({required bool isBookedForOther}) async {
+  Future<bool> _guardBookForOtherMultiStop({
+    required bool isBookedForOther,
+  }) async {
     if (!isBookedForOther) return true;
     if (routeStops.isEmpty) return true;
 
@@ -1415,20 +1440,17 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _logNearbyDriversRequest({required String vehicleType}) {
-    if (!kDebugMode) return;
-    developer.log(
+    AppLogger.d(
       '▶ REQUEST nearby drivers (awaiting result)\n'
       '  vehicleType: $vehicleType\n'
       '  lat: ${pickupEntity.lat}\n'
       '  lng: ${pickupEntity.lng}\n'
       '  socketConnected: ${isSocketConnected.value}',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
   void _logNearbyDriversResult(List<Driver> drivers) {
-    if (!kDebugMode) return;
-
     final found = drivers.length;
     final vehicleType = _pendingNearbyDriversVehicleType ?? 'any';
     if (_lastLoggedNearbyDriversCount == found) {
@@ -1459,26 +1481,24 @@ class VehicleSelectionController extends GetxController {
       }
     }
 
-    developer.log(buffer.toString(), name: _nearbyDriversLogName);
+    AppLogger.d(buffer.toString(), tag: _nearbyDriversLogName);
   }
 
   void _logNearbyDriversError(String message) {
-    if (!kDebugMode) return;
     _lastLoggedNearbyDriversCount = null;
-    developer.log(
+    AppLogger.d(
       '▶ ERROR — nearby drivers failed\n'
       '  vehicleType: ${_pendingNearbyDriversVehicleType ?? 'any'}\n'
       '  message: $message',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
   void _logNearbyDriversInfo(String headline) {
-    if (!kDebugMode) return;
-    developer.log(
+    AppLogger.d(
       '▶ $headline\n'
       '  socketConnected: ${isSocketConnected.value}',
-      name: _nearbyDriversLogName,
+      tag: _nearbyDriversLogName,
     );
   }
 
@@ -1516,7 +1536,9 @@ class VehicleSelectionController extends GetxController {
     _logNearbyDriversResult(drivers);
   }
 
-  Future<void> _preloadNearbyDriverIcons(List<NearbyDriverPoint> drivers) async {
+  Future<void> _preloadNearbyDriverIcons(
+    List<NearbyDriverPoint> drivers,
+  ) async {
     final types = drivers
         .map((d) => (d.vehicleType ?? '').trim().toLowerCase())
         .where((t) => t.isNotEmpty)
@@ -1901,6 +1923,13 @@ class VehicleSelectionController extends GetxController {
     );
     destinations.assignAll(nextDestinations);
     destinationEntity = nextDestinations.last;
+
+    // Reuse the estimate fetched by the edit-flow validation (if provided).
+    final editedEstimate = edited['initialFareEstimate'];
+    if (editedEstimate is FareEstimateModel) {
+      _initialFareEstimate = editedEstimate;
+      _initialFareEstimateAt = edited['initialFareEstimateAt'] as DateTime?;
+    }
     // Refresh only the top route header (GetBuilder id: route_header).
     update(['route_header']);
 

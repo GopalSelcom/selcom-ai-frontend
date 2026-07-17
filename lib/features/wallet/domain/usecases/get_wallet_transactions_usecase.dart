@@ -9,6 +9,10 @@ class GetWalletTransactionsUseCase {
 
   Future<List<WalletTransactionEntity>> call({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
+    String? currencyOverride,
   }) =>
-      _repository.getTransactions(filter: filter);
+      _repository.getTransactions(
+        filter: filter,
+        currencyOverride: currencyOverride,
+      );
 }

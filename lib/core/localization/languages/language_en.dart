@@ -34,10 +34,6 @@ class LanguageEn extends Languages {
     'add_money': 'Add Money',
     'amount': 'Amount',
     'back': 'Back',
-    'add_money_selcom_pesa_subtitle': 'Request money from Selcom Pesa',
-    'add_money_tan_qr_tips': 'TanQR',
-    'add_money_tan_qr_tips_subtitle': 'Add Money using TanQR',
-    'add_money_mobile_money_subtitle': 'Add Money using Mobile Money',
     'wallet_funds_received_title': 'Your wallet has received funds',
     'wallet_funds_received_subtitle':
         'You can now use your wallet to book rides.',
@@ -45,33 +41,29 @@ class LanguageEn extends Languages {
     'mobile_money_request_sent_title': 'Request sent',
     'mobile_money_request_sent_message':
         'Your payment request has been sent to @number. The amount will be reflected in your Selcom Go wallet.',
-    'selcom_pesa_to_go_wallet': 'Selcom Pesa to Go wallet',
+    'selcom_pesa_to_go_wallet': 'SelcomPesa to Go wallet',
     'use_another_number': '+ Use another number',
     'enter_selcom_pesa_customer_phone_hint':
-        'Enter Selcom Pesa customer phone number, and we\'ll send a request',
+        'Enter SelcomPesa customer phone number, and we\'ll send a request',
     'request_sent_complete_selcom_topup':
-        'Request sent. Please complete payment on Selcom Pesa to Topup your Go wallet',
+        'Request sent. Please complete payment on SelcomPesa to Topup your Go wallet',
     'expires_in_with_time': 'Expires in @time',
-    'tanqr_amount_required': 'Please enter an amount',
-    'tanqr_amount_must_be_greater_than_zero':
+    'wallet_topup_amount_required': 'Please enter an amount',
+    'wallet_topup_amount_must_be_greater_than_zero':
         'Amount must be greater than 0',
-    'tanqr_amount_exceeds_max':
+    'wallet_topup_amount_exceeds_max':
         'Amount cannot exceed TZS @max',
-    'tanqr_scan_qr_instruction':
-        'Scan this QR code with your mobile money app to complete the top-up',
-    'tanqr_payment_request_failed':
+    'wallet_topup_request_failed':
         'Could not start the payment. Please try again.',
-    'tanqr_timer_expired_title': 'Payment time expired',
-    'tanqr_timer_expired_message':
+    'wallet_topup_timer_expired_title': 'Payment time expired',
+    'wallet_topup_timer_expired_message':
         'The payment request has expired. Would you like to try again?',
-    'tanqr_missing_registered_phone':
-        'Your registered phone number is missing. Please update your profile.',
-    'tanqr_cancel_request': 'Cancel request',
-    'selcom_pesa_app_not_installed': 'Selcom Pesa app not installed',
+    'wallet_topup_cancel_request': 'Cancel request',
+    'selcom_pesa_app_not_installed': 'SelcomPesa app not installed',
     'selcom_pesa_install_prompt':
-        'Install Selcom Pesa to complete this payment on your device.',
+        'Install SelcomPesa to complete this payment on your device.',
     'selcom_pesa_handoff_failed':
-        'Unable to open Selcom Pesa. Please make sure the app is installed and try again.',
+        'Unable to open SelcomPesa. Please make sure the app is installed and try again.',
     'selcom_pesa_status_not_found':
         'We could not find this payment. Please try again.',
     'selcom_pesa_payment_rejected':
@@ -80,7 +72,7 @@ class LanguageEn extends Languages {
         'Payment received, processing your top-up. Contact support if your balance does not update.',
     'wallet_account_unavailable':
         'Your Go wallet is not available. Please try again later.',
-    'download_app': 'Download app',
+    'download_app': 'Download',
     'mobile_money_phone_value': '+255 711 410 410',
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',
@@ -176,8 +168,10 @@ class LanguageEn extends Languages {
     'finding_your_driver': 'Finding Your Driver',
     'finding_driver_default_description':
         'The driver will pick you up as soon as possible after they confirm your order',
-    'finding_driver_minutes_remain': '@minutes min remaining',
+    'finding_driver_minutes_remain': '@minutes min @seconds sec remaining',
     'driver_will_arriving_in_minutes': 'Driver will arrive in @minutes min...',
+    'driver_finishing_nearby_trip':
+        'Your driver is finishing a nearby trip and will pick you up soon.',
     'driver_assigned': 'Driver Assigned',
     'driver_arriving': 'Driver Arriving',
     'driver_en_route': 'Driver En Route',
@@ -193,7 +187,7 @@ class LanguageEn extends Languages {
         'Enter phone number for verification',
     'enter_promo_code': 'Enter promo code',
     'enter_promocode': 'Enter Promocode',
-    'enter_your_selcom_pesa_number': 'Enter your Selcom Pesa Number',
+    'enter_your_selcom_pesa_number': 'Enter your SelcomPesa Number',
     'error': 'Error',
     'error_opening_phone_dialer': 'Error opening phone dialer',
     'error_sending_message': 'Error sending message',
@@ -208,7 +202,7 @@ class LanguageEn extends Languages {
     'days_left_count': '@count days left',
     'expires_in_timer': 'Expire in @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
-        'Request sent. Please complete payment on Selcom Pesa to top-up your wallet.',
+        'Request sent. Please complete payment on SelcomPesa to top-up your wallet.',
     'payment_completed_successfully': 'Payment completed successfully',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip':
         'Thank you for riding with us, see you on the next trip.',
@@ -311,7 +305,7 @@ class LanguageEn extends Languages {
     'no_recent_locations_found': 'No recent locations found',
     'no_recent_locations': 'No recent locations',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
-        'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from GoChauffeur and its affiliates to the number provided.',
+        'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from Selcom Go and its affiliates to the number provided.',
     'notification': 'Notification',
     'notifications': 'Notifications',
     'ok': 'OK',
@@ -382,6 +376,7 @@ class LanguageEn extends Languages {
     'calculating_best_route': 'Calculating best route...',
     'ride_receipt': 'Ride Receipt',
     'ref_with_id': 'Ref: @id',
+    'transaction_id_with_value': 'Transaction ID: @id',
     'route': 'Route',
     'dropoff': 'Dropoff',
     'em_dash': '—',
@@ -516,7 +511,7 @@ class LanguageEn extends Languages {
     'search_timeout': 'Search Timeout',
     'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
         'Security and preference controls. More settings will appear here as they are enabled.',
-    'selcom_pesa': 'Selcom Pesa',
+    'selcom_pesa': 'SelcomPesa',
     'select_anearby_point_for_easier_pickup':
         'Select a nearby point for easier pickup',
     'select_apayment_method': 'Select a payment method',
@@ -546,13 +541,17 @@ class LanguageEn extends Languages {
     'stay_notified': 'Stay Notified!',
     'enable_notifications_for_ride_updates':
         'Enable notifications to get real-time updates on your ride arrival and driver status.',
-    'steps_to_connect_selcom_pesa': 'Steps to Connect Selcom Pesa',
+    'steps_to_connect_selcom_pesa': 'Steps to Connect SelcomPesa',
     'submit_failed': 'Submit failed',
     'submit': 'Submit',
     'success': 'Success',
     'selected_address': 'Selected address',
     'searching_for_driver': 'Searching for driver...',
     'enable_location_service': 'Enable location service',
+    'enable_location_service_message':
+        'Please enable your location service to get your current location.',
+    'enable_location_service_message_ios':
+        'Location Services are turned off on your device.\n\nGo to Settings → Privacy & Security → Location Services and turn it on. Then return to the app and tap the GPS button again to allow location for Selcom Go.',
     'location_permission_denied': 'Location permission denied',
     'location_access_required': 'Location access required',
     'location_permission_denied_open_settings':
@@ -657,6 +656,7 @@ class LanguageEn extends Languages {
     'visa': 'VISA',
     'wallet': 'Wallet',
     'wallet_number_copied': 'Wallet number copied',
+    'copied_to_clipboard': 'Copied to clipboard',
     'wallet_number_label': 'Wallet Number',
     'wallet_reserved_balance': 'Reserved: @amount',
     'recent_transactions': 'Recent Transactions',
@@ -690,12 +690,12 @@ class LanguageEn extends Languages {
     'yes': 'Yes',
     'yes_cancel': 'YES, CANCEL',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
-        'You can still able to request money on Selcom Pesa using another number.',
+        'You can still able to request money on SelcomPesa using another number.',
     'your_card_has_been_nadded_successfully':
         'Your card has been added successfully.',
     'your_driver_is_already_on_the_way': 'Your driver is already on the way.',
     'your_identity_has_been_successfully_verified_you_can_now_use_selcom_pesa':
-        'Your identity has been successfully verified. You can now use Selcom Pesa.',
+        'Your identity has been successfully verified. You can now use SelcomPesa.',
     'your_linked_account': 'Your Linked Account',
     'your_rating_has_been_submitted': 'Your rating has been submitted.',
     'your_ride_was_cancelled': 'Your ride was cancelled.',
@@ -740,22 +740,22 @@ class LanguageEn extends Languages {
     'card_ready_to_use_you_can_manage_or_remove_anytime':
         'Now ready to use for payments. You can manage or remove this card anytime from your payment settings.',
     'selcom_pesa_connect_step_1':
-        'Enter your Selcom Pesa registered phone number',
+        'Enter your SelcomPesa registered phone number',
     'selcom_pesa_connect_step_2':
-        'Verify the selfie associated with your Selcom Pesa account.',
+        'Verify the selfie associated with your SelcomPesa account.',
     'selcom_pesa_connect_step_3':
-        'Check your Selcom Pesa app and approve the verification request.',
+        'Check your SelcomPesa app and approve the verification request.',
     'selcom_pesa_link_request_sent_message':
-        'A link request was sent to @phoneNumber. Please open Selcom Pesa and approve it to connect your account.',
+        'A link request was sent to @phoneNumber. Please open SelcomPesa and approve it to connect your account.',
     'selcom_pesa_already_linked_message':
         '@phoneNumber is already linked to your Selcom Go account.',
     'link_another_account': 'Link another account',
     'selcom_pesa_pending_approval': 'Pending approval',
     'selcom_pesa_max_linked_accounts':
-        'You can link up to @max Selcom Pesa accounts.',
-    'selcom_pesa_multiple_linked': '@count linked Selcom Pesa accounts',
+        'You can link up to @max SelcomPesa accounts.',
+    'selcom_pesa_multiple_linked': '@count linked SelcomPesa accounts',
     'selcom_pesa_connect_step_4':
-        "You're all set! Your Selcom Pesa account is connected.",
+        "You're all set! Your SelcomPesa account is connected.",
     'otp_sent_to_your_phone_number':
         'OTP Sent to your @phoneNumber phone number',
     'require_verification_pin_before_starting_ride':
@@ -834,7 +834,7 @@ class LanguageEn extends Languages {
     'confirm_and_update': 'Confirm & Update',
     'confirm_stop': 'Confirm Stop',
     'connect_selcom_pesa_ride_charges_subtitle':
-        'Connect your Selcom Pesa account to enable automatic, seamless ride charge deductions.',
+        'Connect your SelcomPesa account to enable automatic, seamless ride charge deductions.',
     'connecting_drivers': 'Looking for nearby drivers...',
     'connecting_socket': 'Looking for nearby drivers...',
     'could_not_refresh_fare_after_pickup':
@@ -870,6 +870,55 @@ class LanguageEn extends Languages {
     'write_a_message': 'Write a message...',
     'your_driver': 'Your Driver',
     'incorrect_pin': 'Incorrect PIN.',
+    'selcom_pesa_link_number': '+ Link number',
+    'selcom_pesa_self_title': 'Self',
+    'selcom_pesa_self_subtitle': 'Enter amount and redirect to SelcomPesa',
+    'selcom_pesa_other_title': 'Other',
+    'selcom_pesa_other_subtitle': 'Enter mobile number and amount',
+    'remove_account_title': 'Remove Account',
+    'remove_account_message': 'Are you sure you want to remove this SelcomPesa account?',
+    'remove_label': 'Remove',
+    'saved_card_label': 'Saved card',
+    'no_saved_cards_found': 'No saved cards found',
+    'add_new_card_text': '+ Add new card',
+    'amount_is_required': 'Amount is required',
+    'enter_valid_amount': 'Please enter a valid amount',
+    'set_as_default': 'Set as Default',
+    'set_as_default_confirm': 'Make this your default account for transactions',
+    'default_account_set_successfully': 'Default account updated successfully',
+    'card_information': 'Card Information',
+    'first_name': 'First Name',
+    'last_name': 'Last Name',
+    'billing_details': 'Billing Details',
+    'billing_details_subtitle':
+        'Please provide your billing address as per your bank records',
+    'country': 'Country',
+    'state': 'State',
+    'select_state': 'Select State',
+    'address': 'Address',
+    'city': 'City',
+    'postal_code': 'Postal Code',
+    'eg_user_email': 'e.g. user@example.com',
+    'street_name_house_number': 'Street name / House number',
+    'eg_dar_es_salaam': 'e.g. Dar es Salaam',
+    'eg_postal_code': 'e.g. 14110',
+    'first_name_is_required': 'First Name is required',
+    'last_name_is_required': 'Last Name is required',
+    'card_number_is_required': 'Card Number is required',
+    'enter_valid_card_number': 'Enter a valid card number',
+    'expiry_is_required': 'Expiry is required',
+    'enter_valid_expiry_date': 'Enter a valid expiry date',
+    'cvv_is_required': 'CVV is required',
+    'cvv_must_be_3_digits': 'CVV must be 3 digits',
+    'country_is_required': 'Country is required',
+    'state_is_required': 'State is required',
+    'phone_number_is_required': 'Phone Number is required',
+    'invalid_phone_number_for_country': 'Invalid phone number for @country',
+    'address_is_required': 'Address is required',
+    'city_is_required': 'City is required',
+    'postal_code_is_required': 'Postal code is required',
+    'invalid_session_response_from_server':
+        'Invalid session response from server.',
   };
 
   @override
@@ -964,21 +1013,6 @@ class LanguageEn extends Languages {
   String get back => values['back'] ?? '';
 
   @override
-  String get addMoneySelcomPesaSubtitle =>
-      values['add_money_selcom_pesa_subtitle'] ?? '';
-
-  @override
-  String get addMoneyTanQrTips => values['add_money_tan_qr_tips'] ?? '';
-
-  @override
-  String get addMoneyTanQrTipsSubtitle =>
-      values['add_money_tan_qr_tips_subtitle'] ?? '';
-
-  @override
-  String get addMoneyMobileMoneySubtitle =>
-      values['add_money_mobile_money_subtitle'] ?? '';
-
-  @override
   String get walletFundsReceivedTitle =>
       values['wallet_funds_received_title'] ?? '';
 
@@ -1015,37 +1049,32 @@ class LanguageEn extends Languages {
   String get expiresInWithTime => values['expires_in_with_time'] ?? '';
 
   @override
-  String get tanQrAmountRequired => values['tanqr_amount_required'] ?? '';
+  String get walletTopUpAmountRequired =>
+      values['wallet_topup_amount_required'] ?? '';
 
   @override
-  String get tanQrAmountMustBeGreaterThanZero =>
-      values['tanqr_amount_must_be_greater_than_zero'] ?? '';
+  String get walletTopUpAmountMustBeGreaterThanZero =>
+      values['wallet_topup_amount_must_be_greater_than_zero'] ?? '';
 
   @override
-  String get tanQrAmountExceedsMax => values['tanqr_amount_exceeds_max'] ?? '';
+  String get walletTopUpAmountExceedsMax =>
+      values['wallet_topup_amount_exceeds_max'] ?? '';
 
   @override
-  String get tanQrScanQrInstruction =>
-      values['tanqr_scan_qr_instruction'] ?? '';
+  String get walletTopUpRequestFailed =>
+      values['wallet_topup_request_failed'] ?? '';
 
   @override
-  String get tanQrPaymentRequestFailed =>
-      values['tanqr_payment_request_failed'] ?? '';
+  String get walletTopUpTimerExpiredTitle =>
+      values['wallet_topup_timer_expired_title'] ?? '';
 
   @override
-  String get tanQrTimerExpiredTitle =>
-      values['tanqr_timer_expired_title'] ?? '';
+  String get walletTopUpTimerExpiredMessage =>
+      values['wallet_topup_timer_expired_message'] ?? '';
 
   @override
-  String get tanQrTimerExpiredMessage =>
-      values['tanqr_timer_expired_message'] ?? '';
-
-  @override
-  String get tanQrMissingRegisteredPhone =>
-      values['tanqr_missing_registered_phone'] ?? '';
-
-  @override
-  String get tanQrCancelRequest => values['tanqr_cancel_request'] ?? '';
+  String get walletTopUpCancelRequest =>
+      values['wallet_topup_cancel_request'] ?? '';
 
   @override
   String get selcomPesaAppNotInstalled =>
@@ -1334,6 +1363,10 @@ class LanguageEn extends Languages {
   @override
   String get driverWillArrivingInMinutes =>
       values['driver_will_arriving_in_minutes'] ?? '';
+
+  @override
+  String get driverFinishingNearbyTrip =>
+      values['driver_finishing_nearby_trip'] ?? '';
 
   @override
   String get driverAssigned => values['driver_assigned'] ?? '';
@@ -1930,6 +1963,10 @@ class LanguageEn extends Languages {
   String get refWithId => values['ref_with_id'] ?? '';
 
   @override
+  String get transactionIdWithValue =>
+      values['transaction_id_with_value'] ?? '';
+
+  @override
   String get route => values['route'] ?? '';
 
   @override
@@ -2411,6 +2448,14 @@ class LanguageEn extends Languages {
   String get enableLocationService => values['enable_location_service'] ?? '';
 
   @override
+  String get enableLocationServiceMessage =>
+      values['enable_location_service_message'] ?? '';
+
+  @override
+  String get enableLocationServiceMessageIos =>
+      values['enable_location_service_message_ios'] ?? '';
+
+  @override
   String get locationPermissionDenied =>
       values['location_permission_denied'] ?? '';
 
@@ -2657,6 +2702,9 @@ class LanguageEn extends Languages {
 
   @override
   String get walletNumberCopied => values['wallet_number_copied'] ?? '';
+
+  @override
+  String get copiedToClipboard => values['copied_to_clipboard'] ?? '';
 
   @override
   String get walletNumberLabel => values['wallet_number_label'] ?? '';
@@ -3241,4 +3289,138 @@ class LanguageEn extends Languages {
   @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';
+
+  @override
+  String get selcomPesaSelfTitle => values['selcom_pesa_self_title'] ?? '';
+
+  @override
+  String get selcomPesaSelfSubtitle => values['selcom_pesa_self_subtitle'] ?? '';
+
+  @override
+  String get selcomPesaOtherTitle => values['selcom_pesa_other_title'] ?? '';
+
+  @override
+  String get selcomPesaOtherSubtitle => values['selcom_pesa_other_subtitle'] ?? '';
+
+  @override
+  String get removeAccountTitle => values['remove_account_title'] ?? '';
+
+  @override
+  String get removeAccountMessage => values['remove_account_message'] ?? '';
+
+  @override
+  String get removeLabel => values['remove_label'] ?? '';
+
+  @override
+  String get savedCardLabel => values['saved_card_label'] ?? '';
+
+  @override
+  String get noSavedCardsFound => values['no_saved_cards_found'] ?? '';
+
+  @override
+  String get addNewCardText => values['add_new_card_text'] ?? '';
+
+  @override
+  String get amountIsRequired => values['amount_is_required'] ?? '';
+
+  @override
+  String get enterValidAmount => values['enter_valid_amount'] ?? '';
+
+  @override
+  String get cardInformation => values['card_information'] ?? '';
+
+  @override
+  String get firstName => values['first_name'] ?? '';
+
+  @override
+  String get lastName => values['last_name'] ?? '';
+
+  @override
+  String get billingDetails => values['billing_details'] ?? '';
+
+  @override
+  String get billingDetailsSubtitle => values['billing_details_subtitle'] ?? '';
+
+  @override
+  String get country => values['country'] ?? '';
+
+  @override
+  String get state => values['state'] ?? '';
+
+  @override
+  String get selectState => values['select_state'] ?? '';
+
+  @override
+  String get address => values['address'] ?? '';
+
+  @override
+  String get city => values['city'] ?? '';
+
+  @override
+  String get postalCode => values['postal_code'] ?? '';
+
+  @override
+  String get egUserEmail => values['eg_user_email'] ?? '';
+
+  @override
+  String get streetNameHouseNumber => values['street_name_house_number'] ?? '';
+
+  @override
+  String get egDarEsSalaam => values['eg_dar_es_salaam'] ?? '';
+
+  @override
+  String get egPostalCode => values['eg_postal_code'] ?? '';
+
+  @override
+  String get firstNameIsRequired => values['first_name_is_required'] ?? '';
+
+  @override
+  String get lastNameIsRequired => values['last_name_is_required'] ?? '';
+
+  @override
+  String get cardNumberIsRequired => values['card_number_is_required'] ?? '';
+
+  @override
+  String get enterValidCardNumber => values['enter_valid_card_number'] ?? '';
+
+  @override
+  String get expiryIsRequired => values['expiry_is_required'] ?? '';
+
+  @override
+  String get enterValidExpiryDate => values['enter_valid_expiry_date'] ?? '';
+
+  @override
+  String get cvvIsRequired => values['cvv_is_required'] ?? '';
+
+  @override
+  String get cvvMustBe3Digits => values['cvv_must_be_3_digits'] ?? '';
+
+  @override
+  String get countryIsRequired => values['country_is_required'] ?? '';
+
+  @override
+  String get stateIsRequired => values['state_is_required'] ?? '';
+
+  @override
+  String get phoneNumberIsRequired => values['phone_number_is_required'] ?? '';
+
+  @override
+  String get invalidPhoneNumberForCountry =>
+      values['invalid_phone_number_for_country'] ?? '';
+
+  @override
+  String get addressIsRequired => values['address_is_required'] ?? '';
+
+  @override
+  String get cityIsRequired => values['city_is_required'] ?? '';
+
+  @override
+  String get postalCodeIsRequired => values['postal_code_is_required'] ?? '';
+
+  @override
+  String get invalidSessionResponseFromServer =>
+      values['invalid_session_response_from_server'] ?? '';
 }

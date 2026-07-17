@@ -4,10 +4,8 @@ import 'dart:io';
 
 import 'package:agora_calling_package/utils/constants.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../features/ride/domain/repositories/ride_repository.dart';
@@ -17,6 +15,7 @@ import '../../shared/utils/ride_active_navigation.dart';
 import '../data/models/notification_model.dart';
 import '../di/injection_container.dart';
 import '../localization/app_strings.dart';
+import '../utils/app_logger.dart';
 import 'call_permission_prompt_service.dart';
 import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
@@ -33,7 +32,33 @@ class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
-  final Logger _logger = Logger();
+  static const String _logTag = 'Notification';
+
+  void _logD(String message) => AppLogger.d(message, tag: _logTag);
+
+  void _logI(String message) => AppLogger.i(message, tag: _logTag);
+
+  void _logW(String message) => AppLogger.w(message, tag: _logTag);
+
+  void _logE(String message) => AppLogger.e(message, tag: _logTag);
+
+  void _logRemoteMessage(String source, RemoteMessage message) {
+    final notification = message.notification;
+    final data = message.data;
+    _logI(
+      '[$source] FCM received — '
+      'messageId=${message.messageId} '
+      'sentTime=${message.sentTime} '
+      'from=${message.from} '
+      'hasNotificationBlock=${notification != null} '
+      'title=${notification?.title ?? data['title']} '
+      'body=${notification?.body ?? data['body']} '
+      'dataKeys=${data.keys.toList()} '
+      'rideId=${data['ride_id'] ?? data['rideId'] ?? data['order_id']} '
+      'status=${data['status']} '
+      'type=${data['type']}',
+    );
+  }
 
   bool _isInitialized = false;
   bool _homePermissionFlowRunning = false;
@@ -50,13 +75,13 @@ class NotificationService {
     // Load persisted token if available (to avoid "123" on start)
     _deviceToken = await StorageService().read(StorageKeys.fcmToken);
     if (_deviceToken != null) {
-      _logger.d("Loaded persisted FCM token: $_deviceToken");
+      _logD("Loaded persisted FCM token: $_deviceToken");
     }
 
     // Listen for token refreshes to keep the cached token updated
     _fcm.onTokenRefresh.listen((token) async {
       _deviceToken = token;
-      _logger.d("FCM Token Updated: $token");
+      _logD("FCM Token Updated: $token");
       await StorageService().write(StorageKeys.fcmToken, token);
     });
 
@@ -103,7 +128,7 @@ class NotificationService {
           _queueOrHandleNavigationRaw(rawData);
         } catch (e, stackTrace) {
           ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-          _logger.e("Error decoding launched notification payload: $e");
+          _logE("Error decoding launched notification payload: $e");
         }
       }
     }
@@ -138,11 +163,17 @@ class NotificationService {
     // Initial message if app was terminated
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
+      _logRemoteMessage('INITIAL (terminated launch)', initialMessage);
       _onMessageOpenedApp(initialMessage);
+    } else {
+      _logD('No initial FCM message (app was not opened from a notification)');
     }
 
     _isInitialized = true;
-    _logger.i("Notification Service Initialized");
+    _logI(
+      'Notification Service Initialized — '
+      'tokenPresent=${(_deviceToken ?? '').isNotEmpty}',
+    );
   }
 
   Future<NotificationSettings> requestPermission() async {
@@ -154,12 +185,12 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      _logger.i('User granted permission');
+      _logI('User granted permission');
     } else if (settings.authorizationStatus ==
         AuthorizationStatus.provisional) {
-      _logger.i('User granted provisional permission');
+      _logI('User granted provisional permission');
     } else {
-      _logger.w('User declined or has not accepted permission');
+      _logW('User declined or has not accepted permission');
     }
     return settings;
   }
@@ -209,7 +240,7 @@ class NotificationService {
       if (token != null && token.isNotEmpty) {
         _deviceToken = token;
         await StorageService().write(StorageKeys.fcmToken, token);
-        _logger.i("FCM Token: $token");
+        _logI("FCM Token: $token");
       }
 
       return token;
@@ -219,11 +250,11 @@ class NotificationService {
       if (Platform.isIOS &&
           e.toString().contains('apns-token-not-set') &&
           retryCount < 5) {
-        _logger.w("APNS token not set, retrying in 3 seconds...");
+        _logW("APNS token not set, retrying in 3 seconds...");
         await Future.delayed(const Duration(seconds: 3));
         return getToken(retryCount: retryCount + 1);
       }
-      _logger.e("Error getting FCM token: $e");
+      _logE("Error getting FCM token: $e");
       return null;
     }
   }
@@ -247,14 +278,14 @@ class NotificationService {
   }
 
   void _onForegroundMessage(RemoteMessage message) {
-    _logger.d("Foreground Message received: ${message.messageId}");
+    _logRemoteMessage('FOREGROUND', message);
 
     // Call pushes use CallKit / in-app UI — not a generic banner.
     final callType = PushTypes.typeFromData(message.data);
     if (PushTypes.isLiveCallSignaling(callType)) {
-      _logger.d(
-        'Skipping host notification for call push type=$callType '
-        '— handled by agora_calling_package',
+      _logI(
+        '[FOREGROUND] Skipped — call push type=$callType '
+        '(handled by agora_calling_package)',
       );
       return;
     }
@@ -262,19 +293,46 @@ class NotificationService {
     final data = FCMNotificationData.fromJson(message.data);
     String? title = message.notification?.title ?? data.title;
     String? body = message.notification?.body ?? data.body;
-    // Only show a local notification if this is a data-only message.
-    if (message.notification == null && title != null && body != null) {
-      _logger.d("Showing local notification for foreground message");
+    final isDataOnly = message.notification == null;
+
+    // Android does not auto-display FCM notification payloads in foreground.
+    // iOS may already show the system banner when a notification block is
+    // present — only mirror data-only pushes locally to avoid duplicates.
+    final shouldShowLocal =
+        title != null &&
+        body != null &&
+        (Platform.isAndroid || isDataOnly);
+
+    if (shouldShowLocal) {
+      _logI(
+        '[FOREGROUND] Showing local notification — title="$title" body="$body" '
+        'platform=${Platform.operatingSystem} '
+        'source=${isDataOnly ? "data_payload" : "fcm_notification_block"}',
+      );
       showLocalNotification(
         id: message.notification?.hashCode ?? message.messageId.hashCode,
         title: title,
         body: body,
         payload: jsonEncode(data.toJson()),
       );
+    } else if (!isDataOnly && Platform.isIOS) {
+      _logI(
+        '[FOREGROUND] iOS skipped local notification — '
+        'FCM notification block present (avoids duplicate banner)',
+      );
+    } else {
+      _logW(
+        '[FOREGROUND] No notification shown — '
+        'missing title/body (title=$title body=$body)',
+      );
     }
 
     // 🚗 Refresh Sticky Notification if this is a ride update
     if (data.rideId != null && data.status != null) {
+      _logI(
+        '[FOREGROUND] Updating ride sticky notification — '
+        'rideId=${data.rideId} status=${data.status}',
+      );
       AndroidOrderTrackingManager().show(
         orderId: data.rideId!,
         status: data.status!,
@@ -287,19 +345,19 @@ class NotificationService {
   }
 
   void _onMessageOpenedApp(RemoteMessage message) {
-    _logger.d("Message opened app: ${message.messageId}");
+    _logRemoteMessage('OPENED_APP', message);
     _queueOrHandleNavigationRaw(Map<String, dynamic>.from(message.data));
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
-    _logger.d("Local notification clicked: ${response.payload}");
+    _logD("Local notification clicked: ${response.payload}");
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
         _queueOrHandleNavigationRaw(rawData);
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-        _logger.e("Error decoding notification payload: $e");
+        _logE("Error decoding notification payload: $e");
       }
     }
   }
@@ -329,12 +387,12 @@ class NotificationService {
     final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
 
     if (rideId == null || rideId.isEmpty) {
-      _logger.w("No ride_id found in notification data");
+      _logW("No ride_id found in notification data");
       return;
     }
 
     try {
-      _logger.i("Navigating to ride $rideId from notification");
+      _logI("Navigating to ride $rideId from notification");
 
       Loader.instance.show();
       try {
@@ -343,7 +401,7 @@ class NotificationService {
 
         result.fold(
           (failure) {
-            _logger.e("Error fetching ride details: ${failure.message}");
+            _logE("Error fetching ride details: ${failure.message}");
             AppDialogs.showErrorDialog(
               message: AppStrings.unableToOpenRideDetails.tr,
             );
@@ -368,7 +426,7 @@ class NotificationService {
     } catch (e, stackTrace) {
       Loader.instance.hide();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      _logger.e("Exception in _handleNotificationNavigationRaw: $e");
+      _logE("Exception in _handleNotificationNavigationRaw: $e");
     }
   }
 
@@ -382,6 +440,10 @@ class NotificationService {
   }) async {
     _idCounter++;
     final finalId = id ?? _idCounter;
+    _logD(
+      'showLocalNotification — id=$finalId title="$title" body="$body" '
+      'hasPayload=${payload != null && payload.isNotEmpty}',
+    );
 
     // 1. System Notification (Always triggered for the Notification Drawer/History)
     try {
@@ -409,9 +471,10 @@ class NotificationService {
         ),
         payload: payload,
       );
+      _logI('Local notification displayed — id=$finalId title="$title"');
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error in _localNotifications.show: $e");
+      _logE('Failed to show local notification id=$finalId: $e');
     }
   }
 }

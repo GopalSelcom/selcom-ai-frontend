@@ -122,7 +122,9 @@ class CancelReasonSelectionDialog extends StatelessWidget {
 
   void disposeController() {
     Future<void>.delayed(const Duration(milliseconds: 400), () {
-      if (Get.isRegistered<CancelReasonSelectionController>(tag: controllerTag)) {
+      if (Get.isRegistered<CancelReasonSelectionController>(
+        tag: controllerTag,
+      )) {
         Get.delete<CancelReasonSelectionController>(tag: controllerTag);
       }
     });
@@ -147,10 +149,7 @@ class CancelReasonSelectionDialog extends StatelessWidget {
               children: [
                 for (var index = 0; index < reasons.length; index++) ...[
                   if (index > 0)
-                    Divider(
-                      height: 1.h,
-                      color: AppColors.bgSoftCircle,
-                    ),
+                    Divider(height: 1.h, color: AppColors.bgSoftCircle),
                   _buildReasonOption(
                     reason: reasons[index],
                     isSelected: selectedReason == reasons[index],
@@ -227,11 +226,7 @@ class CancelReasonSelectionDialog extends StatelessWidget {
                 color: isSelected ? AppColors.primary : AppColors.transparent,
               ),
               child: isSelected
-                  ? Icon(
-                      Icons.check,
-                      size: 14.sp,
-                      color: AppColors.white,
-                    )
+                  ? Icon(Icons.check, size: 14.sp, color: AppColors.white)
                   : null,
             ),
           ],

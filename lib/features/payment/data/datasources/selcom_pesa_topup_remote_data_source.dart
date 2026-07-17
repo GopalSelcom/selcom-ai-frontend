@@ -39,28 +39,35 @@ class SelcomPesaTopupRemoteDataSourceImpl
       ),
     );
 
-    if (response.statusCode == 200 && response.data != null) {
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        final result = _parseSuccess(data, requireShortCode: requireShortCode);
-        if (result != null) {
-          return result;
-        }
+    if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final statusCode = data['status_code'];
+      if (statusCode is int && statusCode != 200) {
+        throw WalletPaymentException(
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
+        );
       }
-      throw WalletPaymentException(
-        _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
-      );
+
+      final result = SelcomPesaTopupResult.fromJson(data);
+      if (result.transid.trim().isEmpty) {
+        throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
+      }
+
+      if (requireShortCode && result.shortCode.trim().isEmpty) {
+        throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
+      }
+
+      return result;
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
   @override
@@ -81,7 +88,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
         );
       }
       final result = SelcomPesaTopupStatusResult.fromEnvelope(data);
@@ -98,11 +105,11 @@ class SelcomPesaTopupRemoteDataSourceImpl
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
   @override
@@ -111,7 +118,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
   }) async {
     final trimmedTransid = transid.trim();
     if (trimmedTransid.isEmpty) {
-      throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+      throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
     }
 
     final response = await ApiService().call(
@@ -132,7 +139,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
       final statusCode = data['status_code'];
       if (statusCode is int && statusCode != 200) {
         throw WalletPaymentException(
-          _messageFromResponse(data) ?? AppStrings.tanQrPaymentRequestFailed,
+          _messageFromResponse(data) ?? AppStrings.walletTopUpRequestFailed,
         );
       }
       return SelcomPesaTopupStatusResult.fromEnvelope(data);
@@ -144,33 +151,14 @@ class SelcomPesaTopupRemoteDataSourceImpl
       }
       throw WalletPaymentException(
         _messageFromResponse(response.data) ??
-            AppStrings.tanQrPaymentRequestFailed,
+            AppStrings.walletTopUpRequestFailed,
       );
     }
 
-    throw WalletPaymentException(AppStrings.tanQrPaymentRequestFailed);
+    throw WalletPaymentException(AppStrings.walletTopUpRequestFailed);
   }
 
-  SelcomPesaTopupResult? _parseSuccess(
-    Map<String, dynamic> data, {
-    required bool requireShortCode,
-  }) {
-    final statusCode = data['status_code'];
-    if (statusCode is int && statusCode != 200) {
-      return null;
-    }
 
-    final result = SelcomPesaTopupResult.fromJson(data);
-    if (result.transid.trim().isEmpty) {
-      return null;
-    }
-
-    if (requireShortCode && result.shortCode.trim().isEmpty) {
-      return null;
-    }
-
-    return result;
-  }
 
   String? _messageFromResponse(dynamic data) {
     if (data is! Map) return null;

@@ -6,9 +6,10 @@ import 'environment.dart';
 /// **Startup:** call [init] once in `main` with [resolveAppEnvironment], then read
 /// values anywhere via `AppConfig.*`.
 ///
-/// **API URLs:** only [apiHost] is stored. [ApiService] prepends `/api` when
-/// building `/api/v4/...` paths. Callers outside [ApiService] (Agora, WebView)
-/// use [apiHost] + [apiPathPrefix] the same way.
+/// **API URLs:** only [apiHost] is stored. [ApiService] prepends [apiRouteSegment]
+/// when building `/{route}/{apiVersion}/...` paths (prod uses `api`; dev/staging
+/// omit it). Callers outside [ApiService] (Agora, WebView) use [versionedApiPath]
+/// / [versionedApiUrl] the same way.
 class AppConfig {
   AppConfig._();
 
@@ -24,24 +25,61 @@ class AppConfig {
   /// Used as Dio [baseUrl] in [ApiService].
   static late String apiHost;
 
-  /// `/api` on dev & staging; empty on prod.
+  /// Single source of truth for the API version segment (e.g. `v4`).
   ///
-  /// Matches the segment [ApiService] adds when `ApiRequest.route` is empty.
-  /// Use with [apiHost] for Agora REST, in-app WebView, or any direct HTTP URL.
-  static String get apiPathPrefix {
+  /// Used by [ApiRequest] defaults and by [versionedApiPath] / [versionedApiUrl]
+  /// for callers outside [ApiService] (Agora, WebView, error reporting).
+  static const String apiVersion = 'v4';
+
+  /// Route segment before version: `api` in prod, empty in dev/staging.
+  ///
+  /// Used as [ApiRequest.route] default in [ApiService].
+  static String get apiRouteSegment {
     switch (environment) {
       case Environment.dev:
       case Environment.staging:
-        return '/api';
+        return 'api';
+      case Environment.prod:
+        return 'api';
+    }
+  }
+
+  /// Leading path prefix derived from [apiRouteSegment] (`/api` or empty).
+  ///
+  /// Prefer [versionedApiPath] / [versionedApiUrl] over composing this by hand.
+  static String get apiPathPrefix =>
+      apiRouteSegment.isEmpty ? '' : '/$apiRouteSegment';
+
+  /// Path after host: `/{apiRouteSegment}/{apiVersion}/{endpoint}` (leading slash).
+  static String versionedApiPath(String endpoint) {
+    final clean =
+        endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    if (apiRouteSegment.isEmpty) {
+      return '/$apiVersion/$clean';
+    }
+    return '/$apiRouteSegment/$apiVersion/$clean';
+  }
+
+  /// Absolute URL: `{apiHost}{versionedApiPath}`.
+  static String versionedApiUrl(String endpoint) =>
+      '$apiHost${versionedApiPath(endpoint)}';
+
+  // ── Socket & error reporting ──────────────────────────────────────────────
+
+  /// Socket.IO origin (path comes from [socketPath]).
+  static late String socketBaseUrl;
+
+  /// Socket.IO engine path: `/go-socket.io` in dev/staging; empty in prod
+  /// (library default — no custom `.setPath`).
+  static String get socketPath {
+    switch (environment) {
+      case Environment.dev:
+      case Environment.staging:
+        return '/go-socket.io';
       case Environment.prod:
         return '';
     }
   }
-
-  // ── Socket & error reporting ──────────────────────────────────────────────
-
-  /// Socket.IO origin (`/go-socket.io` path is set in [AppSocketService]).
-  static late String socketBaseUrl;
 
   /// Host for multipart error-report uploads (separate from main API).
   static late String errorReportHost;

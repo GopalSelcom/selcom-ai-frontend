@@ -33,13 +33,9 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,
-    required String sessionToken,
   }) async {
     try {
-      final result = await remoteDataSource.autocomplete(
-        input: input,
-        sessionToken: sessionToken,
-      );
+      final result = await remoteDataSource.autocomplete(input: input);
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

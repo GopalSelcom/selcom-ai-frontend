@@ -38,13 +38,6 @@ class AppStrings {
   static const String addMoney = 'add_money';
   static const String amount = 'amount';
   static const String back = 'back';
-  static const String addMoneySelcomPesaSubtitle =
-      'add_money_selcom_pesa_subtitle';
-  static const String addMoneyTanQrTips = 'add_money_tan_qr_tips';
-  static const String addMoneyTanQrTipsSubtitle =
-      'add_money_tan_qr_tips_subtitle';
-  static const String addMoneyMobileMoneySubtitle =
-      'add_money_mobile_money_subtitle';
   static const String walletFundsReceivedTitle = 'wallet_funds_received_title';
   static const String walletFundsReceivedSubtitle =
       'wallet_funds_received_subtitle';
@@ -60,17 +53,20 @@ class AppStrings {
   static const String requestSentCompleteSelcomTopup =
       'request_sent_complete_selcom_topup';
   static const String expiresInWithTime = 'expires_in_with_time';
-  static const String tanQrAmountRequired = 'tanqr_amount_required';
-  static const String tanQrAmountMustBeGreaterThanZero =
-      'tanqr_amount_must_be_greater_than_zero';
-  static const String tanQrAmountExceedsMax = 'tanqr_amount_exceeds_max';
-  static const String tanQrScanQrInstruction = 'tanqr_scan_qr_instruction';
-  static const String tanQrPaymentRequestFailed = 'tanqr_payment_request_failed';
-  static const String tanQrTimerExpiredTitle = 'tanqr_timer_expired_title';
-  static const String tanQrTimerExpiredMessage = 'tanqr_timer_expired_message';
-  static const String tanQrMissingRegisteredPhone =
-      'tanqr_missing_registered_phone';
-  static const String tanQrCancelRequest = 'tanqr_cancel_request';
+  static const String walletTopUpAmountRequired =
+      'wallet_topup_amount_required';
+  static const String walletTopUpAmountMustBeGreaterThanZero =
+      'wallet_topup_amount_must_be_greater_than_zero';
+  static const String walletTopUpAmountExceedsMax =
+      'wallet_topup_amount_exceeds_max';
+  static const String walletTopUpRequestFailed =
+      'wallet_topup_request_failed';
+  static const String walletTopUpTimerExpiredTitle =
+      'wallet_topup_timer_expired_title';
+  static const String walletTopUpTimerExpiredMessage =
+      'wallet_topup_timer_expired_message';
+  static const String walletTopUpCancelRequest =
+      'wallet_topup_cancel_request';
   static const String selcomPesaAppNotInstalled =
       'selcom_pesa_app_not_installed';
   static const String selcomPesaInstallPrompt = 'selcom_pesa_install_prompt';
@@ -189,6 +185,8 @@ class AppStrings {
       'finding_driver_minutes_remain';
   static const String driverWillArrivingInMinutes =
       'driver_will_arriving_in_minutes';
+  static const String driverFinishingNearbyTrip =
+      'driver_finishing_nearby_trip';
   static const String driverAssigned = 'driver_assigned';
   static const String driverArriving = 'driver_arriving';
   static const String driverEnRoute = 'driver_en_route';
@@ -444,6 +442,7 @@ class AppStrings {
   static const String calculatingBestRoute = 'calculating_best_route';
   static const String rideReceipt = 'ride_receipt';
   static const String refWithId = 'ref_with_id';
+  static const String transactionIdWithValue = 'transaction_id_with_value';
   static const String route = 'route';
   static const String dropoff = 'dropoff';
   static const String emDash = 'em_dash';
@@ -620,6 +619,10 @@ class AppStrings {
   static const String selectedAddress = 'selected_address';
   static const String searchingForDriver = 'searching_for_driver';
   static const String enableLocationService = 'enable_location_service';
+  static const String enableLocationServiceMessage =
+      'enable_location_service_message';
+  static const String enableLocationServiceMessageIos =
+      'enable_location_service_message_ios';
   static const String locationPermissionDenied = 'location_permission_denied';
   static const String locationAccessRequired = 'location_access_required';
   static const String locationPermissionDeniedOpenSettings =
@@ -730,6 +733,7 @@ class AppStrings {
   static const String visa = 'visa';
   static const String wallet = 'wallet';
   static const String walletNumberCopied = 'wallet_number_copied';
+  static const String copiedToClipboard = 'copied_to_clipboard';
   static const String walletNumberLabel = 'wallet_number_label';
   static const String walletReservedBalance = 'wallet_reserved_balance';
   static const String recentTransactions = 'recent_transactions';
@@ -901,4 +905,56 @@ class AppStrings {
   static const String updateRide = 'update_ride';
   static const String writeAMessage = 'write_a_message';
   static const String yourDriver = 'your_driver';
+  static const String selcomPesaLinkNumber = 'selcom_pesa_link_number';
+  static const String selcomPesaSelfTitle = 'selcom_pesa_self_title';
+  static const String selcomPesaSelfSubtitle = 'selcom_pesa_self_subtitle';
+  static const String selcomPesaOtherTitle = 'selcom_pesa_other_title';
+  static const String selcomPesaOtherSubtitle = 'selcom_pesa_other_subtitle';
+  static const String removeAccountTitle = 'remove_account_title';
+  static const String removeAccountMessage = 'remove_account_message';
+  static const String removeLabel = 'remove_label';
+  static const String savedCardLabel = 'saved_card_label';
+  static const String noSavedCardsFound = 'no_saved_cards_found';
+  static const String addNewCardText = 'add_new_card_text';
+  static const String amountIsRequired = 'amount_is_required';
+  static const String enterValidAmount = 'enter_valid_amount';
+  static const String setAsDefault = 'set_as_default';
+  static const String setAsDefaultConfirm = 'set_as_default_confirm';
+  static const String defaultAccountSetSuccessfully =
+      'default_account_set_successfully';
+
+  // Add card form
+  static const String cardInformation = 'card_information';
+  static const String firstName = 'first_name';
+  static const String lastName = 'last_name';
+  static const String billingDetails = 'billing_details';
+  static const String billingDetailsSubtitle = 'billing_details_subtitle';
+  static const String country = 'country';
+  static const String state = 'state';
+  static const String selectState = 'select_state';
+  static const String address = 'address';
+  static const String city = 'city';
+  static const String postalCode = 'postal_code';
+  static const String egUserEmail = 'eg_user_email';
+  static const String streetNameHouseNumber = 'street_name_house_number';
+  static const String egDarEsSalaam = 'eg_dar_es_salaam';
+  static const String egPostalCode = 'eg_postal_code';
+  static const String firstNameIsRequired = 'first_name_is_required';
+  static const String lastNameIsRequired = 'last_name_is_required';
+  static const String cardNumberIsRequired = 'card_number_is_required';
+  static const String enterValidCardNumber = 'enter_valid_card_number';
+  static const String expiryIsRequired = 'expiry_is_required';
+  static const String enterValidExpiryDate = 'enter_valid_expiry_date';
+  static const String cvvIsRequired = 'cvv_is_required';
+  static const String cvvMustBe3Digits = 'cvv_must_be_3_digits';
+  static const String countryIsRequired = 'country_is_required';
+  static const String stateIsRequired = 'state_is_required';
+  static const String phoneNumberIsRequired = 'phone_number_is_required';
+  static const String invalidPhoneNumberForCountry =
+      'invalid_phone_number_for_country';
+  static const String addressIsRequired = 'address_is_required';
+  static const String cityIsRequired = 'city_is_required';
+  static const String postalCodeIsRequired = 'postal_code_is_required';
+  static const String invalidSessionResponseFromServer =
+      'invalid_session_response_from_server';
 }

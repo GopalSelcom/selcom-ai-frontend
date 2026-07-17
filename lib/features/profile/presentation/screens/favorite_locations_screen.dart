@@ -24,14 +24,14 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
           AppProfileHeader(title: AppStrings.savedLocations.tr),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.favorites.isEmpty) {
+              if (controller.isLoading.value && controller.savedPlaces.isEmpty) {
                 return Align(
                   alignment: Alignment.topCenter,
                   child: FavoriteLocationsScreenShimmer.listContent(),
                 );
               }
 
-              if (controller.favorites.isEmpty) {
+              if (controller.savedPlaces.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -60,13 +60,13 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
               }
 
               return RefreshIndicator(
-                onRefresh: controller.fetchFavorites,
+                onRefresh: controller.fetchSavedPlaces,
                 child: ListView.separated(
                   padding: EdgeInsets.all(16.w),
-                  itemCount: controller.favorites.length,
+                  itemCount: controller.savedPlaces.length,
                   separatorBuilder: (_, __) => SizedBox(height: 12.h),
                   itemBuilder: (context, index) {
-                    final place = controller.favorites[index];
+                    final place = controller.savedPlaces[index];
                     return _locationTile(place);
                   },
                 ),
@@ -132,7 +132,7 @@ class FavoriteLocationsScreen extends GetView<FavoriteLocationsController> {
               ),
             ),
             IconButton(
-              onPressed: () => controller.toggleFavorite(place),
+              onPressed: () => controller.removeSavedPlace(place),
               icon: SvgPictureAsset(
                 AppAssets.locationIcHeartFilled,
                 width: 24.w,

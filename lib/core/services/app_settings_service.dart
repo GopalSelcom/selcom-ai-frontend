@@ -21,6 +21,19 @@ class AppSettingsService {
   /// Cached `features.max_stops` from `/go/settings` (populated by [preload]).
   final maxStops = AppSettingsModel.defaultMaxStops.obs;
 
+  /// Cached `topup_methods` from `/go/settings` (populated by [preload]).
+  ///
+  /// Used by the Add Money bottom sheet for title, subtitle, order, and
+  /// enabled visibility. Flow navigation uses each method's `key`.
+  final topupMethods = <TopupMethodSettings>[].obs;
+
+  /// Add-money options to display: `enabled == true` only, sorted by `order`.
+  List<TopupMethodSettings> get enabledTopupMethods {
+    final methods = topupMethods.where((m) => m.enabled).toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    return methods;
+  }
+
   bool get bookForOtherEnabled => bookForOtherSettings.value?.enabled ?? false;
 
   /// Max intermediate stops allowed (excludes final destination).
@@ -66,6 +79,7 @@ class AppSettingsService {
         paymentWaitSeconds.value = AppSettingsModel.defaultPaymentTimerSeconds;
         cancellationReasons.clear();
         maxStops.value = AppSettingsModel.defaultMaxStops;
+        topupMethods.clear();
       },
       (settings) {
         features.assignAll(settings.features);
@@ -73,6 +87,7 @@ class AppSettingsService {
         paymentWaitSeconds.value = settings.paymentTimerSeconds;
         cancellationReasons.assignAll(settings.cancellationReasons);
         maxStops.value = settings.maxStops;
+        topupMethods.assignAll(settings.topupMethods);
       },
     );
     isLoaded.value = true;

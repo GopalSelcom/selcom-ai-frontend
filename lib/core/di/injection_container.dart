@@ -12,8 +12,10 @@ import '../../features/notification/data/datasources/notification_remote_data_so
 import '../../features/notification/data/repositories/notification_repository_impl.dart';
 import '../../features/notification/domain/repositories/notification_repository.dart';
 import '../../features/notification/presentation/controllers/notification_controller.dart';
+import '../../features/payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
+import '../../features/payment/data/datasources/wallet_payment_remote_data_source.dart';
+import '../../features/payment/presentation/controllers/saved_cards_controller.dart';
 import '../../features/profile/presentation/controllers/payment_methods_controller.dart';
-import '../../features/payment/presentation/controllers/payment_method_controller.dart';
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
@@ -43,12 +45,9 @@ import '../../features/settings/data/datasources/settings_remote_data_source.dar
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/settings_usecase.dart';
-import '../../features/payment/data/datasources/selcom_pesa_topup_remote_data_source.dart';
-import '../../features/payment/data/datasources/wallet_payment_remote_data_source.dart';
 import '../../features/wallet/data/datasources/wallet_remote_data_source.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
-import '../../features/wallet/domain/usecases/get_wallet_details_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../features/wallet/domain/usecases/email_wallet_statement_usecase.dart';
 import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
@@ -59,12 +58,13 @@ import '../network/retry_manager.dart';
 import '../services/analytics_service.dart';
 import '../services/app_region_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/apple_sign_in_service.dart';
+import '../services/facebook_sign_in_service.dart';
+import '../services/google_sign_in_service.dart';
 import '../services/live_activity/live_activity_manager.dart';
+import '../services/local_bank_instructions_service.dart';
 import '../services/nearby_drivers_socket_service.dart';
 import '../services/notification_service.dart';
-import '../services/apple_sign_in_service.dart';
-import '../services/google_sign_in_service.dart';
-import '../services/facebook_sign_in_service.dart';
 import '../services/selcom_pesa/selcom_pesa_app_launcher_service.dart';
 
 final sl = GetIt.instance; // sl: Service Locator
@@ -81,6 +81,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AppleSignInService());
   sl.registerLazySingleton(() => FacebookSignInService());
   sl.registerLazySingleton(() => FirebaseAuthDataSource());
+  sl.registerLazySingleton(() => LocalBankInstructionsService());
   sl.registerLazySingleton<AppleAuthLocalDataSource>(
     () => AppleAuthLocalDataSourceImpl(),
   );
@@ -166,7 +167,6 @@ Future<void> init() async {
       getWalletSummaryUseCase: sl(),
     ),
   );
-  sl.registerFactory(() => PaymentMethodController(profileRepository: sl()));
   sl.registerFactory(() => PaymentMethodsController());
 
   // ── Notification Feature ──
@@ -210,10 +210,13 @@ Future<void> init() async {
       selcomPesaTopupRemoteDataSource: sl(),
     ),
   );
-  sl.registerLazySingleton(() => GetWalletDetailsUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetWalletTransactionsUseCase(sl()));
   sl.registerLazySingleton(() => EmailWalletStatementUseCase(sl()));
+
+  sl.registerLazySingleton<SavedCardsController>(
+    () => SavedCardsController(walletRepository: sl()),
+  );
 
   await sl<AppRegionService>().restore();
 }

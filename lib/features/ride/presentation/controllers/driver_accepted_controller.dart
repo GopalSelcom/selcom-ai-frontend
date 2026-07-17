@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -35,6 +34,7 @@ import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -53,7 +53,6 @@ import '../../../../shared/utils/socket_ride_scope.dart';
 import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/app_google_map.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../data/models/destination_update_models.dart';
@@ -138,6 +137,12 @@ class DriverAcceptedController extends GetxController
   final arrivalLabel = AppStrings.driverWillArrivingInMinutes.trParams({
     'minutes': '1',
   }).obs;
+
+  /// Chained ride: driver is still finishing another nearby trip.
+  /// Drives finishing-nearby sheet copy, hides the map ETA chip, and faces the
+  /// driver marker along the drawn route until the flag clears.
+  final isDriverFinishingNearby = false.obs;
+
   final unreadCount = 0.obs;
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
 
@@ -167,6 +172,7 @@ class DriverAcceptedController extends GetxController
   GoogleMapController? mapController;
   LatLng? _lastDriverRotationSamplePosition;
   bool _navigatedAway = false;
+
   /// Suppresses cancel dialog when the user completed [CancelRideFlow] (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
   DateTime? _lastCameraUpdate;
@@ -381,10 +387,9 @@ class DriverAcceptedController extends GetxController
     _emergencyContactsLoadedOnce = true;
     final result = await rideRepository.getEmergencyContacts();
     result.fold(
-      (f) => developer.log(
-        'emergency_contacts request failed',
-        name: 'EmergencyContacts',
-        error: f.message,
+      (f) => AppLogger.w(
+        'emergency_contacts request failed: ${f.message}',
+        tag: 'EmergencyContacts',
       ),
       (EmergencyContactsResponse res) {
         emergencyContacts.assignAll(res.data.contacts);
@@ -633,6 +638,13 @@ class DriverAcceptedController extends GetxController
     stopIcons.assignAll(icons);
   }
 
+  /// Stops ride fallback polling when the session is invalidated.
+  void onSessionExpired() {
+    isUpdatingStops.value = false;
+    isUpdatingDestination.value = false;
+    stopUpdateProgressStep.value = 0;
+  }
+
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -644,6 +656,9 @@ class DriverAcceptedController extends GetxController
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
     _driverCancelledSub?.cancel();
+    _rideStopsUpdatedSub?.cancel();
+    _rideStopsUpdateFailedSub?.cancel();
+    _paymentStatusSub?.cancel();
     if (!_skipRideRoomLeaveOnClose && rideId.isNotEmpty) {
       _socketService.leaveRideRoom(rideId: rideId);
     }
@@ -675,7 +690,8 @@ class DriverAcceptedController extends GetxController
     final args = raw is Map
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
-    rideId = (args['rideId'] as String?)?.trim() ?? '';
+    // Prefer toString — socket/nav args may not always be a Dart [String].
+    rideId = args['rideId']?.toString().trim() ?? '';
     final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
     final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
     final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
@@ -747,19 +763,20 @@ class DriverAcceptedController extends GetxController
     _refreshMapRouteHeader();
   }
 
+  /// Updates [routeTarget] only — polylines come from `ride:tracking_update`
+  /// `route_geometry` via [TrackingRouteGeometryUtils.shouldDrawPolyline].
   void _setDropRouteFallback() {
     routeTarget.value = 'drop_off';
-    routePoints.assignAll([pickupLatLng, destinationLatLng]);
   }
 
   void _setPickupRouteFallback() {
     routeTarget.value = 'pick_up';
-    final driver = assignedDriverLocation.value;
-    if (driver != null) {
-      routePoints.assignAll([driver, pickupLatLng]);
-      return;
-    }
-    routePoints.assignAll([pickupLatLng, destinationLatLng]);
+  }
+
+  void _clearRouteAwaitingTrackingUpdate() {
+    if (routePoints.isEmpty) return;
+    routePoints.clear();
+    isInitialRouteLoaded.value = false;
   }
 
   void _markInitialRouteReady() {
@@ -769,10 +786,9 @@ class DriverAcceptedController extends GetxController
   }
 
   void _hydrateSocketSeedPayloads(Map<String, dynamic> args) {
-    developer.log(
-      "💧 Hydrating socket seed payloads from args",
-      name: 'ORDER_TRACKING',
-      error: args.toString(),
+    AppLogger.d(
+      '💧 Hydrating socket seed payloads from args: $args',
+      tag: 'ORDER_TRACKING',
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
@@ -847,25 +863,43 @@ class DriverAcceptedController extends GetxController
       _setRideLoadFailure(AppStrings.rideDetailsAreMissing.tr);
       return;
     }
+    if (_navigatedAway) return;
     isLoadingRide.value = true;
     rideLoadError.value = null;
     final result = await rideRepository.getRideDetails(rideId);
+    if (_navigatedAway) {
+      isLoadingRide.value = false;
+      return;
+    }
     await result.fold(
       (f) async {
+        // Don't paint the error sheet if we already left for rematch/searching.
+        if (_navigatedAway) return;
         // Generic localized copy for UI; technical detail stays in logs only.
         _setRideLoadFailure(AppStrings.failedToLoadRideDetails.tr);
-        developer.log(
-          'ride_details request failed',
-          name: 'DriverAcceptedController',
-          error: f.message,
+        AppLogger.w(
+          'ride_details request failed: ${f.message}',
+          tag: 'DriverAcceptedController',
         );
       },
       (r) async {
-        if (shouldOpenFindingDriverForRide(r)) {
-          _skipRideRoomLeaveOnClose = true;
-          navigateToFindingDriverForRide(r, replace: true);
+        if (_navigatedAway) return;
+
+        final normalized = normalizeRideStatusString(
+          rideStatusToApiValue(r.status),
+        );
+        // Only rematch on an explicit searching status — not the broader
+        // [shouldOpenFindingDriverForRide] helper (that also matches incomplete
+        // / error-fallback ride payloads and was leaving this screen empty).
+        if (isRideSearchingStatus(normalized)) {
+          if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+            return;
+          }
+          ride.value = r;
+          _navigateBackToFindingDriverAfterChainBroken();
           return;
         }
+
         if (rideNeedsMidRideCancelScreen(r)) {
           final block = _midRideCancelModelFromRide(r);
           if (block != null) {
@@ -885,11 +919,12 @@ class DriverAcceptedController extends GetxController
 
         // Debug logging for the "Stuck" state issues
         if (isUpdatingStops.value) {
-          debugPrint(
+          AppLogger.d(
             "STOPS_UPDATE_POLL: step=${stopUpdateProgressStep.value}, "
             "pendingStatus=${r.pendingStopsUpdate?.status}, "
             "rideStopsCount=${r.stops.length}, "
             "workingStopsCount=${stopUpdateWorkingStops.length}",
+            tag: 'DriverAcceptedController',
           );
         }
 
@@ -921,12 +956,14 @@ class DriverAcceptedController extends GetxController
             isDestinationUpdateFlow.value = false;
             _pendingDestinationTargetLat = null;
             _pendingDestinationTargetLng = null;
-            _setDropRouteFallback();
+            unawaited(_ensureRideRealtimeAfterLocationUpdate());
           }
         }
       },
     );
-    isLoadingRide.value = false;
+    if (!_navigatedAway) {
+      isLoadingRide.value = false;
+    }
     // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
@@ -949,6 +986,7 @@ class DriverAcceptedController extends GetxController
   }
 
   void _setRideLoadFailure(String message) {
+    if (_navigatedAway) return;
     rideLoadError.value = message;
     _clearRideDriverFields();
     isLoadingRide.value = false;
@@ -1067,10 +1105,9 @@ class DriverAcceptedController extends GetxController
     // Primary realtime status feed — always normalize before comparing.
     _rideStatusSub = _socketService.rideStatusStream.listen((payload) async {
       if (!_isSocketEventForThisRide(payload.rideId)) return;
-      developer.log(
-        "📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId",
-        name: 'ORDER_TRACKING',
-        error: jsonEncode(payload.toJson()),
+      AppLogger.d(
+        '📥 Socket Event: ride_status_stream - Status: ${payload.status} for ride $rideId | ${jsonEncode(payload.toJson())}',
+        tag: 'ORDER_TRACKING',
       );
       final status = (payload.status ?? '').toString().trim();
       final normalized = normalizeRideStatusString(status);
@@ -1093,6 +1130,18 @@ class DriverAcceptedController extends GetxController
         _showCancelDialogThenGoHome(
           AppStrings.noDriverFoundForYourRequestPleaseTryAgain.tr,
         );
+        return;
+      }
+
+      if (normalized == 'searching') {
+        if (_navigatedAway) return;
+        // On driver-accepted during pickup (including chained assignment),
+        // searching means the chain broke / rematch started — always return to
+        // the finding-driver searching sheet.
+        if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+          return;
+        }
+        _navigateBackToFindingDriverAfterChainBroken();
         return;
       }
 
@@ -1168,21 +1217,23 @@ class DriverAcceptedController extends GetxController
           _lastDriverRotationSamplePosition ??
           mapWidgetKey.currentState?.currentAnimatedPosition;
 
-      assignedDriverHeading.value = MapVehicleMarkerUtils.resolveMarkerRotation(
-        previousPosition: rotationFrom,
+      assignedDriverHeading.value = _resolveAssignedDriverHeading(
         currentPosition: rawPos,
+        previousPosition: rotationFrom,
         headingDegrees: parsedHeading,
         previousRotation: assignedDriverHeading.value,
         speedMps: speed,
       );
 
-      if (rotationFrom != null) {
-        final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
-        if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+      if (!isDriverFinishingNearby.value) {
+        if (rotationFrom != null) {
+          final moved = _calculateDistanceInMeters(rotationFrom, rawPos);
+          if (moved >= MapVehicleMarkerUtils.minMovementMetersForBearing) {
+            _lastDriverRotationSamplePosition = rawPos;
+          }
+        } else {
           _lastDriverRotationSamplePosition = rawPos;
         }
-      } else {
-        _lastDriverRotationSamplePosition = rawPos;
       }
 
       mapWidgetKey.currentState?.updateRiderPosition(
@@ -1199,10 +1250,9 @@ class DriverAcceptedController extends GetxController
         if (_navigatedAway) return;
         if (!_isSocketEventForThisRide(payload.rideId)) return;
         _hasReceivedTrackingUpdate = true;
-        developer.log(
-          "📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId",
-          name: 'ORDER_TRACKING',
-          error: jsonEncode(payload.toJson()),
+        AppLogger.d(
+          '📥 Socket Event: tracking_update_socket - Target: ${payload.routeTarget} for ride $rideId | ${jsonEncode(payload.toJson())}',
+          tag: 'ORDER_TRACKING',
         );
         _applyTrackingPayload(payload);
       }
@@ -1217,7 +1267,9 @@ class DriverAcceptedController extends GetxController
     ) async {
       if (payload.rideId.trim() != rideId) return;
       if (_navigatedAway) return;
-      await _maybeNavigateMidRideDriverCancelled(payload.toMidRideCancelModel());
+      await _maybeNavigateMidRideDriverCancelled(
+        payload.toMidRideCancelModel(),
+      );
     });
 
     // Ensure socket is connected for the active-ride entry path too.
@@ -1261,6 +1313,8 @@ class DriverAcceptedController extends GetxController
       _clearIdempotencyKey();
       isUpdatingStops.value = false;
       stopUpdateProgressStep.value = 0;
+      _clearRouteAwaitingTrackingUpdate();
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
       _fetchRideDetails();
     });
 
@@ -1284,6 +1338,10 @@ class DriverAcceptedController extends GetxController
             message: userMessage,
           );
         });
+
+    _paymentStatusSub = _socketService.paymentStatusStream.listen(
+      _handlePaymentBlockStatus,
+    );
   }
 
   /// Ignores socket ticks from other active rides when Home joined multiple rooms.
@@ -1291,7 +1349,72 @@ class DriverAcceptedController extends GetxController
     return socketPayloadIsForRide(
       activeRideId: rideId,
       payloadRideId: payloadRideId,
+      joinedRideRoomId: _socketService.joinedRideRoomId,
     );
+  }
+
+  Future<void> _ensureRideRealtimeAfterLocationUpdate() async {
+    if (rideId.isEmpty) return;
+    try {
+      await _socketService.ensureConnected();
+      _joinRideRoomIfNeeded();
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppLogger.w(
+        'Ride socket rejoin after location update failed',
+        tag: 'DriverAcceptedController',
+      );
+    }
+  }
+
+  bool? _paymentBlockOutcome(PaymentStatusUpdateResponse event) {
+    final phase = (event.phase ?? '').toString().toLowerCase();
+    final status = (event.status ?? '').toString().toLowerCase();
+
+    if (phase.isNotEmpty && phase != 'block') return null;
+
+    if (status == 'confirmed' || status == 'completed') {
+      return true;
+    }
+    if (status == 'failed') {
+      return false;
+    }
+    return null;
+  }
+
+  void _handlePaymentBlockStatus(PaymentStatusUpdateResponse event) {
+    final outcome = _paymentBlockOutcome(event);
+    if (outcome == null) return;
+
+    if (isUpdatingStops.value && stopUpdateProgressStep.value == 1) {
+      if (outcome) {
+        stopUpdateProgressStep.value = 2;
+        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+      } else {
+        isUpdatingStops.value = false;
+        stopUpdateProgressStep.value = 0;
+        _showStopUpdateError(
+          AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr,
+        );
+      }
+      return;
+    }
+
+    if (isUpdatingDestination.value && stopUpdateProgressStep.value == 1) {
+      if (outcome) {
+        stopUpdateProgressStep.value = 2;
+        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+      } else {
+        isUpdatingDestination.value = false;
+        isDestinationUpdateFlow.value = false;
+        stopUpdateProgressStep.value = 0;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        _showDestinationUpdateError(
+          AppStrings.paymentHoldUpdateFailedNoChargesApplied.tr,
+        );
+      }
+    }
   }
 
   void _joinRideRoomIfNeeded() {
@@ -1311,8 +1434,9 @@ class DriverAcceptedController extends GetxController
         MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     } catch (e, stackTrace) {
-      developer.log(
+      AppLogger.e(
         "Error loading map marker icon ($vehicleType): $e",
+        tag: 'DriverAcceptedController',
         error: e,
         stackTrace: stackTrace,
       );
@@ -1331,6 +1455,73 @@ class DriverAcceptedController extends GetxController
         onConfirm: () => Get.offAllNamed(AppRoutes.home),
       );
     });
+  }
+
+  /// Ride chaining broke: assigned driver no longer available — resume driver search.
+  ///
+  /// Replaces SCR-11 (driver accepted) with SCR-10 (finding driver) using the
+  /// same searching labels as a normal match. Sets [_navigatedAway] so in-flight
+  /// [getRideDetails] responses do not paint the "unable to open ride details"
+  /// error sheet after we leave.
+  void _navigateBackToFindingDriverAfterChainBroken() {
+    if (_navigatedAway) return;
+    _navigatedAway = true;
+    _skipRideRoomLeaveOnClose = true;
+    isDriverFinishingNearby.value = false;
+
+    AppLogger.d(
+      'Chain broken → navigating to finding-driver (searching) for ride $rideId',
+      tag: 'ORDER_TRACKING',
+    );
+
+    final currentRide = ride.value;
+    if (currentRide != null) {
+      navigateToFindingDriverForRide(
+        currentRide.copyWith(status: RideStatus.searching),
+        replace: true,
+        chainBroken: true,
+      );
+      return;
+    }
+
+    final fareBreakdown =
+        (_seedRideCharge != null ||
+            _seedBookingFee != null ||
+            _seedTotalAmount != null)
+        ? {
+            if (_seedRideCharge != null) 'ride_charge': _seedRideCharge,
+            if (_seedBookingFee != null) 'booking_fee': _seedBookingFee,
+            if (_seedTotalAmount != null) 'total_amount': _seedTotalAmount,
+          }
+        : null;
+
+    final destinations = routeDestinations.isNotEmpty
+        ? routeDestinations
+              .map((e) => {'lat': e.lat, 'lng': e.lng, 'address': e.address})
+              .toList()
+        : [
+            {
+              'lat': destinationLatLng.latitude,
+              'lng': destinationLatLng.longitude,
+              'address': destinationAddress,
+            },
+          ];
+
+    Get.offNamed(
+      AppRoutes.findingDriver,
+      arguments: {
+        'rideId': rideId,
+        'pickupLat': pickupLatLng.latitude,
+        'pickupLng': pickupLatLng.longitude,
+        'pickupAddress': pickupAddress,
+        'destinationLat': destinationLatLng.latitude,
+        'destinationLng': destinationLatLng.longitude,
+        'destinationAddress': destinationAddress,
+        'destinations': destinations,
+        if (fareBreakdown != null) 'fareBreakdown': fareBreakdown,
+        kFindingDriverChainBrokenArg: true,
+      },
+    );
   }
 
   Future<void> _handleRideCancelledFromTracking() async {
@@ -1395,6 +1586,7 @@ class DriverAcceptedController extends GetxController
       captureStatus: block.captureStatus,
     );
   }
+
   void _syncBottomSheetVehicleImage(String? vehicleType) {
     final previousAsset = bottomSheetVehicleImageAsset.value;
     bottomSheetVehicleImageAsset
@@ -1638,6 +1830,8 @@ class DriverAcceptedController extends GetxController
     }
 
     final rootEta = payload.etaSeconds;
+    // Apply finishing flag first so ETA labels restore correctly when it becomes false.
+    _setDriverFinishingNearby(payload.driverFinishingNearby);
     if (rootEta != null && rootEta.toDouble() > 0) {
       _applySocketEtaSecondsToLabels(rootEta.toDouble(), skipIfArrived: true);
     }
@@ -1719,6 +1913,13 @@ class DriverAcceptedController extends GetxController
 
     rideBottomSheetState.value = nextState;
     _syncSheetLayoutForCurrentStatus();
+    if (_isDriverArrivedAtPickupStatus(normalizedStatus) ||
+        nextState == RideBottomSheetState.rideStarted) {
+      // Driver is free / trip started — no longer "finishing nearby".
+      if (isDriverFinishingNearby.value) {
+        isDriverFinishingNearby.value = false;
+      }
+    }
     if (_isDriverArrivedAtPickupStatus(normalizedStatus)) {
       _syncDriverArrivedPickupMessages();
     }
@@ -1737,6 +1938,7 @@ class DriverAcceptedController extends GetxController
 
   /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
   void _syncDriverArrivedPickupMessages() {
+    isDriverFinishingNearby.value = false;
     assignedDriverSpeed.value = 0;
     arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
     etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
@@ -1957,11 +2159,15 @@ class DriverAcceptedController extends GetxController
     if (etaSeconds <= 0) return;
     currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
-    etaLabel.value = AppStrings.minutesShortCount.trParams({
-      'count': '$minutes',
-    });
+    // Keep ETA in state, but do not show the minutes chip while finishing nearby.
+    if (!isDriverFinishingNearby.value) {
+      etaLabel.value = AppStrings.minutesShortCount.trParams({
+        'count': '$minutes',
+      });
+    }
     final rideStatus = normalizeRideStatusString(currentRideStatus.value);
-    if (_isDriverHeadingToPickupForEta(rideStatus)) {
+    if (_isDriverHeadingToPickupForEta(rideStatus) &&
+        !isDriverFinishingNearby.value) {
       arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
@@ -1974,6 +2180,9 @@ class DriverAcceptedController extends GetxController
     if (st == 'driver_arrived') {
       return arrivalLabel.value;
     }
+    if (isDriverFinishingNearby.value && _isDriverHeadingToPickupForEta(st)) {
+      return AppStrings.driverFinishingNearbyTrip.tr;
+    }
     final secs = currentEtaSeconds.value;
     if (secs > 0 && _isDriverHeadingToPickupForEta(st)) {
       final minutes = (secs / 60).ceil();
@@ -1984,6 +2193,15 @@ class DriverAcceptedController extends GetxController
     return arrivalLabel.value;
   }
 
+  /// Map ETA chip — hidden while the chained driver is finishing another trip.
+  bool get shouldShowMapEtaChip {
+    if (hasRideLoadError) return false;
+    if (isDriverFinishingNearby.value) return false;
+    final st = normalizeRideStatusString(currentRideStatus.value);
+    if (st == 'driver_arrived') return true;
+    return currentEtaSeconds.value > 0 || etaLabel.value.trim().isNotEmpty;
+  }
+
   bool get shouldShowRideEtaBadge {
     final status = currentRideStatus.value;
     if (rideEtaMinutes <= 0) return false;
@@ -1992,11 +2210,115 @@ class DriverAcceptedController extends GetxController
         status == 'near_destination';
   }
 
+  void _setDriverFinishingNearby(bool finishing) {
+    final wasFinishing = isDriverFinishingNearby.value;
+    isDriverFinishingNearby.value = finishing;
+    if (finishing) {
+      // Replaces "Driver will arrive in X min..." while the prior trip is active.
+      arrivalLabel.value = AppStrings.driverFinishingNearbyTrip.tr;
+      _lastDriverRotationSamplePosition = null;
+      _syncDriverHeadingFromActiveRoute(animate: true);
+      return;
+    }
+    if (!wasFinishing) return;
+    _lastDriverRotationSamplePosition = null;
+    _restorePickupArrivalLabelsAfterFinishingNearby();
+  }
+
+  /// When chaining ends (`driver_finishing_nearby` → false), always drop the
+  /// finishing-trip copy. Prefer cached ETA minutes; otherwise show arriving.
+  void _restorePickupArrivalLabelsAfterFinishingNearby() {
+    final st = normalizeRideStatusString(currentRideStatus.value);
+    if (!_isDriverHeadingToPickupForEta(st)) return;
+
+    final secs = currentEtaSeconds.value;
+    if (secs > 0) {
+      final minutes = (secs / 60).ceil();
+      etaLabel.value = AppStrings.minutesShortCount.trParams({
+        'count': '$minutes',
+      });
+      arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+        'minutes': '$minutes',
+      });
+      return;
+    }
+
+    // No ETA cached yet — clear finishing text so the old arrival line can show.
+    etaLabel.value = AppStrings.arriving.tr;
+    arrivalLabel.value = AppStrings.driverIsArriving.tr;
+  }
+
+  /// During chained pickup, GPS movement can point away from the drawn route.
+  /// Prefer the active polyline bearing so the marker faces the route line.
+  double _resolveAssignedDriverHeading({
+    required LatLng currentPosition,
+    LatLng? previousPosition,
+    double? headingDegrees,
+    required double previousRotation,
+    double speedMps = 0,
+  }) {
+    if (isDriverFinishingNearby.value && routePoints.length >= 2) {
+      final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
+        routePoints,
+        currentPosition,
+      );
+      if (routeBearing != null) {
+        return routeBearing;
+      }
+    }
+
+    return MapVehicleMarkerUtils.resolveMarkerRotation(
+      previousPosition: previousPosition,
+      currentPosition: currentPosition,
+      headingDegrees: headingDegrees,
+      previousRotation: previousRotation,
+      speedMps: speedMps,
+    );
+  }
+
+  void _syncDriverHeadingFromActiveRoute({bool animate = false}) {
+    if (!isDriverFinishingNearby.value || routePoints.length < 2) return;
+
+    final driverPos =
+        assignedDriverLocation.value ??
+        mapWidgetKey.currentState?.currentAnimatedPosition;
+    if (driverPos == null) return;
+
+    final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
+      routePoints,
+      driverPos,
+    );
+    if (routeBearing == null) return;
+
+    assignedDriverHeading.value = routeBearing;
+    if (animate) {
+      mapWidgetKey.currentState?.updateRiderPosition(
+        driverPos,
+        rotation: routeBearing,
+        duration: const Duration(milliseconds: 800),
+      );
+    }
+  }
+
   void _applyTrackingPayload(TrackingUpdateSocketResponse payload) {
+    _setDriverFinishingNearby(payload.driverFinishingNearby);
+
     final trackingStatus = (payload.status ?? '')
         .toString()
         .trim()
         .toLowerCase();
+    final normalizedTracking = normalizeRideStatusString(trackingStatus);
+
+    // Chain break can also arrive on tracking before/without a status event.
+    if (normalizedTracking == 'searching') {
+      if (_navigatedAway) return;
+      if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+        return;
+      }
+      _navigateBackToFindingDriverAfterChainBroken();
+      return;
+    }
+
     if (trackingStatus.isNotEmpty) {
       // Only trigger state updates from tracking payloads if it's a major transition.
       // High-frequency tracking often contains stale 'assigned' statuses.
@@ -2025,6 +2347,7 @@ class DriverAcceptedController extends GetxController
 
     final isPickupArrived = _isDriverArrivedAtPickupStatus(trackingStatus);
     if (isPickupArrived) {
+      _setDriverFinishingNearby(false);
       _syncDriverArrivedPickupMessages();
     }
 
@@ -2039,10 +2362,14 @@ class DriverAcceptedController extends GetxController
         final inRide =
             statusForEta.contains('progress') ||
             statusForEta.contains('started');
-        etaLabel.value = inRide ? AppStrings.nearby.tr : AppStrings.arriving.tr;
-        arrivalLabel.value = inRide
-            ? AppStrings.youAreAlmostThere.tr
-            : AppStrings.driverIsArriving.tr;
+        if (!isDriverFinishingNearby.value) {
+          etaLabel.value = inRide
+              ? AppStrings.nearby.tr
+              : AppStrings.arriving.tr;
+          arrivalLabel.value = inRide
+              ? AppStrings.youAreAlmostThere.tr
+              : AppStrings.driverIsArriving.tr;
+        }
       }
     }
 
@@ -2080,16 +2407,10 @@ class DriverAcceptedController extends GetxController
     final kind = TrackingRouteGeometryUtils.classify(coordinates);
     switch (kind) {
       case TrackingRouteGeometryKind.empty:
-        _markInitialRouteReady();
-        if (_hasReceivedTrackingUpdate) {
-          if (routeTarget == 'pick_up') {
-            _setPickupRouteFallback();
-          } else {
-            _setDropRouteFallback();
-          }
-          if (fitCameraOnChange) _fitRouteBounds();
-        } else if (routePoints.isNotEmpty) {
-          routePoints.clear();
+        // Wait for the next tracking payload with path geometry — never draw
+        // a straight pickup→destination fallback line.
+        if (routePoints.isEmpty) {
+          _markInitialRouteReady();
         }
         return;
       case TrackingRouteGeometryKind.repeatedLocation:
@@ -2108,6 +2429,7 @@ class DriverAcceptedController extends GetxController
             nextPoints.length >= 2) {
           _fitRouteBounds();
         }
+        _syncDriverHeadingFromActiveRoute(animate: true);
         return;
     }
   }
@@ -2138,10 +2460,6 @@ class DriverAcceptedController extends GetxController
       return 'drop_off';
     }
     return '';
-  }
-
-  void openProfile() {
-    Get.to(() => ProfileScreen());
   }
 
   /// Places an in-app voice call to the assigned driver using the Agora
@@ -2185,7 +2503,11 @@ class DriverAcceptedController extends GetxController
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint("Error launching dialer: $e");
+      AppLogger.e(
+        'Error launching dialer',
+        tag: 'DriverAcceptedController',
+        error: e,
+      );
       AppDialogs.showErrorDialog(
         title: errorDialogTitle,
         message: AppStrings.errorOpeningPhoneDialer.tr,
@@ -2353,9 +2675,9 @@ class DriverAcceptedController extends GetxController
       // startActivity call removed to respect 'APNs-only' update model
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      developer.log(
+      AppLogger.d(
         "❌ Error in DriverAcceptedController._syncLiveActivityFromStatusPayload: $e",
-        name: 'ORDER_TRACKING',
+        tag: 'ORDER_TRACKING',
       );
     }
   }
@@ -2406,7 +2728,11 @@ class DriverAcceptedController extends GetxController
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      debugPrint('❌ Error syncing Live Activity from Details: $e');
+      AppLogger.e(
+        'Error syncing Live Activity from Details',
+        tag: 'DriverAcceptedController',
+        error: e,
+      );
     }
   }
 
@@ -2436,19 +2762,22 @@ class DriverAcceptedController extends GetxController
       idempotencyKey: stopUpdateIdempotencyKey.value,
     );
 
-    result.fold((f) {
-      if (_handleInsufficientWalletFailure(f)) return;
-      _showStopUpdateError(f.message);
-    }, (res) {
-      if (res is StopUpdatePreviewModel) {
-        stopUpdatePreview.value = res;
-        // Generate key if not present and save it
-        if (stopUpdateIdempotencyKey.value.isEmpty) {
-          stopUpdateIdempotencyKey.value = const Uuid().v4();
+    result.fold(
+      (f) {
+        if (_handleInsufficientWalletFailure(f)) return;
+        _showStopUpdateError(f.message);
+      },
+      (res) {
+        if (res is StopUpdatePreviewModel) {
+          stopUpdatePreview.value = res;
+          // Generate key if not present and save it
+          if (stopUpdateIdempotencyKey.value.isEmpty) {
+            stopUpdateIdempotencyKey.value = const Uuid().v4();
+          }
+          _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
         }
-        _saveIdempotencyKey(stopUpdateIdempotencyKey.value);
-      }
-    });
+      },
+    );
   }
 
   Future<bool> applyStopsUpdate(List<RideStopEntity> stops) async {
@@ -2499,6 +2828,7 @@ class DriverAcceptedController extends GetxController
       _pendingStopPaymentDirection = null;
       isUpdatingStops.value = true;
       stopUpdateProgressStep.value = 1;
+      _clearRouteAwaitingTrackingUpdate();
       await _processPaymentHold(resumeValidationId, direction);
       return;
     }
@@ -2514,6 +2844,7 @@ class DriverAcceptedController extends GetxController
         (applied.blockUpdateValidationId ?? '').isNotEmpty) {
       isUpdatingStops.value = true;
       stopUpdateProgressStep.value = 1;
+      _clearRouteAwaitingTrackingUpdate();
       await _processPaymentHold(
         applied.blockUpdateValidationId!,
         applied.direction,
@@ -2525,6 +2856,8 @@ class DriverAcceptedController extends GetxController
     _clearIdempotencyKey();
     stopUpdateProgressStep.value = 0;
     isUpdatingStops.value = false;
+    _clearRouteAwaitingTrackingUpdate();
+    await _ensureRideRealtimeAfterLocationUpdate();
     await _fetchRideDetails();
   }
 
@@ -2601,10 +2934,13 @@ class DriverAcceptedController extends GetxController
   ) async {
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1; // Show payment step
-      if (!_socketService.isConnected) {
-        await _socketService.connect();
+      try {
+        await _socketService.ensureConnected();
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       }
       _socketService.joinPaymentRoom(validationId: validationId);
+      _joinRideRoomIfNeeded();
       if (AppConfig.ridePaymentBypass) {
         await rideRepository.walletDummyPaymentRequest(
           DummyPaymentRequest(
@@ -2616,8 +2952,10 @@ class DriverAcceptedController extends GetxController
       }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2; // Jump to route update (silent payment)
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     } else {
       stopUpdateProgressStep.value = 2; // Jump to route update (no payment)
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     }
 
     // The socket listeners will handle the rest of the flow
@@ -2704,12 +3042,15 @@ class DriverAcceptedController extends GetxController
       rideId,
       dest,
     );
-    previewRes.fold((f) {
-      if (_handleInsufficientWalletFailure(f)) return;
-      _showDestinationUpdateError(f.message);
-    }, (preview) {
-      destinationUpdatePreview.value = preview;
-    });
+    previewRes.fold(
+      (f) {
+        if (_handleInsufficientWalletFailure(f)) return;
+        _showDestinationUpdateError(f.message);
+      },
+      (preview) {
+        destinationUpdatePreview.value = preview;
+      },
+    );
   }
 
   Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) async {
@@ -2767,6 +3108,7 @@ class DriverAcceptedController extends GetxController
     _pendingDestinationTargetLng = lng;
 
     isDestinationUpdateFlow.value = true;
+    _clearRouteAwaitingTrackingUpdate();
 
     // Step 2: apply destination update (confirm=true).
     final result = await rideRepository.confirmUpdateDestination(rideId, dest);
@@ -2817,8 +3159,8 @@ class DriverAcceptedController extends GetxController
       );
     } else {
       isDestinationUpdateFlow.value = false;
+      await _ensureRideRealtimeAfterLocationUpdate();
       await _fetchRideDetails();
-      _setDropRouteFallback();
       stopUpdateProgressStep.value = 0;
       isUpdatingDestination.value = false;
     }
@@ -2829,15 +3171,19 @@ class DriverAcceptedController extends GetxController
     String direction,
   ) async {
     isUpdatingDestination.value = true;
+    _clearRouteAwaitingTrackingUpdate();
     // Mirrors stop-update payment behavior:
     // - up: request payment authorization
     // - down/flat: skip to route sync step
     if (direction == 'up') {
       stopUpdateProgressStep.value = 1;
-      if (!_socketService.isConnected) {
-        await _socketService.connect();
+      try {
+        await _socketService.ensureConnected();
+      } catch (e, stackTrace) {
+        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       }
       _socketService.joinPaymentRoom(validationId: validationId);
+      _joinRideRoomIfNeeded();
       if (AppConfig.ridePaymentBypass) {
         await rideRepository.walletDummyPaymentRequest(
           DummyPaymentRequest(
@@ -2849,8 +3195,10 @@ class DriverAcceptedController extends GetxController
       }
     } else if (direction == 'down') {
       stopUpdateProgressStep.value = 2;
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     } else {
       stopUpdateProgressStep.value = 2;
+      unawaited(_ensureRideRealtimeAfterLocationUpdate());
     }
     _startDestinationUpdateTimeout();
   }
