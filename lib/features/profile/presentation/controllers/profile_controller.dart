@@ -12,6 +12,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_auth_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
@@ -254,6 +255,13 @@ class ProfileController extends GetxController {
     walletCurrency.value = ProfileWalletCache.currency;
     walletNumber.value = ProfileWalletCache.walletNumber;
     isLoadingWallet.value = false;
+    _maybeFetchLocalBankInstructions(walletNumberForCopy);
+  }
+
+  /// Warms local-bank instructions once per session when a wallet number exists.
+  void _maybeFetchLocalBankInstructions(String walletAccount) {
+    if (walletAccount.trim().isEmpty) return;
+    unawaited(di.sl<LocalBankInstructionsService>().fetchInstructions());
   }
 
   /// Masks the wallet amount whenever profile is entered or a child route pops.
@@ -307,6 +315,7 @@ class ProfileController extends GetxController {
         reservedValue: summary.reserved,
       );
       ProfileWalletCache.isBalanceVisible = isBalanceVisible.value;
+      _maybeFetchLocalBankInstructions(account);
     } catch (_) {
       // Keep last known amount on refresh failure; only clear on first load.
       if (initialLoad) {
@@ -512,7 +521,10 @@ class ProfileController extends GetxController {
     );
   }
 
+  /// Wallet details are required for the wallet screen; without a wallet
+  /// number the card tap is a no-op.
   void openWallet() {
+    if (walletNumberForCopy.isEmpty) return;
     _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.wallet));
   }
 

@@ -14,7 +14,6 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -22,7 +21,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
-import '../../../../core/services/local_bank_instructions_service.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
@@ -160,7 +158,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   @override
   void onInit() {
     super.onInit();
-    unawaited(sl<LocalBankInstructionsService>().fetchInstructions());
     homeSheetController.addListener(_onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
