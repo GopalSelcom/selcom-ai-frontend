@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -20,10 +18,7 @@ import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../data/models/selcom_pesa_link_models.dart';
 import '../../data/models/sp_link_response.dart';
-import '../../domain/entities/payment_card.dart';
 import '../../domain/repositories/selcom_pesa_link_repository.dart';
-import '../screens/add_card_screen.dart';
-import '../widgets/payment_card_action_bottom_sheet.dart';
 import '../widgets/selcom_pesa_flow_bottom_sheet.dart';
 
 /// Payment Methods + Selcom Pesa link orchestration.
@@ -384,11 +379,6 @@ class PaymentMethodsController extends GetxController {
 
   void handleBack() => Get.back<void>();
 
-  Future<void> openSelcomPesaToWallet() async {
-    await Get.toNamed(AppRoutes.selcomPesaToWallet);
-    await loadLinkedAccounts();
-  }
-
   /// Opens phone sheet when user taps Link account / Link another (max 5 guard).
   void linkSelcomPesa() {
     if (!canLinkAnother) {
@@ -495,24 +485,5 @@ class PaymentMethodsController extends GetxController {
       title: AppStrings.selcomPesa.tr,
       message: AppStrings.selcomPesaLinkRequestSentMessage.trParams(params),
     );
-  }
-
-  Future<void> addCard() async {
-    final result = await Get.to<PaymentCard>(() => const AddCardScreen());
-
-    if (result != null) {
-      AppDialogs.showAnimatedBottomSheet(
-        child: PaymentCardActionBottomSheet(
-          title: AppStrings.yourCardHasBeenNaddedSuccessfully.tr,
-          description: AppStrings.cardReadyToUseYouCanManageOrRemoveAnytime.tr,
-          cardNumber: result.fullNumber,
-          imageAssetPath: AppAssets.imgPaymentAddCardSuccess,
-          primaryButtonLabel: AppStrings.ok.tr,
-          onPrimaryPressed: AppDialogs.closeActiveDialog,
-          iconAsset: AppAssets.locationIcArrowRight,
-        ),
-        barrierDismissible: true,
-      );
-    }
   }
 }

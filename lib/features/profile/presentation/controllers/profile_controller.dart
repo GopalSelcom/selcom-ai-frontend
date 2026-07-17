@@ -548,12 +548,6 @@ class ProfileController extends GetxController {
     _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.safety));
   }
 
-  void openNotifications() {
-    _navigateAndResetWalletBalanceOnReturn(
-      Get.toNamed(AppRoutes.notifications),
-    );
-  }
-
   void openSettings() {
     _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.settings));
   }

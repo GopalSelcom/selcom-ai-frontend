@@ -8,7 +8,6 @@ import '../../features/auth/presentation/screens/phone_input_screen.dart';
 import '../../features/auth/presentation/bindings/login_support_binding.dart';
 import '../../features/auth/presentation/screens/login_support_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
-import '../../features/auth/presentation/screens/sign_up.dart';
 import '../../features/auth/presentation/screens/social_login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/bindings/confirm_location_binding.dart';
@@ -60,7 +59,6 @@ class AppRoutes {
   static const String phone = '/auth/phone';
   static const String otp = '/auth/otp';
   static const String profileLoading = '/auth/profile-loading';
-  static const String signUp = '/auth/sign-up';
   static const String home = '/home';
   static const String locationSelection = '/location-selection';
   static const String booking = '/booking';
@@ -115,11 +113,6 @@ class AppRoutes {
     GetPage(
       name: profileLoading,
       page: () => const ProfileLoadingScreen(),
-      binding: AuthBinding(),
-    ),
-    GetPage(
-      name: signUp,
-      page: () => const SignUpScreen(),
       binding: AuthBinding(),
     ),
     GetPage(name: home, page: () => const HomeScreen(), binding: HomeBinding()),
