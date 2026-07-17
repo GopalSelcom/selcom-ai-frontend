@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
-import '../../../../core/data/models/user_profile_models.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
@@ -46,7 +45,6 @@ import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
-import '../../../payment/presentation/controllers/payment_method_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
 import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
@@ -64,13 +62,14 @@ class VehicleSelectionController extends GetxController {
     required this.homeRepository,
     required this.profileRepository,
     required this.rideRepository,
-    required this.paymentMethodController,
   });
 
   final HomeRepository homeRepository;
   final ProfileRepository profileRepository;
   final RideRepository rideRepository;
-  final PaymentMethodController paymentMethodController;
+
+  /// Ride booking currently always charges Go Wallet.
+  static const String _walletPaymentMethodType = 'wallet';
 
   final estimates = <FareEstimateItem>[].obs;
   final selectedVehicleIndex = 0.obs;
@@ -137,28 +136,14 @@ class VehicleSelectionController extends GetxController {
   final stopIcons = <BitmapDescriptor>[].obs;
   final Map<String, BitmapDescriptor> _nearbyDriverIconCache = {};
 
-  static PaymentMethodModel get _walletPaymentMethod => PaymentMethodModel(
-    id: 'wallet',
-    label: AppStrings.wallet.tr,
-    type: 'wallet',
-  );
-
   @override
   void onInit() {
     super.onInit();
     _parseArguments();
-    _ensureWalletPaymentSelected();
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
   }
-
-  void _ensureWalletPaymentSelected() {
-    paymentMethodController.selectedPayment.value = _walletPaymentMethod;
-  }
-
-  PaymentMethodModel get _walletPayment =>
-      paymentMethodController.selectedPayment.value ?? _walletPaymentMethod;
 
   @override
   void onClose() {
@@ -814,8 +799,6 @@ class VehicleSelectionController extends GetxController {
       );
       return;
     }
-    _ensureWalletPaymentSelected();
-    final pay = _walletPayment;
     final isBookAny = est.isBookAnyOption;
 
     isBooking.value = true;
@@ -982,7 +965,7 @@ class VehicleSelectionController extends GetxController {
       final validateRequest = bookingBookAny
           ? ValidateRidePaymentRequest(
               bookAny: true,
-              paymentMethod: pay.type,
+              paymentMethod: _walletPaymentMethodType,
               pickup: pickupEntity,
               destination: destinationEntity,
               stops: routeStops,
@@ -992,7 +975,7 @@ class VehicleSelectionController extends GetxController {
             )
           : ValidateRidePaymentRequest(
               fareEstimate: requiredFare,
-              paymentMethod: pay.type,
+              paymentMethod: _walletPaymentMethodType,
               vehicleTypeId: resolvedVehicleTypeId,
               pickup: pickupEntity,
               destination: destinationEntity,
@@ -1096,7 +1079,7 @@ class VehicleSelectionController extends GetxController {
                       destination: destinationEntity,
                       stops: routeStops,
                       bookAny: true,
-                      paymentMethod: pay.type,
+                      paymentMethod: _walletPaymentMethodType,
                       isBookedForOther: isBookedForOther,
                       passengerName: isBookedForOther ? passengerName : null,
                       passengerPhone: isBookedForOther ? passengerPhone : null,
@@ -1110,7 +1093,7 @@ class VehicleSelectionController extends GetxController {
                       destination: destinationEntity,
                       stops: routeStops,
                       vehicleTypeId: resolvedVehicleTypeId,
-                      paymentMethod: pay.type,
+                      paymentMethod: _walletPaymentMethodType,
                       isBookedForOther: isBookedForOther,
                       passengerName: isBookedForOther ? passengerName : null,
                       passengerPhone: isBookedForOther ? passengerPhone : null,
@@ -1156,7 +1139,7 @@ class VehicleSelectionController extends GetxController {
 
                   if (!rideBookResponseIndicatesPaymentApplied(
                     ride,
-                    pay.type,
+                    _walletPaymentMethodType,
                   )) {
                     AppDialogs.showConfirmationDialog(
                       title: AppStrings.bookRidePaymentNotAppliedTitle.tr,

@@ -114,7 +114,6 @@ class _ProfileEndpoints {
 
   final updateProfile = "edit_profile";
   final getProfile = "go/user/profile";
-  final paymentMethods = "go/user/payment-methods";
   final voipToken = "go/user/voip-token";
   final getEmailSubject = "go/get_email_subject";
   final sendEmail = "go/send_email";

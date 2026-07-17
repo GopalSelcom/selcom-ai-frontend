@@ -1,14 +1,9 @@
 import 'package:get/get.dart';
 
-import '../../features/payment/presentation/controllers/payment_method_controller.dart';
-import '../di/injection_container.dart';
-
+/// App-wide GetX bindings registered at startup.
+///
+/// Keep this lean — feature controllers belong on their route bindings.
 class InitialBinding extends Bindings {
   @override
-  void dependencies() {
-    Get.lazyPut<PaymentMethodController>(
-      () => PaymentMethodController(profileRepository: sl()),
-      fenix: true,
-    );
-  }
+  void dependencies() {}
 }
