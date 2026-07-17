@@ -2,37 +2,35 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 
 class FareEstimateModel {
   final List<FareEstimateItem> estimates;
-  final double distanceKm;
-  final int durationMin;
   final RouteGeometry? routeGeometry;
+  final List<FareLeg>? legs;
+  final FareEstimateLocation? pickup;
+  final List<FareEstimateLocation> stops;
+  final FareEstimateLocation? destination;
+  final bool? isMultiStop;
   final BookAnyEstimate? bookAny;
 
   FareEstimateModel({
     required this.estimates,
-    required this.distanceKm,
-    required this.durationMin,
     this.routeGeometry,
+    this.legs,
+    this.pickup,
+    this.stops = const [],
+    this.destination,
+    this.isMultiStop,
     this.bookAny,
   });
 
   factory FareEstimateModel.fromResponse(FareEstimateResponseModel response) {
     final data = response.data;
-    final estimates = data?.estimates ?? [];
-
-    double distance = 0.0;
-    int duration = 0;
-
-    if (estimates.isNotEmpty) {
-      // Using distance and duration from the first estimate as general trip info
-      distance = estimates.first.distanceKm ?? 0.0;
-      duration = estimates.first.durationMinutes ?? 0;
-    }
-
     return FareEstimateModel(
-      estimates: estimates,
-      distanceKm: distance,
-      durationMin: duration,
+      estimates: data?.estimates ?? const [],
       routeGeometry: data?.routeGeometry,
+      legs: data?.legs,
+      pickup: data?.pickup,
+      stops: data?.stops ?? const [],
+      destination: data?.destination,
+      isMultiStop: data?.isMultiStop,
       bookAny: data?.bookAny,
     );
   }
@@ -46,9 +44,13 @@ class FareEstimateModel {
   Map<String, dynamic> toJson() {
     return {
       'estimates': estimates.map((e) => e.toJson()).toList(),
-      'distance_km': distanceKm,
-      'duration_min': durationMin,
       'route_geometry': routeGeometry?.toJson(),
+      'legs': legs?.map((e) => e.toJson()).toList(),
+      'pickup': pickup?.toJson(),
+      'stops': stops.map((e) => e.toJson()).toList(),
+      'destination': destination?.toJson(),
+      'is_multi_stop': isMultiStop,
+      'book_any': bookAny?.toJson(),
     };
   }
 }

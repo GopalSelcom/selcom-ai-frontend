@@ -242,6 +242,10 @@ class LocationSelectionController extends GetxController {
             validationFailure = validation;
             return null;
           }
+          if (validation.estimate != null) {
+            built['initialFareEstimate'] = validation.estimate;
+            built['initialFareEstimateAt'] = validation.estimatedAt;
+          }
           return built;
         });
       } finally {

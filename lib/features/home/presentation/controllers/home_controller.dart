@@ -1213,7 +1213,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           message: parsed.message,
           errorCode: parsed.errorCode,
         );
-      }, (_) => EstimateValidationOutcome.success());
+      }, (model) => EstimateValidationOutcome.success(estimate: model));
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
@@ -1416,6 +1416,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1496,6 +1500,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1602,6 +1610,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destination': destAddr,
         'destinationLat': loc.lat,
         'destinationLng': loc.lng,
+        if (validation.estimate != null) ...{
+          'initialFareEstimate': validation.estimate,
+          'initialFareEstimateAt': validation.estimatedAt,
+        },
       },
     );
   }
@@ -1970,6 +1982,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             'preferredVehicleTypeId': preferredVehicleTypeId,
           if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
             'preferredVehicleName': preferredVehicleName,
+          if (validation.estimate != null) ...{
+            'initialFareEstimate': validation.estimate,
+            'initialFareEstimateAt': validation.estimatedAt,
+          },
         };
       });
     } finally {
@@ -2518,14 +2534,25 @@ class EstimateValidationOutcome {
     required this.canProceed,
     this.errorMessage,
     this.errorCode,
+    this.estimate,
+    this.estimatedAt,
   });
 
   final bool canProceed;
   final String? errorMessage;
   final String? errorCode;
 
-  factory EstimateValidationOutcome.success() {
-    return const EstimateValidationOutcome._(canProceed: true);
+  /// Fare estimate returned by the validation call; passed to vehicle
+  /// selection so the same route is not estimated twice.
+  final FareEstimateModel? estimate;
+  final DateTime? estimatedAt;
+
+  factory EstimateValidationOutcome.success({FareEstimateModel? estimate}) {
+    return EstimateValidationOutcome._(
+      canProceed: true,
+      estimate: estimate,
+      estimatedAt: estimate != null ? DateTime.now() : null,
+    );
   }
 
   factory EstimateValidationOutcome.failure({

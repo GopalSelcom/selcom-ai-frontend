@@ -41,6 +41,7 @@ import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
+import '../../../home/data/models/home_models.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
@@ -105,6 +106,12 @@ class VehicleSelectionController extends GetxController {
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
   bool _forceRefreshActiveRides = false;
+
+  /// Estimate already fetched by the pre-navigation validation call; consumed
+  /// once (if fresh) to avoid estimating the same route twice.
+  FareEstimateModel? _initialFareEstimate;
+  DateTime? _initialFareEstimateAt;
+  static const _initialFareEstimateMaxAge = Duration(seconds: 30);
   final _vehicleTypes = <VehicleTypeModel>[];
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
@@ -240,6 +247,12 @@ class VehicleSelectionController extends GetxController {
         .toLowerCase();
     _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
 
+    final initialEstimate = args['initialFareEstimate'];
+    if (initialEstimate is FareEstimateModel) {
+      _initialFareEstimate = initialEstimate;
+      _initialFareEstimateAt = args['initialFareEstimateAt'] as DateTime?;
+    }
+
     isRouteReady.value = false;
     update(['route_header']);
   }
@@ -284,66 +297,25 @@ class VehicleSelectionController extends GetxController {
       ..clear()
       ..addAll(vehicleTypes);
 
-    final result = await homeRepository.estimateFare(req);
-    result.fold(
-      (f) {
-        AppLogger.w('[VehicleSelection] Fare estimate error: $f', tag: 'VehicleSelection');
-        estimates.assignAll(_dummyEstimates(vehicleTypes));
-        isRouteReady.value = false;
-      },
-      (model) {
-        AppLogger.d(
-          '[VehicleSelection] Fare estimate success => '
-          'estimates=${model.estimates.length}, '
-          'routeGeometry=${model.routeGeometry != null}, '
-          'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+    final initialEstimate = _takeFreshInitialEstimate();
+    if (initialEstimate != null) {
+      AppLogger.d(
+        '[VehicleSelection] Reusing pre-navigation fare estimate '
+        '(skipping duplicate estimate call).',
+        tag: 'VehicleSelection',
+      );
+      _applyEstimateModel(initialEstimate, vehicleTypes);
+    } else {
+      final result = await homeRepository.estimateFare(req);
+      result.fold((f) {
+        AppLogger.w(
+          '[VehicleSelection] Fare estimate error: $f',
           tag: 'VehicleSelection',
         );
-        if (model.estimates.isEmpty) {
-          estimates.assignAll(_dummyEstimates(vehicleTypes));
-        } else {
-          final normalized = model.estimates
-              .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
-              .toList();
-          estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
-          final pending = _pendingPromoApplyResult;
-          if (pending != null) {
-            _applyPromoValidationToEstimates(pending);
-          }
-          if (appliedPromoCode.value.trim().isNotEmpty) {
-            promoValidatedAt.value = DateTime.now();
-          }
-
-          if (model.routeGeometry?.coordinates != null &&
-              model.routeGeometry!.coordinates!.isNotEmpty) {
-            final coords = model.routeGeometry!.coordinates!;
-            final mapped = coords
-                .map((c) {
-                  if (c.length >= 2) return LatLng(c[1], c[0]);
-                  return null;
-                })
-                .whereType<LatLng>()
-                .toList();
-
-            if (mapped.length >= 2) {
-              routePoints.assignAll(mapped);
-              isRouteReady.value = true;
-              AppLogger.d(
-                '[VehicleSelection] API route geometry applied => '
-                'points=${mapped.length}, '
-                'first=${mapped.first.latitude},${mapped.first.longitude}, '
-                'last=${mapped.last.latitude},${mapped.last.longitude}',
-                tag: 'VehicleSelection',
-              );
-            } else {
-              _useStraightLineFallback();
-            }
-          } else {
-            _useStraightLineFallback();
-          }
-        }
-      },
-    );
+        estimates.assignAll(_dummyEstimates(vehicleTypes));
+        isRouteReady.value = false;
+      }, (model) => _applyEstimateModel(model, vehicleTypes));
+    }
     isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
 
@@ -353,6 +325,78 @@ class VehicleSelectionController extends GetxController {
 
     _requestNearbyDriversForCurrentSelection();
     _scheduleFitBoundsMicrotask();
+  }
+
+  /// Returns the pre-navigation estimate exactly once, and only when it is
+  /// still fresh and no promo code is applied (a promo changes the request).
+  FareEstimateModel? _takeFreshInitialEstimate() {
+    final estimate = _initialFareEstimate;
+    final estimatedAt = _initialFareEstimateAt;
+    _initialFareEstimate = null;
+    _initialFareEstimateAt = null;
+
+    if (estimate == null || estimatedAt == null) return null;
+    if (appliedPromoCode.value.trim().isNotEmpty) return null;
+    final age = DateTime.now().difference(estimatedAt);
+    if (age > _initialFareEstimateMaxAge) return null;
+    return estimate;
+  }
+
+  void _applyEstimateModel(
+    FareEstimateModel model,
+    List<VehicleTypeModel> vehicleTypes,
+  ) {
+    AppLogger.d(
+      '[VehicleSelection] Fare estimate applied => '
+      'estimates=${model.estimates.length}, '
+      'routeGeometry=${model.routeGeometry != null}, '
+      'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+      tag: 'VehicleSelection',
+    );
+    if (model.estimates.isEmpty) {
+      estimates.assignAll(_dummyEstimates(vehicleTypes));
+      return;
+    }
+
+    final normalized = model.estimates
+        .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
+        .toList();
+    estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
+    final pending = _pendingPromoApplyResult;
+    if (pending != null) {
+      _applyPromoValidationToEstimates(pending);
+    }
+    if (appliedPromoCode.value.trim().isNotEmpty) {
+      promoValidatedAt.value = DateTime.now();
+    }
+
+    if (model.routeGeometry?.coordinates != null &&
+        model.routeGeometry!.coordinates!.isNotEmpty) {
+      final coords = model.routeGeometry!.coordinates!;
+      final mapped = coords
+          .map((c) {
+            if (c.length >= 2) return LatLng(c[1], c[0]);
+            return null;
+          })
+          .whereType<LatLng>()
+          .toList();
+
+      if (mapped.length >= 2) {
+        routePoints.assignAll(mapped);
+        isRouteReady.value = true;
+        AppLogger.d(
+          '[VehicleSelection] API route geometry applied => '
+          'points=${mapped.length}, '
+          'first=${mapped.first.latitude},${mapped.first.longitude}, '
+          'last=${mapped.last.latitude},${mapped.last.longitude}',
+          tag: 'VehicleSelection',
+        );
+      } else {
+        _useStraightLineFallback();
+      }
+    } else {
+      _useStraightLineFallback();
+    }
   }
 
   void _useStraightLineFallback() {
@@ -1896,6 +1940,13 @@ class VehicleSelectionController extends GetxController {
     );
     destinations.assignAll(nextDestinations);
     destinationEntity = nextDestinations.last;
+
+    // Reuse the estimate fetched by the edit-flow validation (if provided).
+    final editedEstimate = edited['initialFareEstimate'];
+    if (editedEstimate is FareEstimateModel) {
+      _initialFareEstimate = editedEstimate;
+      _initialFareEstimateAt = edited['initialFareEstimateAt'] as DateTime?;
+    }
     // Refresh only the top route header (GetBuilder id: route_header).
     update(['route_header']);
 
