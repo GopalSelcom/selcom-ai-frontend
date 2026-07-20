@@ -78,7 +78,11 @@ class MyRidesController extends GetxController {
             }
           }
           if (rideStatusIsOngoingActive(freshRide.status)) {
-            navigateToOngoingRide(freshRide);
+            // Caller already called getRideDetails — live screens must not fetch again.
+            navigateToOngoingRide(
+              freshRide,
+              skipInitialRideDetailsFetch: true,
+            );
             return;
           }
           // My Rides entry must always use non-completion mode.
@@ -86,16 +90,19 @@ class MyRidesController extends GetxController {
           if (Get.isRegistered<RideDetailsController>()) {
             Get.delete<RideDetailsController>();
           }
+          // onRideTap already fetched freshRide — skip controller init reload.
           Get.put(
             RideDetailsController(
               ride: freshRide,
               openedFromCompletionFlow: false,
+              refreshOnInit: false,
             ),
           );
           Get.to(
             () => RideDetailsScreen(
               ride: freshRide,
               openedFromCompletionFlow: false,
+              refreshOnInit: false,
             ),
           );
         },

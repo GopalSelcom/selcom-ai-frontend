@@ -417,7 +417,11 @@ class NotificationService {
                 return;
               }
             }
-            navigateToOngoingRide(ride);
+            // Notification handler already fetched ride details before routing.
+            navigateToOngoingRide(
+              ride,
+              skipInitialRideDetailsFetch: true,
+            );
           },
         );
       } finally {

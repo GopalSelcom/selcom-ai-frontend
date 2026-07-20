@@ -21,11 +21,14 @@ import '../widgets/ride_details_screen_shimmer.dart';
 class RideDetailsScreen extends StatelessWidget {
   final RideEntity ride;
   final bool openedFromCompletionFlow;
+  /// Passed to [RideDetailsController]; false when caller pre-fetched ride details.
+  final bool refreshOnInit;
 
   const RideDetailsScreen({
     super.key,
     required this.ride,
     this.openedFromCompletionFlow = false,
+    this.refreshOnInit = true,
   });
 
   @override
@@ -50,6 +53,7 @@ class RideDetailsScreen extends StatelessWidget {
             RideDetailsController(
               ride: ride,
               openedFromCompletionFlow: openedFromCompletionFlow,
+              refreshOnInit: refreshOnInit,
             ),
           );
 

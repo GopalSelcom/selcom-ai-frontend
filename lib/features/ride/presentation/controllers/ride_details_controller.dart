@@ -31,10 +31,13 @@ class RideDetailsController extends GetxController {
   RideDetailsController({
     required this.ride,
     this.openedFromCompletionFlow = false,
+    this.refreshOnInit = true,
   });
 
   RideEntity ride;
   final bool openedFromCompletionFlow;
+  /// When false, caller already fetched ride details (My Rides tap, completion handoff).
+  final bool refreshOnInit;
 
   late final RideRatingController ratingController;
   final isLoadingRideDetails = true.obs;
@@ -51,7 +54,13 @@ class RideDetailsController extends GetxController {
   void onInit() {
     super.onInit();
     ratingController = _resolveRideRatingController();
-    unawaited(_loadRideDetails());
+    // Avoid duplicate GET /rides/:id when navigation already supplied fresh data.
+    if (refreshOnInit) {
+      unawaited(_loadRideDetails());
+    } else {
+      isLoadingRideDetails.value = false;
+      _primeRatingIfNeeded();
+    }
   }
 
   Future<void> _loadRideDetails() async {

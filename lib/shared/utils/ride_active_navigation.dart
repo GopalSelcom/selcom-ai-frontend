@@ -10,6 +10,34 @@ import 'ride_status_normalizer.dart';
 /// Navigation arg: ride chaining broke and the rider is searching again.
 const kFindingDriverChainBrokenArg = 'chain_broken';
 
+/// Navigation arg: caller already fetched ride details before routing.
+const kSkipInitialRideDetailsFetchArg = 'skipInitialRideDetailsFetch';
+
+/// Navigation arg: full ride model from a pre-fetch (My Rides / Home / push).
+const kPrefetchedRideArg = 'prefetchedRide';
+
+bool skipInitialRideDetailsFetchFromNavigationArgs(
+  Map<String, dynamic> args,
+) {
+  return (args[kSkipInitialRideDetailsFetchArg] as bool?) ?? false;
+}
+
+RideModel? prefetchedRideFromNavigationArgs(Map<String, dynamic> args) {
+  final raw = args[kPrefetchedRideArg];
+  return raw is RideModel ? raw : null;
+}
+
+void appendPrefetchedRideNavigationArgs(
+  Map<String, dynamic> args,
+  RideModel ride, {
+  required bool skipInitialRideDetailsFetch,
+}) {
+  if (!skipInitialRideDetailsFetch) return;
+  // In-memory model only — avoids a second bootstrap fetch on SCR-10/SCR-11.
+  args[kPrefetchedRideArg] = ride;
+  args[kSkipInitialRideDetailsFetchArg] = true;
+}
+
 /// Terminal / inactive rides — show details sheet instead of live ride UI.
 bool rideStatusIsOngoingActive(RideStatus status) {
   switch (status) {
@@ -123,6 +151,7 @@ bool shouldOpenFindingDriverForRide(RideModel ride) {
 Map<String, dynamic> findingDriverArgumentsFromRide(
   RideModel ride, {
   bool chainBroken = false,
+  bool skipInitialRideDetailsFetch = false,
 }) {
   final vehicleType =
       ride.vehicleSnapshot?.vehicleType.trim() ??
@@ -130,7 +159,7 @@ Map<String, dynamic> findingDriverArgumentsFromRide(
       ride.vehicleDisplayName?.trim() ??
       '';
 
-  return {
+  final args = {
     'rideId': ride.id,
     if (vehicleType.isNotEmpty) 'vehicleType': vehicleType,
     'pickupLat': ride.pickup.lat,
@@ -155,14 +184,25 @@ Map<String, dynamic> findingDriverArgumentsFromRide(
       'search_started_at': ride.searchStartedAt!.toIso8601String(),
     if (chainBroken) kFindingDriverChainBrokenArg: true,
   };
+  appendPrefetchedRideNavigationArgs(
+    args,
+    ride,
+    skipInitialRideDetailsFetch: skipInitialRideDetailsFetch,
+  );
+  return args;
 }
 
 void navigateToFindingDriverForRide(
   RideModel ride, {
   bool replace = false,
   bool chainBroken = false,
+  bool skipInitialRideDetailsFetch = false,
 }) {
-  final args = findingDriverArgumentsFromRide(ride, chainBroken: chainBroken);
+  final args = findingDriverArgumentsFromRide(
+    ride,
+    chainBroken: chainBroken,
+    skipInitialRideDetailsFetch: skipInitialRideDetailsFetch,
+  );
   if (replace) {
     Get.offNamed(AppRoutes.findingDriver, arguments: args);
   } else {
@@ -171,13 +211,21 @@ void navigateToFindingDriverForRide(
 }
 
 /// Routes to finding-driver (searching / no driver) or driver-accepted (assigned+).
+///
+/// Set [skipInitialRideDetailsFetch] when the caller already called getRideDetails
+/// (My Rides tap, Home active ride, push notification).
 void navigateToOngoingRide(
   RideModel ride, {
   bool replace = false,
   Map<String, dynamic>? pendingIncomingCallPayload,
+  bool skipInitialRideDetailsFetch = false,
 }) {
   if (shouldOpenFindingDriverForRide(ride)) {
-    navigateToFindingDriverForRide(ride, replace: replace);
+    navigateToFindingDriverForRide(
+      ride,
+      replace: replace,
+      skipInitialRideDetailsFetch: skipInitialRideDetailsFetch,
+    );
     return;
   }
   if (rideNeedsMidRideCancelScreen(ride)) {
@@ -195,6 +243,7 @@ void navigateToOngoingRide(
     ride,
     pendingIncomingCallPayload: pendingIncomingCallPayload,
     replace: replace,
+    skipInitialRideDetailsFetch: skipInitialRideDetailsFetch,
   );
 }
 
@@ -206,6 +255,7 @@ void navigateToDriverAcceptedForRide(
   RideModel rideValue, {
   Map<String, dynamic>? pendingIncomingCallPayload,
   bool replace = false,
+  bool skipInitialRideDetailsFetch = false,
 }) {
   final driver = rideValue.driverSnapshot;
   final vehicle = rideValue.vehicleSnapshot;
@@ -260,6 +310,11 @@ void navigateToDriverAcceptedForRide(
       if (pendingIncomingCallPayload != null)
         'pendingIncomingCallPayload': pendingIncomingCallPayload,
     };
+  appendPrefetchedRideNavigationArgs(
+    arguments,
+    rideValue,
+    skipInitialRideDetailsFetch: skipInitialRideDetailsFetch,
+  );
 
   if (replace) {
     Get.offNamed(AppRoutes.driverAccepted, arguments: arguments);

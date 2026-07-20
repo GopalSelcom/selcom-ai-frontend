@@ -152,6 +152,8 @@ class FindingDriverController extends GetxController {
   /// Ride chaining: previous driver assignment was withdrawn; rider is searching again.
   /// Uses the same searching title/description as a normal match (no special copy).
   bool _chainBrokenReSearch = false;
+  bool _skipInitialRideDetailsFetch = false;
+  RideModel? _prefetchedRide;
 
   /// When false, hide search countdown/progress (driver matched or later).
   bool get isSearchingPhase =>
@@ -339,60 +341,67 @@ class FindingDriverController extends GetxController {
   /// Polls ride details once so we don't stay on "Finding driver" after assignment.
   Future<void> _syncInitialRideStatusFromApi() async {
     if (rideId.isEmpty) return;
+    if (_skipInitialRideDetailsFetch && _prefetchedRide != null) {
+      // My Rides / Home already fetched — apply status without a second GET.
+      _applyInitialRideStatusFromModel(_prefetchedRide!);
+      return;
+    }
     final result = await rideRepository.getRideDetails(rideId);
-    result.fold((_) {}, (ride) {
-      final rawStatus = rideStatusToApiValue(ride.status);
-      final normalized = normalizeRideStatusString(rawStatus);
-      if (isRideSearchingStatus(normalized)) {
-        if (_chainBrokenReSearch) {
-          _applyChainBrokenReSearchState();
-        }
-        _resyncCountdownFromRide(ride);
-        return;
-      }
+    result.fold((_) {}, _applyInitialRideStatusFromModel);
+  }
 
-      // After chain break, ignore a stale HTTP "still assigned" snapshot so we
-      // stay on the searching sheet until a fresh socket assignment arrives
-      // (avoids bouncing back to SCR-11 while rematch is in progress).
-      if (_chainBrokenReSearch && isDriverPickupEnRouteStatus(normalized)) {
+  void _applyInitialRideStatusFromModel(RideModel ride) {
+    final rawStatus = rideStatusToApiValue(ride.status);
+    final normalized = normalizeRideStatusString(rawStatus);
+    if (isRideSearchingStatus(normalized)) {
+      if (_chainBrokenReSearch) {
         _applyChainBrokenReSearchState();
-        _resyncCountdownFromRide(ride);
-        return;
       }
+      _resyncCountdownFromRide(ride);
+      return;
+    }
 
-      final d = ride.driverSnapshot;
-      DriverSnapshot? driverSnapshot;
-      if (d is DriverSnapshotModel) {
-        driverSnapshot = DriverSnapshot(
-          name: d.name,
-          phone: d.phone,
-          avatarUrl: d.avatarUrl,
-          vehicleColor: d.vehicleColor,
-          vehicleModel: d.vehicleModel,
-          vehicleRegistrationNumber: d.vehicleRegistrationNumber,
-          vehicleType: d.vehicleType,
-          verificationCode: d.verificationCode,
-          rating: d.rating,
-        );
-      } else if (d != null) {
-        driverSnapshot = DriverSnapshot(
-          name: d.name,
-          phone: d.phone,
-          avatarUrl: d.avatarUrl,
-          rating: d.rating,
-        );
-      }
+    // After chain break, ignore a stale HTTP "still assigned" snapshot so we
+    // stay on the searching sheet until a fresh socket assignment arrives
+    // (avoids bouncing back to SCR-11 while rematch is in progress).
+    if (_chainBrokenReSearch && isDriverPickupEnRouteStatus(normalized)) {
+      _applyChainBrokenReSearchState();
+      _resyncCountdownFromRide(ride);
+      return;
+    }
 
-      final payload = EventRiderStatusUpdateResponse(
-        rideId: ride.id,
-        status: rawStatus,
-        pinCode: ride.pinCode,
-        pinRequired: ride.pinRequired,
-        driverSnapshot: driverSnapshot,
+    final d = ride.driverSnapshot;
+    DriverSnapshot? driverSnapshot;
+    if (d is DriverSnapshotModel) {
+      driverSnapshot = DriverSnapshot(
+        name: d.name,
+        phone: d.phone,
+        avatarUrl: d.avatarUrl,
+        vehicleColor: d.vehicleColor,
+        vehicleModel: d.vehicleModel,
+        vehicleRegistrationNumber: d.vehicleRegistrationNumber,
+        vehicleType: d.vehicleType,
+        verificationCode: d.verificationCode,
+        rating: d.rating,
       );
-      latestRideStatusPayload.value = payload;
-      _handleRideStatus(rawStatus, payload);
-    });
+    } else if (d != null) {
+      driverSnapshot = DriverSnapshot(
+        name: d.name,
+        phone: d.phone,
+        avatarUrl: d.avatarUrl,
+        rating: d.rating,
+      );
+    }
+
+    final payload = EventRiderStatusUpdateResponse(
+      rideId: ride.id,
+      status: rawStatus,
+      pinCode: ride.pinCode,
+      pinRequired: ride.pinRequired,
+      driverSnapshot: driverSnapshot,
+    );
+    latestRideStatusPayload.value = payload;
+    _handleRideStatus(rawStatus, payload);
   }
 
   Future<void> _ensureRouteLetterIcons() async {
@@ -569,6 +578,10 @@ class FindingDriverController extends GetxController {
 
     _chainBrokenReSearch =
         (args[kFindingDriverChainBrokenArg] as bool?) ?? false;
+    _skipInitialRideDetailsFetch = skipInitialRideDetailsFetchFromNavigationArgs(
+      args,
+    );
+    _prefetchedRide = prefetchedRideFromNavigationArgs(args);
 
     activeRoutePoints.clear();
     routeTarget.value = 'pick_up';

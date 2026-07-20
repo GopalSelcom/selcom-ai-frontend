@@ -766,7 +766,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           isCompleted: freshRide.status == RideStatus.rideCompleted,
           updateIfExists: true,
         );
-        navigateToOngoingRide(freshRide);
+        // openActiveRide already refreshed this ride — skip SCR-11 bootstrap fetch.
+        navigateToOngoingRide(
+          freshRide,
+          skipInitialRideDetailsFetch: true,
+        );
       },
     );
   }

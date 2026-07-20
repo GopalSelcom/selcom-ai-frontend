@@ -177,6 +177,11 @@ class DriverAcceptedController extends GetxController
   bool _isUserInitiatedCancellation = false;
   DateTime? _lastCameraUpdate;
   bool _openedCompletedRideDetails = false;
+  /// Guards completion handoff so socket + tracking cannot start parallel fetches.
+  bool _completionHandoffInProgress = false;
+  Future<void>? _completionRideDetailsFetch;
+  /// Coalesces concurrent getRideDetails calls (resume, handoff, stop-update poll).
+  Future<void>? _rideDetailsFetchInFlight;
   bool _hasReceivedTrackingUpdate = false;
 
   StreamSubscription<bool>? _connectionSub;
@@ -191,6 +196,9 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
   StreamSubscription<RideDriverCancelledPayload>? _driverCancelledSub;
   bool _skipRideRoomLeaveOnClose = false;
+  /// Set from nav args when My Rides / Home already pre-fetched this ride.
+  bool _skipInitialRideDetailsFetch = false;
+  RideModel? _prefetchedRide;
   bool _isHandlingAppResume = false;
   bool _emergencyContactsLoadedOnce = false;
 
@@ -376,7 +384,18 @@ class DriverAcceptedController extends GetxController
 
   Future<void> _bootstrap() async {
     await _loadMarkerIcons();
-    await _fetchRideDetails();
+    if (_skipInitialRideDetailsFetch && _prefetchedRide != null) {
+      // Reuse pre-fetched ride from navigation instead of GET /rides/:id on open.
+      if (_navigatedAway) return;
+      isLoadingRide.value = true;
+      rideLoadError.value = null;
+      await _applyRideDetailsFromModel(_prefetchedRide!);
+      if (!_navigatedAway) {
+        isLoadingRide.value = false;
+      }
+    } else {
+      await _fetchRideDetails();
+    }
     _handleStopUpdateRecovery();
     await _initRideRoomSocket();
   }
@@ -761,6 +780,10 @@ class DriverAcceptedController extends GetxController
     routeTarget.value = 'pick_up';
     _hydrateSocketSeedPayloads(args);
     _refreshMapRouteHeader();
+    _skipInitialRideDetailsFetch = skipInitialRideDetailsFetchFromNavigationArgs(
+      args,
+    );
+    _prefetchedRide = prefetchedRideFromNavigationArgs(args);
   }
 
   /// Updates [routeTarget] only — polylines come from `ride:tracking_update`
@@ -864,6 +887,22 @@ class DriverAcceptedController extends GetxController
       return;
     }
     if (_navigatedAway) return;
+    // Share one in-flight request when multiple code paths fetch at once.
+    if (_rideDetailsFetchInFlight != null) {
+      await _rideDetailsFetchInFlight;
+      return;
+    }
+
+    _rideDetailsFetchInFlight = _fetchRideDetailsOnce();
+    try {
+      await _rideDetailsFetchInFlight;
+    } finally {
+      _rideDetailsFetchInFlight = null;
+    }
+  }
+
+  Future<void> _fetchRideDetailsOnce() async {
+    if (_navigatedAway) return;
     isLoadingRide.value = true;
     rideLoadError.value = null;
     final result = await rideRepository.getRideDetails(rideId);
@@ -883,88 +922,92 @@ class DriverAcceptedController extends GetxController
         );
       },
       (r) async {
-        if (_navigatedAway) return;
-
-        final normalized = normalizeRideStatusString(
-          rideStatusToApiValue(r.status),
-        );
-        // Only rematch on an explicit searching status — not the broader
-        // [shouldOpenFindingDriverForRide] helper (that also matches incomplete
-        // / error-fallback ride payloads and was leaving this screen empty).
-        if (isRideSearchingStatus(normalized)) {
-          if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
-            return;
-          }
-          ride.value = r;
-          _navigateBackToFindingDriverAfterChainBroken();
-          return;
-        }
-
-        if (rideNeedsMidRideCancelScreen(r)) {
-          final block = _midRideCancelModelFromRide(r);
-          if (block != null) {
-            await _maybeNavigateMidRideDriverCancelled(block);
-            return;
-          }
-        }
-        rideLoadError.value = null;
-        ride.value = r;
-        _applyRide(r);
-        _syncDestinationFromRide(r);
-        // HTTP details can show completion before/without a matching socket tick;
-        // keep bottom-sheet state and completion navigation in sync with the model.
-        _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
-        _syncLiveActivityFromDetails(r);
-        await _loadMarkerIcons();
-
-        // Debug logging for the "Stuck" state issues
-        if (isUpdatingStops.value) {
-          AppLogger.d(
-            "STOPS_UPDATE_POLL: step=${stopUpdateProgressStep.value}, "
-            "pendingStatus=${r.pendingStopsUpdate?.status}, "
-            "rideStopsCount=${r.stops.length}, "
-            "workingStopsCount=${stopUpdateWorkingStops.length}",
-            tag: 'DriverAcceptedController',
-          );
-        }
-
-        // Hardening: If we are stuck in recalculating step and pending update is gone, it succeeded!
-        if (isUpdatingStops.value && stopUpdateProgressStep.value == 2) {
-          if (r.pendingStopsUpdate == null) {
-            _clearIdempotencyKey();
-            stopUpdateProgressStep.value = 0;
-            isUpdatingStops.value = false;
-          } else if (stopUpdateWorkingStops.isNotEmpty &&
-              r.stops.length == stopUpdateWorkingStops.length) {
-            // Also succeed if the confirmed stops list now matches our target list count
-            _clearIdempotencyKey();
-            stopUpdateProgressStep.value = 0;
-            isUpdatingStops.value = false;
-          }
-        }
-
-        if (isUpdatingDestination.value && stopUpdateProgressStep.value == 2) {
-          final dest = r.destination;
-          final tLat = _pendingDestinationTargetLat;
-          final tLng = _pendingDestinationTargetLng;
-          if (tLat != null &&
-              tLng != null &&
-              (dest.lat - tLat).abs() < 0.00002 &&
-              (dest.lng - tLng).abs() < 0.00002) {
-            stopUpdateProgressStep.value = 0;
-            isUpdatingDestination.value = false;
-            isDestinationUpdateFlow.value = false;
-            _pendingDestinationTargetLat = null;
-            _pendingDestinationTargetLng = null;
-            unawaited(_ensureRideRealtimeAfterLocationUpdate());
-          }
-        }
+        await _applyRideDetailsFromModel(r);
       },
     );
     if (!_navigatedAway) {
       isLoadingRide.value = false;
     }
     // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
+  }
+
+  Future<void> _applyRideDetailsFromModel(RideModel r) async {
+    if (_navigatedAway) return;
+
+    final normalized = normalizeRideStatusString(
+      rideStatusToApiValue(r.status),
+    );
+    // Only rematch on an explicit searching status — not the broader
+    // [shouldOpenFindingDriverForRide] helper (that also matches incomplete
+    // / error-fallback ride payloads and was leaving this screen empty).
+    if (isRideSearchingStatus(normalized)) {
+      if (rideBottomSheetState.value == RideBottomSheetState.rideStarted) {
+        return;
+      }
+      ride.value = r;
+      _navigateBackToFindingDriverAfterChainBroken();
+      return;
+    }
+
+    if (rideNeedsMidRideCancelScreen(r)) {
+      final block = _midRideCancelModelFromRide(r);
+      if (block != null) {
+        await _maybeNavigateMidRideDriverCancelled(block);
+        return;
+      }
+    }
+    rideLoadError.value = null;
+    ride.value = r;
+    _applyRide(r);
+    _syncDestinationFromRide(r);
+    // HTTP details can show completion before/without a matching socket tick;
+    // keep bottom-sheet state and completion navigation in sync with the model.
+    _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
+    _syncLiveActivityFromDetails(r);
+    await _loadMarkerIcons();
+
+    // Debug logging for the "Stuck" state issues
+    if (isUpdatingStops.value) {
+      AppLogger.d(
+        "STOPS_UPDATE_POLL: step=${stopUpdateProgressStep.value}, "
+        "pendingStatus=${r.pendingStopsUpdate?.status}, "
+        "rideStopsCount=${r.stops.length}, "
+        "workingStopsCount=${stopUpdateWorkingStops.length}",
+        tag: 'DriverAcceptedController',
+      );
+    }
+
+    // Hardening: If we are stuck in recalculating step and pending update is gone, it succeeded!
+    if (isUpdatingStops.value && stopUpdateProgressStep.value == 2) {
+      if (r.pendingStopsUpdate == null) {
+        _clearIdempotencyKey();
+        stopUpdateProgressStep.value = 0;
+        isUpdatingStops.value = false;
+      } else if (stopUpdateWorkingStops.isNotEmpty &&
+          r.stops.length == stopUpdateWorkingStops.length) {
+        // Also succeed if the confirmed stops list now matches our target list count
+        _clearIdempotencyKey();
+        stopUpdateProgressStep.value = 0;
+        isUpdatingStops.value = false;
+      }
+    }
+
+    if (isUpdatingDestination.value && stopUpdateProgressStep.value == 2) {
+      final dest = r.destination;
+      final tLat = _pendingDestinationTargetLat;
+      final tLng = _pendingDestinationTargetLng;
+      if (tLat != null &&
+          tLng != null &&
+          (dest.lat - tLat).abs() < 0.00002 &&
+          (dest.lng - tLng).abs() < 0.00002) {
+        stopUpdateProgressStep.value = 0;
+        isUpdatingDestination.value = false;
+        isDestinationUpdateFlow.value = false;
+        _pendingDestinationTargetLat = null;
+        _pendingDestinationTargetLng = null;
+        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+      }
+    }
   }
 
   /// Retry is only offered when navigation supplied a [rideId].
@@ -1146,7 +1189,7 @@ class DriverAcceptedController extends GetxController
       }
 
       if (_navigatedAway) return;
-      _applyBottomSheetStateForStatus(status);
+      // _applyStatusPayload already applies status; avoid duplicate completion triggers.
       _applyStatusPayload(payload);
       await _syncLiveActivityFromStatusPayload(payload);
     });
@@ -1961,8 +2004,20 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  Future<void> _fetchRideDetailsForCompletionHandoff() {
+    // Socket/tracking can fire completion multiple times before ride.value updates.
+    _completionRideDetailsFetch ??= _fetchRideDetails().whenComplete(() {
+      _completionRideDetailsFetch = null;
+    });
+    return _completionRideDetailsFetch!;
+  }
+
+  /// Opens post-completion Ride Details once. Trusts realtime status over lagging HTTP.
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
+    if (_completionHandoffInProgress || _completionRideDetailsFetch != null) {
+      return;
+    }
     final normalizedCurrentStatus = currentRideStatus.value
         .trim()
         .toLowerCase();
@@ -1970,37 +2025,30 @@ class DriverAcceptedController extends GetxController
         normalizedCurrentStatus != 'ride_completed') {
       return;
     }
-    RideModel? currentRide = ride.value;
-    if (currentRide == null) {
-      _fetchRideDetails().whenComplete(_openCompletedRideDetailsScreen);
+
+    final currentRide = ride.value;
+    if (currentRide != null) {
+      // Realtime status already says completed — use in-memory ride snapshot
+      // instead of waiting on HTTP (avoids a second fetch when API status lags).
+      _presentCompletedRideDetailsScreen(currentRide);
       return;
     }
-    final normalizedRideModelStatus = currentRide.status.name
-        .replaceAllMapped(
-          RegExp(r'([a-z0-9])([A-Z])'),
-          (m) => '${m.group(1)}_${m.group(2)}',
-        )
-        .toLowerCase();
-    final isRideModelCompleted =
-        normalizedRideModelStatus == 'completed' ||
-        normalizedRideModelStatus == 'ride_completed';
-    if (!isRideModelCompleted) {
-      _fetchRideDetails().whenComplete(() {
-        final refreshedRide = ride.value;
-        if (refreshedRide == null) return;
-        final refreshedStatus = refreshedRide.status.name
-            .replaceAllMapped(
-              RegExp(r'([a-z0-9])([A-Z])'),
-              (m) => '${m.group(1)}_${m.group(2)}',
-            )
-            .toLowerCase();
-        if (refreshedStatus == 'completed' ||
-            refreshedStatus == 'ride_completed') {
-          _openCompletedRideDetailsScreen();
+
+    _completionHandoffInProgress = true;
+    unawaited(
+      _fetchRideDetailsForCompletionHandoff().whenComplete(() {
+        _completionHandoffInProgress = false;
+        if (_openedCompletedRideDetails) return;
+        final refreshed = ride.value;
+        if (refreshed != null) {
+          _presentCompletedRideDetailsScreen(refreshed);
         }
-      });
-      return;
-    }
+      }),
+    );
+  }
+
+  void _presentCompletedRideDetailsScreen(RideModel currentRide) {
+    if (_openedCompletedRideDetails) return;
     // Normalize payload for details screen: force completed status and review UI.
     // Socket/status payloads can be slightly delayed, so we make this explicit.
     final completedRide = currentRide.copyWith(
@@ -2016,12 +2064,14 @@ class DriverAcceptedController extends GetxController
         () => RideDetailsScreen(
           ride: completedRide,
           openedFromCompletionFlow: true,
+          refreshOnInit: false,
         ),
         binding: BindingsBuilder(() {
           Get.put(
             RideDetailsController(
               ride: completedRide,
               openedFromCompletionFlow: true,
+              refreshOnInit: false,
             ),
           );
         }),
