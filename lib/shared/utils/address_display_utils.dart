@@ -1,10 +1,5 @@
-/// Short label for map route headers (first segment before comma).
-String compactAddressLine(String value) {
-  final trimmed = value.trim();
-  if (trimmed.isEmpty) return trimmed;
-  final first = trimmed.split(',').first.trim();
-  return first.isEmpty ? trimmed : first;
-}
+/// Full address for UI display (trimmed only, never truncated in code).
+String compactAddressLine(String value) => value.trim();
 
 /// Prepends an optional user note as the first comma-separated address segment.
 String prependAddressLine(String baseAddress, String optionalLine) {
