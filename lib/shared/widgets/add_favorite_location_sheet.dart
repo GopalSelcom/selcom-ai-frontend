@@ -11,7 +11,6 @@ import '../utils/app_dialogs.dart';
 import '../utils/favorite_location_chip_catalog.dart';
 import '../utils/saved_places_ordering.dart';
 import 'add_favorite_location_controller.dart';
-import 'app_animated_reveal.dart';
 import 'app_primary_button.dart';
 import 'app_saved_place_chip.dart';
 import 'app_text_field.dart';
@@ -48,11 +47,14 @@ class AddFavoriteLocationSheet extends StatelessWidget {
       tag: controllerTag,
     );
 
+    final context = Get.context;
     return AppDialogs.showStandardBottomSheet<void>(
       title: AppStrings.addToFavourites.tr,
       subtitle: AppStrings.addToFavouritesSubtitle.tr,
       headerTextAlign: TextAlign.start,
-      maxHeightFactor: 0.92,
+      maxHeightFactor: context != null
+          ? _scrollBodyMaxHeightFactor(context)
+          : 0.65,
       barrierDismissible: true,
       content: AddFavoriteLocationSheet(controllerTag: controllerTag),
     ).whenComplete(() {
@@ -71,23 +73,89 @@ class AddFavoriteLocationSheet extends StatelessWidget {
     return 10.h + 5.h + 13.h + 72.h + 14.h + 1.h + 16.h + 8.h;
   }
 
+  /// Body max height fraction so header + scroll area + safe area fit on screen.
+  static double _scrollBodyMaxHeightFactor(BuildContext context) {
+    final screenH = MediaQuery.sizeOf(context).height;
+    final headerH = _standardSheetHeaderHeight(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final bottomChrome = safeBottom > 0
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
+        : 16.h;
+    final bodyPadding = 16.h + 8.h;
+    final available = screenH - headerH - safeBottom - bottomChrome - bodyPadding;
+    return (available / screenH).clamp(0.35, 0.72);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return _AddFavoriteLocationSheetBody(
-      controller: controller,
-      standardSheetHeaderHeight: _standardSheetHeaderHeight(context),
-    );
+    return _AddFavoriteLocationSheetBody(controller: controller);
   }
 }
 
-class _AddFavoriteLocationSheetBody extends StatelessWidget {
+class _AddFavoriteLocationSheetBody extends StatefulWidget {
   const _AddFavoriteLocationSheetBody({
     required this.controller,
-    required this.standardSheetHeaderHeight,
   });
 
   final AddFavoriteLocationController controller;
-  final double standardSheetHeaderHeight;
+
+  @override
+  State<_AddFavoriteLocationSheetBody> createState() =>
+      _AddFavoriteLocationSheetBodyState();
+}
+
+class _AddFavoriteLocationSheetBodyState
+    extends State<_AddFavoriteLocationSheetBody> {
+  final GlobalKey _saveButtonKey = GlobalKey();
+  Worker? _canSaveWorker;
+  bool _wasCanSave = false;
+
+  AddFavoriteLocationController get controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _canSaveWorker = everAll(
+      [
+        controller.selectedLabel,
+        controller.customLabelText,
+        controller.hasUserSelectedLabel,
+      ],
+      (_) => _onCanSaveChanged(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _canSaveWorker?.dispose();
+    super.dispose();
+  }
+
+  void _onCanSaveChanged() {
+    final canSave = controller.canSave;
+    if (canSave && !_wasCanSave) {
+      _scheduleScrollSaveButtonIntoView();
+    }
+    _wasCanSave = canSave;
+  }
+
+  void _scheduleScrollSaveButtonIntoView() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Future<void>.delayed(const Duration(milliseconds: 320), () {
+        if (!mounted) return;
+        final saveContext = _saveButtonKey.currentContext;
+        if (saveContext == null || !saveContext.mounted) return;
+        Scrollable.ensureVisible(
+          saveContext,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          alignment: 1.0,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        );
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,10 +163,17 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
     final screenH = media.size.height;
     final keyboard = media.viewInsets.bottom;
     final safeBottom = media.padding.bottom;
-
-    final maxCap =
-        (screenH * 0.92 - standardSheetHeaderHeight - safeBottom)
-            .clamp(240.0, screenH * 0.75);
+    final bottomChrome = safeBottom > 0
+        ? (GetPlatform.isIOS ? 0.0 : 8.h)
+        : 16.h;
+    final bodyPadding = 16.h + 8.h;
+    final viewportMaxHeight = (screenH -
+            AddFavoriteLocationSheet._standardSheetHeaderHeight(context) -
+            safeBottom -
+            bottomChrome -
+            bodyPadding -
+            keyboard)
+        .clamp(180.0, screenH * 0.65);
 
     return Obx(() {
       controller.savedPlaces.length;
@@ -109,12 +184,9 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
       final saving = controller.isSaving.value;
 
       final chips = controller.chipsForDisplay();
-      final bodyHeight = keyboard > 0
-          ? (maxCap - keyboard).clamp(180.0, maxCap)
-          : controller.estimateContentHeight(chips.length).clamp(200.0, maxCap);
 
-      return SizedBox(
-        height: bodyHeight,
+      return ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: viewportMaxHeight),
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
@@ -172,18 +244,22 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
                   onChanged: controller.onCustomLabelChanged,
                 ),
               ],
-              AppAnimatedReveal(
-                show: controller.canSave,
-                visibleKey: const ValueKey('save-button-visible'),
-                hiddenKey: const ValueKey('save-button-hidden'),
-                child: Padding(
-                  padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
-                  child: AppPrimaryButton(
-                    label: AppStrings.saveAddress.tr,
-                    isLoading: saving,
-                    onPressed: controller.saveSelected,
-                  ),
-                ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                clipBehavior: Clip.hardEdge,
+                alignment: Alignment.topCenter,
+                child: controller.canSave
+                    ? Padding(
+                        key: _saveButtonKey,
+                        padding: EdgeInsets.only(top: 22.h, bottom: 8.h),
+                        child: AppPrimaryButton(
+                          label: AppStrings.saveAddress.tr,
+                          isLoading: saving,
+                          onPressed: controller.saveSelected,
+                        ),
+                      )
+                    : SizedBox(width: double.infinity, height: 0),
               ),
             ],
           ),
