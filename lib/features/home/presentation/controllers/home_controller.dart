@@ -2291,7 +2291,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
     await _openAddFavoriteBottomSheet(
       address: detailedAddress,
-      onSave: (label) => saveAddressFromPrediction(item: item, label: label),
+      onSave: (label, address) =>
+          saveAddressFromPrediction(item: item, label: label, address: address),
     );
   }
 
@@ -2305,7 +2306,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
     await _openAddFavoriteBottomSheet(
       address: loc.address.trim(),
-      onSave: (label) => saveAddressFromRecentLocation(loc: loc, label: label),
+      onSave: (label, address) =>
+          saveAddressFromRecentLocation(loc: loc, label: label, address: address),
     );
   }
 
@@ -2321,8 +2323,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
     await _openAddFavoriteBottomSheet(
       address: address.trim(),
-      onSave: (label) => saveAddressFromAddress(
-        address: address,
+      onSave: (label, resolvedAddress) => saveAddressFromAddress(
+        address: resolvedAddress,
         label: label,
         lat: lat,
         lng: lng,
@@ -2332,7 +2334,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _openAddFavoriteBottomSheet({
     required String address,
-    required Future<void> Function(String label) onSave,
+    required Future<void> Function(String label, String address) onSave,
   }) async {
     final detailedAddress = address.trim();
     if (detailedAddress.isEmpty) {
@@ -2347,8 +2349,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       resolveSavedPlace: getSavedPlaceByLabel,
       isSaving: isSavingPlace,
       savedPlaces: savedPlaces,
-      onSave: (label) async {
-        await onSave(label);
+      onSave: (label, resolvedAddress) async {
+        await onSave(label, resolvedAddress);
         if (!isSavingPlace.value) {
           Get.back<void>();
         }
@@ -2387,14 +2389,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> saveAddressFromPrediction({
     required Prediction item,
     required String label,
+    required String address,
   }) async {
     final normalizedLabel = label.trim();
-    final address = (item.description ?? '').trim();
+    final detailedAddress = address.trim();
     if (normalizedLabel.isEmpty) {
       AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterLabel.tr);
       return;
     }
-    if (address.isEmpty) {
+    if (detailedAddress.isEmpty) {
       AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
       return;
     }
@@ -2403,17 +2406,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     isSavingPlace.value = true;
     try {
       await Loader.run(() async {
-        final latLng = await getLatLngFromAddress(address);
+        final latLng = await getLatLngFromAddress(detailedAddress);
         final lat = latLng?.latitude ?? mapCenter.value.latitude;
         final lng = latLng?.longitude ?? mapCenter.value.longitude;
-        final name = address.split(',').first.trim().isEmpty
-            ? address
-            : address.split(',').first.trim();
+        final name = detailedAddress.split(',').first.trim().isEmpty
+            ? detailedAddress
+            : detailedAddress.split(',').first.trim();
 
         final request = SaveRecentAsFavoriteRequest(
           label: normalizedLabel.toLowerCase(),
           name: name,
-          address: address,
+          address: detailedAddress,
           lat: lat,
           lng: lng,
         );
@@ -2437,14 +2440,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> saveAddressFromRecentLocation({
     required RecentDestinationModel loc,
     required String label,
+    required String address,
   }) async {
     final normalizedLabel = label.trim();
-    final address = loc.address.trim();
+    final detailedAddress = address.trim();
     if (normalizedLabel.isEmpty) {
       AppDialogs.showErrorDialog(message: AppStrings.pleaseEnterLabel.tr);
       return;
     }
-    if (address.isEmpty) {
+    if (detailedAddress.isEmpty) {
       AppDialogs.showErrorDialog(message: AppStrings.noLocationsFound.tr);
       return;
     }
@@ -2455,10 +2459,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       await Loader.run(() async {
         final request = SaveRecentAsFavoriteRequest(
           label: normalizedLabel.toLowerCase(),
-          name: address.split(',').first.trim().isEmpty
-              ? address
-              : address.split(',').first.trim(),
-          address: address,
+          name: detailedAddress.split(',').first.trim().isEmpty
+              ? detailedAddress
+              : detailedAddress.split(',').first.trim(),
+          address: detailedAddress,
           lat: loc.lat,
           lng: loc.lng,
         );

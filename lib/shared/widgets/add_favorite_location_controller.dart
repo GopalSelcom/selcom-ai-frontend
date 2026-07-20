@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../core/data/models/responses/get_saved_places_response.dart';
 import '../../core/localization/app_strings.dart';
+import '../utils/address_display_utils.dart';
 import '../utils/favorite_location_chip_catalog.dart';
 import '../utils/saved_places_ordering.dart';
 
@@ -49,7 +50,7 @@ class AddFavoriteLocationController extends GetxController {
   });
 
   final String address;
-  final Future<void> Function(String label) onSave;
+  final Future<void> Function(String label, String address) onSave;
   final SavedPlace? Function(String canonicalLabel) resolveSavedPlace;
   final RxBool isSaving;
   final RxList<SavedPlace> savedPlaces;
@@ -57,6 +58,10 @@ class AddFavoriteLocationController extends GetxController {
   final selectedLabel = ''.obs;
   final hasUserSelectedLabel = false.obs;
   final customLabelText = ''.obs;
+  final addressNoteText = ''.obs;
+
+  String get effectiveAddress =>
+      prependAddressLine(address, addressNoteText.value);
 
   bool get canSave {
     if (!hasUserSelectedLabel.value) return false;
@@ -78,6 +83,10 @@ class AddFavoriteLocationController extends GetxController {
   void onCustomLabelChanged(String value) {
     hasUserSelectedLabel.value = true;
     customLabelText.value = value;
+  }
+
+  void onAddressNoteChanged(String value) {
+    addressNoteText.value = value;
   }
 
   /// Filled presets → custom saved labels → empty presets → Add New (matches Home).
@@ -115,7 +124,7 @@ class AddFavoriteLocationController extends GetxController {
 
   Future<void> saveSelected() async {
     final entry = entryForSelectionKey(selectedLabel.value);
-    await onSave(labelForSave(entry));
+    await onSave(labelForSave(entry), effectiveAddress);
   }
 
   String presetDisplayTitle(FavoriteLocationSlotId id) {
@@ -134,7 +143,8 @@ class AddFavoriteLocationController extends GetxController {
   double estimateContentHeight(int chipCount) {
     final chipRows = (chipCount / 3).ceil();
     var height =
-        52.h + 20.h + 28.h + 10.h + (chipRows * 48.h).clamp(108.h, 200.h);
+        52.h + 20.h + 12.h + 28.h + 10.h + 56.h + 20.h + 28.h + 10.h +
+        (chipRows * 48.h).clamp(108.h, 200.h);
     if (selectedLabel.value == 'add_new') {
       height += 12.h + 56.h;
     }

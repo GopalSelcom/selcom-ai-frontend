@@ -30,7 +30,7 @@ class AddFavoriteLocationSheet extends StatelessWidget {
 
   static Future<void> show({
     required String address,
-    required Future<void> Function(String label) onSave,
+    required Future<void> Function(String label, String address) onSave,
     required SavedPlace? Function(String canonicalLabel) resolveSavedPlace,
     required RxBool isSaving,
     required RxList<SavedPlace> savedPlaces,
@@ -104,6 +104,7 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
       controller.savedPlaces.length;
       controller.selectedLabel.value;
       controller.customLabelText.value;
+      controller.addressNoteText.value;
       controller.hasUserSelectedLabel.value;
       final saving = controller.isSaving.value;
 
@@ -128,9 +129,20 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
                   border: Border.all(color: AppColors.skeletonBase),
                 ),
                 child: Text(
-                  controller.address,
+                  controller.effectiveAddress,
                   style: AppTextStyles.homeCaption.copyWith(height: 20 / 12),
                 ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                AppStrings.pickupConfirmationNoteLabel.tr,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              _AddFavoriteAddressNoteField(
+                onChanged: controller.onAddressNoteChanged,
               ),
               SizedBox(height: 20.h),
               Text(
@@ -224,6 +236,46 @@ class _AddFavoriteLocationSheetBody extends StatelessWidget {
       onTap: onTap,
       backgroundColor: isSelected ? AppColors.primaryLight : null,
       borderColor: isSelected ? AppColors.primary : null,
+    );
+  }
+}
+
+class _AddFavoriteAddressNoteField extends StatefulWidget {
+  const _AddFavoriteAddressNoteField({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_AddFavoriteAddressNoteField> createState() =>
+      _AddFavoriteAddressNoteFieldState();
+}
+
+class _AddFavoriteAddressNoteFieldState
+    extends State<_AddFavoriteAddressNoteField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppTextField(
+      hintText: AppStrings.pickupConfirmationNoteHint.tr,
+      controller: _controller,
+      onChanged: widget.onChanged,
+      textInputAction: TextInputAction.done,
+      textFieldBackgroundColor: AppColors.white,
+      textColor: AppColors.textHeading,
+      enableEnhancedStyle: false,
     );
   }
 }
