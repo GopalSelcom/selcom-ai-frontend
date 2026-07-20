@@ -146,6 +146,8 @@ class LanguageSw extends Languages {
     'share_slip': 'Shiriki Stakabadhi',
     'share_slip_subtitle': 'Tuma kiungo cha stakabadhi kwa wengine',
     'driver_arrived_map_badge': 'Dereva amewasili',
+    'map_satellite_view': 'Mwonekano wa setilaiti',
+    'map_standard_view': 'Ramani ya kawaida',
     'driver_arrived_pickup_primary': 'Dereva amewasili kwenye eneo la kuchukulia',
     'your_driver_has_arrived': 'Dereva wako amewasili!',
     'driver_is_heading_to_your_location': 'Dereva anaelekea eneo lako',
@@ -1238,6 +1240,12 @@ class LanguageSw extends Languages {
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
+
+  @override
+  String get mapSatelliteView => values['map_satellite_view'] ?? '';
+
+  @override
+  String get mapStandardView => values['map_standard_view'] ?? '';
 
   @override
   String get driverArrivedPickupPrimary =>

@@ -25,18 +25,16 @@ class AppMapService {
     }
   }
 
-  /// Applies brand map styling; pass [overrideStyle] to replace the default JSON.
-  static Future<void> applyBrandMapStyle(
-    GoogleMapController controller, {
+  /// Brand JSON style for [MapType.normal]; `null` for satellite/hybrid layers.
+  static Future<String?> resolveMapStyle({
+    required MapType mapType,
     String? overrideStyle,
   }) async {
-    final style = overrideStyle ?? await loadBrandMapStyle();
-    if (style == null || style.isEmpty) return;
-    try {
-      await controller.setMapStyle(style);
-    } catch (_) {
-      // Map may not be ready on some platforms during teardown.
+    if (mapType != MapType.normal) return null;
+    if (overrideStyle != null && overrideStyle.isNotEmpty) {
+      return overrideStyle;
     }
+    return loadBrandMapStyle();
   }
 
   // ── Standard UI chrome (minimal; we use [AppMapGpsButton] instead of the SDK button)

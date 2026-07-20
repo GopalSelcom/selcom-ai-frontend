@@ -56,6 +56,7 @@ import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
 import '../network/retry_manager.dart';
 import '../services/analytics_service.dart';
+import '../services/app_map_type_service.dart';
 import '../services/app_region_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/apple_sign_in_service.dart';
@@ -73,6 +74,8 @@ Future<void> init() async {
   // ── Services ──
   sl.registerLazySingleton(() => AnalyticsService());
   sl.registerLazySingleton(() => AppRegionService());
+  // Shared across all AppGoogleMap instances for session-wide layer preference.
+  sl.registerLazySingleton(() => AppMapTypeService());
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => AppSocketService());
   sl.registerLazySingleton(() => LiveActivityManager());

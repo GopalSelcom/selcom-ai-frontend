@@ -155,6 +155,8 @@ class LanguageEn extends Languages {
     'share_slip': 'Share Slip',
     'share_slip_subtitle': 'Send receipt link to others',
     'driver_arrived_map_badge': 'Driver arrived',
+    'map_satellite_view': 'Satellite view',
+    'map_standard_view': 'Standard map',
     'driver_arrived_pickup_primary': 'Driver arrived at pickup',
     'your_driver_has_arrived': 'Your driver has arrived!',
     'driver_is_heading_to_your_location': 'Driver is heading to your location',
@@ -1318,6 +1320,12 @@ class LanguageEn extends Languages {
 
   @override
   String get driverArrivedMapBadge => values['driver_arrived_map_badge'] ?? '';
+
+  @override
+  String get mapSatelliteView => values['map_satellite_view'] ?? '';
+
+  @override
+  String get mapStandardView => values['map_standard_view'] ?? '';
 
   @override
   String get driverArrivedPickupPrimary =>

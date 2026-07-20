@@ -130,6 +130,8 @@ abstract class Languages {
   String get shareSlip;
   String get shareSlipSubtitle;
   String get driverArrivedMapBadge;
+  String get mapSatelliteView;
+  String get mapStandardView;
   String get driverArrivedPickupPrimary;
   String get yourDriverHasArrived;
   String get driverIsHeadingToYourLocation;

@@ -1,11 +1,27 @@
 import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../core/di/injection_container.dart' as di;
 import '../../core/services/app_map_service.dart';
+import '../../core/services/app_map_type_service.dart';
+import 'app_map_layer_button.dart';
 import 'map_rider_tracking_mixin.dart';
+
+/// Where the built-in standard/satellite layer toggle is anchored on [AppGoogleMap].
+///
+/// [topTrailing] is the default for ride/confirm flows. [none] when the screen
+/// places its own [AppMapLayerButton] (e.g. Home stacks it above GPS).
+enum AppMapLayerTogglePlacement {
+  none,
+  topTrailing,
+  bottomTrailing,
+}
 
 /// **Canonical embedded map for the app** (`lib/shared/widgets/`).
 ///
@@ -36,7 +52,7 @@ class AppGoogleMap extends StatefulWidget {
     this.zoomControlsEnabled = false,
     this.mapToolbarEnabled = false,
     this.compassEnabled = false,
-    this.mapType = MapType.normal,
+    this.layerTogglePlacement = AppMapLayerTogglePlacement.topTrailing,
     this.trafficEnabled = false,
     this.buildingsEnabled = false,
     this.indoorViewEnabled = true,
@@ -82,7 +98,10 @@ class AppGoogleMap extends StatefulWidget {
   final bool zoomControlsEnabled;
   final bool mapToolbarEnabled;
   final bool compassEnabled;
-  final MapType mapType;
+
+  /// Built-in layer toggle placement. Defaults to [AppMapLayerTogglePlacement.topTrailing].
+  /// Set [AppMapLayerTogglePlacement.none] when the screen renders its own control.
+  final AppMapLayerTogglePlacement layerTogglePlacement;
   final bool trafficEnabled;
   final bool buildingsEnabled;
   final bool indoorViewEnabled;
@@ -118,11 +137,19 @@ class AppGoogleMapState extends State<AppGoogleMap>
   DateTime? _lastCameraUpdateAt;
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
+  String? _resolvedMapStyle;
+  Worker? _mapTypeWorker;
+  late final AppMapTypeService _mapTypeService;
 
   @override
   void initState() {
     super.initState();
     isTrackingRider = widget.trackRider;
+    _mapTypeService = di.sl<AppMapTypeService>();
+    _mapTypeWorker = ever(_mapTypeService.mapType, (_) {
+      unawaited(_loadMapStyle());
+    });
+    unawaited(_loadMapStyle());
 
     // Link the animated marker position to the camera for smooth following
     onAnimatedPositionUpdate = (position, rotation) {
@@ -174,6 +201,9 @@ class AppGoogleMapState extends State<AppGoogleMap>
     super.didUpdateWidget(oldWidget);
     if (widget.trackRider != oldWidget.trackRider) {
       isTrackingRider = widget.trackRider;
+    }
+    if (widget.style != oldWidget.style) {
+      unawaited(_loadMapStyle());
     }
     final riderMarker = _findRiderMarker();
     if (riderMarker != null) {
@@ -296,8 +326,48 @@ class AppGoogleMapState extends State<AppGoogleMap>
     setState(() {});
   }
 
+  Future<void> _loadMapStyle() async {
+    // Brand JSON applies only to normal map; hybrid/satellite use native tiles.
+    final style = await AppMapService.resolveMapStyle(
+      mapType: _mapTypeService.mapType.value,
+      overrideStyle: widget.style,
+    );
+    if (!mounted) return;
+    setState(() => _resolvedMapStyle = style);
+  }
+
+  Widget? _layerToggle() {
+    if (widget.layerTogglePlacement == AppMapLayerTogglePlacement.none) {
+      return null;
+    }
+
+    final toggle = Obx(
+      () => AppMapLayerButton(
+        isSatelliteView: _mapTypeService.isSatelliteView,
+        onPressed: _mapTypeService.toggleMapType,
+      ),
+    );
+
+    // Offset follows [padding] so screens can clear status bar / headers via
+    // [GoogleMap.padding] (see confirm location and vehicle selection).
+    return switch (widget.layerTogglePlacement) {
+      AppMapLayerTogglePlacement.topTrailing => Positioned(
+        top: widget.padding.top + 12.h,
+        right: 16.w,
+        child: toggle,
+      ),
+      AppMapLayerTogglePlacement.bottomTrailing => Positioned(
+        bottom: widget.padding.bottom + 16.h,
+        right: 16.w,
+        child: toggle,
+      ),
+      AppMapLayerTogglePlacement.none => null,
+    };
+  }
+
   @override
   void dispose() {
+    _mapTypeWorker?.dispose();
     // Runs before the platform GoogleMap is torn down; listeners/async map
     // work should treat the controller as invalid immediately after this.
     widget.onMapDisposed?.call();
@@ -306,98 +376,73 @@ class AppGoogleMapState extends State<AppGoogleMap>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Listener(
-          onPointerDown: (_) {
-            _isUserInteracting = true;
-            widget.onUserInteraction?.call();
-          },
-          onPointerUp: (_) => _isUserInteracting = false,
-          onPointerCancel: (_) => _isUserInteracting = false,
-          child: GoogleMap(
-            initialCameraPosition: widget.initialCameraPosition,
-            onMapCreated: (controller) async {
-              _controller = controller;
-              await AppMapService.applyBrandMapStyle(
-                controller,
-                overrideStyle: widget.style,
-              );
-              widget.onMapCreated(controller);
-              if (isTrackingRider) _moveToRider();
+    return Obx(() {
+      final mapType = _mapTypeService.mapType.value;
+      final layerToggle = _layerToggle();
+
+      return Stack(
+        children: [
+          Listener(
+            onPointerDown: (_) {
+              _isUserInteracting = true;
+              widget.onUserInteraction?.call();
             },
-            markers: getAnimatedMarkers(widget.markers),
-            polylines: widget.polylines,
-            circles: widget.circles,
-            polygons: widget.polygons,
-            heatmaps: widget.heatmaps,
-            tileOverlays: widget.tileOverlays,
-            padding: widget.padding,
-            cameraTargetBounds: widget.cameraTargetBounds,
-            myLocationEnabled: widget.myLocationEnabled,
-            myLocationButtonEnabled: widget.myLocationButtonEnabled,
-            zoomControlsEnabled: widget.zoomControlsEnabled,
-            mapToolbarEnabled: widget.mapToolbarEnabled,
-            compassEnabled: widget.compassEnabled,
-            mapType: widget.mapType,
-            trafficEnabled: widget.trafficEnabled,
-            buildingsEnabled: widget.buildingsEnabled,
-            indoorViewEnabled: widget.indoorViewEnabled,
-            liteModeEnabled: widget.liteModeEnabled,
-            minMaxZoomPreference: widget.minMaxZoomPreference,
-            gestureRecognizers:
-                widget.gestureRecognizers ??
-                <Factory<OneSequenceGestureRecognizer>>{},
-            onCameraMove: widget.onCameraMove,
-            onCameraIdle: () {
-              _isProgrammaticMove = false;
-              widget.onCameraIdle?.call();
-            },
-            onCameraMoveStarted: () {
-              if (_isUserInteracting && !_isProgrammaticMove) {
-                setState(() {
-                  isTrackingRider = false;
-                });
-                widget.onTrackingChanged?.call(false);
-                widget.onUserInteraction?.call();
-              }
-              widget.onCameraMoveStarted?.call();
-            },
-            onTap: widget.onTap,
-            onLongPress: widget.onLongPress,
-            mapId: widget.mapId,
+            onPointerUp: (_) => _isUserInteracting = false,
+            onPointerCancel: (_) => _isUserInteracting = false,
+            child: GoogleMap(
+              initialCameraPosition: widget.initialCameraPosition,
+              onMapCreated: (controller) {
+                _controller = controller;
+                widget.onMapCreated(controller);
+                if (isTrackingRider) _moveToRider();
+              },
+              markers: getAnimatedMarkers(widget.markers),
+              polylines: widget.polylines,
+              circles: widget.circles,
+              polygons: widget.polygons,
+              heatmaps: widget.heatmaps,
+              tileOverlays: widget.tileOverlays,
+              padding: widget.padding,
+              cameraTargetBounds: widget.cameraTargetBounds,
+              myLocationEnabled: widget.myLocationEnabled,
+              myLocationButtonEnabled: widget.myLocationButtonEnabled,
+              zoomControlsEnabled: widget.zoomControlsEnabled,
+              mapToolbarEnabled: widget.mapToolbarEnabled,
+              compassEnabled: widget.compassEnabled,
+              mapType: mapType,
+              trafficEnabled: widget.trafficEnabled,
+              buildingsEnabled: widget.buildingsEnabled,
+              indoorViewEnabled: widget.indoorViewEnabled,
+              liteModeEnabled: widget.liteModeEnabled,
+              minMaxZoomPreference: widget.minMaxZoomPreference,
+              gestureRecognizers:
+                  widget.gestureRecognizers ??
+                  <Factory<OneSequenceGestureRecognizer>>{},
+              onCameraMove: widget.onCameraMove,
+              onCameraIdle: () {
+                _isProgrammaticMove = false;
+                widget.onCameraIdle?.call();
+              },
+              onCameraMoveStarted: () {
+                if (_isUserInteracting && !_isProgrammaticMove) {
+                  setState(() {
+                    isTrackingRider = false;
+                  });
+                  widget.onTrackingChanged?.call(false);
+                  widget.onUserInteraction?.call();
+                }
+                widget.onCameraMoveStarted?.call();
+              },
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              mapId: widget.mapId,
+              // Custom style is incompatible with hybrid/satellite map types.
+              style: mapType == MapType.normal ? _resolvedMapStyle : null,
+            ),
           ),
-        ),
-        // Internal buttons are now hidden as they are moved to the main screen chips.
-        /*
-        Positioned(
-          top: MediaQuery.paddingOf(context).top + 110.h,
-          right: 16.w,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasRider && !isTrackingRider) ...[
-                _IconActionButton(
-                  icon: Icons.navigation,
-                  onPressed: _retrack,
-                  color: Theme.of(context).primaryColor,
-                ),
-                SizedBox(height: 12.h),
-              ],
-              if (widget.showGpsButton)
-                _IconActionButton(
-                  icon: Icons.gps_fixed,
-                  onPressed: () {
-                    setState(() => isTrackingRider = false);
-                    widget.onGpsPressed?.call();
-                  },
-                  color: AppColors.textMapHint,
-                ),
-            ],
-          ),
-        ),
-        */
-      ],
-    );
+          if (layerToggle != null) layerToggle,
+        ],
+      );
+    });
   }
 }

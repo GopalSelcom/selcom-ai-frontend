@@ -1,5 +1,5 @@
 /// Map stack for the app: one place to import the embedded Google Map surface
-/// and related chrome (GPS, header, profile chip).
+/// and related chrome (GPS, layer toggle, header, profile chip).
 ///
 /// **Policy:** Feature screens must use [AppGoogleMap] — not the raw
 /// `google_maps_flutter` [GoogleMap] widget. Extend [AppGoogleMap] in this
@@ -7,7 +7,7 @@
 ///
 /// ```dart
 /// import 'package:selcom_rides_frontend/shared/widgets/map_widgets.dart';
-/// // AppGoogleMap(...), AppMapService..., AppMapGpsButton, AppMapTopHeader, ...
+/// // AppGoogleMap, AppMapLayerButton, AppMapService, AppMapGpsButton, ...
 /// ```
 library;
 
@@ -16,5 +16,6 @@ export 'package:selcom_rides_frontend/core/services/app_map_service.dart';
 export 'app_google_map.dart';
 export 'app_map_route_polyline.dart';
 export 'app_map_gps_button.dart';
+export 'app_map_layer_button.dart';
 export 'app_map_profile_chip.dart';
 export 'app_map_top_header.dart';

@@ -472,14 +472,14 @@ class ConfirmLocationScreen extends GetView<ConfirmLocationController> {
     required LatLng triggerLatLng,
   }) async {
     if (mapController.mapController == null) return null;
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final raw = await AppMapService.screenOffsetFor(
       mapController.mapController!,
       initialLatLng,
     );
     if (raw == null) return null;
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      final dpr = MediaQuery.of(context).devicePixelRatio;
-      return Offset(raw.dx / dpr, raw.dy / dpr);
+      return Offset(raw.dx / devicePixelRatio, raw.dy / devicePixelRatio);
     }
     return raw;
   }
@@ -500,6 +500,7 @@ class _ConfirmLocationMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final initial = controller.initialLatLng;
     final initialCamera = CameraPosition(target: initial, zoom: 16);
+    final topSafe = MediaQuery.paddingOf(context).top;
 
     return Obx(() {
       controller.routeCircles.value;
@@ -514,7 +515,11 @@ class _ConfirmLocationMap extends StatelessWidget {
         onMapCreated: controller.onMapCreated,
         onCameraMove: controller.onCameraMove,
         onCameraIdle: controller.onCameraIdle,
-        padding: EdgeInsets.only(bottom: bottomPanelReserve.h),
+        padding: EdgeInsets.only(
+          // Top inset clears status bar and aligns with AppBackButton row.
+          top: topSafe + 10.h,
+          bottom: bottomPanelReserve.h,
+        ),
       );
     });
   }

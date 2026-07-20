@@ -6,7 +6,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/app_map_type_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -15,6 +17,7 @@ import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_draggable_bottom_sheet.dart';
 import '../../../../shared/widgets/app_google_map.dart';
 import '../../../../shared/widgets/app_map_gps_button.dart';
+import '../../../../shared/widgets/app_map_layer_button.dart';
 import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
@@ -35,6 +38,7 @@ class HomeScreen extends GetView<HomeController> {
   Widget build(BuildContext context) {
     controller.onHomeVisible();
     final screenHeight = MediaQuery.sizeOf(context).height;
+    final mapTypeService = di.sl<AppMapTypeService>();
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -57,6 +61,8 @@ class HomeScreen extends GetView<HomeController> {
                         showsMoreBadge: showsMoreBadge,
                       );
                 return AppGoogleMap(
+                  // Layer toggle is stacked above GPS in this screen's overlay.
+                  layerTogglePlacement: AppMapLayerTogglePlacement.none,
                   initialCameraPosition: CameraPosition(
                     target: controller.mapCenter.value,
                     zoom: 16,
@@ -106,8 +112,21 @@ class HomeScreen extends GetView<HomeController> {
               return Positioned(
                 bottom: bottomOffset,
                 right: 20.w,
-                child: AppMapGpsButton(
-                  onPressed: () => controller.recenterMap(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Satellite toggle shares session state via AppMapTypeService.
+                    Obx(
+                      () => AppMapLayerButton(
+                        isSatelliteView: mapTypeService.isSatelliteView,
+                        onPressed: mapTypeService.toggleMapType,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    AppMapGpsButton(
+                      onPressed: () => controller.recenterMap(),
+                    ),
+                  ],
                 ),
               );
             }),

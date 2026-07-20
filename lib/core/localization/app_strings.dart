@@ -167,6 +167,8 @@ class AppStrings {
   static const String shareSlip = 'share_slip';
   static const String shareSlipSubtitle = 'share_slip_subtitle';
   static const String driverArrivedMapBadge = 'driver_arrived_map_badge';
+  static const String mapSatelliteView = 'map_satellite_view';
+  static const String mapStandardView = 'map_standard_view';
   static const String driverArrivedPickupPrimary =
       'driver_arrived_pickup_primary';
   static const String yourDriverHasArrived = 'your_driver_has_arrived';
