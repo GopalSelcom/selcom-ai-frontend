@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
@@ -45,7 +46,7 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, List<RideModel>>> getRideHistory({
+  Future<Either<Failure, RideHistoryModelResponse?>> getRideHistory({
     int page = 1,
     int limit = 10,
   }) async {

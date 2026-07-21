@@ -1,81 +1,133 @@
-import '../user_model.dart';
+import 'dart:convert';
 
-/// Envelope for `POST go/auth/firebase_login`.
 class FirebaseLoginResponseModel {
-  final int? statusCode;
-  final String? message;
-  final FirebaseLoginData? data;
+  int? statusCode;
+  String? message;
+  FirebaseLoginResponse? data;
 
-  FirebaseLoginResponseModel({this.statusCode, this.message, this.data});
+  FirebaseLoginResponseModel({
+    this.statusCode,
+    this.message,
+    this.data,
+  });
 
-  factory FirebaseLoginResponseModel.fromJson(Map<String, dynamic> json) {
-    final payload = json['data'];
-    return FirebaseLoginResponseModel(
-      statusCode: (json['status_code'] as num?)?.toInt(),
-      message: json['message']?.toString(),
-      data: payload is Map<String, dynamic>
-          ? FirebaseLoginData.fromJson(payload)
-          : payload is Map
-          ? FirebaseLoginData.fromJson(Map<String, dynamic>.from(payload))
-          : null,
-    );
-  }
+  factory FirebaseLoginResponseModel.fromRawJson(String str) => FirebaseLoginResponseModel.fromJson(json.decode(str));
 
-  bool get isSuccess => statusCode == 200;
+  String toRawJson() => json.encode(toJson());
+
+  factory FirebaseLoginResponseModel.fromJson(Map<String, dynamic> json) => FirebaseLoginResponseModel(
+    statusCode: json["status_code"],
+    message: json["message"],
+    data: json["data"] == null ? null : FirebaseLoginResponse.fromJson(json["data"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toJson(),
+  };
 }
 
-/// `data` for `POST go/auth/firebase_login`.
-class FirebaseLoginData {
-  final UserModel? user;
-  final String? accessToken;
-  final String? refreshToken;
-  final bool? isNewUser;
-  final bool? walletStatusFlag;
-  final String? walletStatus;
-  final String? name;
-  final String? email;
-  final bool? needsPhone;
-  final bool? needsName;
+class FirebaseLoginResponse {
+  String? accessToken;
+  String? newRefreshToken;
+  User? user;
+  bool? isNewUser;
+  String? walletStatus;
+  bool? walletStatusFlag;
+  bool? needsPhone;
+  String? name;
+  String? email;
+  bool? needsName;
 
-  const FirebaseLoginData({
-    this.user,
+  FirebaseLoginResponse({
     this.accessToken,
-    this.refreshToken,
+    this.newRefreshToken,
+    this.user,
     this.isNewUser,
-    this.walletStatusFlag,
     this.walletStatus,
+    this.walletStatusFlag,
+    this.needsPhone,
     this.name,
     this.email,
-    this.needsPhone,
     this.needsName,
   });
 
-  factory FirebaseLoginData.fromJson(Map<String, dynamic> json) {
-    return FirebaseLoginData(
-      user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
-      accessToken: json['accessToken']?.toString(),
-      refreshToken: json['newRefreshToken']?.toString(),
-      isNewUser: json['is_new_user'] as bool?,
-      walletStatusFlag: json['wallet_status_flag'] as bool?,
-      walletStatus: json['wallet_status']?.toString(),
-      name: json['name']?.toString(),
-      email: json['email']?.toString(),
-      needsPhone: json['needs_phone'] as bool?,
-      needsName: json['needs_name'] as bool?,
-    );
-  }
+  factory FirebaseLoginResponse.fromRawJson(String str) => FirebaseLoginResponse.fromJson(json.decode(str));
 
-  bool? get isUserAlreadyRegistered => isNewUser == null ? null : !isNewUser!;
+  String toRawJson() => json.encode(toJson());
 
-  bool get isWalletNotCreated => walletStatusFlag == true;
+  factory FirebaseLoginResponse.fromJson(Map<String, dynamic> json) => FirebaseLoginResponse(
+    accessToken: json["accessToken"],
+    newRefreshToken: json["newRefreshToken"],
+    user: json["user"] == null ? null : User.fromJson(json["user"]),
+    isNewUser: json["is_new_user"],
+    walletStatus: json["wallet_status"],
+    walletStatusFlag: json["wallet_status_flag"],
+    needsPhone: json["needs_phone"],
+    name: json["name"],
+    email: json["email"],
+    needsName: json["needs_name"],
+  );
 
-  String get signUpName =>
-      (name?.trim().isNotEmpty == true ? name!.trim() : null) ??
-      user?.name?.trim() ??
-      '';
+  Map<String, dynamic> toJson() => {
+    "accessToken": accessToken,
+    "newRefreshToken": newRefreshToken,
+    "user": user?.toJson(),
+    "is_new_user": isNewUser,
+    "wallet_status": walletStatus,
+    "wallet_status_flag": walletStatusFlag,
+    "needs_phone": needsPhone,
+    "name": name,
+    "email": email,
+    "needs_name": needsName,
+  };
+}
 
-  String get signUpEmail =>
-      (email?.trim().isNotEmpty == true ? email!.trim() : null) ??
-      user?.emailId?.trim() ??
-      '';
+class User {
+  String? id;
+  String? name;
+  String? emailId;
+  int? mobileNumber;
+  String? countryCode;
+  String? image;
+  int? isVerify;
+  String? firebaseUid;
+
+  User({
+    this.id,
+    this.name,
+    this.emailId,
+    this.mobileNumber,
+    this.countryCode,
+    this.image,
+    this.isVerify,
+    this.firebaseUid,
+  });
+
+  factory User.fromRawJson(String str) => User.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    id: json["_id"],
+    name: json["name"],
+    emailId: json["emailId"],
+    mobileNumber: json["mobile_number"],
+    countryCode: json["country_code"],
+    image: json["image"],
+    isVerify: json["is_verify"],
+    firebaseUid: json["firebase_uid"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "_id": id,
+    "name": name,
+    "emailId": emailId,
+    "mobile_number": mobileNumber,
+    "country_code": countryCode,
+    "image": image,
+    "is_verify": isVerify,
+    "firebase_uid": firebaseUid,
+  };
 }

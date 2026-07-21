@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -15,7 +16,7 @@ class MyRidesController extends GetxController {
 
   MyRidesController({required this.rideUseCase});
 
-  final pastRides = <RideModel>[].obs;
+  final pastRides = <Ride>[].obs;
   final isLoading = true.obs;
   final isLoadingMore = false.obs;
   final hasMoreData = true.obs;
@@ -41,8 +42,8 @@ class MyRidesController extends GetxController {
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (rides) {
-          pastRides.assignAll(rides);
-          hasMoreData.value = rides.length >= _limit;
+          pastRides.assignAll((rides?.data?.rides??[]));
+          hasMoreData.value = rides.data.pagination.limit;
         },
       );
     } catch (e, stackTrace) {

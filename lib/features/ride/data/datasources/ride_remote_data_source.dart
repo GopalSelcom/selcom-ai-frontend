@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/ride_payment_endpoints.dart';
@@ -26,7 +27,7 @@ abstract class RideRemoteDataSource {
 
   Future<List<RecentDestinationModel>> getRecentDestinations();
 
-  Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10});
+  Future<RideHistoryModelResponse?> getRideHistory({int page = 1, int limit = 10});
 
   Future<RideModel> getRideDetails(String rideId);
 
@@ -161,7 +162,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<List<RideModel>> getRideHistory({int page = 1, int limit = 10}) async {
+  Future<RideHistoryModelResponse?> getRideHistory({int page = 1, int limit = 10}) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.history,
@@ -171,10 +172,10 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final List rides = response.data['data']?['rides'] ?? [];
-      return rides.map((e) => RideModel.fromJson(e)).toList();
+      final data = RideHistoryModelResponse.fromJson(response.data);
+      return data;
     }
-    return [];
+    return null;
   }
 
   @override

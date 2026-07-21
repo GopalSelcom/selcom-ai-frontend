@@ -46,8 +46,7 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:exported="true"
             android:hardwareAccelerated="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
@@ -78,6 +77,15 @@
                 <data android:scheme="https" />
                 <data android:host="sl.selcom.app" />
             </intent-filter>
+
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+
+<!--                &lt;!&ndash; Ab system bina host ke is scheme ko cleanly pakad lega &ndash;&gt;-->
+<!--                <data android:scheme="selcom-test-callback" />-->
+<!--            </intent-filter>-->
         </activity>
 
         <activity
@@ -136,6 +144,13 @@
         <!-- Selcom Pesa: package visibility (Android 11+) -->
         <package android:name="com.selcompesa" />
         <package android:name="com.selcombank.dev" />
+
+
+<!--        <package android:name="com.selcomid" />-->
+<!--        <intent>-->
+<!--            <action android:name="android.intent.action.VIEW" />-->
+<!--            <data android:scheme="selcomid" />-->
+<!--        </intent>-->
         <!-- Selcom Pesa: custom scheme probe (matches iOS LSApplicationQueriesSchemes) -->
         <intent>
             <action android:name="android.intent.action.VIEW" />

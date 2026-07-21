@@ -39,7 +39,7 @@ void appendPrefetchedRideNavigationArgs(
 }
 
 /// Terminal / inactive rides — show details sheet instead of live ride UI.
-bool rideStatusIsOngoingActive(RideStatus status) {
+bool rideStatusIsOngoingActive(String status) {
   switch (status) {
     case RideStatus.rideCompleted:
     case RideStatus.cancelled:
