@@ -324,7 +324,8 @@ class AuthController extends GetxController {
       return user.isVerify != 1 ||
           user.mobileNumber == null ||
           user.mobileNumber == 0;
-    } catch (_) {
+    } catch (e,strace) {
+      print("this is exceptopn-->$e-->$strace");
       return true;
     }
   }

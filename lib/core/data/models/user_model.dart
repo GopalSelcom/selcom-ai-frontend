@@ -57,10 +57,10 @@ class UserModel extends UserEntity {
       tinNumber: json['tin_number'],
       nidaNumber: json['nida_number'],
       lat: (coordinates != null && coordinates.length > 1)
-          ? coordinates[1].toDouble()
+          ? coordinates[1] != null?coordinates[1].toDouble():0.0
           : 0.0,
       lng: (coordinates != null && coordinates.isNotEmpty)
-          ? coordinates[0].toDouble()
+          ? coordinates[0] != null?coordinates[0].toDouble():0.0
           : 0.0,
       pushNotification: json['push_notification'],
       smsNotification: json['sms_notification'],

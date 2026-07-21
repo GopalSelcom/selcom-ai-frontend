@@ -1,155 +1,152 @@
-import '../../domain/entities/wallet_transaction_entity.dart';
+import 'dart:convert';
 
 class GoCardStatementResponseModel {
-  GoCardStatementResponseModel({
-    this.statusCode,
-    this.message,
-    this.response,
-  });
+  int? statusCode;
+  String? message;
+  Response? response;
 
-  final int? statusCode;
-  final String? message;
-  final GoCardStatementData? response;
+  GoCardStatementResponseModel({this.statusCode, this.message, this.response});
 
-  factory GoCardStatementResponseModel.fromJson(Map<String, dynamic> json) {
-    final payload = json['response'];
-    return GoCardStatementResponseModel(
-      statusCode: json['status_code'] as int?,
-      message: json['message']?.toString(),
-      response: payload is Map<String, dynamic>
-          ? GoCardStatementData.fromJson(payload)
-          : null,
-    );
-  }
+  factory GoCardStatementResponseModel.fromRawJson(String str) =>
+      GoCardStatementResponseModel.fromJson(json.decode(str));
 
-  bool get isSuccess => statusCode == 200 && response != null;
+  String toRawJson() => json.encode(toJson());
+
+  factory GoCardStatementResponseModel.fromJson(Map<String, dynamic> json) =>
+      GoCardStatementResponseModel(
+        statusCode: json["status_code"],
+        message: json["message"],
+        response: json["response"] == null
+            ? null
+            : Response.fromJson(json["response"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+    "status_code": statusCode,
+    "message": message,
+    "response": response?.toJson(),
+  };
 }
 
-class GoCardStatementData {
-  GoCardStatementData({
+class Response {
+  String? result;
+  String? pan;
+  String? currency;
+  int? balance;
+  String? name;
+  DateTime? startdate;
+  DateTime? enddate;
+  int? records;
+  List<Datum>? data;
+
+  Response({
     this.result,
-    this.resultCode,
     this.pan,
     this.currency,
+    this.balance,
+    this.name,
+    this.startdate,
+    this.enddate,
     this.records,
-    this.transactions = const [],
+    this.data,
   });
 
-  final String? result;
-  final String? resultCode;
-  final String? pan;
-  final String? currency;
-  final int? records;
-  final List<GoCardStatementTransaction> transactions;
+  factory Response.fromRawJson(String str) =>
+      Response.fromJson(json.decode(str));
 
-  factory GoCardStatementData.fromJson(Map<String, dynamic> json) {
-    final rows = json['data'] ?? json['transactions'];
-    return GoCardStatementData(
-      result: json['result']?.toString(),
-      resultCode: json['resultcode']?.toString(),
-      pan: json['pan']?.toString(),
-      currency: json['currency']?.toString(),
-      records: json['records'] is num ? (json['records'] as num).toInt() : null,
-      transactions: rows is List
-          ? rows
-                .whereType<Map>()
-                .map(
-                  (row) => GoCardStatementTransaction.fromJson(
-                    Map<String, dynamic>.from(row),
-                  ),
-                )
-                .toList(growable: false)
-          : const [],
-    );
-  }
+  String toRawJson() => json.encode(toJson());
 
-  List<WalletTransactionEntity> toEntities() {
-    final code = currency?.trim().isNotEmpty == true ? currency!.trim() : 'TZS';
-    return transactions
-        .map((transaction) => transaction.toEntity(currency: code))
-        .whereType<WalletTransactionEntity>()
-        .toList(growable: false);
-  }
+  factory Response.fromJson(Map<String, dynamic> json) => Response(
+    result: json["result"],
+    pan: json["pan"],
+    currency: json["currency"],
+    balance: json["balance"],
+    name: json["name"],
+    startdate: json["startdate"] == null
+        ? null
+        : DateTime.parse(json["startdate"]),
+    enddate: json["enddate"] == null ? null : DateTime.parse(json["enddate"]),
+    records: json["records"],
+    data: json["data"] == null
+        ? []
+        : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "result": result,
+    "pan": pan,
+    "currency": currency,
+    "balance": balance,
+    "name": name,
+    "startdate": startdate == null
+        ? null
+        : "${startdate!.year.toString().padLeft(4, '0')}-${startdate!.month.toString().padLeft(2, '0')}-${startdate!.day.toString().padLeft(2, '0')}",
+    "enddate": enddate == null
+        ? null
+        : "${enddate!.year.toString().padLeft(4, '0')}-${enddate!.month.toString().padLeft(2, '0')}-${enddate!.day.toString().padLeft(2, '0')}",
+    "records": records,
+    "data": data == null
+        ? []
+        : List<dynamic>.from(data!.map((x) => x.toJson())),
+  };
 }
 
-class GoCardStatementTransaction {
-  GoCardStatementTransaction({
-    this.date,
-    this.type,
-    this.amount,
+class Datum {
+  int? id;
+  String? fulltimestamp;
+  String? transid;
+  String? reference;
+  String? currency;
+  String? amount;
+  String? charge;
+  String? obal;
+  String? cbal;
+  String? transtype;
+  String? utilitycode;
+
+  Datum({
+    this.id,
+    this.fulltimestamp,
+    this.transid,
     this.reference,
-    this.transId,
-    this.merchant,
-    this.comment,
-    this.utilityCode,
+    this.currency,
+    this.amount,
+    this.charge,
+    this.obal,
+    this.cbal,
+    this.transtype,
+    this.utilitycode,
   });
 
-  final String? date;
-  final String? type;
-  final String? amount;
-  final String? reference;
-  final String? transId;
-  final String? merchant;
-  final String? comment;
-  final String? utilityCode;
+  factory Datum.fromRawJson(String str) => Datum.fromJson(json.decode(str));
 
-  factory GoCardStatementTransaction.fromJson(Map<String, dynamic> json) {
-    return GoCardStatementTransaction(
-      date: json['fulltimestamp']?.toString() ?? json['date']?.toString(),
-      type: json['transtype']?.toString() ?? json['type']?.toString(),
-      amount: json['amount']?.toString(),
-      reference: json['reference']?.toString(),
-      transId: json['transid']?.toString(),
-      merchant: json['merchant']?.toString(),
-      comment: json['comment']?.toString(),
-      utilityCode: json['utilitycode']?.toString(),
-    );
-  }
+  String toRawJson() => json.encode(toJson());
 
-  WalletTransactionEntity? toEntity({required String currency}) {
-    final parsedDate = _parseStatementDate(date);
-    if (parsedDate == null) return null;
+  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+    id: json["id"],
+    fulltimestamp: json["fulltimestamp"],
+    transid: json["transid"],
+    reference: json["reference"],
+    currency: json["currency"],
+    amount: json["amount"],
+    charge: json["charge"],
+    obal: json["obal"],
+    cbal: json["cbal"],
+    transtype: json["transtype"],
+    utilitycode: json["utilitycode"],
+  );
 
-    final normalizedType = (type ?? '').trim().toUpperCase();
-    final isRelease = normalizedType == 'RELEASE';
-    // RELEASE is grouped with received; amount has no +/- prefix.
-    final isCredit = normalizedType == 'CREDIT' || isRelease;
-    final parsedAmount = double.tryParse((amount ?? '').trim()) ?? 0;
-
-    final displayTransId = transId?.trim().isNotEmpty == true
-        ? transId!.trim()
-        : reference?.trim().isNotEmpty == true
-        ? reference!.trim()
-        : '—';
-
-    final typeLabel = _transtypeLabel(normalizedType);
-
-    final id = displayTransId != '—'
-        ? displayTransId
-        : '${date}_${normalizedType}_$parsedAmount';
-
-    return WalletTransactionEntity(
-      id: id,
-      merchantName: displayTransId,
-      categoryLabel: typeLabel,
-      amount: parsedAmount,
-      isCredit: isCredit,
-      showAmountSign: !isRelease,
-      createdAt: parsedDate,
-      currency: currency,
-    );
-  }
-
-  static String _transtypeLabel(String normalizedType) {
-    if (normalizedType.isEmpty) return '—';
-    return '${normalizedType[0]}${normalizedType.substring(1).toLowerCase()}';
-  }
-
-  static DateTime? _parseStatementDate(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    final trimmed = value.trim();
-    final direct = DateTime.tryParse(trimmed);
-    if (direct != null) return direct;
-    return DateTime.tryParse(trimmed.replaceFirst(' ', 'T'));
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "fulltimestamp": fulltimestamp,
+    "transid": transid,
+    "reference": reference,
+    "currency": currency,
+    "amount": amount,
+    "charge": charge,
+    "obal": obal,
+    "cbal": cbal,
+    "transtype": transtype,
+    "utilitycode": utilitycode,
+  };
 }

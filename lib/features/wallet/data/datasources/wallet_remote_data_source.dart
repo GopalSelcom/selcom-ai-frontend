@@ -1,3 +1,4 @@
+import '../../../../core/constants/params.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/network/api_service.dart';
@@ -14,7 +15,7 @@ import '../models/go_email_card_statement_models.dart';
 abstract class WalletRemoteDataSource {
   Future<WalletCardBalanceEntity?> getCardBalance();
 
-  Future<List<WalletTransactionEntity>> getCardStatement({
+  Future<GoCardStatementResponseModel?> getCardStatement({
     required String startDate,
     required String endDate,
     String currency = 'TZS',
@@ -63,7 +64,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
   }
 
   @override
-  Future<List<WalletTransactionEntity>> getCardStatement({
+  Future<GoCardStatementResponseModel?> getCardStatement({
     required String startDate,
     required String endDate,
     String currency = 'TZS',
@@ -74,26 +75,24 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
           endpoint: URLS.wallet.cardStatement,
           method: ApiMethod.get,
           queryParams: {
-            'startdate': startDate,
-            'enddate': endDate,
-            'currency': currency,
+            Params.startDate: startDate,
+            Params.endDate: endDate,
+            Params.currency: currency,
           },
           errorPresentationType: ErrorPresentationType.none,
         ),
       );
 
       if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-        final model = GoCardStatementResponseModel.fromJson(
-          Map<String, dynamic>.from(response.data),
-        );
-        if (model.isSuccess) {
-          return model.response!.toEntities();
+        final model = GoCardStatementResponseModel.fromJson(response.data);
+        if (model.statusCode==200) {
+          return model;
         }
-        return const [];
+        return null;
       }
 
       if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-        return const [];
+        return null;
       }
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
@@ -102,7 +101,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
         tag: 'WalletRemoteDataSource',
       );
     }
-    return const [];
+    return null;
   }
 
   @override

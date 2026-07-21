@@ -32,7 +32,7 @@ class WalletRepositoryImpl implements WalletRepository {
        _selcomPesaTopupRemoteDataSource = selcomPesaTopupRemoteDataSource;
 
   final WalletRemoteDataSource _remoteDataSource;
-  List<WalletTransactionEntity>? _statementCache;
+  List<Datum>? _statementCache;
   final WalletPaymentRemoteDataSource _paymentRemoteDataSource;
   final SelcomPesaTopupRemoteDataSource _selcomPesaTopupRemoteDataSource;
 
@@ -151,7 +151,7 @@ class WalletRepositoryImpl implements WalletRepository {
     String? currencyOverride,
   }) async {
     if (_statementCache != null) {
-      return _statementCache!;
+      return _statementCache??[];
     }
 
     final (startDate, endDate) = defaultWalletStatementDateRange();
@@ -168,8 +168,8 @@ class WalletRepositoryImpl implements WalletRepository {
       currency: currency,
     );
 
-    final sorted = List<WalletTransactionEntity>.from(transactions)
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sorted = List<Datum>.from(transactions?.response?.data??[])
+      ..sort((a, b) => (b.creationDate??DateTime.now()).compareTo(a.creationDate??DateTime.now()));
 
     _statementCache = List.unmodifiable(sorted);
     return _statementCache!;
