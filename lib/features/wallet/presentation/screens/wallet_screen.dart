@@ -33,26 +33,36 @@ class WalletScreen extends GetView<WalletController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    WalletInfoCard(
-                      // Masked by default; eye reveals balance + reserved from cache/API.
-                      balanceText: controller.displayBalanceText,
-                      reservedBalanceText:
-                          controller.formattedReservedBalanceLabel,
-                      walletNumberText: controller.formattedWalletNumber,
-                      isBalanceVisible: controller.isBalanceVisible.value,
-                      isRefreshingBalance:
-                          controller.isRefreshingWalletBalance.value,
-                      onToggleBalanceVisibility:
-                          controller.toggleBalanceVisibility,
-                      onCopyWalletNumber: controller.copyWalletNumber,
-                      onAddMoney: controller.openAddMoney,
-                      onEStatement: controller.openEStatement,
+                    // Card pull refreshes balance only; statement list has its own indicator.
+                    RefreshIndicator(
+                      onRefresh: controller.refreshWalletCard,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        child: WalletInfoCard(
+                          // Masked by default; eye reveals balance + reserved from cache/API.
+                          balanceText: controller.displayBalanceText,
+                          reservedBalanceText:
+                              controller.formattedReservedBalanceLabel,
+                          walletNumberText: controller.formattedWalletNumber,
+                          isBalanceVisible: controller.isBalanceVisible.value,
+                          isRefreshingBalance:
+                              controller.isRefreshingWalletBalance.value,
+                          onToggleBalanceVisibility:
+                              controller.toggleBalanceVisibility,
+                          onCopyWalletNumber: controller.copyWalletNumber,
+                          onAddMoney: controller.openAddMoney,
+                          onEStatement: controller.openEStatement,
+                        ),
+                      ),
                     ),
                     SizedBox(height: 20.h),
                     Expanded(
                       child: WalletRecentTransactionsSection(
                         transactions: controller.recentTransactions,
                         onViewAll: controller.openTransactionHistory,
+                        // List pull refreshes statement preview only.
                         onRefresh: controller.refreshWallet,
                       ),
                     ),

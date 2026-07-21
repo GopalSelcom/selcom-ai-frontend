@@ -232,14 +232,29 @@ class WalletController extends GetxController {
   String get walletNumberForCopy =>
       summary.value?.walletNumber.replaceAll(RegExp(r'\s+'), '') ?? '';
 
+  /// Statement-list pull-to-refresh — reloads recent transactions only.
+  /// Wallet card balance is refreshed separately via [refreshWalletCard].
   Future<void> refreshWallet() {
-    // Pull-to-refresh must always re-fetch the statement. Balance is only
-    // re-fetched when the amount is currently revealed (eye open).
     sl<WalletRepository>().invalidateStatementCache();
-    return loadWallet(
-      showLoading: false,
-      fetchBalance: isBalanceVisible.value,
-    );
+    return loadWallet(showLoading: false, fetchBalance: false);
+  }
+
+  /// Wallet-card pull-to-refresh — reloads balance / summary only (not statement).
+  /// Keeps the amount masked unless the eye is already open.
+  Future<void> refreshWalletCard() async {
+    if (isRefreshingWalletBalance.value) return;
+
+    final showRefreshingUi = isBalanceVisible.value;
+    if (showRefreshingUi) {
+      isRefreshingWalletBalance.value = true;
+    }
+    try {
+      await _fetchAndApplyWalletSummary();
+    } finally {
+      if (showRefreshingUi) {
+        isRefreshingWalletBalance.value = false;
+      }
+    }
   }
 
   /// Hides the amount, or reveals cached amount and refreshes balance from API.
@@ -258,23 +273,29 @@ class WalletController extends GetxController {
   }
 
   Future<void> _refreshWalletBalance() async {
+    if (isRefreshingWalletBalance.value) return;
+
     isRefreshingWalletBalance.value = true;
     try {
-      final walletSummary = await sl<WalletRepository>().getWalletSummary();
-      summary.value = walletSummary;
-      _persistProfileWalletCache(walletSummary);
-
-      if (Get.isRegistered<ProfileController>()) {
-        final profileController = Get.find<ProfileController>();
-        profileController.walletBalance.value =
-            NumberFormat('#,##0', 'en_US').format(walletSummary.balance);
-        profileController.walletCurrency.value = walletSummary.currency.trim();
-        profileController.walletNumber.value =
-            formatWalletAccountNumber(walletSummary.walletNumber.trim());
-        profileController.isWalletLinked.value = true;
-      }
+      await _fetchAndApplyWalletSummary();
     } finally {
       isRefreshingWalletBalance.value = false;
+    }
+  }
+
+  Future<void> _fetchAndApplyWalletSummary() async {
+    final walletSummary = await sl<WalletRepository>().getWalletSummary();
+    summary.value = walletSummary;
+    _persistProfileWalletCache(walletSummary);
+
+    if (Get.isRegistered<ProfileController>()) {
+      final profileController = Get.find<ProfileController>();
+      profileController.walletBalance.value =
+          NumberFormat('#,##0', 'en_US').format(walletSummary.balance);
+      profileController.walletCurrency.value = walletSummary.currency.trim();
+      profileController.walletNumber.value =
+          formatWalletAccountNumber(walletSummary.walletNumber.trim());
+      profileController.isWalletLinked.value = true;
     }
   }
 
