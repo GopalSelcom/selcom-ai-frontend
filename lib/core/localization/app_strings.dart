@@ -100,9 +100,9 @@ class AppStrings {
   static const String passengerDetailsTitle = 'passenger_details_title';
   static const String passengerNameLabel = 'passenger_name_label';
   static const String passengerPhoneLabel = 'passenger_phone_label';
-  static const String
-  byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =
-      'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy';
+  static const String onboardingFooterLead = 'onboarding_footer_lead';
+  static const String onboardingFooterTermsLink = 'onboarding_footer_terms_link';
+  static const String onboardingFooterJoiner = 'onboarding_footer_joiner';
   static const String call = 'call';
   static const String callDriver = 'call_driver';
   static const String callDriverSheetSubtitle = 'call_driver_sheet_subtitle';

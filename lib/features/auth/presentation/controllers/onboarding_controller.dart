@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '/core/localization/app_strings.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/network/urls.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../shared/widgets/web_view_screen.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class OnboardingController extends GetxController {
@@ -119,6 +124,26 @@ class OnboardingController extends GetxController {
 
   void onSkip() {
     Get.offAllNamed(AppRoutes.login);
+  }
+
+  /// Opens the same legal WebView as Profile → Privacy Policy.
+  void openPrivacyPolicy() {
+    unawaited(
+      WebViewScreen.open(
+        title: AppStrings.privacyPolicy.tr,
+        url: AppConfig.versionedApiUrl(URLS.common.privacy),
+      ),
+    );
+  }
+
+  /// Opens the same legal WebView as Profile → Terms and Conditions.
+  void openTermsAndConditions() {
+    unawaited(
+      WebViewScreen.open(
+        title: AppStrings.termsAndConditions.tr,
+        url: AppConfig.versionedApiUrl(URLS.common.termsAndConditions),
+      ),
+    );
   }
 }
 

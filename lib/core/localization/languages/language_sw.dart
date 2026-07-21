@@ -89,8 +89,10 @@ class LanguageSw extends Languages {
     'passenger_details_title': 'Maelezo ya Abiria',
     'passenger_name_label': 'Jina la Abiria',
     'passenger_phone_label': 'Simu ya Abiria',
-    'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
-        'Kwa kuendelea, unakubali kwamba umesoma na kukubaliana na Vigezo na Masharti yetu na Sera ya Faragha',
+    'onboarding_footer_lead':
+        'Kwa kuendelea, unakubali kwamba umesoma na kukubaliana na ',
+    'onboarding_footer_terms_link': 'Vigezo na Masharti yetu',
+    'onboarding_footer_joiner': ' na ',
     'call': 'Piga simu',
     'call_driver': 'Piga simu kwa dereva',
     'call_driver_sheet_subtitle': 'Chagua jinsi unavyotaka kuwasiliana na dereva wako wakati wa safari hii.',
@@ -1066,10 +1068,15 @@ class LanguageSw extends Languages {
       values['booking_ride_option_for_someone_else'] ?? '';
 
   @override
-  String
-  get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =>
-      values['by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy'] ??
-      '';
+  String get onboardingFooterLead =>
+      values['onboarding_footer_lead'] ?? '';
+
+  @override
+  String get onboardingFooterTermsLink =>
+      values['onboarding_footer_terms_link'] ?? '';
+
+  @override
+  String get onboardingFooterJoiner => values['onboarding_footer_joiner'] ?? '';
 
   @override
   String get call => values['call'] ?? '';

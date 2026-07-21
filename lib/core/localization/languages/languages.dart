@@ -76,8 +76,9 @@ abstract class Languages {
   String get bookingForSomeoneElseSubtitle;
   String get bookingRideOptionForMe;
   String get bookingRideOptionForSomeoneElse;
-  String
-  get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy;
+  String get onboardingFooterLead;
+  String get onboardingFooterTermsLink;
+  String get onboardingFooterJoiner;
   String get call;
   String get callDriver;
   String get callDriverSheetSubtitle;
