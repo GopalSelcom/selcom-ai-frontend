@@ -241,7 +241,7 @@ class Destination {
 }
 
 class Location {
-  Type? type;
+  String? type;
   List<double>? coordinates;
 
   Location({

@@ -4,6 +4,8 @@
 // (`RideStatus.driverArriving`), or snake_case. Always normalize first so UI
 // labels and navigation stay in sync.
 
+import '../../core/domain/entities/ride_entity.dart';
+
 /// Converts any ride status string to snake_case lowercase.
 ///
 /// Examples: `driverAssigned` → `driver_assigned`,
@@ -23,6 +25,39 @@ String normalizeRideStatusString(String? raw) {
       .replaceAll(' ', '_');
 
   return canonical.toLowerCase();
+}
+
+/// Parses a status object (String or RideStatus) into a canonical [RideStatus] enum.
+RideStatus parseRideStatus(Object? raw) {
+  if (raw is RideStatus) return raw;
+  final normalized = normalizeRideStatusString(raw?.toString());
+  switch (normalized) {
+    case 'searching':
+      return RideStatus.searching;
+    case 'driver_assigned':
+    case 'accepted':
+      return RideStatus.driverAssigned;
+    case 'driver_arriving':
+      return RideStatus.driverArriving;
+    case 'driver_arrived':
+      return RideStatus.driverArrived;
+    case 'ride_started':
+      return RideStatus.rideStarted;
+    case 'ride_in_progress':
+      return RideStatus.rideInProgress;
+    case 'near_destination':
+      return RideStatus.nearDestination;
+    case 'ride_completed':
+    case 'completed':
+      return RideStatus.rideCompleted;
+    case 'cancelled':
+    case 'canceled':
+      return RideStatus.cancelled;
+    case 'no_driver_found':
+      return RideStatus.noDriverFound;
+    default:
+      return RideStatus.searching;
+  }
 }
 
 /// True while the passenger is still waiting for a driver match.

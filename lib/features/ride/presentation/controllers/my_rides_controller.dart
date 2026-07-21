@@ -42,8 +42,10 @@ class MyRidesController extends GetxController {
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (rides) {
-          pastRides.assignAll((rides?.data?.rides??[]));
-          hasMoreData.value = rides.data.pagination.limit;
+          pastRides.assignAll((rides?.data?.rides ?? []));
+          hasMoreData.value =
+              (rides?.data?.pagination?.page ?? 1) <
+              (rides?.data?.pagination?.totalPages ?? 1);
         },
       );
     } catch (e, stackTrace) {
@@ -59,11 +61,13 @@ class MyRidesController extends GetxController {
   /// Always fetch latest ride details first, then route the tap behavior.
   /// - Ongoing (active) ride statuses -> navigate like Home active ride
   /// - Terminal statuses -> open details screen
-  Future<void> onRideTap(RideModel ride) async {
+  Future<void> onRideTap(Ride ride) async {
     if (isOpeningRide.value) return;
+    final rideId = ride.id ?? '';
+    if (rideId.isEmpty) return;
     isOpeningRide.value = true;
     try {
-      final result = await rideUseCase.getRideDetails(ride.id);
+      final result = await rideUseCase.getRideDetails(rideId);
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
@@ -80,10 +84,7 @@ class MyRidesController extends GetxController {
           }
           if (rideStatusIsOngoingActive(freshRide.status)) {
             // Caller already called getRideDetails — live screens must not fetch again.
-            navigateToOngoingRide(
-              freshRide,
-              skipInitialRideDetailsFetch: true,
-            );
+            navigateToOngoingRide(freshRide, skipInitialRideDetailsFetch: true);
             return;
           }
           // My Rides entry must always use non-completion mode.
@@ -134,13 +135,15 @@ class MyRidesController extends GetxController {
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (rides) {
-          if (rides.isEmpty) {
+          if ((rides?.data?.rides ?? []).isEmpty) {
             hasMoreData.value = false;
             return;
           }
-          pastRides.addAll(rides);
+          pastRides.addAll((rides?.data?.rides ?? []));
           _page.value = nextPage;
-          hasMoreData.value = rides.length >= _limit;
+          hasMoreData.value =
+              (rides?.data?.pagination?.page ?? 1) <
+              (rides?.data?.pagination?.totalPages ?? 1);
         },
       );
     } catch (e, stackTrace) {

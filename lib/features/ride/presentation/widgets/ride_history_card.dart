@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
+import '../../../../shared/utils/ride_status_normalizer.dart';
 import '../../data/models/ride_history_model.dart';
 import 'ride_common_widgets.dart';
 
@@ -19,7 +19,8 @@ class RideHistoryCard extends StatelessWidget {
 
   const RideHistoryCard({super.key, required this.ride, this.onTap});
 
-  String _getStatusText(RideStatus status) {
+  String _getStatusText(Object? rawStatus) {
+    final status = parseRideStatus(rawStatus);
     if (rideStatusIsOngoingActive(status)) {
       return AppStrings.ongoing.tr;
     }
@@ -27,7 +28,7 @@ class RideHistoryCard extends StatelessWidget {
       case RideStatus.rideCompleted:
         return AppStrings.completed.tr;
       case RideStatus.cancelled:
-        if (ride.midRideCancel?.cancelledAt  != null) {
+        if (ride.midRideCancel?.cancelledAt != null) {
           return AppStrings.midRideCancelledByDriverPartialCharge.tr;
         }
         return AppStrings.cancelled.tr;
@@ -38,7 +39,8 @@ class RideHistoryCard extends StatelessWidget {
     }
   }
 
-  Color _getStatusColor(RideStatus status) {
+  Color _getStatusColor(Object? rawStatus) {
+    final status = parseRideStatus(rawStatus);
     if (rideStatusIsOngoingActive(status)) {
       return AppColors.info;
     }
@@ -58,18 +60,38 @@ class RideHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedDate = DateFormat(
       'yyyy-MM-dd, hh:mm a',
-    ).format((ride.createdAt??DateTime.now()));
+    ).format(ride.createdAt ?? DateTime.now());
     final resolvedVehicleType = (ride.vehicleSnapshot?.vehicleName ?? '').trim();
     final vehicleType = resolvedVehicleType.isNotEmpty
         ? resolvedVehicleType
         : AppStrings.fallbackRideName.tr;
-    final effectiveFare = ride.midRideCancel?.captureStatus != null || ride.midRideCancel?.captureStatus != null
-        ? (ride.midRideCancel?.capturedAmount ?? ride.midRideCancel?.partialFare??0)
-        : ride.status == RideStatus.cancelled
-        ? (ride.cancellationFee ?? 0)
-        : (ride.fareBreakdown?.totalAmount ??
-              ride.finalFare ??
-              ride.fareEstimate);
+
+    final num effectiveFare =
+        ride.midRideCancel?.capturedAmount ??
+        ride.midRideCancel?.partialFare ??
+        (parseRideStatus(ride.status) == RideStatus.cancelled
+            ? (ride.cancellationFee ?? 0)
+            : (ride.fareBreakdown?.totalAmount ??
+                ride.finalFare ??
+                ride.fareEstimate ??
+                0));
+
+    final pickupAddress = ride.pickup?.address ?? '';
+    final destAddress = ride.destination?.address ?? '';
+
+    final convertedStops = ride.stops?.map((stop) {
+      final latVal = stop.lat ?? stop.location?.coordinates?.elementAtOrNull(1) ?? 0.0;
+      final lngVal = stop.lng ?? stop.location?.coordinates?.elementAtOrNull(0) ?? 0.0;
+      return RideStopEntity(
+        index: stop.index ?? 0,
+        lat: latVal.toDouble(),
+        lng: lngVal.toDouble(),
+        address: stop.address ?? '',
+        status: stop.status ?? '',
+        arrivedAt: stop.arrivedAt,
+        completedAt: stop.completedAt,
+      );
+    }).toList();
 
     return GestureDetector(
       onTap: onTap,
@@ -142,11 +164,11 @@ class RideHistoryCard extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
               child: RideLocationsTimeline(
-                startLocation: ride.pickup.address.split(',').first,
-                startAddress: ride.pickup.address,
-                endLocation: ride.destination.address.split(',').first,
-                endAddress: ride.destination.address,
-                stops: ride.stops,
+                startLocation: pickupAddress.split(',').first,
+                startAddress: pickupAddress,
+                endLocation: destAddress.split(',').first,
+                endAddress: destAddress,
+                stops: convertedStops,
                 showStopsAsSummary: true,
               ),
             ),
@@ -166,9 +188,9 @@ class RideHistoryCard extends StatelessWidget {
                 children: [
                   Text(
                     AppStrings.paymentMethodWithName.trParams({
-                      'name': ride.paymentMethod == PaymentMethod.selcomPesa
+                      'name': (ride.paymentMethod == 'selcom_pesa' || ride.paymentMethod == 'selcomPesa')
                           ? AppStrings.selcomPesa.tr
-                          : ride.paymentMethod.name,
+                          : (ride.paymentMethod ?? ''),
                     }),
                     style: TextStyle(
                       fontFamily: AppTextStyles.metropolisFont,
@@ -197,3 +219,4 @@ class RideHistoryCard extends StatelessWidget {
     );
   }
 }
+
