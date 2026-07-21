@@ -67,8 +67,6 @@ class WalletController extends GetxController {
   final RxList<WalletTransactionItem> recentTransactions =
       <WalletTransactionItem>[].obs;
 
-  RxBool isTestingMode = true.obs;
-
   RxBool isNidaRegistrationDialogVisible = false.obs;
 
   Timer? _walletBalanceHideTimer;

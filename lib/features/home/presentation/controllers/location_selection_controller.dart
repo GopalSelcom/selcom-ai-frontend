@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -668,6 +670,81 @@ class LocationSelectionController extends GetxController {
       return;
     }
     homeController.searchQuery.value = text;
+  }
+
+  void openSelectSavedLocation(String canonical) {
+    Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
+  }
+
+  void openSelectSavedLocationForSavedPlace(SavedPlace place) {
+    final raw = (place.label ?? place.name ?? '').trim();
+    Get.toNamed(
+      AppRoutes.selectSavedLocation,
+      arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
+    );
+  }
+
+  void onPresetChipTap(String canonical, SavedPlace? place) {
+    if (place == null) {
+      openSelectSavedLocation(canonical);
+      return;
+    }
+    _applySavedPlaceChip(place);
+  }
+
+  void onPresetChipLongPress(String canonical) {
+    openSelectSavedLocation(canonical);
+  }
+
+  void onExtraChipTap(SavedPlace place) {
+    _applySavedPlaceChip(place);
+  }
+
+  void onExtraChipLongPress(SavedPlace place) {
+    openSelectSavedLocationForSavedPlace(place);
+  }
+
+  void _applySavedPlaceChip(SavedPlace place) {
+    final applied = homeController.applySavedPlaceToLocationSelection(
+      savedPlace: place,
+      activeSegmentIndex: activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    if (applied) {
+      confirmSelectionForSegment(activeSegmentIndex.value);
+    }
+  }
+
+  /// Confirm-stop flow when picking an intermediate stop from search.
+  Future<void> handleStopSelection({
+    required String address,
+    required double lat,
+    required double lng,
+  }) async {
+    final parentArgs = Get.arguments is Map
+        ? Map<String, dynamic>.from(Get.arguments as Map)
+        : <String, dynamic>{};
+    final result = await Get.toNamed(
+      AppRoutes.confirmStop,
+      arguments: {
+        'address': address,
+        'lat': lat,
+        'lng': lng,
+        if (parentArgs['isSelectingDestination'] == true)
+          'isSelectingDestination': true,
+      },
+    );
+    if (result != null) {
+      Get.back(result: result);
+    }
   }
 
   @override
