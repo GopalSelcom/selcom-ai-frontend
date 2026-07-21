@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/spin_kit_fading_circle.dart';
@@ -538,59 +537,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         contentHorizontalPadding: 16.w,
         resolvePlace: controller.getSavedPlaceByLabel,
         extraSavedPlaces: extras,
-        onChipTap: (canonical, place) {
-          if (place == null) {
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical);
-            return;
-          }
-          final applied = controller.applySavedPlaceToLocationSelection(
-            savedPlace: place,
-            activeSegmentIndex: _activeSegmentIndex.value,
-            pickupController: pickupController,
-            destinationController: destinationController,
-            extraDestinationControllers: _extraDestinationControllers,
-            pickupEditedByUser: pickupEditedByUser,
-            routePickupLat: _routePickupLat,
-            routePickupLng: _routePickupLng,
-            routeDestinationLat: _routeDestinationLat,
-            routeDestinationLng: _routeDestinationLng,
-            destinationPlaceId: _destinationPlaceId,
-          );
-          if (applied) {
-            locationController.confirmSelectionForSegment(
-              _activeSegmentIndex.value,
-            );
-          }
-        },
-        onSavedChipLongPress: (canonical) =>
-            Get.toNamed(AppRoutes.selectSavedLocation, arguments: canonical),
-        onExtraChipTap: (place) {
-          final applied = controller.applySavedPlaceToLocationSelection(
-            savedPlace: place,
-            activeSegmentIndex: _activeSegmentIndex.value,
-            pickupController: pickupController,
-            destinationController: destinationController,
-            extraDestinationControllers: _extraDestinationControllers,
-            pickupEditedByUser: pickupEditedByUser,
-            routePickupLat: _routePickupLat,
-            routePickupLng: _routePickupLng,
-            routeDestinationLat: _routeDestinationLat,
-            routeDestinationLng: _routeDestinationLng,
-            destinationPlaceId: _destinationPlaceId,
-          );
-          if (applied) {
-            locationController.confirmSelectionForSegment(
-              _activeSegmentIndex.value,
-            );
-          }
-        },
-        onExtraChipLongPress: (place) {
-          final raw = (place.label ?? place.name ?? '').trim();
-          Get.toNamed(
-            AppRoutes.selectSavedLocation,
-            arguments: raw.isEmpty ? AppStrings.saved.tr : raw,
-          );
-        },
+        onChipTap: locationController.onPresetChipTap,
+        onSavedChipLongPress: locationController.onPresetChipLongPress,
+        onExtraChipTap: locationController.onExtraChipTap,
+        onExtraChipLongPress: locationController.onExtraChipLongPress,
       );
     });
   }
@@ -985,24 +935,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
     required String address,
     required double lat,
     required double lng,
-  }) async {
-    final parentArgs = Get.arguments is Map
-        ? Map<String, dynamic>.from(Get.arguments as Map)
-        : <String, dynamic>{};
-    final result = await Get.toNamed(
-      AppRoutes.confirmStop,
-      arguments: {
-        'address': address,
-        'lat': lat,
-        'lng': lng,
-        if (parentArgs['isSelectingDestination'] == true)
-          'isSelectingDestination': true,
-      },
-    );
-    if (result != null) {
-      Get.back(result: result);
-    }
-  }
+  }) =>
+      locationController.handleStopSelection(
+        address: address,
+        lat: lat,
+        lng: lng,
+      );
 
   void _onSuggestionSelected(Prediction prediction) async {
     if (Get.arguments is Map && Get.arguments['isSelectingStop'] == true) {
