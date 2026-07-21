@@ -13,7 +13,7 @@ class RideUseCase {
 
   RideUseCase(this.repository);
 
-  Future<Either<Failure, RideHistoryModelResponse?>> getRideHistory({
+  Future<Either<Failure, List<RideModel>>> getRideHistory({
     int page = 1,
     int limit = 10,
   }) {

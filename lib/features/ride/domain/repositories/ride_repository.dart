@@ -15,7 +15,7 @@ abstract class RideRepository {
 
   Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations();
 
-  Future<Either<Failure, RideHistoryModelResponse?>> getRideHistory({
+  Future<Either<Failure, List<RideModel>>> getRideHistory({
     int page = 1,
     int limit = 10,
   });

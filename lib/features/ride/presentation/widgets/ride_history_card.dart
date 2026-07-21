@@ -10,11 +10,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
-import '../../data/models/ride_history_model.dart';
 import 'ride_common_widgets.dart';
 
 class RideHistoryCard extends StatelessWidget {
-  final Ride ride;
+  final RideModel ride;
   final VoidCallback? onTap;
 
   const RideHistoryCard({super.key, required this.ride, this.onTap});
@@ -27,7 +26,7 @@ class RideHistoryCard extends StatelessWidget {
       case RideStatus.rideCompleted:
         return AppStrings.completed.tr;
       case RideStatus.cancelled:
-        if (ride.midRideCancel?.cancelledAt  != null) {
+        if (ride.midRideCancel?.isDriverMidRideCancel == true) {
           return AppStrings.midRideCancelledByDriverPartialCharge.tr;
         }
         return AppStrings.cancelled.tr;
@@ -58,13 +57,13 @@ class RideHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedDate = DateFormat(
       'yyyy-MM-dd, hh:mm a',
-    ).format((ride.createdAt??DateTime.now()));
-    final resolvedVehicleType = (ride.vehicleSnapshot?.vehicleName ?? '').trim();
+    ).format(ride.createdAt);
+    final resolvedVehicleType = (ride.vehicleDisplayName ?? '').trim();
     final vehicleType = resolvedVehicleType.isNotEmpty
         ? resolvedVehicleType
         : AppStrings.fallbackRideName.tr;
-    final effectiveFare = ride.midRideCancel?.captureStatus != null || ride.midRideCancel?.captureStatus != null
-        ? (ride.midRideCancel?.capturedAmount ?? ride.midRideCancel?.partialFare??0)
+    final effectiveFare = ride.midRideCancel?.isDriverMidRideCancel == true
+        ? (ride.midRideCancel?.displayChargeAmount ?? 0)
         : ride.status == RideStatus.cancelled
         ? (ride.cancellationFee ?? 0)
         : (ride.fareBreakdown?.totalAmount ??
