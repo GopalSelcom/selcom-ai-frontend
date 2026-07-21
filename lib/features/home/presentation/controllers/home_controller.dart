@@ -157,7 +157,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     analyticsService.logEvent('home_screen_viewed');
     _loadMapIcons();
     _initSequentialPermissions();
-    _addMockDrivers();
     _startActiveRidePolling();
     _loadHomeData().whenComplete(() async {
       // Product rule: call pending-review API only once when app session
@@ -1069,10 +1068,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       return;
     }
     await toggleAddAddressBottomSheetForRecent(loc);
-  }
-
-  void _addMockDrivers() {
-    // Removed map driver markers
   }
 
   Future<void> _getCurrentLocation({

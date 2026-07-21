@@ -129,7 +129,6 @@ class FindingDriverController extends GetxController {
   GoogleMapController? mapController;
 
   late final PaymentCountdownTimer _searchCountdown;
-  Timer? _mockDriverAssignTimer;
   StreamSubscription<bool>? _connectionSub;
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
@@ -494,7 +493,6 @@ class FindingDriverController extends GetxController {
   @override
   void onClose() {
     _searchCountdown.stop();
-    _mockDriverAssignTimer?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
@@ -574,9 +572,8 @@ class FindingDriverController extends GetxController {
 
     _chainBrokenReSearch =
         (args[kFindingDriverChainBrokenArg] as bool?) ?? false;
-    _skipInitialRideDetailsFetch = skipInitialRideDetailsFetchFromNavigationArgs(
-      args,
-    );
+    _skipInitialRideDetailsFetch =
+        skipInitialRideDetailsFetchFromNavigationArgs(args);
     _prefetchedRide = prefetchedRideFromNavigationArgs(args);
 
     activeRoutePoints.clear();
@@ -692,19 +689,10 @@ class FindingDriverController extends GetxController {
     );
   }
 
-  void _scheduleMockDriverAssigned() {
-    _mockDriverAssignTimer?.cancel();
-    _mockDriverAssignTimer = Timer(
-      const Duration(seconds: 6),
-      _navigateToDriverAccepted,
-    );
-  }
-
   void _navigateToDriverAccepted() {
     if (_didNavigateToAccepted) return;
     _didNavigateToAccepted = true;
     _searchCountdown.stop();
-    _mockDriverAssignTimer?.cancel();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
@@ -734,10 +722,7 @@ class FindingDriverController extends GetxController {
   }
 
   Future<void> _initRideRoomSocket() async {
-    if (rideId.isEmpty) {
-      _scheduleMockDriverAssigned();
-      return;
-    }
+    if (rideId.isEmpty) return;
 
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
