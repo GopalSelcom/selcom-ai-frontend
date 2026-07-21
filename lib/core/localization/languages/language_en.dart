@@ -94,8 +94,10 @@ class LanguageEn extends Languages {
     'passenger_details_title': 'Passenger Details',
     'passenger_name_label': 'Passenger Name',
     'passenger_phone_label': 'Passenger Phone',
-    'by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy':
-        'By continuing, you agree that you have read and accept our T&Cs and Privacy Policy',
+    'onboarding_footer_lead':
+        'By continuing, you agree that you have read and accept our ',
+    'onboarding_footer_terms_link': 'T&Cs',
+    'onboarding_footer_joiner': ' and ',
     'call': 'Call',
     'call_driver': 'Call driver',
     'call_driver_sheet_subtitle':
@@ -1145,10 +1147,15 @@ class LanguageEn extends Languages {
       values['booking_ride_option_for_someone_else'] ?? '';
 
   @override
-  String
-  get byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy =>
-      values['by_continuing_you_agree_that_you_have_read_and_accept_our_tand_cs_and_privacy_policy'] ??
-      '';
+  String get onboardingFooterLead =>
+      values['onboarding_footer_lead'] ?? '';
+
+  @override
+  String get onboardingFooterTermsLink =>
+      values['onboarding_footer_terms_link'] ?? '';
+
+  @override
+  String get onboardingFooterJoiner => values['onboarding_footer_joiner'] ?? '';
 
   @override
   String get call => values['call'] ?? '';

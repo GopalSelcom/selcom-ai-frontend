@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -159,14 +160,12 @@ class OnboardingScreen extends GetView<OnboardingController> {
                               alignIconToTrailingEnd: true,
                             ),
                           ),
+                          // One sentence; T&Cs and Privacy Policy open profile WebViews.
                           Padding(
                             padding: EdgeInsets.only(bottom: 16.h),
-                            child: Text(
-                              AppStrings
-                                  .byContinuingYouAgreeThatYouHaveReadAndAcceptOurTAndCsAndPrivacyPolicy
-                                  .tr,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.onboardingFooter,
+                            child: _OnboardingLegalFooter(
+                              onTermsTap: controller.openTermsAndConditions,
+                              onPrivacyTap: controller.openPrivacyPolicy,
                             ),
                           ),
                         ],
@@ -178,6 +177,83 @@ class OnboardingScreen extends GetView<OnboardingController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Footer copy as one centered sentence with inline tappable legal links.
+///
+/// Uses [Text.rich] so wrapping matches the original single-line text. Only
+/// [AppStrings.onboardingFooterTermsLink] and [AppStrings.privacyPolicy] are
+/// styled as links (semi-bold + underline).
+class _OnboardingLegalFooter extends StatefulWidget {
+  const _OnboardingLegalFooter({
+    required this.onTermsTap,
+    required this.onPrivacyTap,
+  });
+
+  final VoidCallback onTermsTap;
+  final VoidCallback onPrivacyTap;
+
+  @override
+  State<_OnboardingLegalFooter> createState() => _OnboardingLegalFooterState();
+}
+
+class _OnboardingLegalFooterState extends State<_OnboardingLegalFooter> {
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  TextStyle get _baseStyle => AppTextStyles.onboardingFooter;
+
+  /// Semi-bold + underline on link phrases only; rest of sentence stays regular.
+  TextStyle get _linkStyle => AppTextStyles.onboardingFooter.copyWith(
+    fontWeight: FontWeight.w600,
+    decoration: TextDecoration.underline,
+    decorationColor: AppColors.textBody,
+    decorationThickness: 1.5,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    // Recognizers must be created/disposed when using tappable TextSpans.
+    _termsRecognizer = TapGestureRecognizer()..onTap = widget.onTermsTap;
+    _privacyRecognizer = TapGestureRecognizer()..onTap = widget.onPrivacyTap;
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        style: _baseStyle,
+        children: [
+          TextSpan(text: AppStrings.onboardingFooterLead.tr),
+          TextSpan(
+            text: AppStrings.onboardingFooterTermsLink.tr,
+            style: _linkStyle,
+            recognizer: _termsRecognizer,
+          ),
+          TextSpan(text: AppStrings.onboardingFooterJoiner.tr),
+          TextSpan(
+            text: AppStrings.privacyPolicy.tr,
+            style: _linkStyle,
+            recognizer: _privacyRecognizer,
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
+      // Prevent tight line height from clipping underlines (Metropolis footer).
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: true,
       ),
     );
   }
