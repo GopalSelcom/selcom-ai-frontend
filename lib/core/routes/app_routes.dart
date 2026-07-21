@@ -2,10 +2,11 @@ import 'package:agora_calling_package/agora_calling_package.dart';
 import 'package:get/get.dart';
 
 import '../../features/auth/presentation/bindings/auth_binding.dart';
+import '../../features/auth/presentation/bindings/login_support_binding.dart';
+import '../../features/auth/presentation/bindings/splash_binding.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
-import '../../features/auth/presentation/bindings/login_support_binding.dart';
 import '../../features/auth/presentation/screens/login_support_screen.dart';
 import '../../features/auth/presentation/screens/profile_loading_screen.dart';
 import '../../features/auth/presentation/screens/social_login_screen.dart';
@@ -88,7 +89,11 @@ class AppRoutes {
 
   static List<GetPage> get pages => [
     ...AgoraCalling.routes(),
-    GetPage(name: splash, page: () => const SplashScreen()),
+    GetPage(
+      name: splash,
+      page: () => const SplashScreen(),
+      binding: SplashBinding(),
+    ),
     GetPage(
       name: onboarding,
       page: () => const OnboardingScreen(),
