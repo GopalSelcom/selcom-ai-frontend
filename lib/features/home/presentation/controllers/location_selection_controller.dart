@@ -215,6 +215,8 @@ class LocationSelectionController extends GetxController {
     }
 
     if (isVehicleSelectionEditMode.value) {
+      // Edit mode: validate estimate before popping back to vehicle selection
+      // (no navigation — estimate travels in the pop result as initialFareEstimate).
       EstimateValidationOutcome? validationFailure;
       Map<String, dynamic>? payload;
       homeController.isProceedingToBooking.value = true;

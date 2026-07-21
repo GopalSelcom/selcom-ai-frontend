@@ -1058,14 +1058,34 @@ class FindingDriverController extends GetxController {
     unawaited(_searchAgain());
   }
 
-  /// After search timeout, Home may still cache the cancelled ride — refresh before rebooking.
+  /// After search timeout: refresh active rides, re-estimate, then replace
+  /// finding-driver with vehicle selection (same pre-nav gate as home).
   Future<void> _searchAgain() async {
     if (Get.isRegistered<HomeController>()) {
       await Get.find<HomeController>().refreshActiveRide(force: true);
     }
-    await Get.offNamed(
-      AppRoutes.booking,
-      arguments: {
+
+    if (!Get.isRegistered<HomeController>()) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.unableToInitiateBookingRightNow.tr,
+      );
+      return;
+    }
+
+    final homeController = Get.find<HomeController>();
+    await homeController.navigateToBookingAfterEstimate(
+      pickupAddress: pickupAddress,
+      pickupLat: pickupLatLng.latitude,
+      pickupLng: pickupLatLng.longitude,
+      destination: LocationEntity(
+        lat: destinationLatLng.latitude,
+        lng: destinationLatLng.longitude,
+        address: destinationAddress,
+      ),
+      stops: destinations.length > 1
+          ? destinations.sublist(0, destinations.length - 1)
+          : const [],
+      bookingArguments: {
         'pickup': pickupAddress,
         'pickupLat': pickupLatLng.latitude,
         'pickupLng': pickupLatLng.longitude,
@@ -1075,6 +1095,7 @@ class FindingDriverController extends GetxController {
         'destinations': destinations.toList(),
         'forceRefreshActiveRides': true,
       },
+      replaceRoute: true,
     );
   }
 }

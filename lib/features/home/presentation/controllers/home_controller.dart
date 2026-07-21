@@ -1179,6 +1179,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return value;
   }
 
+  /// Pre-navigation fare estimate gate.
+  ///
+  /// Called before opening vehicle selection. On API failure or empty
+  /// [FareEstimateModel.estimates], navigation must not proceed — the caller
+  /// shows an error dialog and keeps the user on the current screen.
   Future<EstimateValidationOutcome> _validateEstimateBeforeBookingNavigation({
     required String pickupAddress,
     required double pickupLat,
@@ -1209,7 +1214,14 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           message: parsed.message,
           errorCode: parsed.errorCode,
         );
-      }, (model) => EstimateValidationOutcome.success(estimate: model));
+      }, (model) {
+        if (model.estimates.isEmpty) {
+          return EstimateValidationOutcome.failure(
+            message: AppStrings.unableToEstimateFareForThisRoute.tr,
+          );
+        }
+        return EstimateValidationOutcome.success(estimate: model);
+      });
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       rethrow;
@@ -1268,7 +1280,54 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  /// Fare estimate gate for location flows (including vehicle-selection edit).
+  /// Single entry point for opening vehicle selection after a fare estimate.
+  ///
+  /// Flow: estimate API → on success attach [initialFareEstimate] to route args
+  /// → navigate. On failure, show dialog and return `false` (no navigation).
+  ///
+  /// Use [replaceRoute] when replacing the current screen (e.g. search again).
+  Future<bool> navigateToBookingAfterEstimate({
+    required String pickupAddress,
+    required double pickupLat,
+    required double pickupLng,
+    required LocationEntity destination,
+    List<LocationEntity> stops = const [],
+    required Map<String, dynamic> bookingArguments,
+    bool showHomeFareEstimateLoader = false,
+    bool replaceRoute = false,
+  }) async {
+    final validation = await _validateEstimateBeforeBookingNavigation(
+      pickupAddress: pickupAddress,
+      pickupLat: pickupLat,
+      pickupLng: pickupLng,
+      destination: destination,
+      stops: stops,
+      showHomeFareEstimateLoader: showHomeFareEstimateLoader,
+    );
+
+    if (!validation.canProceed) {
+      await presentEstimateValidationError(validation);
+      return false;
+    }
+
+    final args = Map<String, dynamic>.from(bookingArguments);
+    if (validation.estimate != null) {
+      args['initialFareEstimate'] = validation.estimate;
+      args['initialFareEstimateAt'] = validation.estimatedAt;
+    }
+
+    if (replaceRoute) {
+      await Get.offNamed(AppRoutes.booking, arguments: args);
+    } else {
+      Get.toNamed(AppRoutes.booking, arguments: args);
+    }
+    return true;
+  }
+
+  /// Same gate as [navigateToBookingAfterEstimate] but without navigation.
+  ///
+  /// Used when location selection runs in vehicle-selection edit mode: validate
+  /// here, return estimate in the pop result, then vehicle selection reuses it.
   Future<EstimateValidationOutcome> validateEstimateForRoute({
     required String pickupAddress,
     required double pickupLat,
@@ -1385,25 +1444,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final validation = await _validateEstimateBeforeBookingNavigation(
+    await navigateToBookingAfterEstimate(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destination: LocationEntity(lat: dLat, lng: dLng, address: destAddr),
-      showHomeFareEstimateLoader: true,
-    );
-    if (!validation.canProceed) {
-      await _showEstimateValidationErrorAfterLoaderDismiss(
-        message: validation.errorMessage!,
-        errorCode: validation.errorCode,
-      );
-      return;
-    }
-
-    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
-    Get.toNamed(
-      AppRoutes.booking,
-      arguments: {
+      bookingArguments: {
         'pickup': pickupAddr,
         'pickupLat': pickupLL.latitude,
         'pickupLng': pickupLL.longitude,
@@ -1412,11 +1458,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
-        if (validation.estimate != null) ...{
-          'initialFareEstimate': validation.estimate,
-          'initialFareEstimateAt': validation.estimatedAt,
-        },
       },
+      showHomeFareEstimateLoader: true,
     );
   }
 
@@ -1469,25 +1512,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final validation = await _validateEstimateBeforeBookingNavigation(
+    await navigateToBookingAfterEstimate(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
       destination: LocationEntity(lat: dLat, lng: dLng, address: destAddr),
-      showHomeFareEstimateLoader: true,
-    );
-    if (!validation.canProceed) {
-      await _showEstimateValidationErrorAfterLoaderDismiss(
-        message: validation.errorMessage!,
-        errorCode: validation.errorCode,
-      );
-      return;
-    }
-
-    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
-    Get.toNamed(
-      AppRoutes.booking,
-      arguments: {
+      bookingArguments: {
         'pickup': pickupAddr,
         'pickupLat': pickupLL.latitude,
         'pickupLng': pickupLL.longitude,
@@ -1496,11 +1526,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         'destinationLng': dLng,
         if (place.id != null && place.id!.isNotEmpty)
           'destinationPlaceId': place.id,
-        if (validation.estimate != null) ...{
-          'initialFareEstimate': validation.estimate,
-          'initialFareEstimateAt': validation.estimatedAt,
-        },
       },
+      showHomeFareEstimateLoader: true,
     );
   }
 
@@ -1577,7 +1604,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     final pickupAddr = activePickupAddress;
     final pickupLL = activePickupLatLng;
-    final validation = await _validateEstimateBeforeBookingNavigation(
+    await navigateToBookingAfterEstimate(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
       pickupLng: pickupLL.longitude,
@@ -1586,31 +1613,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         lng: loc.lng,
         address: destAddr,
       ),
-      showHomeFareEstimateLoader: showHomeFareEstimateLoader,
-    );
-    if (!validation.canProceed) {
-      await _showEstimateValidationErrorAfterLoaderDismiss(
-        message: validation.errorMessage!,
-        errorCode: validation.errorCode,
-      );
-      return;
-    }
-
-    // GetX lifecycle managed via AppRoutes and VehicleSelectionBinding.
-    Get.toNamed(
-      AppRoutes.booking,
-      arguments: {
+      bookingArguments: {
         'pickup': pickupAddr,
         'pickupLat': pickupLL.latitude,
         'pickupLng': pickupLL.longitude,
         'destination': destAddr,
         'destinationLat': loc.lat,
         'destinationLng': loc.lng,
-        if (validation.estimate != null) ...{
-          'initialFareEstimate': validation.estimate,
-          'initialFareEstimateAt': validation.estimatedAt,
-        },
       },
+      showHomeFareEstimateLoader: showHomeFareEstimateLoader,
     );
   }
 
@@ -1859,6 +1870,11 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     Get.back();
   }
 
+  /// Location selection → vehicle selection.
+  ///
+  /// Phase 1 (loader): resolve pickup/destination coordinates only.
+  /// Phase 2: [navigateToBookingAfterEstimate] — estimate API, then navigate
+  /// with `Get.toNamed` so location selection stays on the stack.
   Future<void> proceedToBookingFromLocationSelection({
     required String pickup,
     required List<String> destinations,
@@ -1894,7 +1910,6 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     isProceedingToBooking.value = true;
 
     Map<String, dynamic>? bookingArguments;
-    EstimateValidationOutcome? estimateValidationFailure;
     try {
       bookingArguments = await Loader.run(() async {
         double? pLat = routePickupLat;
@@ -1947,22 +1962,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           return null;
         }
 
-        final validation = await _validateEstimateBeforeBookingNavigation(
-          pickupAddress: pickup,
-          pickupLat: pLat,
-          pickupLng: pLng,
-          destination: resolvedDestinations.last,
-          stops: resolvedDestinations.length > 1
-              ? resolvedDestinations.sublist(0, resolvedDestinations.length - 1)
-              : const [],
-        );
-        if (!validation.canProceed) {
-          estimateValidationFailure = validation;
-          return null;
-        }
-
         AppLogger.d(
-          '[LocationSelection] Navigate booking args => '
+          '[LocationSelection] Resolved booking args => '
           'pickup=($pLat,$pLng), destinationsCount=${resolvedDestinations.length}, '
           'preferredVehicleTypeId=${preferredVehicleTypeId ?? ''}',
           tag: 'HomeController',
@@ -1978,28 +1979,28 @@ class HomeController extends GetxController with WidgetsBindingObserver {
             'preferredVehicleTypeId': preferredVehicleTypeId,
           if (preferredVehicleName != null && preferredVehicleName.isNotEmpty)
             'preferredVehicleName': preferredVehicleName,
-          if (validation.estimate != null) ...{
-            'initialFareEstimate': validation.estimate,
-            'initialFareEstimateAt': validation.estimatedAt,
-          },
         };
       });
     } finally {
       isProceedingToBooking.value = false;
     }
 
-    if (estimateValidationFailure != null) {
-      await _showEstimateValidationErrorAfterLoaderDismiss(
-        message: estimateValidationFailure!.errorMessage!,
-        errorCode: estimateValidationFailure!.errorCode,
-      );
-      return;
-    }
-
     if (bookingArguments == null) return;
 
-    // Navigate only after the loader overlay is dismissed (root navigator).
-    Get.offNamed(AppRoutes.booking, arguments: bookingArguments);
+    // Estimate gate runs outside Loader.run so geocoding and fare API are separate.
+    final destinationEntities =
+        bookingArguments['destinations'] as List<LocationEntity>;
+    await navigateToBookingAfterEstimate(
+      pickupAddress: pickup,
+      pickupLat: (bookingArguments['pickupLat'] as num).toDouble(),
+      pickupLng: (bookingArguments['pickupLng'] as num).toDouble(),
+      destination: destinationEntities.last,
+      stops: destinationEntities.length > 1
+          ? destinationEntities.sublist(0, destinationEntities.length - 1)
+          : const [],
+      bookingArguments: bookingArguments,
+      showHomeFareEstimateLoader: true,
+    );
   }
 
   /// Chip subtitle; Home falls back to current map address when saved line is empty.
@@ -2530,6 +2531,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 }
 
 class EstimateValidationOutcome {
+  /// Result of the pre-navigation estimate gate ([_validateEstimateBeforeBookingNavigation]).
   const EstimateValidationOutcome._({
     required this.canProceed,
     this.errorMessage,

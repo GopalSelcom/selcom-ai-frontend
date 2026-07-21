@@ -10,7 +10,6 @@ import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rider_response.dart';
-import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/ride_model.dart';
@@ -232,10 +231,13 @@ class VehicleSelectionController extends GetxController {
         .toLowerCase();
     _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
 
+    // Passed from [HomeController.navigateToBookingAfterEstimate]; consumed once
+    // on first [_loadEstimates] to avoid a duplicate estimate call.
     final initialEstimate = args['initialFareEstimate'];
     if (initialEstimate is FareEstimateModel) {
       _initialFareEstimate = initialEstimate;
-      _initialFareEstimateAt = args['initialFareEstimateAt'] as DateTime?;
+      _initialFareEstimateAt =
+          args['initialFareEstimateAt'] as DateTime? ?? DateTime.now();
     }
 
     isRouteReady.value = false;
@@ -261,6 +263,12 @@ class VehicleSelectionController extends GetxController {
       ? destinations.sublist(0, destinations.length - 1)
       : const [];
 
+  /// Loads vehicle types and fare rows for the current route.
+  ///
+  /// - Initial load (`silent: false`): applies pre-navigation estimate only;
+  ///   does not call the estimate API (gate already ran before navigation).
+  /// - Silent refresh (`silent: true`): promo / vehicle change — calls API and
+  ///   keeps existing rows if the call fails.
   Future<void> _loadEstimates({
     bool silent = false,
     bool preserveRoute = false,
@@ -273,7 +281,6 @@ class VehicleSelectionController extends GetxController {
       routePoints.clear();
       nearbyDrivers.clear();
     }
-    final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await homeRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
@@ -282,25 +289,20 @@ class VehicleSelectionController extends GetxController {
       ..clear()
       ..addAll(vehicleTypes);
 
-    final initialEstimate = _takeFreshInitialEstimate();
-    if (initialEstimate != null) {
-      AppLogger.d(
-        '[VehicleSelection] Reusing pre-navigation fare estimate '
-        '(skipping duplicate estimate call).',
-        tag: 'VehicleSelection',
-      );
-      _applyEstimateModel(initialEstimate, vehicleTypes);
+    if (silent) {
+      await _refreshEstimatesSilently(vehicleTypes);
     } else {
-      final result = await homeRepository.estimateFare(req);
-      result.fold((f) {
-        AppLogger.w(
-          '[VehicleSelection] Fare estimate error: $f',
+      final initialEstimate = _takeFreshInitialEstimate();
+      if (initialEstimate == null) {
+        AppLogger.e(
+          'VehicleSelection opened without a fresh pre-navigation estimate.',
           tag: 'VehicleSelection',
         );
-        estimates.assignAll(_dummyEstimates(vehicleTypes));
-        isRouteReady.value = false;
-      }, (model) => _applyEstimateModel(model, vehicleTypes));
+      } else {
+        _applyEstimateModel(initialEstimate, vehicleTypes);
+      }
     }
+
     isLoadingEstimates.value = false;
     _applyPreferredVehicleSelection();
 
@@ -310,6 +312,23 @@ class VehicleSelectionController extends GetxController {
 
     _requestNearbyDriversForCurrentSelection();
     _scheduleFitBoundsMicrotask();
+  }
+
+  /// Promo re-estimate only — keeps existing rows when the call fails.
+  Future<void> _refreshEstimatesSilently(
+    List<VehicleTypeModel> vehicleTypes,
+  ) async {
+    final result = await homeRepository.estimateFare(_fareEstimateRequest());
+    result.fold(
+      (failure) => AppLogger.w(
+        '[VehicleSelection] Silent fare refresh failed: $failure',
+        tag: 'VehicleSelection',
+      ),
+      (model) {
+        if (model.estimates.isEmpty) return;
+        _applyEstimateModel(model, vehicleTypes);
+      },
+    );
   }
 
   /// Returns the pre-navigation estimate exactly once, and only when it is
@@ -327,6 +346,10 @@ class VehicleSelectionController extends GetxController {
     return estimate;
   }
 
+  /// Applies API estimate to UI state (vehicle rows + route polyline).
+  ///
+  /// Empty [model.estimates] is ignored — initial load should never hit this
+  /// because navigation is gated upstream; silent refresh no-ops instead.
   void _applyEstimateModel(
     FareEstimateModel model,
     List<VehicleTypeModel> vehicleTypes,
@@ -339,7 +362,10 @@ class VehicleSelectionController extends GetxController {
       tag: 'VehicleSelection',
     );
     if (model.estimates.isEmpty) {
-      estimates.assignAll(_dummyEstimates(vehicleTypes));
+      AppLogger.w(
+        '[VehicleSelection] Received empty estimate list.',
+        tag: 'VehicleSelection',
+      );
       return;
     }
 
@@ -700,44 +726,6 @@ class VehicleSelectionController extends GetxController {
       });
       if (byName >= 0) selectedVehicleIndex.value = byName;
     }
-  }
-
-  /// Fallback rows when estimate API fails; uses real `VehicleTypeModel.id` from `getVehicleTypes()`.
-  List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
-    final sorted = (types.where((t) => t.isActive).toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
-    final list = sorted.isNotEmpty ? sorted : types;
-    if (list.isEmpty) {
-      return [
-        FareEstimateItem(
-          vehicleTypeId: '',
-          vehicleName: 'ride',
-          displayName: AppStrings.displayNameRide.tr,
-          fareEstimate: 500,
-          distanceKm: 4.2,
-          durationMinutes: 10,
-          maxPassengers: 4,
-          currency: CountryRegionDefaults.currencyCodeForIso2(
-            di.sl<AppRegionService>().selected.code,
-          ),
-        ),
-      ];
-    }
-    return list.map((vt) {
-      final fare = vt.baseFare > 0 ? vt.baseFare : 500;
-      return FareEstimateItem(
-        vehicleTypeId: vt.id,
-        vehicleName: vt.name,
-        displayName: vt.displayName.isNotEmpty ? vt.displayName : vt.name,
-        fareEstimate: fare,
-        distanceKm: 4.2,
-        durationMinutes: 10,
-        maxPassengers: vt.maxPassengers,
-        currency: CountryRegionDefaults.currencyCodeForIso2(
-          di.sl<AppRegionService>().selected.code,
-        ),
-      );
-    }).toList();
   }
 
   FareEstimateItem? get selectedEstimate {
@@ -1354,43 +1342,6 @@ class VehicleSelectionController extends GetxController {
     return result.fold((_) => false, (ok) => ok);
   }
 
-  Future<bool> _waitForPaymentBlockStatus({
-    Duration timeout = const Duration(seconds: 300),
-  }) async {
-    final completer = Completer<bool>();
-    late StreamSubscription<PaymentStatusUpdateResponse> sub;
-
-    sub = _socketService.paymentStatusStream.listen((event) {
-      final outcome = _paymentBlockOutcome(event);
-      if (outcome == null) return;
-      if (!completer.isCompleted) completer.complete(outcome);
-    });
-
-    try {
-      return await completer.future.timeout(timeout, onTimeout: () => false);
-    } finally {
-      await sub.cancel();
-    }
-  }
-
-  bool? _paymentBlockOutcome(PaymentStatusUpdateResponse event) {
-    final phase = (event.phase ?? '').toString().toLowerCase();
-    final status = (event.status ?? '').toString().toLowerCase();
-
-    // Accept both documented shapes:
-    // - { phase: "block", status: "confirmed|failed" }
-    // - { status: "completed|failed" } (without phase)
-    if (phase.isNotEmpty && phase != 'block') return null;
-
-    if (status == 'confirmed') {
-      return true;
-    }
-    if (status == 'failed') {
-      return false;
-    }
-    return null;
-  }
-
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
@@ -1753,7 +1704,7 @@ class VehicleSelectionController extends GetxController {
         );
         appliedPromoCode.value = '';
         promoValidatedAt.value = null;
-        await _loadEstimates();
+        await _loadEstimates(silent: true, preserveRoute: true);
         return false;
       },
       (data) async {
@@ -1783,7 +1734,7 @@ class VehicleSelectionController extends GetxController {
     if (appliedPromoCode.value.trim().isEmpty) return;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
-    await _loadEstimates();
+    await _loadEstimates(silent: true, preserveRoute: true);
   }
 
   Future<void> openPromotions() async {
@@ -1928,7 +1879,8 @@ class VehicleSelectionController extends GetxController {
     final editedEstimate = edited['initialFareEstimate'];
     if (editedEstimate is FareEstimateModel) {
       _initialFareEstimate = editedEstimate;
-      _initialFareEstimateAt = edited['initialFareEstimateAt'] as DateTime?;
+      _initialFareEstimateAt =
+          edited['initialFareEstimateAt'] as DateTime? ?? DateTime.now();
     }
     // Refresh only the top route header (GetBuilder id: route_header).
     update(['route_header']);
