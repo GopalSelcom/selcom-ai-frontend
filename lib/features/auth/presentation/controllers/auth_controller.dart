@@ -57,6 +57,7 @@ class AuthController extends GetxController {
   final AppRegionService appRegionService;
 
   final mobileNumber = ''.obs;
+
   /// Name typed on the phone screen when [needsName] is true.
   final userName = ''.obs;
   final countryCode = '+255'.obs;
@@ -67,6 +68,7 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final errorMessage = ''.obs;
   final isPhoneAttachFlow = false.obs;
+
   /// Set from firebase_login `needs_name`, or inferred on resume when stored
   /// user has no name (e.g. Apple private relay / Google without display name).
   final needsName = false.obs;
@@ -153,7 +155,8 @@ class AuthController extends GetxController {
   }
 
   static const int _nameMinLength = 1;
-  static const int _nameMaxLength = 120; // Matches POST /go/auth/set_name contract.
+  static const int _nameMaxLength =
+      120; // Matches POST /go/auth/set_name contract.
 
   bool get _isUserNameValid {
     final value = userName.value.trim();
@@ -197,8 +200,7 @@ class AuthController extends GetxController {
             return false;
           }
 
-          final savedName =
-              response?.user?.name?.trim().isNotEmpty == true
+          final savedName = response?.user?.name?.trim().isNotEmpty == true
               ? response!.user!.name!.trim()
               : trimmedName;
           await _mergeNameIntoStoredUser(savedName);
@@ -380,18 +382,15 @@ class AuthController extends GetxController {
 
     await Loader.withFlag(isLoading, () async {
       final signInResult = await signInWithGoogleUseCase(NoParams());
-      await signInResult.fold(
-        (failure) async {
-          if (failure is AppleSignInFailure && failure.isCancelled) {
-            errorMessage.value = AppStrings.googleSignInCancelled.tr;
-            return;
-          }
-          errorMessage.value = failure.message.isNotEmpty
-              ? failure.message
-              : AppStrings.googleSignInFailed.tr;
-        },
-        (user) => _completeSocialSignIn(user),
-      );
+      await signInResult.fold((failure) async {
+        if (failure is AppleSignInFailure && failure.isCancelled) {
+          errorMessage.value = AppStrings.googleSignInCancelled.tr;
+          return;
+        }
+        errorMessage.value = failure.message.isNotEmpty
+            ? failure.message
+            : AppStrings.googleSignInFailed.tr;
+      }, (user) => _completeSocialSignIn(user));
     });
   }
 
@@ -403,58 +402,55 @@ class AuthController extends GetxController {
       appleSignInDebugLog('controller_sign_in_started');
       final result = await signInWithAppleUseCase(NoParams());
 
-      await result.fold(
-        (failure) async {
-          if (failure is AppleSignInFailure && failure.isCancelled) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {'reason': 'cancelled'},
-            );
-            errorMessage.value = AppStrings.appleSignInCancelled.tr;
-            return;
-          }
-          if (failure is AccountLinkingFailure) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {'reason': 'account_linking'},
-            );
-            errorMessage.value = AppStrings.appleSignInAccountExists.tr;
-            return;
-          }
-          if (failure is NetworkFailure) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {'reason': 'network'},
-            );
-            errorMessage.value = failure.message;
-            return;
-          }
-          if (failure is FirebaseAuthFailure) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {
-                'reason': 'firebase_auth_failure',
-                'firebaseCode': failure.code ?? 'unknown',
-              },
-            );
-          } else if (failure is AppleSignInFailure) {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {'reason': 'apple_sign_in_failure'},
-            );
-          } else {
-            appleSignInDebugLog(
-              'controller_failed',
-              metadata: {
-                'reason': 'other_failure',
-                'failureType': failure.runtimeType.toString(),
-              },
-            );
-          }
-          errorMessage.value = AppStrings.appleSignInFailed.tr;
-        },
-        (user) => _completeSocialSignIn(user),
-      );
+      await result.fold((failure) async {
+        if (failure is AppleSignInFailure && failure.isCancelled) {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {'reason': 'cancelled'},
+          );
+          errorMessage.value = AppStrings.appleSignInCancelled.tr;
+          return;
+        }
+        if (failure is AccountLinkingFailure) {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {'reason': 'account_linking'},
+          );
+          errorMessage.value = AppStrings.appleSignInAccountExists.tr;
+          return;
+        }
+        if (failure is NetworkFailure) {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {'reason': 'network'},
+          );
+          errorMessage.value = failure.message;
+          return;
+        }
+        if (failure is FirebaseAuthFailure) {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {
+              'reason': 'firebase_auth_failure',
+              'firebaseCode': failure.code ?? 'unknown',
+            },
+          );
+        } else if (failure is AppleSignInFailure) {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {'reason': 'apple_sign_in_failure'},
+          );
+        } else {
+          appleSignInDebugLog(
+            'controller_failed',
+            metadata: {
+              'reason': 'other_failure',
+              'failureType': failure.runtimeType.toString(),
+            },
+          );
+        }
+        errorMessage.value = AppStrings.appleSignInFailed.tr;
+      }, (user) => _completeSocialSignIn(user));
     });
   }
 
@@ -487,9 +483,10 @@ class AuthController extends GetxController {
       },
       (response) async {
         appleSignInDebugLog('controller_exchange_firebase_session_succeeded');
-        if (response?.isSuccess != true || response?.data == null) {
+        if (response?.statusCode != 200 || response?.data == null) {
           errorMessage.value =
-              response?.message ?? AppStrings.somethingWentWrongPleaseTryAgain.tr;
+              response?.message ??
+              AppStrings.somethingWentWrongPleaseTryAgain.tr;
           return;
         }
 
@@ -516,17 +513,26 @@ class AuthController extends GetxController {
     if (loginData.accessToken != null) {
       await StorageService().writeAccessToken(loginData.accessToken!);
     }
-    if (loginData.refreshToken != null) {
+    if (loginData.newRefreshToken != null) {
       await StorageService().write(
         StorageKeys.refreshToken,
-        loginData.refreshToken!,
+        loginData.newRefreshToken!,
       );
     }
 
     return _finalizeAuthSession(
-      user: user,
-      signUpName: loginData.signUpName,
-      signUpEmail: loginData.signUpEmail,
+      user: UserModel(
+        id: user.id ?? "",
+        name: user.name,
+        firebaseUid: user.firebaseUid,
+        emailId: user.emailId,
+        isVerify: user.isVerify,
+        mobileNumber: user.mobileNumber,
+        image: user.image,
+        countryCode: user.countryCode,
+      ),
+      signUpName: loginData.name ?? "",
+      signUpEmail: loginData.email ?? "",
       needsPhone: loginData.needsPhone == true,
       needsName: loginData.needsName == true,
     );
@@ -569,10 +575,7 @@ class AuthController extends GetxController {
     required bool needsPhone,
     required bool needsName,
   }) async {
-    await StorageService().write(
-      StorageKeys.user,
-      jsonEncode(user.toJson()),
-    );
+    await StorageService().write(StorageKeys.user, jsonEncode(user.toJson()));
 
     pendingSignUpName.value = signUpName;
     pendingSignUpEmail.value = signUpEmail;
@@ -601,26 +604,23 @@ class AuthController extends GetxController {
     await Loader.withFlag(isLoading, () async {
       final result = await signInWithFacebookUseCase(NoParams());
 
-      await result.fold(
-        (failure) async {
-          if (failure is FacebookSignInFailure && failure.isCancelled) {
-            errorMessage.value = AppStrings.facebookSignInCancelled.tr;
-            return;
-          }
-          if (failure is AccountLinkingFailure) {
-            errorMessage.value = AppStrings.appleSignInAccountExists.tr;
-            return;
-          }
-          if (failure is NetworkFailure) {
-            errorMessage.value = failure.message;
-            return;
-          }
-          errorMessage.value = failure.message.isNotEmpty
-              ? failure.message
-              : AppStrings.facebookSignInFailed.tr;
-        },
-        (user) => _completeSocialSignIn(user),
-      );
+      await result.fold((failure) async {
+        if (failure is FacebookSignInFailure && failure.isCancelled) {
+          errorMessage.value = AppStrings.facebookSignInCancelled.tr;
+          return;
+        }
+        if (failure is AccountLinkingFailure) {
+          errorMessage.value = AppStrings.appleSignInAccountExists.tr;
+          return;
+        }
+        if (failure is NetworkFailure) {
+          errorMessage.value = failure.message;
+          return;
+        }
+        errorMessage.value = failure.message.isNotEmpty
+            ? failure.message
+            : AppStrings.facebookSignInFailed.tr;
+      }, (user) => _completeSocialSignIn(user));
     });
   }
 }
