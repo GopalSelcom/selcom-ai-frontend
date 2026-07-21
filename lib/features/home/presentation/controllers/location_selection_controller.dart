@@ -393,6 +393,7 @@ class LocationSelectionController extends GetxController {
     String initialPickup = homeController.currentMapAddress.value;
     String initialDestination = '';
     var initialActiveSegment = 1;
+    var hasExplicitActiveSegment = false;
     var clearPickupOnOpen = false;
     var clearDestinationOnOpen = false;
     final initialExtraStops = <String>[];
@@ -457,6 +458,7 @@ class LocationSelectionController extends GetxController {
       final active = (m['activeSegmentIndex'] as num?)?.toInt();
       if (active != null && active >= 0) {
         initialActiveSegment = active;
+        hasExplicitActiveSegment = true;
       }
       clearPickupOnOpen = (m['clearPickupOnOpen'] as bool?) ?? false;
       clearDestinationOnOpen = (m['clearDestinationOnOpen'] as bool?) ?? false;
@@ -481,6 +483,9 @@ class LocationSelectionController extends GetxController {
 
     if (homeController.isNonSelectableMapAddress(initialPickup)) {
       initialPickup = '';
+    }
+    if (!hasExplicitActiveSegment) {
+      initialActiveSegment = initialPickup.trim().isEmpty ? 0 : 1;
     }
 
     pickupController = TextEditingController(text: initialPickup);
