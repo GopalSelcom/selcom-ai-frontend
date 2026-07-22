@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
-import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';

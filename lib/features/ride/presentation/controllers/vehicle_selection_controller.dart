@@ -1115,7 +1115,7 @@ class VehicleSelectionController extends GetxController {
                   );
                 },
                 (data) async {
-                  final ride = data.data?.ride;
+                  final ride = data.ride;
                   final rideId = ride?.id;
                   if (rideId == null || rideId.isEmpty || ride == null) {
                     AppDialogs.showErrorDialog(
