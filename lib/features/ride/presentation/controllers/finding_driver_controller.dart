@@ -136,6 +136,7 @@ class FindingDriverController extends GetxController {
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
+  StreamSubscription<bool>? _nearbyDriversConnectionSub;
 
   bool _didNavigateToAccepted = false;
 
@@ -504,6 +505,7 @@ class FindingDriverController extends GetxController {
     _fareSettledSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
+    _nearbyDriversConnectionSub?.cancel();
     if (!_didNavigateToAccepted && rideId.isNotEmpty) {
       _socketService.leaveRideRoom(rideId: rideId);
     }
@@ -701,8 +703,10 @@ class FindingDriverController extends GetxController {
     _rideStatusSub?.cancel();
     _driverLocSub?.cancel();
     _trackingSub?.cancel();
+    _fareSettledSub?.cancel();
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
+    _nearbyDriversConnectionSub?.cancel();
     final statusPayload = latestRideStatusPayload.value;
     final driverLocPayload = latestDriverLocationPayload.value;
     final trackingPayload = latestTrackingPayload.value;
@@ -798,6 +802,7 @@ class FindingDriverController extends GetxController {
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
     _nearbyDriversErrorSub?.cancel();
+    _nearbyDriversConnectionSub?.cancel();
 
     _nearbyDriversSub = _socketService.nearbyDriversStream.listen((drivers) {
       if (drivers.isEmpty) {
@@ -824,7 +829,7 @@ class FindingDriverController extends GetxController {
       isLoadingNearbyDrivers.value = false;
     });
 
-    _socketService.connectionStream.listen((ok) {
+    _nearbyDriversConnectionSub = _socketService.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
       if (ok) {
         _requestNearbyDrivers();
