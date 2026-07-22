@@ -1,15 +1,15 @@
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
+import '../../../../core/data/models/responses/rides/review_tags_response.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../models/ride_rating_ride_model.dart';
-import '../models/ride_rating_tag_model.dart';
 
 abstract class RideRatingRemoteDataSource {
   Future<RideRatingRideModel?> getLastCompletedRide();
 
-  Future<List<RideRatingTagModel>> getReviewTags({required int rating});
+  Future<ReviewTagsResponse> getReviewTags({required int rating});
 
   Future<bool> submitRideRating(SubmitRideRatingRequest request);
 
@@ -52,7 +52,7 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   }
 
   @override
-  Future<List<RideRatingTagModel>> getReviewTags({required int rating}) async {
+  Future<ReviewTagsResponse> getReviewTags({required int rating}) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.reviewTags,
@@ -62,28 +62,16 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       ),
     );
 
-    if (response.statusCode == 200) {
-      final data = response.data;
-      final payload = data is Map<String, dynamic>
-          ? (data['data'] as Map<String, dynamic>?)
-          : null;
-      final tags = payload?['tags'];
-      if (tags is List) {
-        final parsed = tags
-            .whereType<Map>()
-            .map(
-              (item) =>
-                  RideRatingTagModel.fromJson(item.cast<String, dynamic>()),
-            )
-            .toList();
-        parsed.sort((a, b) => a.order.compareTo(b.order));
-        return parsed;
-      }
-      return const <RideRatingTagModel>[];
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      return ReviewTagsResponse.fromJson(body);
+    }
+    if (body is Map) {
+      return ReviewTagsResponse.fromJson(Map<String, dynamic>.from(body));
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return const <RideRatingTagModel>[];
+      return ReviewTagsResponse(statusCode: response.statusCode);
     }
 
     throw Exception(

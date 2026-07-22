@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
+import '../../../../core/data/models/responses/rides/review_tags_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
-import '../../domain/entities/ride_rating_tag_entity.dart';
 import '../../domain/repositories/ride_rating_repository.dart';
 import '../datasources/ride_rating_remote_data_source.dart';
 
@@ -25,12 +25,12 @@ class RideRatingRepositoryImpl implements RideRatingRepository {
   }
 
   @override
-  Future<Either<Failure, List<RideRatingTagEntity>>> getReviewTags({
+  Future<Either<Failure, List<ReviewTagModel>>> getReviewTags({
     required int rating,
   }) async {
     try {
-      final tags = await remoteDataSource.getReviewTags(rating: rating);
-      return Right(tags);
+      final response = await remoteDataSource.getReviewTags(rating: rating);
+      return Right(response.activeTags);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/data/models/responses/rides/review_tags_response.dart';
 import '../../../../core/errors/failures.dart';
-import '../entities/ride_rating_tag_entity.dart';
 import '../repositories/ride_rating_repository.dart';
 
 class GetReviewTagsUseCase {
@@ -9,7 +9,7 @@ class GetReviewTagsUseCase {
 
   GetReviewTagsUseCase(this.repository);
 
-  Future<Either<Failure, List<RideRatingTagEntity>>> call({
+  Future<Either<Failure, List<ReviewTagModel>>> call({
     required int rating,
   }) {
     return repository.getReviewTags(rating: rating);

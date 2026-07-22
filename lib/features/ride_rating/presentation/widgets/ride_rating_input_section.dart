@@ -80,9 +80,14 @@ class RideRatingInputSection extends StatelessWidget {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: controller.availableTags.map((tag) {
-                    final isSelected = controller.isTagSelected(tag.key);
+                    final key = (tag.key ?? '').trim();
+                    final label = (tag.label ?? '').trim();
+                    if (key.isEmpty || label.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    final isSelected = controller.isTagSelected(key);
                     return GestureDetector(
-                      onTap: () => controller.onTagToggled(tag.key),
+                      onTap: () => controller.onTagToggled(key),
                       child: Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 14.w,
@@ -100,7 +105,7 @@ class RideRatingInputSection extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          tag.label,
+                          label,
                           style: AppTextStyles.homeCaption.copyWith(
                             color: isSelected
                                 ? AppColors.primary

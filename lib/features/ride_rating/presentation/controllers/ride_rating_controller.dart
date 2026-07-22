@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
+import '../../../../core/data/models/responses/rides/review_tags_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
@@ -11,7 +12,6 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../domain/entities/ride_rating_ride_entity.dart';
-import '../../domain/entities/ride_rating_tag_entity.dart';
 import '../../domain/usecases/get_last_completed_ride_usecase.dart';
 import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/skip_ride_rating_usecase.dart';
@@ -35,7 +35,7 @@ class RideRatingController extends GetxController {
 
   final Rxn<RideRatingRideEntity> pendingReviewRide =
       Rxn<RideRatingRideEntity>();
-  final availableTags = <RideRatingTagEntity>[].obs;
+  final availableTags = <ReviewTagModel>[].obs;
   final selectedTags = <String>[].obs;
   final selectedRating = 0.obs;
   final isSubmitting = false.obs;
