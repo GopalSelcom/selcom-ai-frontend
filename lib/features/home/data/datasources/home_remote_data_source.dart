@@ -162,9 +162,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           };
           model = FareEstimateResponseModel(
             statusCode: parsedStatus ?? httpStatus ?? 400,
-            message: map['message']?.toString(),
-            errorCode: code,
-            data: null,
+            message: map['message'].toString(),
           );
         } else {
           rethrow;

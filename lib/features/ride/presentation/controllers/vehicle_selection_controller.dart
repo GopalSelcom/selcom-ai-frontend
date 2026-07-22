@@ -40,7 +40,6 @@ import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../../home/data/models/home_models.dart';
 import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
@@ -108,7 +107,7 @@ class VehicleSelectionController extends GetxController {
 
   /// Estimate already fetched by the pre-navigation validation call; consumed
   /// once (if fresh) to avoid estimating the same route twice.
-  FareEstimateModel? _initialFareEstimate;
+  FareEstimateResponseModel? _initialFareEstimate;
   DateTime? _initialFareEstimateAt;
   static const _initialFareEstimateMaxAge = Duration(seconds: 30);
   final _vehicleTypes = <VehicleTypeModel>[];
@@ -233,7 +232,7 @@ class VehicleSelectionController extends GetxController {
     _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
 
     final initialEstimate = args['initialFareEstimate'];
-    if (initialEstimate is FareEstimateModel) {
+    if (initialEstimate is FareEstimateResponseModel) {
       _initialFareEstimate = initialEstimate;
       _initialFareEstimateAt = args['initialFareEstimateAt'] as DateTime?;
     }
@@ -314,7 +313,7 @@ class VehicleSelectionController extends GetxController {
 
   /// Returns the pre-navigation estimate exactly once, and only when it is
   /// still fresh and no promo code is applied (a promo changes the request).
-  FareEstimateModel? _takeFreshInitialEstimate() {
+  FareEstimateResponseModel? _takeFreshInitialEstimate() {
     final estimate = _initialFareEstimate;
     final estimatedAt = _initialFareEstimateAt;
     _initialFareEstimate = null;
@@ -328,7 +327,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _applyEstimateModel(
-    FareEstimateModel model,
+    FareEstimateResponseModel model,
     List<VehicleTypeModel> vehicleTypes,
   ) {
     AppLogger.d(
@@ -1926,7 +1925,7 @@ class VehicleSelectionController extends GetxController {
 
     // Reuse the estimate fetched by the edit-flow validation (if provided).
     final editedEstimate = edited['initialFareEstimate'];
-    if (editedEstimate is FareEstimateModel) {
+    if (editedEstimate is FareEstimateResponseModel) {
       _initialFareEstimate = editedEstimate;
       _initialFareEstimateAt = edited['initialFareEstimateAt'] as DateTime?;
     }

@@ -1,252 +1,192 @@
-/// Envelope for `POST go/rides/estimate`.
+import 'dart:convert';
+
+import '../../location_model.dart';
+
 class FareEstimateResponseModel {
   final int? statusCode;
   final String? message;
   final String? errorCode;
   final FareEstimateData? data;
 
-  FareEstimateResponseModel({
+  const FareEstimateResponseModel({
     this.statusCode,
     this.message,
     this.errorCode,
     this.data,
   });
 
-  factory FareEstimateResponseModel.fromJson(Map<String, dynamic> json) {
-    final scRaw = json['status_code'];
-    final int? statusCode = switch (scRaw) {
-      null => null,
-      final int i => i,
-      final num n => n.toInt(),
-      final String s => int.tryParse(s.trim()),
-      _ => int.tryParse(scRaw.toString()),
-    };
+  factory FareEstimateResponseModel.fromRawJson(String str) =>
+      FareEstimateResponseModel.fromJson(json.decode(str));
 
-    FareEstimateData? data;
-    final dataRaw = json['data'];
-    if (dataRaw != null && dataRaw is Map) {
-      try {
-        data = FareEstimateData.fromJson(
-          dataRaw is Map<String, dynamic>
-              ? dataRaw
-              : Map<String, dynamic>.from(dataRaw),
-        );
-      } catch (_) {
-        data = null;
-      }
-    }
+  String toRawJson() => json.encode(toJson());
 
-    return FareEstimateResponseModel(
-      statusCode: statusCode,
-      message: json['message']?.toString(),
-      errorCode: json['error_code']?.toString(),
-      data: data,
-    );
-  }
+  factory FareEstimateResponseModel.fromJson(Map<String, dynamic> json) =>
+      FareEstimateResponseModel(
+        statusCode: json['status_code'],
+        message: json['message'],
+        errorCode: json['error_code'],
+        data: json['data'] == null
+            ? null
+            : FareEstimateData.fromJson(json['data']),
+      );
 
-  Map<String, dynamic> toJson() {
-    return {
-      'status_code': statusCode,
-      'message': message,
-      'error_code': errorCode,
-      'data': data?.toJson(),
-    };
-  }
+  bool get isSuccess => statusCode == 200 && data != null;
 
-  bool get isSuccess => statusCode == 200;
+  List<FareEstimateItem> get estimates => data?.estimates ?? const [];
+
+  RouteGeometry? get routeGeometry => data?.routeGeometry;
+
+  List<FareLeg>? get legs => data?.legs;
+
+  LocationModel get pickup => data?.pickup ?? LocationModel.fromJson({});
+
+  List<LocationModel> get stops => data?.stops ?? const [];
+
+  LocationModel get destination =>
+      data?.destination ?? LocationModel.fromJson({});
+
+  bool? get isMultiStop => data?.isMultiStop;
+
+  BookAnyEstimate? get bookAny => data?.bookAny;
+
+  Map<String, dynamic> toJson() => {
+    'status_code': statusCode,
+    'message': message,
+    'error_code': errorCode,
+    'data': data?.toJson(),
+  };
 }
 
 class FareEstimateData {
   final List<FareEstimateItem>? estimates;
   final RouteGeometry? routeGeometry;
   final List<FareLeg>? legs;
-  final FareEstimateLocation? pickup;
-  final List<FareEstimateLocation> stops;
-  final FareEstimateLocation? destination;
+  final LocationModel pickup;
+  final List<LocationModel> stops;
+  final LocationModel destination;
   final bool? isMultiStop;
   final BookAnyEstimate? bookAny;
 
-  FareEstimateData({
+  const FareEstimateData({
     this.estimates,
     this.routeGeometry,
     this.legs,
-    this.pickup,
-    this.stops = const [],
-    this.destination,
+    required this.pickup,
+    required this.stops,
+    required this.destination,
     this.isMultiStop,
     this.bookAny,
   });
 
-  factory FareEstimateData.fromJson(Map<String, dynamic> json) {
-    final rawStops = json['stops'];
-    return FareEstimateData(
-      estimates: json['estimates'] != null
-          ? (json['estimates'] as List)
-                .map(
-                  (e) => FareEstimateItem.fromJson(
-                    e is Map<String, dynamic>
-                        ? e
-                        : Map<String, dynamic>.from(e as Map),
-                  ),
-                )
-                .toList()
-          : null,
-      routeGeometry: json['route_geometry'] != null
-          ? RouteGeometry.fromJson(
-              json['route_geometry'] is Map<String, dynamic>
-                  ? json['route_geometry'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['route_geometry'] as Map),
-            )
-          : null,
-      legs: json['legs'] != null
-          ? (json['legs'] as List)
-                .map(
-                  (e) => FareLeg.fromJson(
-                    e is Map<String, dynamic>
-                        ? e
-                        : Map<String, dynamic>.from(e as Map),
-                  ),
-                )
-                .toList()
-          : null,
-      pickup: json['pickup'] != null
-          ? FareEstimateLocation.fromJson(
-              json['pickup'] is Map<String, dynamic>
-                  ? json['pickup'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['pickup'] as Map),
-            )
-          : null,
-      stops: rawStops is List
-          ? rawStops
-                .whereType<Map>()
-                .map(
-                  (e) => FareEstimateLocation.fromJson(
-                    Map<String, dynamic>.from(e),
-                  ),
-                )
-                .toList(growable: false)
-          : const [],
-      destination: json['destination'] != null
-          ? FareEstimateLocation.fromJson(
-              json['destination'] is Map<String, dynamic>
-                  ? json['destination'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['destination'] as Map),
-            )
-          : null,
-      isMultiStop: json['is_multi_stop'] as bool?,
-      bookAny: json['book_any'] != null
-          ? BookAnyEstimate.fromJson(
-              json['book_any'] is Map<String, dynamic>
-                  ? json['book_any'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['book_any'] as Map),
-            )
-          : null,
-    );
-  }
+  factory FareEstimateData.fromRawJson(String str) =>
+      FareEstimateData.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {
-      'estimates': estimates?.map((e) => e.toJson()).toList(),
-      'route_geometry': routeGeometry?.toJson(),
-      'legs': legs?.map((e) => e.toJson()).toList(),
-      'pickup': pickup?.toJson(),
-      'stops': stops.map((e) => e.toJson()).toList(),
-      'destination': destination?.toJson(),
-      'is_multi_stop': isMultiStop,
-      'book_any': bookAny?.toJson(),
-    };
-  }
-}
+  String toRawJson() => json.encode(toJson());
 
-/// `pickup` / `destination` / `stops[]` on `POST go/rides/estimate` `data`.
-class FareEstimateLocation {
-  final double? lat;
-  final double? lng;
-  final String? address;
-
-  const FareEstimateLocation({this.lat, this.lng, this.address});
-
-  factory FareEstimateLocation.fromJson(Map<String, dynamic> json) {
-    return FareEstimateLocation(
-      lat: (json['lat'] as num?)?.toDouble(),
-      lng: (json['lng'] as num?)?.toDouble(),
-      address: json['address']?.toString(),
-    );
-  }
+  factory FareEstimateData.fromJson(Map<String, dynamic> json) =>
+      FareEstimateData(
+        estimates: json['estimates'] == null
+            ? []
+            : List<FareEstimateItem>.from(
+                json['estimates'].map((x) => FareEstimateItem.fromJson(x)),
+              ),
+        routeGeometry: json['route_geometry'] == null
+            ? null
+            : RouteGeometry.fromJson(json['route_geometry']),
+        legs: json['legs'] == null
+            ? []
+            : List<FareLeg>.from(json['legs'].map((x) => FareLeg.fromJson(x))),
+        pickup: LocationModel.fromJson(json['pickup'] ?? {}),
+        stops: json['stops'] == null
+            ? []
+            : List<LocationModel>.from(
+                json['stops'].map((x) => LocationModel.fromJson(x)),
+              ),
+        destination: LocationModel.fromJson(json['destination'] ?? {}),
+        isMultiStop: json['is_multi_stop'],
+        bookAny: json['book_any'] == null
+            ? null
+            : BookAnyEstimate.fromJson(json['book_any']),
+      );
 
   Map<String, dynamic> toJson() => {
-    'lat': lat,
-    'lng': lng,
-    'address': address,
+    'estimates': estimates == null
+        ? []
+        : List<dynamic>.from(estimates!.map((x) => x.toJson())),
+    'route_geometry': routeGeometry?.toJson(),
+    'legs': legs == null
+        ? []
+        : List<dynamic>.from(legs!.map((x) => x.toJson())),
+    'pickup': pickup.toJson(),
+    'stops': List<dynamic>.from(stops.map((x) => x.toJson())),
+    'destination': destination.toJson(),
+    'is_multi_stop': isMultiStop,
+    'book_any': bookAny?.toJson(),
   };
 }
 
 class BookAnyEstimate {
   final bool eligible;
-  final int minFare;
-  final int maxFare;
-  final int blockAmount;
-  final List<String> vehicleTypeIds;
+  final FareRange? fareRange;
+  final int? blockAmount;
+  final List<String>? vehicleTypeIds;
   final String? currency;
 
-  BookAnyEstimate({
-    required this.eligible,
-    required this.minFare,
-    required this.maxFare,
-    required this.blockAmount,
-    this.vehicleTypeIds = const [],
+  const BookAnyEstimate({
+    this.eligible = false,
+    this.fareRange,
+    this.blockAmount,
+    this.vehicleTypeIds,
     this.currency,
   });
 
-  factory BookAnyEstimate.fromJson(Map<String, dynamic> json) {
-    final range = json['fare_range'];
-    int minFare = 0;
-    int maxFare = 0;
-    if (range is Map) {
-      minFare = (range['min'] as num?)?.toInt() ?? 0;
-      maxFare = (range['max'] as num?)?.toInt() ?? 0;
-    }
-    return BookAnyEstimate(
-      eligible: json['eligible'] == true,
-      minFare: minFare,
-      maxFare: maxFare,
-      blockAmount: (json['block_amount'] as num?)?.toInt() ?? maxFare,
-      vehicleTypeIds: json['vehicle_type_ids'] != null
-          ? (json['vehicle_type_ids'] as List)
-                .map((e) => e.toString())
-                .toList()
-          : const [],
-      currency: json['currency']?.toString(),
-    );
-  }
+  factory BookAnyEstimate.fromRawJson(String str) =>
+      BookAnyEstimate.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {
-      'eligible': eligible,
-      'fare_range': {'min': minFare, 'max': maxFare},
-      'block_amount': blockAmount,
-      'vehicle_type_ids': vehicleTypeIds,
-      'currency': currency,
-    };
-  }
+  String toRawJson() => json.encode(toJson());
+
+  factory BookAnyEstimate.fromJson(Map<String, dynamic> json) =>
+      BookAnyEstimate(
+        eligible: json['eligible'] ?? false,
+        fareRange: json['fare_range'] == null
+            ? null
+            : FareRange.fromJson(json['fare_range']),
+        blockAmount: json['block_amount'],
+        vehicleTypeIds: json['vehicle_type_ids'] == null
+            ? []
+            : List<String>.from(json['vehicle_type_ids'].map((x) => x)),
+        currency: json['currency'],
+      );
+
+  int? get minFare => fareRange?.min;
+  int? get maxFare => fareRange?.max;
+
+  Map<String, dynamic> toJson() => {
+    'eligible': eligible,
+    'fare_range': fareRange?.toJson(),
+    'block_amount': blockAmount,
+    'vehicle_type_ids': vehicleTypeIds == null
+        ? []
+        : List<dynamic>.from(vehicleTypeIds!.map((x) => x)),
+    'currency': currency,
+  };
 }
 
-class FareLeg {
-  final double? distance;
-  final int? duration;
+class FareRange {
+  final int? min;
+  final int? max;
 
-  FareLeg({this.distance, this.duration});
+  const FareRange({this.min, this.max});
 
-  factory FareLeg.fromJson(Map<String, dynamic> json) {
-    return FareLeg(
-      distance: (json['distance'] as num?)?.toDouble(),
-      duration: (json['duration'] as num?)?.toInt(),
-    );
-  }
+  factory FareRange.fromRawJson(String str) =>
+      FareRange.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {'distance': distance, 'duration': duration};
-  }
+  String toRawJson() => json.encode(toJson());
+
+  factory FareRange.fromJson(Map<String, dynamic> json) =>
+      FareRange(min: json['min'], max: json['max']);
+
+  Map<String, dynamic> toJson() => {'min': min, 'max': max};
 }
 
 class FareEstimateItem {
@@ -259,21 +199,19 @@ class FareEstimateItem {
   final int? baseFare;
   final int? perKmCharge;
   final int? perMinCharge;
-  final int? minimumFare;
   final int? waypointCharge;
+  final int? minimumFare;
   final int? maxPassengers;
   final String? currency;
-  /// Present when a promo code is applied to the estimate request.
   final bool? promoApplied;
   final int? promoDiscount;
   final int? discountedFare;
   final String? promoError;
-  /// Client-only Book Any row — not returned on API estimate items.
   final bool isBookAnyOption;
   final int? bookAnyMinFare;
   final int? bookAnyMaxFare;
 
-  FareEstimateItem({
+  const FareEstimateItem({
     this.vehicleTypeId,
     this.vehicleName,
     this.displayName,
@@ -283,8 +221,8 @@ class FareEstimateItem {
     this.baseFare,
     this.perKmCharge,
     this.perMinCharge,
-    this.minimumFare,
     this.waypointCharge,
+    this.minimumFare,
     this.maxPassengers,
     this.currency,
     this.promoApplied,
@@ -296,95 +234,110 @@ class FareEstimateItem {
     this.bookAnyMaxFare,
   });
 
-  /// Amount the rider pays when a promo applies; otherwise base estimate.
-  int get displayFare {
-    if (promoApplied == true &&
-        discountedFare != null &&
-        discountedFare! >= 0) {
-      return discountedFare!;
-    }
-    return fareEstimate ?? 0;
-  }
+  factory FareEstimateItem.fromRawJson(String str) =>
+      FareEstimateItem.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory FareEstimateItem.fromJson(Map<String, dynamic> json) =>
+      FareEstimateItem(
+        vehicleTypeId: json['vehicle_type_id'],
+        vehicleName: json['vehicle_name'],
+        displayName: json['display_name'],
+        fareEstimate: json['fare_estimate'],
+        distanceKm: (json['distance_km'] as num?)?.toDouble(),
+        durationMinutes: json['duration_minutes'],
+        baseFare: json['base_fare'],
+        perKmCharge: json['per_km_charge'],
+        perMinCharge: json['per_min_charge'],
+        waypointCharge: json['waypoint_charge'],
+        minimumFare: json['minimum_fare'],
+        maxPassengers: json['max_passengers'],
+        currency: json['currency'],
+        promoApplied: json['promo_applied'],
+        promoDiscount: json['promo_discount'],
+        discountedFare: json['discounted_fare'],
+        promoError: json['promo_error'],
+        isBookAnyOption: json['is_book_any_option'] ?? false,
+        bookAnyMinFare: json['book_any_min_fare'],
+        bookAnyMaxFare: json['book_any_max_fare'],
+      );
 
   int get originalFare => fareEstimate ?? 0;
+  int get displayFare => discountedFare ?? fareEstimate ?? 0;
 
-  factory FareEstimateItem.fromJson(Map<String, dynamic> json) {
-    bool? promoApplied;
-    final raw = json['promo_applied'];
-    if (raw is bool) {
-      promoApplied = raw;
-    } else if (raw != null) {
-      promoApplied = raw == 1 || raw == '1' || raw == true;
-    }
+  Map<String, dynamic> toJson() => {
+    'vehicle_type_id': vehicleTypeId,
+    'vehicle_name': vehicleName,
+    'display_name': displayName,
+    'fare_estimate': fareEstimate,
+    'distance_km': distanceKm,
+    'duration_minutes': durationMinutes,
+    'base_fare': baseFare,
+    'per_km_charge': perKmCharge,
+    'per_min_charge': perMinCharge,
+    'waypoint_charge': waypointCharge,
+    'minimum_fare': minimumFare,
+    'max_passengers': maxPassengers,
+    'currency': currency,
+    'promo_applied': promoApplied,
+    'promo_discount': promoDiscount,
+    'discounted_fare': discountedFare,
+    'promo_error': promoError,
+    'is_book_any_option': isBookAnyOption,
+    'book_any_min_fare': bookAnyMinFare,
+    'book_any_max_fare': bookAnyMaxFare,
+  };
+}
 
-    return FareEstimateItem(
-      vehicleTypeId: json['vehicle_type_id']?.toString(),
-      vehicleName: json['vehicle_name']?.toString(),
-      displayName: json['display_name']?.toString(),
-      fareEstimate: (json['fare_estimate'] as num?)?.toInt(),
-      distanceKm: (json['distance_km'] as num?)?.toDouble(),
-      durationMinutes: (json['duration_minutes'] as num?)?.toInt(),
-      baseFare: (json['base_fare'] as num?)?.toInt(),
-      perKmCharge: (json['per_km_charge'] as num?)?.toInt(),
-      perMinCharge: (json['per_min_charge'] as num?)?.toInt(),
-      minimumFare: (json['minimum_fare'] as num?)?.toInt(),
-      waypointCharge: (json['waypoint_charge'] as num?)?.toInt(),
-      maxPassengers: (json['max_passengers'] as num?)?.toInt(),
-      currency: json['currency']?.toString(),
-      promoApplied: promoApplied,
-      promoDiscount: (json['promo_discount'] as num?)?.toInt(),
-      discountedFare: (json['discounted_fare'] as num?)?.toInt(),
-      promoError: json['promo_error']?.toString(),
-      isBookAnyOption: json['is_book_any_option'] == true,
-      bookAnyMinFare: (json['book_any_min_fare'] as num?)?.toInt(),
-      bookAnyMaxFare: (json['book_any_max_fare'] as num?)?.toInt(),
-    );
-  }
+class FareLeg {
+  final double? distance;
+  final int? duration;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'vehicle_type_id': vehicleTypeId,
-      'vehicle_name': vehicleName,
-      'display_name': displayName,
-      'fare_estimate': fareEstimate,
-      'distance_km': distanceKm,
-      'duration_minutes': durationMinutes,
-      'base_fare': baseFare,
-      'per_km_charge': perKmCharge,
-      'per_min_charge': perMinCharge,
-      'minimum_fare': minimumFare,
-      'waypoint_charge': waypointCharge,
-      'max_passengers': maxPassengers,
-      'currency': currency,
-      'promo_applied': promoApplied,
-      'promo_discount': promoDiscount,
-      'discounted_fare': discountedFare,
-      'promo_error': promoError,
-      'is_book_any_option': isBookAnyOption,
-      'book_any_min_fare': bookAnyMinFare,
-      'book_any_max_fare': bookAnyMaxFare,
-    };
-  }
+  const FareLeg({this.distance, this.duration});
+
+  factory FareLeg.fromRawJson(String str) => FareLeg.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory FareLeg.fromJson(Map<String, dynamic> json) => FareLeg(
+    distance: (json['distance'] as num?)?.toDouble(),
+    duration: json['duration'],
+  );
+
+  Map<String, dynamic> toJson() => {'distance': distance, 'duration': duration};
 }
 
 class RouteGeometry {
-  final List<List<double>>? coordinates;
   final String? type;
+  final List<List<double>>? coordinates;
 
-  RouteGeometry({this.coordinates, this.type});
+  const RouteGeometry({this.type, this.coordinates});
 
-  factory RouteGeometry.fromJson(Map<String, dynamic> json) {
-    return RouteGeometry(
-      coordinates: (json['coordinates'] as List?)
-          ?.map(
-            (e) => (e as List).map((c) => (c as num).toDouble()).toList(),
-          )
-          .toList(),
-      type: json['type']?.toString(),
-    );
-  }
+  factory RouteGeometry.fromRawJson(String str) =>
+      RouteGeometry.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {'coordinates': coordinates, 'type': type};
-  }
+  String toRawJson() => json.encode(toJson());
+
+  factory RouteGeometry.fromJson(Map<String, dynamic> json) => RouteGeometry(
+    type: json['type'],
+    coordinates: json['coordinates'] == null
+        ? []
+        : List<List<double>>.from(
+            json['coordinates'].map(
+              (x) => List<double>.from(
+                x.map((value) => (value as num).toDouble()),
+              ),
+            ),
+          ),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'coordinates': coordinates == null
+        ? []
+        : List<dynamic>.from(
+            coordinates!.map((x) => List<dynamic>.from(x.map((x) => x))),
+          ),
+  };
 }

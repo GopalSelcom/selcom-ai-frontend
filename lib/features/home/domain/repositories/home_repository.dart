@@ -3,12 +3,12 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/geocode_response_model.dart';
-import '../../data/models/home_models.dart';
 import '../../data/models/places_models.dart';
 
 abstract class HomeRepository {
@@ -27,7 +27,7 @@ abstract class HomeRepository {
     required String address,
   });
 
-  Future<Either<Failure, FareEstimateModel>> estimateFare(
+  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
     FareEstimateRequest request,
   );
 

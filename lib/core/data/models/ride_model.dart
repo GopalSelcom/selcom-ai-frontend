@@ -2,6 +2,7 @@ import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/entities/mid_ride_cancel_entity.dart';
 import '../../domain/entities/ride_entity.dart';
+import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
 
 class RideModel extends RideEntity {
@@ -294,22 +295,6 @@ class RideStopModel extends RideStopEntity {
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'])
           : null,
-    );
-  }
-}
-
-class LocationModel extends LocationEntity {
-  const LocationModel({
-    required super.lat,
-    required super.lng,
-    required super.address,
-  });
-
-  factory LocationModel.fromJson(Map<String, dynamic> json) {
-    return LocationModel(
-      lat: (json['lat'] ?? 0.0).toDouble(),
-      lng: (json['lng'] ?? 0.0).toDouble(),
-      address: json['address'] ?? '',
     );
   }
 }

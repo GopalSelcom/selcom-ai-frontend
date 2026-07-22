@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
@@ -43,7 +44,6 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
-import '../../data/models/home_models.dart';
 import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../screens/recent_locations_screen.dart';
@@ -136,7 +136,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final Rxn<LatLng> deviceGpsLocation = Rxn<LatLng>();
 
   final selectedVehicle = ''.obs;
-  final fareEstimate = Rxn<FareEstimateModel>();
+  final fareEstimate = Rxn<FareEstimateResponseModel>();
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
   bool _ignoreSelectionReset = false;
@@ -2549,10 +2549,12 @@ class EstimateValidationOutcome {
 
   /// Fare estimate returned by the validation call; passed to vehicle
   /// selection so the same route is not estimated twice.
-  final FareEstimateModel? estimate;
+  final FareEstimateResponseModel? estimate;
   final DateTime? estimatedAt;
 
-  factory EstimateValidationOutcome.success({FareEstimateModel? estimate}) {
+  factory EstimateValidationOutcome.success({
+    FareEstimateResponseModel? estimate,
+  }) {
     return EstimateValidationOutcome._(
       canProceed: true,
       estimate: estimate,
