@@ -40,9 +40,7 @@ import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../../shared/widgets/add_favorite_location_sheet.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../profile/data/cache/user_profile_cache.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../ride/data/models/ride_management_models.dart';
-import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../data/models/places_models.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -64,16 +62,12 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   static bool _didCheckPendingReviewOnHomeLaunch = false;
 
   final HomeRepository homeRepository;
-  final RideRepository rideRepository;
-  final ProfileRepository profileRepository;
   final AnalyticsService analyticsService;
   final NotificationService notificationService;
   final RideRatingController rideRatingController;
 
   HomeController({
     required this.homeRepository,
-    required this.rideRepository,
-    required this.profileRepository,
     required this.analyticsService,
     required this.notificationService,
     required this.rideRatingController,
@@ -443,10 +437,10 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Fetch vehicle types, recent destinations, saved places, and profile in parallel.
       final results = await Future.wait([
         homeRepository.getVehicleTypes(),
-        rideRepository.getRecentDestinations(),
-        profileRepository.getSavedPlaces(),
-        rideRepository.getActiveRide(),
-        profileRepository.getProfile(),
+        homeRepository.getRecentDestinations(),
+        homeRepository.getSavedPlaces(),
+        homeRepository.getActiveRide(),
+        homeRepository.getProfile(),
       ]);
 
       // Handle Vehicle Types
@@ -497,7 +491,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// Reloads recent destinations into the Home list (not the dedicated screen list).
   Future<void> reloadRecentDestinations() async {
-    final result = await rideRepository.getRecentDestinations();
+    final result = await homeRepository.getRecentDestinations();
     result.fold((_) => null, (destinations) {
       recentDestinations.assignAll(destinations);
       invalidateHomeSheetMeasurement();
@@ -548,7 +542,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   Future<void> loadRecentLocationsScreen() async {
     try {
       isLoadingRecentLocationsScreen.value = true;
-      final result = await rideRepository.getRecentDestinations();
+      final result = await homeRepository.getRecentDestinations();
       result.fold((_) => null, (destinations) {
         recentDestinationsScreen.assignAll(destinations);
         invalidateHomeSheetMeasurement();
@@ -633,7 +627,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
     _isRefreshingActiveRide = true;
     _lastActiveRideRefreshAt = DateTime.now();
-    final result = await rideRepository.getActiveRide();
+    final result = await homeRepository.getActiveRide();
     result.fold((_) {}, _applyActiveRideResponse);
     _isRefreshingActiveRide = false;
   }
@@ -761,7 +755,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final rideId = rideValue.id.trim();
     if (rideId.isEmpty) return;
 
-    final detailsResult = await rideRepository.getRideDetails(rideId);
+    final detailsResult = await homeRepository.getRideDetails(rideId);
     detailsResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (freshRide) async {
@@ -1056,7 +1050,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           lng: loc.lng,
         );
 
-        final result = await profileRepository.saveRecentAsFavorite(request);
+        final result = await homeRepository.saveRecentAsFavorite(request);
         await result.fold((failure) => null, (success) async {
           if (success) {
             await refreshSavedPlacesAfterMutation();
@@ -1639,7 +1633,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// Reload from `GET go/user/saved-places`; always applies API list including `[]`.
   Future<void> loadSavedPlaces() async {
-    final result = await profileRepository.getSavedPlaces();
+    final result = await homeRepository.getSavedPlaces();
     result.fold((_) => null, (response) {
       savedPlaces.assignAll(
         SavedPlacesOrdering.sortForDisplay(
@@ -1653,8 +1647,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// After a save/delete mutation, fetch latest saved places from server.
   /// Some backends are eventually consistent, so we retry once shortly.
   Future<void> refreshSavedPlacesAfterMutation() async {
-    await loadSavedPlaces();
-    await Future<void>.delayed(const Duration(milliseconds: 250));
+    // await loadSavedPlaces();
+    // await Future<void>.delayed(const Duration(milliseconds: 250));
     await loadSavedPlaces();
   }
 
@@ -2387,7 +2381,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       confirmText: AppStrings.remove.tr,
       cancelText: AppStrings.cancel.tr,
       onConfirm: () async {
-        final result = await profileRepository.deleteSavedPlace(savedPlaceId);
+        final result = await homeRepository.deleteSavedPlace(savedPlaceId);
         result.fold(
           (failure) => AppDialogs.showErrorDialog(message: failure.message),
           (success) async {
@@ -2439,7 +2433,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           lng: lng,
         );
 
-        final result = await profileRepository.saveRecentAsFavorite(request);
+        final result = await homeRepository.saveRecentAsFavorite(request);
         await result.fold(
           (failure) async =>
               AppDialogs.showErrorDialog(message: failure.message),
@@ -2485,7 +2479,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           lng: loc.lng,
         );
 
-        final result = await profileRepository.saveRecentAsFavorite(request);
+        final result = await homeRepository.saveRecentAsFavorite(request);
         await result.fold(
           (failure) async =>
               AppDialogs.showErrorDialog(message: failure.message),
@@ -2535,7 +2529,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           lng: latLng?.longitude ?? mapCenter.value.longitude,
         );
 
-        final result = await profileRepository.saveRecentAsFavorite(request);
+        final result = await homeRepository.saveRecentAsFavorite(request);
         await result.fold(
           (failure) async =>
               AppDialogs.showErrorDialog(message: failure.message),

@@ -13,9 +13,9 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/balance_visibility_policy.dart';
 import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/currency_formatter.dart';
-import '../../../profile/domain/usecases/profile_usecase.dart';
-import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
+import '../../../profile/presentation/controllers/profile_controller.dart'
+    show ProfileWalletCache;
 import '../../data/models/go_card_balance_response.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
@@ -70,7 +70,7 @@ class WalletController extends GetxController {
 
   final EmailWalletStatementUseCase _emailWalletStatementUseCase =
       sl<EmailWalletStatementUseCase>();
-  final ProfileUseCase _profileUseCase = sl<ProfileUseCase>();
+  final WalletRepository _walletRepository = sl<WalletRepository>();
 
   final RxBool isLoading = true.obs;
   final RxBool isEmailingStatement = false.obs;
@@ -279,16 +279,6 @@ class WalletController extends GetxController {
       if (cardBalance != null) {
         summary.value = cardBalance;
         _persistProfileWalletCache(cardBalance);
-
-        if (Get.isRegistered<ProfileController>()) {
-          final profileController = Get.find<ProfileController>();
-          profileController.walletBalance.value =
-              NumberFormat('#,##0', 'en_US').format(cardBalance.availableBalance);
-          profileController.walletCurrency.value = cardBalance.currency;
-          profileController.walletNumber.value =
-              formatWalletAccountNumber(cardBalance.pan);
-          profileController.isWalletLinked.value = true;
-        }
       }
     } finally {
       isRefreshingWalletBalance.value = false;
@@ -335,7 +325,7 @@ class WalletController extends GetxController {
     if (isEmailingStatement.value) return;
 
     await Loader.withFlag(isEmailingStatement, () async {
-      final profileResult = await _profileUseCase.getProfile();
+      final profileResult = await _walletRepository.getUserProfile();
       var email = '';
       profileResult.fold((_) => null, (user) {
         email = user.emailId?.trim() ?? '';

@@ -18,10 +18,109 @@ import '../models/emergency_contacts_response.dart';
 import '../models/mid_ride_cancel_models.dart';
 import '../models/ride_management_models.dart';
 
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
+
 class RideRepositoryImpl implements RideRepository {
   final RideRemoteDataSource remoteDataSource;
 
   RideRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes() async {
+    try {
+      final response = await remoteDataSource.getVehicleTypes();
+      if (!response.isSuccess) {
+        return const Right([]);
+      }
+      return Right(response.vehicleTypes);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
+    FareEstimateRequest request,
+  ) async {
+    try {
+      final response = await remoteDataSource.estimateFare(request);
+      if (!response.isSuccess) {
+        final msg = (response.message ?? '').trim();
+        final display = msg.isEmpty
+            ? 'Unable to estimate fare for this route.'
+            : msg;
+        final code = response.errorCode?.trim();
+        final failureMessage = (code != null && code.isNotEmpty)
+            ? '$code|$display'
+            : display;
+        return Left(ServerFailure(failureMessage));
+      }
+      return Right(response);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, BookRideResponse>> bookRide(
+    BookRideRequest request,
+  ) async {
+    try {
+      final result = await remoteDataSource.bookRide(request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PromoValidateData>> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  }) async {
+    try {
+      final r = await remoteDataSource.validatePromo(
+        code: code,
+        vehicleTypeId: vehicleTypeId,
+        fareEstimate: fareEstimate,
+      );
+      if (r.isSuccess && r.data != null) {
+        return Right(r.data!);
+      }
+      final err = r.errorCode?.trim();
+      final msg = (r.message ?? '').trim();
+      return Left(
+        PromoValidationFailure(
+          msg.isEmpty ? 'Promo code cannot be applied.' : msg,
+          errorCode: (err == null || err.isEmpty) ? null : err,
+        ),
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance() async {
+    try {
+      final result = await remoteDataSource.getWalletBalance();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide() async {

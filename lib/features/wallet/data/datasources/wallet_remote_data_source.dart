@@ -6,6 +6,8 @@ import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
+import '../../../../core/data/models/user_model.dart';
+import '../../../profile/data/models/profile_response_model.dart';
 import '../models/go_card_balance_response.dart';
 import '../models/go_card_statement_response.dart';
 import '../models/go_email_card_statement_models.dart';
@@ -22,6 +24,8 @@ abstract class WalletRemoteDataSource {
   Future<WalletStatementEmailResult> emailCardStatement(
     EmailCardStatementRequest request,
   );
+
+  Future<UserModel> getUserProfile();
 }
 
 class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
@@ -141,6 +145,27 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
     }
 
     throw WalletStatementEmailException(AppStrings.walletStatementEmailFailed);
+  }
+
+  @override
+  Future<UserModel> getUserProfile() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.profile.getProfile,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final profileResponse = UserProfileResponseModel.fromJson(
+        Map<String, dynamic>.from(response.data),
+      );
+      return profileResponse.data.toUserModel();
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const UserModel(id: '');
+    }
+    throw Exception('Failed to get profile');
   }
 
   String? _messageFromResponse(dynamic data) {

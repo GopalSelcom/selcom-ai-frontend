@@ -20,6 +20,10 @@ import '../models/go_add_card_response_model.dart';
 import '../models/go_init_card_session_response_model.dart' hide Datum;
 import '../models/model_status_msg.dart';
 
+import '../../../../core/data/models/user_model.dart';
+import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../profile/data/cache/user_profile_cache.dart';
+
 class WalletRepositoryImpl implements WalletRepository {
   WalletRepositoryImpl({
     required WalletRemoteDataSource remoteDataSource,
@@ -33,6 +37,21 @@ class WalletRepositoryImpl implements WalletRepository {
   List<TransactionDatum>? _statementCache;
   final WalletPaymentRemoteDataSource _paymentRemoteDataSource;
   final SelcomPesaTopupRemoteDataSource _selcomPesaTopupRemoteDataSource;
+
+  @override
+  Future<Either<Failure, UserModel>> getUserProfile() async {
+    if (UserProfileCache.isLoaded && UserProfileCache.user != null) {
+      return Right(UserProfileCache.user!);
+    }
+    try {
+      final result = await _remoteDataSource.getUserProfile();
+      UserProfileCache.save(result);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 
   @override
   Future<GoCardBalanceResponseModel?> getCardBalance() =>

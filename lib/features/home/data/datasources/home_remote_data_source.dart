@@ -13,8 +13,31 @@ import '../../../../core/network/urls.dart';
 import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/responses/create_saved_place_response.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/user_model.dart';
+import '../../../profile/data/models/profile_response_model.dart';
+import '../../../ride/data/models/ride_management_models.dart';
+
 abstract class HomeRemoteDataSource {
   Future<VehicleTypesResponseModel> getVehicleTypes();
+
+  Future<List<RecentDestinationModel>> getRecentDestinations();
+
+  Future<GetSavedPlacesResponseModel?> getSavedPlaces();
+
+  Future<ActiveRideResponseModel?> getActiveRide();
+
+  Future<UserModel> getProfile();
+
+  Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request);
+
+  Future<bool> deleteSavedPlace(String id);
+
+  Future<RideModel> getRideDetails(String rideId);
 
   Future<AutocompletePredictionModel?> autocomplete({required String input});
 
@@ -63,6 +86,131 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       statusCode: response.statusCode,
       message: null,
     );
+  }
+
+  @override
+  Future<List<RecentDestinationModel>> getRecentDestinations() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.recentDestinations,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final body = response.data is Map<String, dynamic>
+          ? response.data as Map<String, dynamic>
+          : Map<String, dynamic>.from(response.data as Map);
+      final parsed = RecentDestinationsResponseModel.fromJson(body);
+      return parsed.data?.destinations ?? [];
+    }
+    return [];
+  }
+
+  @override
+  Future<GetSavedPlacesResponseModel?> getSavedPlaces() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.address.savedPlaces,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return GetSavedPlacesResponseModel.fromJson(
+        response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : Map<String, dynamic>.from(response.data as Map),
+      );
+    }
+    return null;
+  }
+
+  @override
+  Future<ActiveRideResponseModel?> getActiveRide() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.activeRide,
+        method: ApiMethod.get,
+        errorPresentationType: ErrorPresentationType.none
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return ActiveRideResponseModel.fromJson(response.data);
+    }
+    return null;
+  }
+
+  @override
+  Future<UserModel> getProfile() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.profile.getProfile,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final profileResponse = UserProfileResponseModel.fromJson(
+        Map<String, dynamic>.from(response.data),
+      );
+      return profileResponse.data.toUserModel();
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const UserModel(id: '');
+    }
+    throw Exception('Failed to get profile');
+  }
+
+  @override
+  Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.address.saveRecentAsFavorite,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.data != null) {
+      final createResponse = CreateSavedPlaceResponseModel.fromJson(
+        response.data,
+      );
+      return createResponse.isSuccess;
+    }
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<bool> deleteSavedPlace(String id) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.address.deleteSavedPlace(id),
+        method: ApiMethod.delete,
+      ),
+    );
+    return response.statusCode == 200;
+  }
+
+  @override
+  Future<RideModel> getRideDetails(String rideId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.rideDetails(rideId),
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final rideData =
+          response.data['data']?['ride'] ?? response.data['data'] ?? {};
+      return RideModel.fromJson(rideData);
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return RideModel.fromJson({'_id': rideId});
+    }
+    throw Exception('Failed to get ride details');
   }
 
   @override

@@ -119,6 +119,15 @@ class Params {
   static const String fname = "fname";
   static const String lname = "lname";
   static const String city = "city";
+  static const String startDate = "start_date";
+  static const String endDate = "end_date";
+  static const String spCountryCode = "sp_country_code";
+  static const String spMobileNumber = "sp_mobile_number";
+  static const String goCountryCode = "go_country_code";
+  static const String goMobileNumber = "go_mobile_number";
+  static const String shortCode = "short_code";
+  static const String otp = "otp";
+  static const String token = "token";
   // static const String address = "address";
 
 

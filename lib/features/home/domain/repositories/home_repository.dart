@@ -11,8 +11,31 @@ import '../../../../core/errors/failures.dart';
 import '../../data/models/geocode_response_model.dart';
 import '../../data/models/places_models.dart';
 
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/user_model.dart';
+import '../../../ride/data/models/ride_management_models.dart';
+
 abstract class HomeRepository {
   Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes();
+
+  Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations();
+
+  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
+
+  Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide();
+
+  Future<Either<Failure, UserModel>> getProfile();
+
+  Future<Either<Failure, bool>> saveRecentAsFavorite(
+    SaveRecentAsFavoriteRequest request,
+  );
+
+  Future<Either<Failure, bool>> deleteSavedPlace(String id);
+
+  Future<Either<Failure, RideModel>> getRideDetails(String rideId);
 
   Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,

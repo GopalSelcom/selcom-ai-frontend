@@ -41,12 +41,10 @@ import '../../../../shared/utils/ride_payment_validation_messages.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../../home/domain/repositories/home_repository.dart';
 import '../../../home/presentation/controllers/location_selection_controller.dart';
 import '../../../payment/domain/models/insufficient_wallet_balance_details.dart';
 import '../../../payment/domain/wallet_ride_balance_guard.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
-import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -59,13 +57,9 @@ const String kBookAnyVehicleTypeId = '__book_any__';
 /// SCR-09 — vehicle + fare selection.
 class VehicleSelectionController extends GetxController {
   VehicleSelectionController({
-    required this.homeRepository,
-    required this.profileRepository,
     required this.rideRepository,
   });
 
-  final HomeRepository homeRepository;
-  final ProfileRepository profileRepository;
   final RideRepository rideRepository;
 
   /// Ride booking currently always charges Go Wallet.
@@ -275,7 +269,7 @@ class VehicleSelectionController extends GetxController {
     }
     final req = _fareEstimateRequest();
 
-    final vehicleTypesResult = await homeRepository.getVehicleTypes();
+    final vehicleTypesResult = await rideRepository.getVehicleTypes();
     List<VehicleTypeModel> vehicleTypes = [];
     vehicleTypesResult.fold((_) {}, (list) => vehicleTypes = list);
     _vehicleTypes
@@ -291,7 +285,7 @@ class VehicleSelectionController extends GetxController {
       );
       _applyEstimateModel(initialEstimate, vehicleTypes);
     } else {
-      final result = await homeRepository.estimateFare(req);
+      final result = await rideRepository.estimateFare(req);
       result.fold((f) {
         AppLogger.w(
           '[VehicleSelection] Fare estimate error: $f',
@@ -852,7 +846,7 @@ class VehicleSelectionController extends GetxController {
       );
 
       // Re-estimate fare/route after pickup confirmation so pricing and ETA are fresh.
-      final refreshedEstimateResult = await homeRepository.estimateFare(
+      final refreshedEstimateResult = await rideRepository.estimateFare(
         _fareEstimateRequest(),
       );
 
@@ -1109,7 +1103,7 @@ class VehicleSelectionController extends GetxController {
                           ? null
                           : appliedPromoCode.value.trim(),
                     );
-              final result = await homeRepository.bookRide(request);
+              final result = await rideRepository.bookRide(request);
               await result.fold<Future<void>>(
                 (f) async {
                   String msg = f.message;
@@ -1209,7 +1203,7 @@ class VehicleSelectionController extends GetxController {
       return true;
     }
 
-    final walletResult = await profileRepository.getWalletBalance();
+    final walletResult = await rideRepository.getWalletBalance();
     return walletResult.fold((_) => true, (wallet) {
       final details = WalletRideBalanceGuard.insufficientDetails(
         currentBalance: _walletSpendableBalance(wallet),
@@ -1739,7 +1733,7 @@ class VehicleSelectionController extends GetxController {
       return true;
     }
     final fare = est!.originalFare;
-    final result = await homeRepository.validatePromo(
+    final result = await rideRepository.validatePromo(
       code: code,
       vehicleTypeId: vid,
       fareEstimate: fare,

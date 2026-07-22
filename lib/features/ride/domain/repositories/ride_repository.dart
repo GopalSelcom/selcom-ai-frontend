@@ -11,7 +11,29 @@ import '../../data/models/mid_ride_cancel_models.dart';
 import '../../data/models/ride_history_model.dart';
 import '../../data/models/ride_management_models.dart';
 
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
+
 abstract class RideRepository {
+  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes();
+
+  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
+    FareEstimateRequest request,
+  );
+
+  Future<Either<Failure, BookRideResponse>> bookRide(BookRideRequest request);
+
+  Future<Either<Failure, PromoValidateData>> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  });
+
   Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide();
 
   Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations();
@@ -45,6 +67,8 @@ abstract class RideRepository {
   Future<Either<Failure, ValidateRidePaymentResponse>> validateRidePayment(
     ValidateRidePaymentRequest request,
   );
+
+  Future<Either<Failure, GoCardBalanceResponseModel>> getWalletBalance();
 
   Future<Either<Failure, bool>> walletDummyPaymentRequest(
     DummyPaymentRequest request,

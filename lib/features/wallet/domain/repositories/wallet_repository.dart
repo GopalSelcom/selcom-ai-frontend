@@ -13,8 +13,12 @@ import '../entities/wallet_page_data.dart';
 import '../entities/wallet_statement_email_result.dart';
 import '../entities/wallet_transaction_filter.dart';
 
+import '../../../../core/data/models/user_model.dart';
+
 abstract class WalletRepository {
   Future<GoCardBalanceResponseModel?> getCardBalance();
+
+  Future<Either<Failure, UserModel>> getUserProfile();
 
   /// Loads wallet summary and statement transactions with one card-balance call.
   Future<WalletPageData> getWalletPageData({

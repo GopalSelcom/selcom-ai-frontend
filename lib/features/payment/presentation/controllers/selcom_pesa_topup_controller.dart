@@ -18,7 +18,6 @@ import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../profile/data/models/selcom_pesa_link_models.dart';
-import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
@@ -275,18 +274,16 @@ class SelcomPesaTopupController extends GetxController {
     );
   }
 
-  Future<void> retryOtherTopUp() async {
+  Future<void> retryOtherTopUp({Account? account}) async {
     if (_activeFlow != SelcomPesaTopupFlow.other) return;
-    if (Get.isRegistered<PaymentMethodsController>()) {
-      final selected =
-          Get.find<PaymentMethodsController>().selectedLinkedAccount;
-      if (selected != null) {
-        await submitSelectedLinkedAccountTopUp(
-          account: selected,
-          closeSheetFirst: false,
-        );
-        return;
-      }
+    final selected = account ??
+        (Get.arguments is Account ? Get.arguments as Account : null);
+    if (selected != null) {
+      await submitSelectedLinkedAccountTopUp(
+        account: selected,
+        closeSheetFirst: false,
+      );
+      return;
     }
     await submitOtherTopUp(closeSheetFirst: false);
   }

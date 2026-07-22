@@ -2,13 +2,20 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
+import '../../../profile/data/cache/user_profile_cache.dart';
+import '../../../ride/data/models/ride_management_models.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
 import '../models/geocode_response_model.dart';
@@ -62,6 +69,89 @@ class HomeRepositoryImpl implements HomeRepository {
       return const [];
     }
     return response.vehicleTypes;
+  }
+
+  @override
+  Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations() async {
+    try {
+      final result = await remoteDataSource.getRecentDestinations();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() async {
+    try {
+      final result = await remoteDataSource.getSavedPlaces();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide() async {
+    try {
+      final result = await remoteDataSource.getActiveRide();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserModel>> getProfile() async {
+    if (UserProfileCache.isLoaded && UserProfileCache.user != null) {
+      return Right(UserProfileCache.user!);
+    }
+    try {
+      final result = await remoteDataSource.getProfile();
+      UserProfileCache.save(result);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> saveRecentAsFavorite(
+    SaveRecentAsFavoriteRequest request,
+  ) async {
+    try {
+      final result = await remoteDataSource.saveRecentAsFavorite(request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteSavedPlace(String id) async {
+    try {
+      final result = await remoteDataSource.deleteSavedPlace(id);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RideModel>> getRideDetails(String rideId) async {
+    try {
+      final result = await remoteDataSource.getRideDetails(rideId);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override

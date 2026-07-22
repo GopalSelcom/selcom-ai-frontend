@@ -24,7 +24,29 @@ import '../models/mid_ride_cancel_models.dart';
 import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
+import '../../../../core/data/models/requests/book_ride_request.dart';
+import '../../../../core/data/models/requests/fare_estimate_request.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
+
 abstract class RideRemoteDataSource {
+  Future<VehicleTypesResponseModel> getVehicleTypes();
+
+  Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
+
+  Future<BookRideResponse> bookRide(BookRideRequest request);
+
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  });
+
+  Future<GoCardBalanceResponseModel> getWalletBalance();
+
   Future<ActiveRideResponseModel?> getActiveRide();
 
   Future<List<RecentDestinationModel>> getRecentDestinations();
@@ -95,6 +117,191 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   final ApiService apiService = ApiService();
 
   RideRemoteDataSourceImpl();
+
+  @override
+  Future<VehicleTypesResponseModel> getVehicleTypes() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.getVehicleTypes,
+        method: ApiMethod.get,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return VehicleTypesResponseModel.fromJson(response.data);
+    }
+
+    return VehicleTypesResponseModel(
+      statusCode: response.statusCode,
+      message: null,
+    );
+  }
+
+  @override
+  Future<FareEstimateResponseModel> estimateFare(
+    FareEstimateRequest request,
+  ) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.estimateFare,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    final raw = response.data;
+    Map<String, dynamic>? map;
+    if (raw is Map<String, dynamic>) {
+      map = Map<String, dynamic>.from(raw);
+    } else if (raw is Map) {
+      map = Map<String, dynamic>.from(raw);
+    }
+
+    if (map != null) {
+      final httpStatus = response.statusCode;
+      if (httpStatus != null && !map.containsKey('status_code')) {
+        map['status_code'] = httpStatus;
+      }
+      late final FareEstimateResponseModel model;
+      try {
+        model = FareEstimateResponseModel.fromJson(map);
+      } catch (_) {
+        final code = map['error_code']?.toString().trim();
+        if (code == 'VALID_DISTANCE_EXCEEDED') {
+          final sc = map['status_code'];
+          final int? parsedStatus = switch (sc) {
+            null => httpStatus,
+            final int i => i,
+            final num n => n.toInt(),
+            final String s => int.tryParse(s.trim()),
+            _ => int.tryParse(sc.toString()),
+          };
+          model = FareEstimateResponseModel(
+            statusCode: parsedStatus ?? httpStatus ?? 400,
+            message: map['message'].toString(),
+          );
+        } else {
+          rethrow;
+        }
+      }
+      if (!model.isSuccess) {
+        if (model.errorCode?.trim() == 'VALID_DISTANCE_EXCEEDED') {
+          return model;
+        }
+        if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+          return model;
+        }
+        final msg = (model.message ?? '').trim();
+        throw Exception(
+          msg.isEmpty ? 'Unable to estimate fare for this route.' : msg,
+        );
+      }
+      return model;
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return FareEstimateResponseModel(
+        statusCode: response.statusCode,
+        message: null,
+        errorCode: null,
+        data: null,
+      );
+    }
+    throw Exception('Unable to estimate fare for this route.');
+  }
+
+  @override
+  Future<BookRideResponse> bookRide(BookRideRequest request) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: RidePaymentEndpoints.bookRide,
+        method: ApiMethod.post,
+        body: request.toJson(),
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      return BookRideResponse.fromJson(response.data);
+    }
+
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        try {
+          return BookRideResponse.fromJson(raw);
+        } catch (_) {}
+      }
+      if (raw is Map) {
+        try {
+          return BookRideResponse.fromJson(Map<String, dynamic>.from(raw));
+        } catch (_) {}
+      }
+      return BookRideResponse(
+        statusCode: response.statusCode,
+        message: null,
+        data: null,
+      );
+    }
+
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      final message = (data['message'] as String?)?.trim();
+      if (message != null && message.isNotEmpty) {
+        throw Exception(message);
+      }
+    }
+
+    throw Exception('Unable to complete your booking at this time.');
+  }
+
+  @override
+  Future<PromoValidateResponse> validatePromo({
+    required String code,
+    required String vehicleTypeId,
+    required int fareEstimate,
+  }) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.promoValidate,
+        method: ApiMethod.post,
+        body: {
+          Params.code: code.trim().toUpperCase(),
+          Params.vehicleTypeID: vehicleTypeId,
+          Params.flareEstimate: fareEstimate,
+        },
+        errorPresentationType: ErrorPresentationType.none,
+        showLoader: false,
+      ),
+    );
+
+    final body = response.data;
+    return PromoValidateResponse.fromHttpResponse(
+      httpStatus: response.statusCode,
+      body: body,
+    );
+  }
+
+  @override
+  Future<GoCardBalanceResponseModel> getWalletBalance() async {
+    try {
+      final response = await ApiService().call(
+        request: ApiRequest(
+          endpoint: URLS.wallet.cardBalance,
+          method: ApiMethod.get,
+          errorPresentationType: ErrorPresentationType.none,
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        return GoCardBalanceResponseModel.fromJson(
+          Map<String, dynamic>.from(response.data),
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+    }
+    return GoCardBalanceResponseModel();
+  }
 
   @override
   Future<ActiveRideResponseModel?> getActiveRide() async {

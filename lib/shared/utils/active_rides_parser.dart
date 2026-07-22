@@ -6,6 +6,7 @@
 /// - Self: max one active ride (`is_booked_for_other == false`).
 /// - Book for other: max `settings.features.book_for_other.max_active` concurrent rides
 ///   (self ride is **not** counted toward `max_active`).
+library;
 
 import '../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
