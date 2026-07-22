@@ -3,6 +3,7 @@ import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_mod
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
@@ -174,7 +175,7 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, String>> validateRidePayment(
+  Future<Either<Failure, ValidateRidePaymentResponse>> validateRidePayment(
     ValidateRidePaymentRequest request,
   ) async {
     try {

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/destination_update_models.dart';
@@ -41,7 +42,7 @@ abstract class RideRepository {
 
   Future<Either<Failure, ReceiptModel>> getReceipt(String rideId);
 
-  Future<Either<Failure, String>> validateRidePayment(
+  Future<Either<Failure, ValidateRidePaymentResponse>> validateRidePayment(
     ValidateRidePaymentRequest request,
   );
 

@@ -13,6 +13,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rid
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -995,8 +996,9 @@ class VehicleSelectionController extends GetxController {
             message: AppStrings.couldNotValidatePaymentPleaseTryAgain.tr,
           );
         },
-        (validationId) async {
-          if (validationId.trim().isEmpty) {
+        (validation) async {
+          final validationId = (validation.validationId ?? '').trim();
+          if (validationId.isEmpty) {
             AppDialogs.showErrorDialog(
               title: AppStrings.paymentValidationFailed.tr,
               message: AppStrings.validationIdMissingFromServerResponse.tr,
@@ -1010,16 +1012,20 @@ class VehicleSelectionController extends GetxController {
           // }
 
           var blockValidationId = validationId;
+          var latestValidation = validation;
           Loader.instance.show();
           while (true) {
             String? roomValidationId;
-            if (AppConfig.ridePaymentBypass) {
+            final needsCallback = !latestValidation.canProceedDirectly;
+            if (AppConfig.ridePaymentBypass || needsCallback) {
               roomValidationId = blockValidationId;
               _socketService.joinPaymentRoom(validationId: roomValidationId);
             }
             final paymentConfirmed = AppConfig.ridePaymentBypass
-                ? await _confirmDevPaymentCallback(roomValidationId ?? "")
-                : true;
+                ? await _confirmDevPaymentCallback(roomValidationId ?? '')
+                : latestValidation.canProceedDirectly
+                ? true
+                : await _waitForPaymentBlockStatus();
 
             if (paymentConfirmed) {
               break;
@@ -1035,7 +1041,7 @@ class VehicleSelectionController extends GetxController {
             final reValidation = await rideRepository.validateRidePayment(
               validateRequest,
             );
-            final nextId = reValidation.fold<String?>(
+            final nextValidation = reValidation.fold<ValidateRidePaymentResponse?>(
               (f) {
                 if (_handlePaymentValidationFailure(f)) return null;
                 AppDialogs.showErrorDialog(
@@ -1044,8 +1050,8 @@ class VehicleSelectionController extends GetxController {
                 );
                 return null;
               },
-              (id) {
-                final t = id.trim();
+              (value) {
+                final t = (value.validationId ?? '').trim();
                 if (t.isEmpty) {
                   AppDialogs.showErrorDialog(
                     title: AppStrings.paymentValidationFailed.tr,
@@ -1054,13 +1060,14 @@ class VehicleSelectionController extends GetxController {
                   );
                   return null;
                 }
-                return t;
+                return value;
               },
             );
-            if (nextId == null) {
+            if (nextValidation == null) {
               return;
             }
-            blockValidationId = nextId;
+            latestValidation = nextValidation;
+            blockValidationId = (nextValidation.validationId ?? '').trim();
           }
 
           // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).

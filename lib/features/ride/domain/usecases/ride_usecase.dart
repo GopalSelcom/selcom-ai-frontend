@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
+import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/destination_update_models.dart';
@@ -47,7 +48,7 @@ class RideUseCase {
     return repository.getReceipt(rideId);
   }
 
-  Future<Either<Failure, String>> validateRidePayment(
+  Future<Either<Failure, ValidateRidePaymentResponse>> validateRidePayment(
     ValidateRidePaymentRequest request,
   ) {
     return repository.validateRidePayment(request);

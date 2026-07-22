@@ -6,6 +6,7 @@ import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
@@ -50,7 +51,9 @@ abstract class RideRemoteDataSource {
 
   Future<ReceiptModel> getReceipt(String rideId);
 
-  Future<String> validateRidePayment(ValidateRidePaymentRequest request);
+  Future<ValidateRidePaymentResponse> validateRidePayment(
+    ValidateRidePaymentRequest request,
+  );
 
   Future<bool> walletDummyPaymentRequest(DummyPaymentRequest request);
 
@@ -358,7 +361,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<String> validateRidePayment(ValidateRidePaymentRequest request) async {
+  Future<ValidateRidePaymentResponse> validateRidePayment(
+    ValidateRidePaymentRequest request,
+  ) async {
     final endpoint = RidePaymentEndpoints.validateRidePayment;
     final response = await ApiService().call(
       request: ApiRequest(
@@ -372,9 +377,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       final body = _apiResponseMap(response.data);
       if (body != null) {
-        return body['data']?['validation_id']?.toString() ?? '';
+        return ValidateRidePaymentResponse.fromJson(body);
       }
-      return '';
+      return ValidateRidePaymentResponse(statusCode: response.statusCode);
     }
 
     final body = _apiResponseMap(response.data);
