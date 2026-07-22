@@ -24,6 +24,7 @@ class Params {
   static const String email = "email";
   static const String mobileNumber = "mobile_number";
   static const String countryCode = "country_code";
+  static const String countryId = "country_id";
   static const String firstName = "first_name";
   static const String lastName = "last_name";
   static const String gender = "gender";
@@ -62,6 +63,23 @@ class Params {
   static String CARD_CVN = "card_cvn";
   static String CARD_EXPIRY_DATE = "card_expiry_date";
   static String app_referal_code = "app_referal_code";
+
+  // ── Additional Request Params ──
+  static const String reason = "reason";
+  static const String destination = "destination";
+  static const String confirm = "confirm";
+  static const String stops = "stops";
+  static const String role = "role";
+  static const String input = "input";
+  static const String lat = "lat";
+  static const String lng = "lng";
+  static const String address = "address";
+  static const String message = "message";
+  static const String iosActivityToken = "ios_activity_token";
+  static const String expiryMonth = "expiry_month";
+  static const String expiryYear = "expiry_year";
+  static const String cvv = "cvv";
+  static const String name = "name";
 }
 
 /// Standard HTTP status/result codes for API response handling.

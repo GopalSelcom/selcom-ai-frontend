@@ -1,4 +1,5 @@
 import '../../../../core/data/models/notification_model.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 
@@ -25,7 +26,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.notification.list,
         method: ApiMethod.get,
-        queryParams: {'page': page, 'limit': limit},
+        queryParams: {Params.page: page, Params.limit: limit},
       ),
     );
 

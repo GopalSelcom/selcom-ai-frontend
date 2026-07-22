@@ -9,6 +9,7 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -167,7 +168,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.history,
         method: ApiMethod.get,
-        queryParams: {'page': page, 'limit': limit},
+        queryParams: {Params.page: page, Params.limit: limit},
       ),
     );
 
@@ -225,7 +226,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.cancelRide(rideId),
         method: ApiMethod.put,
-        body: {'reason': reason},
+        body: {Params.reason: reason},
       ),
     );
     return response.statusCode == 200 || response.statusCode == 201;
@@ -239,7 +240,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     final body = <String, dynamic>{};
     final trimmed = reason?.trim() ?? '';
     if (trimmed.isNotEmpty) {
-      body['reason'] = trimmed;
+      body[Params.reason] = trimmed;
     }
 
     final response = await ApiService().call(
@@ -269,7 +270,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: RidePaymentEndpoints.updateDestination(rideId),
         method: ApiMethod.put,
-        body: {'destination': destination, 'confirm': false},
+        body: {Params.destination: destination, Params.confirm: false},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -307,7 +308,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: RidePaymentEndpoints.updateDestination(rideId),
         method: ApiMethod.put,
-        body: {'destination': destination, 'confirm': true},
+        body: {Params.destination: destination, Params.confirm: true},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -426,7 +427,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.get,
-        queryParams: {'page': page, 'limit': limit},
+        queryParams: {Params.page: page, Params.limit: limit},
       ),
     );
 
@@ -442,7 +443,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.messages(rideId),
         method: ApiMethod.post,
-        body: {'message': message},
+        body: {Params.message: message},
       ),
     );
     return response.statusCode == 200;
@@ -455,7 +456,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         request: ApiRequest(
           endpoint: URLS.common.chatQuickReplies,
           method: ApiMethod.get,
-          queryParams: {'role': role},
+          queryParams: {Params.role: role},
         ),
       );
       if (response.statusCode == 200 && response.data != null) {
@@ -497,7 +498,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         request: ApiRequest(
           endpoint: URLS.ride.activityToken(rideId),
           method: ApiMethod.patch,
-          body: {'ios_activity_token': token},
+          body: {Params.iosActivityToken: token},
         ),
       );
       AppLogger.d(
@@ -534,7 +535,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         endpoint: RidePaymentEndpoints.updateStops(rideId),
         method: ApiMethod.put,
         headers: {'Idempotency-Key': idempotencyKey},
-        body: {'stops': stops, 'confirm': confirm},
+        body: {Params.stops: stops, Params.confirm: confirm},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -660,7 +661,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
             contentType: 'application/pdf',
           ),
         ],
-        body: {'ride_id': rideId},
+        body: {Params.rideId: rideId},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
