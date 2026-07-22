@@ -1189,13 +1189,9 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  double _walletSpendableBalance(GoCardBalanceData? data) {
-    if (data == null) return 0;
-    final available = data.available?.trim();
-    if (available != null && available.isNotEmpty) {
-      return double.tryParse(available) ?? 0;
-    }
-    return double.tryParse(data.balance ?? '0') ?? 0;
+  double _walletSpendableBalance(GoCardBalanceResponseModel? wallet) {
+    if (wallet == null) return 0;
+    return wallet.availableBalance.toDouble();
   }
 
   /// Client-side check via `go_wallet/go_card_balance` until payment API returns breakdown.
@@ -1209,9 +1205,9 @@ class VehicleSelectionController extends GetxController {
     final walletResult = await profileRepository.getWalletBalance();
     return walletResult.fold((_) => true, (wallet) {
       final details = WalletRideBalanceGuard.insufficientDetails(
-        currentBalance: _walletSpendableBalance(wallet.response),
+        currentBalance: _walletSpendableBalance(wallet),
         requiredAmount: requiredAmount,
-        currency: wallet.response?.currency ?? "",
+        currency: wallet.currency,
       );
       if (details == null) return true;
       unawaited(_showInsufficientWalletDialog(details));
@@ -1827,8 +1823,13 @@ class VehicleSelectionController extends GetxController {
   }
 
   void closeVehicleSelection() {
-    // Cancel from vehicle selection should return to home and clear back stack.
-    Get.offAllNamed(AppRoutes.home);
+    // Return to existing home screen if present in backstack, avoiding full stack wipe & duplicate re-fetches.
+    final canPopToHome = Get.key.currentState?.canPop() ?? false;
+    if (canPopToHome) {
+      Get.until((route) => route.settings.name == AppRoutes.home || route.isFirst);
+    } else {
+      Get.offAllNamed(AppRoutes.home);
+    }
   }
 
   Future<void> editRouteHeader() async {

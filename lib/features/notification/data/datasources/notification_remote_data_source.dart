@@ -3,7 +3,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class NotificationRemoteDataSource {
-  Future<NotificationResponseModel> getNotifications({
+  Future<NotificationPayloadModel> getNotifications({
     int page = 1,
     int limit = 20,
   });
@@ -17,7 +17,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   NotificationRemoteDataSourceImpl();
 
   @override
-  Future<NotificationResponseModel> getNotifications({
+  Future<NotificationPayloadModel> getNotifications({
     int page = 1,
     int limit = 20,
   }) async {
@@ -30,7 +30,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     );
 
     if (response.data is Map<String, dynamic>) {
-      return NotificationResponseModel.fromJson(response.data);
+      return NotificationPayloadModel.fromJson(response.data);
     }
 
     final responseData = response.data;
@@ -38,10 +38,10 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
         ? responseData['message']?.toString()
         : null;
 
-    return NotificationResponseModel(
+    return NotificationPayloadModel(
       statusCode: response.statusCode,
       message: message,
-      data: NotificationPayloadModel(notifications: const [], unreadCount: 0),
+      data: Data(notifications: const [], unreadCount: 0),
     );
   }
 

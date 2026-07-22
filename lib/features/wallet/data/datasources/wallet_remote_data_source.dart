@@ -5,15 +5,13 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
-import '../../domain/entities/wallet_card_balance_entity.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
-import '../../domain/entities/wallet_transaction_entity.dart';
 import '../models/go_card_balance_response.dart';
 import '../models/go_card_statement_response.dart';
 import '../models/go_email_card_statement_models.dart';
 
 abstract class WalletRemoteDataSource {
-  Future<WalletCardBalanceEntity?> getCardBalance();
+  Future<GoCardBalanceResponseModel?> getCardBalance();
 
   Future<GoCardStatementResponseModel?> getCardStatement({
     required String startDate,
@@ -30,7 +28,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
   WalletRemoteDataSourceImpl();
 
   @override
-  Future<WalletCardBalanceEntity?> getCardBalance() async {
+  Future<GoCardBalanceResponseModel?> getCardBalance() async {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
@@ -45,7 +43,7 @@ class WalletRemoteDataSourceImpl implements WalletRemoteDataSource {
           Map<String, dynamic>.from(response.data),
         );
         if (model.isSuccess) {
-          return model.response!.toEntity();
+          return model;
         }
         return null;
       }

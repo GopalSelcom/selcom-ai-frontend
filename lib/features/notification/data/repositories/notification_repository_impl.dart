@@ -12,7 +12,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
   NotificationRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, NotificationResponseModel>> getNotifications({
+  Future<Either<Failure, NotificationPayloadModel>> getNotifications({
     int page = 1,
     int limit = 20,
   }) async {

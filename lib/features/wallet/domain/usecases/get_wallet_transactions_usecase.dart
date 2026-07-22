@@ -1,4 +1,4 @@
-import '../entities/wallet_transaction_entity.dart';
+import '../../data/models/go_card_statement_response.dart';
 import '../entities/wallet_transaction_filter.dart';
 import '../repositories/wallet_repository.dart';
 
@@ -7,7 +7,7 @@ class GetWalletTransactionsUseCase {
 
   final WalletRepository _repository;
 
-  Future<List<WalletTransactionEntity>> call({
+  Future<List<TransactionDatum>> call({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
     String? currencyOverride,
   }) =>

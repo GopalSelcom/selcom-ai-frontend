@@ -37,7 +37,7 @@ class Response {
   DateTime? startdate;
   DateTime? enddate;
   int? records;
-  List<Datum>? data;
+  List<TransactionDatum>? data;
 
   Response({
     this.result,
@@ -69,7 +69,7 @@ class Response {
     records: json["records"],
     data: json["data"] == null
         ? []
-        : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+        : List<TransactionDatum>.from(json["data"]!.map((x) => TransactionDatum.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -91,7 +91,7 @@ class Response {
   };
 }
 
-class Datum {
+class TransactionDatum {
   int? id;
   String? fulltimestamp;
   String? transid;
@@ -104,7 +104,7 @@ class Datum {
   String? transtype;
   String? utilitycode;
 
-  Datum({
+  TransactionDatum({
     this.id,
     this.fulltimestamp,
     this.transid,
@@ -118,11 +118,11 @@ class Datum {
     this.utilitycode,
   });
 
-  factory Datum.fromRawJson(String str) => Datum.fromJson(json.decode(str));
+  factory TransactionDatum.fromRawJson(String str) => TransactionDatum.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
+  factory TransactionDatum.fromJson(Map<String, dynamic> json) => TransactionDatum(
     id: json["id"],
     fulltimestamp: json["fulltimestamp"],
     transid: json["transid"],

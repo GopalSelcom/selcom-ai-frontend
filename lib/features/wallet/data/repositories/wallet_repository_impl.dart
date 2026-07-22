@@ -6,16 +6,14 @@ import '../../../payment/data/datasources/wallet_payment_remote_data_source.dart
 import '../../../payment/data/models/go_other_payment_methods_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_models.dart';
 import '../../../payment/data/models/selcom_pesa_topup_status_models.dart';
-import '../../domain/entities/wallet_card_balance_entity.dart';
-import '../../domain/entities/wallet_details_entity.dart';
+import '../models/go_card_balance_response.dart';
 import '../../domain/entities/wallet_page_data.dart';
 import '../../domain/entities/wallet_statement_email_result.dart';
-import '../../domain/entities/wallet_summary_entity.dart';
-import '../../domain/entities/wallet_transaction_entity.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../datasources/wallet_remote_data_source.dart';
+import '../models/go_card_statement_response.dart';
 import '../models/go_email_card_statement_models.dart';
 import '../models/go_wallet_card_model.dart';
 import '../models/go_add_card_response_model.dart';
@@ -32,22 +30,13 @@ class WalletRepositoryImpl implements WalletRepository {
        _selcomPesaTopupRemoteDataSource = selcomPesaTopupRemoteDataSource;
 
   final WalletRemoteDataSource _remoteDataSource;
-  List<Datum>? _statementCache;
+  List<TransactionDatum>? _statementCache;
   final WalletPaymentRemoteDataSource _paymentRemoteDataSource;
   final SelcomPesaTopupRemoteDataSource _selcomPesaTopupRemoteDataSource;
 
   @override
-  Future<WalletDetailsEntity?> getWalletDetails() async {
-    final balance = await _remoteDataSource.getCardBalance();
-    return _walletDetailsFromCardBalance(balance);
-  }
-
-  @override
-  Future<WalletSummaryEntity> getWalletSummary() async {
-    final balance = await _remoteDataSource.getCardBalance();
-
-    return _summaryFromCardBalance(balance);
-  }
+  Future<GoCardBalanceResponseModel?> getCardBalance() =>
+      _remoteDataSource.getCardBalance();
 
   @override
   Future<WalletPageData> getWalletPageData({
@@ -56,54 +45,23 @@ class WalletRepositoryImpl implements WalletRepository {
     // Single card-balance fetch for wallet screen first paint (summary + statement).
     invalidateStatementCache();
     final balance = await _remoteDataSource.getCardBalance();
-    final summary = _summaryFromCardBalance(balance);
     final all = await _loadStatementTransactions(balance: balance);
     final transactions = switch (filter) {
       WalletTransactionFilter.all => all,
       WalletTransactionFilter.received =>
-        all
-            .where((transaction) => transaction.isCredit)
-            .toList(growable: false),
+        all.where(_isDatumCredit).toList(growable: false),
       WalletTransactionFilter.sent =>
-        all
-            .where((transaction) => !transaction.isCredit)
-            .toList(growable: false),
+        all.where((datum) => !_isDatumCredit(datum)).toList(growable: false),
     };
 
     return WalletPageData(
-      summary: summary,
+      cardBalance: balance,
       transactions: List.unmodifiable(transactions),
     );
   }
 
-  WalletSummaryEntity _summaryFromCardBalance(
-    WalletCardBalanceEntity? balance,
-  ) {
-    return WalletSummaryEntity(
-      balance: balance?.available ?? 0,
-      walletNumber: balance?.pan.trim() ?? '',
-      currency: balance?.currency ?? 'TZS',
-      reserved: balance?.reserved ?? 0,
-    );
-  }
-
-  WalletDetailsEntity? _walletDetailsFromCardBalance(
-    WalletCardBalanceEntity? balance,
-  ) {
-    if (balance == null) return null;
-
-    final accountNo = balance.pan.trim();
-    if (accountNo.isEmpty) return null;
-
-    return WalletDetailsEntity(
-      accountNo: accountNo,
-      name: balance.holderName,
-      status: 1,
-    );
-  }
-
   @override
-  Future<List<WalletTransactionEntity>> getTransactions({
+  Future<List<TransactionDatum>> getTransactions({
     WalletTransactionFilter filter = WalletTransactionFilter.all,
     String? currencyOverride,
   }) async {
@@ -113,13 +71,9 @@ class WalletRepositoryImpl implements WalletRepository {
     final filtered = switch (filter) {
       WalletTransactionFilter.all => all,
       WalletTransactionFilter.received =>
-        all
-            .where((transaction) => transaction.isCredit)
-            .toList(growable: false),
+        all.where(_isDatumCredit).toList(growable: false),
       WalletTransactionFilter.sent =>
-        all
-            .where((transaction) => !transaction.isCredit)
-            .toList(growable: false),
+        all.where((datum) => !_isDatumCredit(datum)).toList(growable: false),
     };
     return List.unmodifiable(filtered);
   }
@@ -146,12 +100,12 @@ class WalletRepositoryImpl implements WalletRepository {
     );
   }
 
-  Future<List<WalletTransactionEntity>> _loadStatementTransactions({
-    WalletCardBalanceEntity? balance,
+  Future<List<TransactionDatum>> _loadStatementTransactions({
+    GoCardBalanceResponseModel? balance,
     String? currencyOverride,
   }) async {
     if (_statementCache != null) {
-      return _statementCache??[];
+      return _statementCache!;
     }
 
     final (startDate, endDate) = defaultWalletStatementDateRange();
@@ -160,7 +114,7 @@ class WalletRepositoryImpl implements WalletRepository {
     final currency = currencyOverride?.trim().isNotEmpty == true
         ? currencyOverride!.trim()
         : balance?.currency.trim().isNotEmpty == true
-            ? balance!.currency.trim()
+            ? balance!.currency
             : 'TZS';
     final transactions = await _remoteDataSource.getCardStatement(
       startDate: startDate,
@@ -168,11 +122,27 @@ class WalletRepositoryImpl implements WalletRepository {
       currency: currency,
     );
 
-    final sorted = List<Datum>.from(transactions?.response?.data??[])
-      ..sort((a, b) => (b.creationDate??DateTime.now()).compareTo(a.creationDate??DateTime.now()));
+    final sorted = List<TransactionDatum>.from(transactions?.response?.data ?? [])
+      ..sort((a, b) => _parseTimestamp(b.fulltimestamp).compareTo(_parseTimestamp(a.fulltimestamp)));
 
     _statementCache = List.unmodifiable(sorted);
     return _statementCache!;
+  }
+
+  bool _isDatumCredit(TransactionDatum datum) {
+    final type = (datum.transtype ?? '').trim().toUpperCase();
+    return type == 'CREDIT' || type == 'CREDITED' || type == 'RELEASE';
+  }
+
+  DateTime _parseTimestamp(String? timestamp) {
+    if (timestamp == null || timestamp.trim().isEmpty) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+    final trimmed = timestamp.trim();
+    final direct = DateTime.tryParse(trimmed);
+    if (direct != null) return direct;
+    return DateTime.tryParse(trimmed.replaceFirst(' ', 'T')) ??
+        DateTime.fromMillisecondsSinceEpoch(0);
   }
 
   @override

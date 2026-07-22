@@ -1,39 +1,64 @@
-import '../../domain/entities/wallet_card_balance_entity.dart';
+// To parse this JSON data, do
+//
+//     final goCardBalanceResponseModel = goCardBalanceResponseModelFromJson(jsonString);
 
-/// Envelope for `go_wallet/go_card_balance`.
-///
-/// Top-level `response` holds card metadata plus a `data[]` balance line list.
+import 'dart:convert';
+
+GoCardBalanceResponseModel goCardBalanceResponseModelFromJson(String str) => GoCardBalanceResponseModel.fromJson(json.decode(str));
+
+String goCardBalanceResponseModelToJson(GoCardBalanceResponseModel data) => json.encode(data.toJson());
+
 class GoCardBalanceResponseModel {
+  int? statusCode;
+  String? message;
+  BalanceResponse? response;
+
   GoCardBalanceResponseModel({
     this.statusCode,
     this.message,
     this.response,
   });
 
-  final int? statusCode;
-  final String? message;
-  final GoCardBalanceData? response;
+  GoCardBalanceResponseModel copyWith({
+    int? statusCode,
+    String? message,
+    BalanceResponse? response,
+  }) =>
+      GoCardBalanceResponseModel(
+        statusCode: statusCode ?? this.statusCode,
+        message: message ?? this.message,
+        response: response ?? this.response,
+      );
 
-  factory GoCardBalanceResponseModel.fromJson(Map<String, dynamic> json) {
-    final payload = json['response'];
-    return GoCardBalanceResponseModel(
-      statusCode: json['status_code'] as int?,
-      message: json['message']?.toString(),
-      response: payload is Map<String, dynamic>
-          ? GoCardBalanceData.fromJson(payload)
-          : null,
-    );
-  }
+  factory GoCardBalanceResponseModel.fromJson(Map<String, dynamic> json) => GoCardBalanceResponseModel(
+    statusCode: json["status_code"],
+    message: json["message"],
+    response: json["response"] == null ? null : BalanceResponse.fromJson(json["response"]),
+  );
 
-  bool get isSuccess =>
-      statusCode == 200 && response != null && response!.isSuccessful;
+  Map<String, dynamic> toJson() => {
+    "status_code": statusCode,
+    "message": message,
+    "response": response?.toJson(),
+  };
 }
 
-/// Wallet card balance payload from `go_wallet/go_card_balance`.
-class GoCardBalanceData {
-  GoCardBalanceData({
+class BalanceResponse {
+  String? result;
+  String? resultcode;
+  String? pan;
+  String? name;
+  String? phone;
+  String? cardNumber;
+  String? accountType;
+  String? dealer;
+  String? group;
+  int? records;
+  List<BalanceDatum>? data;
+
+  BalanceResponse({
     this.result,
-    this.resultCode,
+    this.resultcode,
     this.pan,
     this.name,
     this.phone,
@@ -42,122 +67,74 @@ class GoCardBalanceData {
     this.dealer,
     this.group,
     this.records,
-    this.data = const [],
-    this.currency,
-    this.available,
-    this.reserved,
-    this.balance,
-    this.status,
+    this.data,
   });
 
-  final String? result;
-  final String? resultCode;
-  final String? pan;
-  final String? name;
-  final String? phone;
-  final String? cardNumber;
-  final String? accountType;
-  final String? dealer;
-  final String? group;
-  final int? records;
-  final List<GoCardBalanceLineItem> data;
+  BalanceResponse copyWith({
+    String? result,
+    String? resultcode,
+    String? pan,
+    String? name,
+    String? phone,
+    String? cardNumber,
+    String? accountType,
+    String? dealer,
+    String? group,
+    int? records,
+    List<BalanceDatum>? data,
+  }) =>
+      BalanceResponse(
+        result: result ?? this.result,
+        resultcode: resultcode ?? this.resultcode,
+        pan: pan ?? this.pan,
+        name: name ?? this.name,
+        phone: phone ?? this.phone,
+        cardNumber: cardNumber ?? this.cardNumber,
+        accountType: accountType ?? this.accountType,
+        dealer: dealer ?? this.dealer,
+        group: group ?? this.group,
+        records: records ?? this.records,
+        data: data ?? this.data,
+      );
 
-  /// Flattened from the primary ACTIVE balance line for legacy callers.
-  final String? currency;
-  final String? available;
-  final String? reserved;
-  final String? balance;
-  final String? status;
+  factory BalanceResponse.fromJson(Map<String, dynamic> json) => BalanceResponse(
+    result: json["result"],
+    resultcode: json["resultcode"],
+    pan: json["pan"],
+    name: json["name"],
+    phone: json["phone"],
+    cardNumber: json["card_number"],
+    accountType: json["account_type"],
+    dealer: json["dealer"],
+    group: json["group"],
+    records: json["records"],
+    data: json["data"] == null ? [] : List<BalanceDatum>.from(json["data"]!.map((x) => BalanceDatum.fromJson(x))),
+  );
 
-  factory GoCardBalanceData.fromJson(Map<String, dynamic> json) {
-    final lines = _parseBalanceLines(json['data']);
-    final line = _primaryBalanceLine(lines);
-
-    return GoCardBalanceData(
-      result: json['result']?.toString(),
-      resultCode: json['resultcode']?.toString(),
-      pan: json['pan']?.toString(),
-      name: json['name']?.toString(),
-      phone: json['phone']?.toString(),
-      cardNumber: json['card_number']?.toString(),
-      accountType: json['account_type']?.toString(),
-      dealer: json['dealer']?.toString(),
-      group: json['group']?.toString(),
-      records: _parseInt(json['records']),
-      data: lines,
-      currency: line?.currency ?? json['currency']?.toString(),
-      available: line?.available ?? json['available']?.toString(),
-      reserved: line?.reserved ?? json['reserved']?.toString(),
-      balance: line?.balance ?? json['balance']?.toString(),
-      status: line?.status ?? json['status']?.toString(),
-    );
-  }
-
-  bool get isSuccessful {
-    final normalizedResult = result?.trim().toUpperCase();
-    if (normalizedResult == 'SUCCESS') return true;
-    return resultCode?.trim() == '000';
-  }
-
-  WalletCardBalanceEntity toEntity() {
-    final primary = primaryBalanceLine;
-    final availableAmount = _parseAmount(primary?.available ?? available);
-    final balanceAmount = _parseAmount(primary?.balance ?? balance);
-    final hasAvailableField = (primary?.available ?? available)
-            ?.trim()
-            .isNotEmpty ==
-        true;
-    return WalletCardBalanceEntity(
-      available: hasAvailableField ? availableAmount : balanceAmount,
-      reserved: _parseAmount(primary?.reserved ?? reserved),
-      currency: (primary?.currency ?? currency)?.trim().isNotEmpty == true
-          ? (primary?.currency ?? currency)!.trim()
-          : 'TZS',
-      pan: pan?.trim() ?? '',
-      holderName: name?.trim().isNotEmpty == true ? name!.trim() : null,
-    );
-  }
-
-  GoCardBalanceLineItem? get primaryBalanceLine => _primaryBalanceLine(data);
-
-  static List<GoCardBalanceLineItem> _parseBalanceLines(dynamic raw) {
-    if (raw is! List) return const [];
-
-    final lines = <GoCardBalanceLineItem>[];
-    for (final item in raw) {
-      if (item is! Map<String, dynamic>) continue;
-      lines.add(GoCardBalanceLineItem.fromJson(item));
-    }
-    return lines;
-  }
-
-  static GoCardBalanceLineItem? _primaryBalanceLine(
-    List<GoCardBalanceLineItem> lines,
-  ) {
-    if (lines.isEmpty) return null;
-
-    for (final item in lines) {
-      if (item.status?.trim().toUpperCase() == 'ACTIVE') {
-        return item;
-      }
-    }
-    return lines.first;
-  }
-
-  static int? _parseInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    return int.tryParse(value.toString());
-  }
-
-  static double _parseAmount(String? value) {
-    if (value == null || value.trim().isEmpty) return 0;
-    return double.tryParse(value.trim()) ?? 0;
-  }
+  Map<String, dynamic> toJson() => {
+    "result": result,
+    "resultcode": resultcode,
+    "pan": pan,
+    "name": name,
+    "phone": phone,
+    "card_number": cardNumber,
+    "account_type": accountType,
+    "dealer": dealer,
+    "group": group,
+    "records": records,
+    "data": data == null ? [] : List<dynamic>.from(data!.map((x) => x.toJson())),
+  };
 }
 
-class GoCardBalanceLineItem {
-  const GoCardBalanceLineItem({
+class BalanceDatum {
+  int? id;
+  String? currency;
+  int? balance;
+  int? reserved;
+  int? available;
+  String? status;
+
+  BalanceDatum({
     this.id,
     this.currency,
     this.balance,
@@ -166,28 +143,58 @@ class GoCardBalanceLineItem {
     this.status,
   });
 
-  final int? id;
-  final String? currency;
-  final String? balance;
-  final String? reserved;
-  final String? available;
-  final String? status;
+  BalanceDatum copyWith({
+    int? id,
+    String? currency,
+    int? balance,
+    int? reserved,
+    int? available,
+    String? status,
+  }) =>
+      BalanceDatum(
+        id: id ?? this.id,
+        currency: currency ?? this.currency,
+        balance: balance ?? this.balance,
+        reserved: reserved ?? this.reserved,
+        available: available ?? this.available,
+        status: status ?? this.status,
+      );
 
-  factory GoCardBalanceLineItem.fromJson(Map<String, dynamic> json) {
-    return GoCardBalanceLineItem(
-      id: GoCardBalanceData._parseInt(json['id']),
-      currency: json['currency']?.toString(),
-      balance: _amountAsString(json['balance']),
-      reserved: _amountAsString(json['reserved']),
-      available: _amountAsString(json['available']),
-      status: json['status']?.toString(),
-    );
-  }
+  factory BalanceDatum.fromJson(Map<String, dynamic> json) => BalanceDatum(
+    id: json["id"],
+    currency: json["currency"],
+    balance: json["balance"],
+    reserved: json["reserved"],
+    available: json["available"],
+    status: json["status"],
+  );
 
-  static String? _amountAsString(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toString();
-    final text = value.toString().trim();
-    return text.isEmpty ? null : text;
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "currency": currency,
+    "balance": balance,
+    "reserved": reserved,
+    "available": available,
+    "status": status,
+  };
+}
+
+extension GoCardBalanceResponseModelX on GoCardBalanceResponseModel {
+  bool get isSuccess => statusCode == 200 && response != null;
+
+  BalanceDatum? get _firstDatum =>
+      response?.data?.isNotEmpty == true ? response!.data!.first : null;
+
+  int get availableBalance =>
+      _firstDatum?.available ?? _firstDatum?.balance ?? 0;
+  int get reservedBalance => _firstDatum?.reserved ?? 0;
+  String get currency =>
+      _firstDatum?.currency?.trim().isNotEmpty == true
+          ? _firstDatum!.currency!.trim()
+          : 'TZS';
+  String get pan =>
+      response?.pan?.trim().isNotEmpty == true
+          ? response!.pan!.trim()
+          : response?.cardNumber?.trim() ?? '';
+  String get holderName => response?.name?.trim() ?? '';
 }

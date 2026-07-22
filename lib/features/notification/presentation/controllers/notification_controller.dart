@@ -8,7 +8,7 @@ class NotificationController extends GetxController {
 
   NotificationController({required this.repository});
 
-  final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
+  final RxList<Notification> notifications = <Notification>[].obs;
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMore = false.obs;
@@ -79,9 +79,10 @@ class NotificationController extends GetxController {
     isLoadingMore.value = false;
   }
 
-  Future<void> markAsRead(String id) async {
+  Future<void> markAsRead(String? id) async {
+    if (id == null || id.isEmpty) return;
     final index = notifications.indexWhere((e) => e.id == id);
-    if (index == -1 || notifications[index].isRead) {
+    if (index == -1 || (notifications[index].isRead ?? false)) {
       return;
     }
 

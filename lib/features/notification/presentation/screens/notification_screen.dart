@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -130,19 +130,21 @@ class NotificationScreen extends StatelessWidget {
   }
 
   Widget _buildNotificationItem(
-    NotificationModel notification,
+    Notification notification,
     NotificationController controller,
   ) {
+    final isRead = notification.isRead ?? false;
+    final text = notification.text ?? '';
     return GestureDetector(
       onTap: () => controller.markAsRead(notification.id),
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: notification.isRead
+          color: isRead
               ? AppColors.surfaceSubtle
               : AppColors.bgUnreadNotification,
           borderRadius: BorderRadius.circular(16.r),
-          border: notification.isRead
+          border: isRead
               ? null
               : Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           boxShadow: [
@@ -157,7 +159,7 @@ class NotificationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// Red dot for unread
-            if (!notification.isRead)
+            if (!isRead)
               Container(
                 width: 8.w,
                 height: 8.w,
@@ -195,9 +197,9 @@ class NotificationScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          notification.text,
+                          text,
                           style: AppTextStyles.homeSubtitle.copyWith(
-                            fontWeight: notification.isRead
+                            fontWeight: isRead
                                 ? FontWeight.w500
                                 : FontWeight.bold,
                             color: AppColors.textHeading,
@@ -326,16 +328,16 @@ class NotificationScreen extends StatelessWidget {
     }
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null) return '';
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
     try {
-      final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final diff = now.difference(date);
 
       if (diff.inMinutes < 60) {
+        final mins = diff.inMinutes < 1 ? 1 : diff.inMinutes;
         return AppStrings.minutesAgo.trParams({
-          'count': diff.inMinutes.toString(),
+          'count': mins.toString(),
         });
       }
       if (diff.inHours < 24) {

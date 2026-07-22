@@ -179,7 +179,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       AppLogger.d('getWalletBalance error (suppressed): $e', tag: 'ProfileRemoteDataSource');
     }
     return GoCardBalanceResponseModel(
-      response: GoCardBalanceData(balance: "0", currency: CurrencyCode.tzs),
+      response: BalanceResponse(
+        data: [
+          BalanceDatum(balance: 0, currency: CurrencyCode.tzs),
+        ],
+      ),
     );
   }
 

@@ -4,7 +4,7 @@ import '../../../../core/data/models/notification_model.dart';
 import '../../../../core/errors/failures.dart';
 
 abstract class NotificationRepository {
-  Future<Either<Failure, NotificationResponseModel>> getNotifications({
+  Future<Either<Failure, NotificationPayloadModel>> getNotifications({
     int page = 1,
     int limit = 20,
   });

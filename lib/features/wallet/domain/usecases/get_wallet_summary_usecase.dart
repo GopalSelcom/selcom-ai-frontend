@@ -1,4 +1,4 @@
-import '../entities/wallet_summary_entity.dart';
+import '../../data/models/go_card_balance_response.dart';
 import '../repositories/wallet_repository.dart';
 
 class GetWalletSummaryUseCase {
@@ -6,5 +6,5 @@ class GetWalletSummaryUseCase {
 
   final WalletRepository _repository;
 
-  Future<WalletSummaryEntity> call() => _repository.getWalletSummary();
+  Future<GoCardBalanceResponseModel?> call() => _repository.getCardBalance();
 }

@@ -20,7 +20,7 @@ import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../profile/data/models/selcom_pesa_link_models.dart';
 import '../../../profile/presentation/controllers/payment_methods_controller.dart';
 import '../../../settings/data/models/settings_models.dart';
-import '../../../wallet/domain/entities/wallet_details_entity.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/datasources/wallet_payment_remote_data_source.dart';
@@ -651,27 +651,28 @@ class SelcomPesaTopupController extends GetxController {
   }
 
   Future<_WalletTopupContext?> _loadWalletContext() async {
-    final details = await _walletRepository.getWalletDetails();
-    if (details == null || !details.hasWallet) {
+    final cardBalance = await _walletRepository.getCardBalance();
+    if (cardBalance == null || !cardBalance.isSuccess) {
       return null;
     }
-    if (!details.isActive) {
+    final accountNo = cardBalance.pan;
+    if (accountNo.isEmpty) {
       return null;
     }
 
-    final displayName = await _resolveDisplayName(details);
+    final displayName = await _resolveDisplayName(cardBalance);
     if (displayName.isEmpty) {
       return null;
     }
 
     return _WalletTopupContext(
-      accountNo: details.accountNo.trim(),
+      accountNo: accountNo,
       displayName: displayName,
     );
   }
 
-  Future<String> _resolveDisplayName(WalletDetailsEntity details) async {
-    final walletName = details.name?.trim() ?? '';
+  Future<String> _resolveDisplayName(GoCardBalanceResponseModel cardBalance) async {
+    final walletName = cardBalance.holderName;
     if (walletName.isNotEmpty) return walletName;
 
     final raw = await StorageService().read(StorageKeys.user);

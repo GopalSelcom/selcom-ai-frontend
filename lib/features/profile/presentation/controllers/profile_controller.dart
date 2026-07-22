@@ -24,7 +24,7 @@ import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
-import '../../../wallet/domain/entities/wallet_summary_entity.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/utils/wallet_session.dart';
 import '../../data/cache/user_profile_cache.dart';
@@ -68,8 +68,8 @@ abstract final class ProfileWalletCache {
     reserved = reservedValue;
   }
 
-  /// Shared summary for profile and wallet screens (no network).
-  static WalletSummaryEntity? toSummaryEntity() {
+  /// Shared card balance model for profile and wallet screens (no network).
+  static GoCardBalanceResponseModel? toCardBalanceModel() {
     if (!isLoaded || !isWalletLinked) return null;
 
     final rawNumber = walletNumberRaw.trim().isNotEmpty
@@ -78,13 +78,21 @@ abstract final class ProfileWalletCache {
     if (rawNumber.isEmpty) return null;
 
     final balanceValue =
-        double.tryParse(balance.replaceAll(',', '')) ?? 0;
+        (double.tryParse(balance.replaceAll(',', '')) ?? 0).toInt();
 
-    return WalletSummaryEntity(
-      balance: balanceValue,
-      walletNumber: rawNumber,
-      currency: currency.trim().isNotEmpty ? currency.trim() : 'TZS',
-      reserved: reserved,
+    return GoCardBalanceResponseModel(
+      statusCode: 200,
+      response: BalanceResponse(
+        pan: rawNumber,
+        data: [
+          BalanceDatum(
+            currency: currency.trim().isNotEmpty ? currency.trim() : 'TZS',
+            available: balanceValue,
+            balance: balanceValue,
+            reserved: reserved.toInt(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -296,15 +304,19 @@ class ProfileController extends GetxController {
 
     try {
       final summary = await getWalletSummaryUseCase();
-      final account = summary.walletNumber.trim();
+      if (summary == null || !summary.isSuccess) {
+        _setWalletUnlinked();
+        return;
+      }
+      final account = summary.pan;
       if (account.isEmpty) {
         _setWalletUnlinked();
         return;
       }
       isWalletLinked.value = true;
       walletBalance.value =
-          NumberFormat('#,##0', 'en_US').format(summary.balance);
-      walletCurrency.value = summary.currency.trim();
+          NumberFormat('#,##0', 'en_US').format(summary.availableBalance);
+      walletCurrency.value = summary.currency;
       walletNumber.value = formatWalletAccountNumber(account);
       ProfileWalletCache.save(
         linked: true,
@@ -312,7 +324,7 @@ class ProfileController extends GetxController {
         currencyValue: walletCurrency.value,
         walletNumberValue: walletNumber.value,
         walletNumberRawValue: account,
-        reservedValue: summary.reserved,
+        reservedValue: summary.reservedBalance.toDouble(),
       );
       ProfileWalletCache.isBalanceVisible = isBalanceVisible.value;
       _maybeFetchLocalBankInstructions(account);

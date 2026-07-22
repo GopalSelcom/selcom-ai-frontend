@@ -108,6 +108,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final selectedPickupSavedPlaceId = Rxn<String>(_currentLocationPlaceId);
   final isSavedPlacesExpanded = false.obs;
   final isLoadingHomeData = false.obs;
+  Future<void>? _loadHomeDataInFlight;
 
   /// True after the first [_loadHomeData] attempt finishes (success or partial).
   /// Location selection uses this to reuse in-memory recent/saved places.
@@ -421,6 +422,22 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _loadHomeData() async {
     if (SessionExpiryService.isHandling) return;
+    if (_loadHomeDataInFlight != null) {
+      return _loadHomeDataInFlight!;
+    }
+
+    final load = _performLoadHomeData();
+    _loadHomeDataInFlight = load;
+    try {
+      await load;
+    } finally {
+      if (identical(_loadHomeDataInFlight, load)) {
+        _loadHomeDataInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _performLoadHomeData() async {
     isLoadingHomeData.value = true;
     try {
       // Fetch vehicle types, recent destinations, saved places, and profile in parallel.
@@ -580,6 +597,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       _skipNextVisibleRefresh = false;
       return;
     }
+    if (isLoadingHomeData.value || _loadHomeDataInFlight != null) return;
     if (_activeRideRefreshQueued) return;
     _activeRideRefreshQueued = true;
     Future.microtask(() async {

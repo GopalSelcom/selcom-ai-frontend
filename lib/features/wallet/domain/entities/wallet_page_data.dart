@@ -1,13 +1,13 @@
-import 'wallet_summary_entity.dart';
-import 'wallet_transaction_entity.dart';
+import '../../data/models/go_card_balance_response.dart';
+import '../../data/models/go_card_statement_response.dart';
 
 /// Summary and recent transactions loaded with a single card-balance request.
 class WalletPageData {
   const WalletPageData({
-    required this.summary,
+    this.cardBalance,
     required this.transactions,
   });
 
-  final WalletSummaryEntity summary;
-  final List<WalletTransactionEntity> transactions;
+  final GoCardBalanceResponseModel? cardBalance;
+  final List<TransactionDatum> transactions;
 }

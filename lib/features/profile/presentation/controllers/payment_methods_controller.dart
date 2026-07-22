@@ -14,6 +14,7 @@ import '../../../../shared/utils/phone_formatter.dart';
 import '../../../../shared/utils/selcom_pesa_phone_utils.dart';
 import '../../../payment/domain/wallet_payment_phone_country.dart';
 import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
+import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../data/datasources/selcom_pesa_link_remote_data_source.dart';
 import '../../data/models/selcom_pesa_link_models.dart';
@@ -100,11 +101,15 @@ class PaymentMethodsController extends GetxController {
   Future<void> _loadWalletSummary() async {
     try {
       final summary = await _getWalletSummaryUseCase();
-      walletBalance.value = NumberFormat(
-        '#,##0',
-        'en_US',
-      ).format(summary.balance);
-      walletNumber.value = summary.walletNumber.trim();
+      if (summary != null && summary.isSuccess) {
+        walletBalance.value = NumberFormat(
+          '#,##0',
+          'en_US',
+        ).format(summary.availableBalance);
+        walletNumber.value = summary.pan;
+      } else {
+        clearWalletDisplayOnLogout();
+      }
     } catch (_) {
       clearWalletDisplayOnLogout();
     }

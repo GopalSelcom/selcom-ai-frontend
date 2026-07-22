@@ -16,7 +16,7 @@ import '../../../../shared/utils/currency_formatter.dart';
 import '../../../profile/domain/usecases/profile_usecase.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.dart';
-import '../../domain/entities/wallet_summary_entity.dart';
+import '../../data/models/go_card_balance_response.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../data/datasources/wallet_remote_data_source.dart';
@@ -31,12 +31,25 @@ class WalletController extends GetxController {
   /// GetX bindings. Must be cleared on logout — see [WalletSession.teardownOnLogout].
   static WalletController? _instance;
 
+  static WalletController? get instance => _instance;
+
   factory WalletController() {
     _instance ??= WalletController._internal();
     return _instance!;
   }
 
   WalletController._internal();
+
+  static void resetControllerInstanceOnAccountSwitch() {
+    if (_instance != null) {
+      final controller = _instance!;
+      controller._cancelWalletBalanceHideTimer();
+      controller.isEmailingStatement.value = false;
+      controller.isBalanceVisible.value = false;
+      controller.isRefreshingWalletBalance.value = false;
+      controller._loadInFlight = null;
+    }
+  }
 
   /// Clears in-memory wallet UI and drops [_instance] so the next session
   /// cannot reuse the previous user's balance or transaction preview.
@@ -63,7 +76,7 @@ class WalletController extends GetxController {
   final RxBool isEmailingStatement = false.obs;
   final RxBool isRefreshingWalletBalance = false.obs;
   final RxBool isBalanceVisible = false.obs;
-  final Rxn<WalletSummaryEntity> summary = Rxn<WalletSummaryEntity>();
+  final Rxn<GoCardBalanceResponseModel> summary = Rxn<GoCardBalanceResponseModel>();
   final RxList<WalletTransactionItem> recentTransactions =
       <WalletTransactionItem>[].obs;
 
@@ -96,7 +109,7 @@ class WalletController extends GetxController {
 
   /// Reuses [ProfileWalletCache] so wallet entry does not refetch card balance.
   void _restoreSummaryFromSharedCache() {
-    summary.value = ProfileWalletCache.toSummaryEntity();
+    summary.value = ProfileWalletCache.toCardBalanceModel();
   }
 
   /// [fetchBalance] `false` when profile already loaded balance this session —
@@ -138,14 +151,16 @@ class WalletController extends GetxController {
         final pageData = await sl<WalletRepository>().getWalletPageData(
           filter: WalletTransactionFilter.all,
         );
-        summary.value = pageData.summary;
+        summary.value = pageData.cardBalance;
         recentTransactions.assignAll(
           pageData.transactions
               .take(walletRecentTransactionPreviewLimit)
               .map(mapWalletTransactionToItem)
               .toList(growable: false),
         );
-        _persistProfileWalletCache(pageData.summary);
+        if (pageData.cardBalance != null) {
+          _persistProfileWalletCache(pageData.cardBalance!);
+        }
       }
     } finally {
       isLoading.value = false;
@@ -170,17 +185,17 @@ class WalletController extends GetxController {
     );
   }
 
-  void _persistProfileWalletCache(WalletSummaryEntity walletSummary) {
-    final account = walletSummary.walletNumber.trim();
+  void _persistProfileWalletCache(GoCardBalanceResponseModel cardBalance) {
+    final account = cardBalance.pan;
     if (account.isEmpty) return;
 
     ProfileWalletCache.save(
       linked: true,
-      balanceValue: NumberFormat('#,##0', 'en_US').format(walletSummary.balance),
-      currencyValue: walletSummary.currency.trim(),
+      balanceValue: NumberFormat('#,##0', 'en_US').format(cardBalance.availableBalance),
+      currencyValue: cardBalance.currency,
       walletNumberValue: formatWalletAccountNumber(account),
       walletNumberRawValue: account,
-      reservedValue: walletSummary.reserved,
+      reservedValue: cardBalance.reservedBalance.toDouble(),
     );
     ProfileWalletCache.isBalanceVisible = isBalanceVisible.value;
     // Once per session while wallet number exists (service dedupes).
@@ -188,7 +203,7 @@ class WalletController extends GetxController {
   }
 
   String get formattedBalance {
-    final value = summary.value?.balance;
+    final value = summary.value?.availableBalance;
     if (value == null) return '';
     return CurrencyFormatter.formatWithApiCurrency(
       value,
@@ -209,14 +224,14 @@ class WalletController extends GetxController {
 
   /// Reserved line follows the same eye visibility as [displayBalanceText].
   String? get formattedReservedBalanceLabel {
-    final reserved = summary.value?.reserved ?? 0;
+    final reserved = summary.value?.reservedBalance ?? 0;
     if (reserved <= 0) return null;
 
     final showAmount =
         isBalanceVisible.value || isRefreshingWalletBalance.value;
     final amountText = showAmount
         ? CurrencyFormatter.formatWithApiCurrency(
-            reserved,
+            reserved.toDouble(),
             summary.value?.currency,
           )
         : formatHiddenWalletBalance(summary.value?.currency);
@@ -225,12 +240,12 @@ class WalletController extends GetxController {
   }
 
   String get formattedWalletNumber {
-    final raw = summary.value?.walletNumber ?? '';
+    final raw = summary.value?.pan ?? '';
     return formatWalletAccountNumber(raw);
   }
 
   String get walletNumberForCopy =>
-      summary.value?.walletNumber.replaceAll(RegExp(r'\s+'), '') ?? '';
+      summary.value?.pan.replaceAll(RegExp(r'\s+'), '') ?? '';
 
   Future<void> refreshWallet() {
     // Pull-to-refresh must always re-fetch the statement. Balance is only
@@ -260,18 +275,20 @@ class WalletController extends GetxController {
   Future<void> _refreshWalletBalance() async {
     isRefreshingWalletBalance.value = true;
     try {
-      final walletSummary = await sl<WalletRepository>().getWalletSummary();
-      summary.value = walletSummary;
-      _persistProfileWalletCache(walletSummary);
+      final cardBalance = await sl<WalletRepository>().getCardBalance();
+      if (cardBalance != null) {
+        summary.value = cardBalance;
+        _persistProfileWalletCache(cardBalance);
 
-      if (Get.isRegistered<ProfileController>()) {
-        final profileController = Get.find<ProfileController>();
-        profileController.walletBalance.value =
-            NumberFormat('#,##0', 'en_US').format(walletSummary.balance);
-        profileController.walletCurrency.value = walletSummary.currency.trim();
-        profileController.walletNumber.value =
-            formatWalletAccountNumber(walletSummary.walletNumber.trim());
-        profileController.isWalletLinked.value = true;
+        if (Get.isRegistered<ProfileController>()) {
+          final profileController = Get.find<ProfileController>();
+          profileController.walletBalance.value =
+              NumberFormat('#,##0', 'en_US').format(cardBalance.availableBalance);
+          profileController.walletCurrency.value = cardBalance.currency;
+          profileController.walletNumber.value =
+              formatWalletAccountNumber(cardBalance.pan);
+          profileController.isWalletLinked.value = true;
+        }
       }
     } finally {
       isRefreshingWalletBalance.value = false;

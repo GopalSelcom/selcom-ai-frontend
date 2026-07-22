@@ -1,38 +1,40 @@
+// To parse this JSON data, do
+//
+//     final notificationPayloadModel = notificationPayloadModelFromJson(jsonString);
+
 import 'dart:convert';
 
-NotificationResponseModel notificationModelFromJson(String str) =>
-    NotificationResponseModel.fromJson(json.decode(str));
+NotificationPayloadModel notificationPayloadModelFromJson(String str) => NotificationPayloadModel.fromJson(json.decode(str));
 
-String notificationModelToJson(NotificationResponseModel data) =>
-    json.encode(data.toJson());
+String notificationPayloadModelToJson(NotificationPayloadModel data) => json.encode(data.toJson());
 
-class NotificationResponseModel {
-  final int? statusCode;
-  final String? message;
-  final NotificationPayloadModel? data;
+class NotificationPayloadModel {
+  int? statusCode;
+  String? message;
+  Data? data;
 
-  NotificationResponseModel({this.statusCode, this.message, this.data});
+  NotificationPayloadModel({
+    this.statusCode,
+    this.message,
+    this.data,
+  });
 
-  NotificationResponseModel copyWith({
+  NotificationPayloadModel copyWith({
     int? statusCode,
     String? message,
-    NotificationPayloadModel? data,
-  }) => NotificationResponseModel(
-    statusCode: statusCode ?? this.statusCode,
-    message: message ?? this.message,
-    data: data ?? this.data,
-  );
-
-  factory NotificationResponseModel.fromJson(Map<String, dynamic> json) =>
-      NotificationResponseModel(
-        statusCode: json["status_code"],
-        message: json["message"],
-        data: json["data"] == null
-            ? null
-            : NotificationPayloadModel.fromJson(
-                Map<String, dynamic>.from(json["data"]),
-              ),
+    Data? data,
+  }) =>
+      NotificationPayloadModel(
+        statusCode: statusCode ?? this.statusCode,
+        message: message ?? this.message,
+        data: data ?? this.data,
       );
+
+  factory NotificationPayloadModel.fromJson(Map<String, dynamic> json) => NotificationPayloadModel(
+    statusCode: json["status_code"],
+    message: json["message"],
+    data: json["data"] == null ? null : Data.fromJson(json["data"]),
+  );
 
   Map<String, dynamic> toJson() => {
     "status_code": statusCode,
@@ -41,68 +43,146 @@ class NotificationResponseModel {
   };
 }
 
-class NotificationPayloadModel {
-  final List<NotificationModel> notifications;
-  final int unreadCount;
-  final NotificationPaginationModel? pagination;
+class Data {
+  List<Notification>? notifications;
+  int? unreadCount;
+  Pagination? pagination;
 
-  NotificationPayloadModel({
-    required this.notifications,
-    required this.unreadCount,
+  Data({
+    this.notifications,
+    this.unreadCount,
     this.pagination,
   });
 
-  factory NotificationPayloadModel.fromJson(Map<String, dynamic> json) {
-    final rawNotifications = json["notifications"];
-    final parsedNotifications = rawNotifications is List
-        ? rawNotifications
-              .map(
-                (item) => NotificationModel.fromJson(
-                  Map<String, dynamic>.from(item as Map),
-                ),
-              )
-              .toList()
-        : <NotificationModel>[];
+  Data copyWith({
+    List<Notification>? notifications,
+    int? unreadCount,
+    Pagination? pagination,
+  }) =>
+      Data(
+        notifications: notifications ?? this.notifications,
+        unreadCount: unreadCount ?? this.unreadCount,
+        pagination: pagination ?? this.pagination,
+      );
 
-    return NotificationPayloadModel(
-      notifications: parsedNotifications,
-      unreadCount: json["unread_count"] is int ? json["unread_count"] : 0,
-      pagination: json["pagination"] == null
-          ? null
-          : NotificationPaginationModel.fromJson(
-              Map<String, dynamic>.from(json["pagination"]),
-            ),
-    );
-  }
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
+    notifications: json["notifications"] == null ? [] : List<Notification>.from(json["notifications"]!.map((x) => Notification.fromJson(x))),
+    unreadCount: json["unread_count"],
+    pagination: json["pagination"] == null ? null : Pagination.fromJson(json["pagination"]),
+  );
 
   Map<String, dynamic> toJson() => {
-    "notifications": notifications.map((x) => x.toJson()).toList(),
+    "notifications": notifications == null ? [] : List<dynamic>.from(notifications!.map((x) => x.toJson())),
     "unread_count": unreadCount,
     "pagination": pagination?.toJson(),
   };
 }
 
-class NotificationPaginationModel {
-  final int page;
-  final int limit;
-  final int total;
-  final int totalPages;
+class Notification {
+  String? id;
+  DateTime? createdOn;
+  bool? isMarketing;
+  String? url;
+  bool? isRead;
+  String? rideId;
+  int? type;
+  String? orderId;
+  String? text;
 
-  NotificationPaginationModel({
-    required this.page,
-    required this.limit,
-    required this.total,
-    required this.totalPages,
+  Notification({
+    this.id,
+    this.createdOn,
+    this.isMarketing,
+    this.url,
+    this.isRead,
+    this.rideId,
+    this.type,
+    this.orderId,
+    this.text,
   });
 
-  factory NotificationPaginationModel.fromJson(Map<String, dynamic> json) {
-    return NotificationPaginationModel(
-      page: json["page"] is int ? json["page"] : 1,
-      limit: json["limit"] is int ? json["limit"] : 20,
-      total: json["total"] is int ? json["total"] : 0,
-      totalPages: json["total_pages"] is int ? json["total_pages"] : 1,
-    );
-  }
+  Notification copyWith({
+    String? id,
+    DateTime? createdOn,
+    bool? isMarketing,
+    String? url,
+    bool? isRead,
+    String? rideId,
+    int? type,
+    String? orderId,
+    String? text,
+  }) =>
+      Notification(
+        id: id ?? this.id,
+        createdOn: createdOn ?? this.createdOn,
+        isMarketing: isMarketing ?? this.isMarketing,
+        url: url ?? this.url,
+        isRead: isRead ?? this.isRead,
+        rideId: rideId ?? this.rideId,
+        type: type ?? this.type,
+        orderId: orderId ?? this.orderId,
+        text: text ?? this.text,
+      );
+
+  factory Notification.fromJson(Map<String, dynamic> json) => Notification(
+    id: json["_id"],
+    createdOn: json["created_on"] == null ? null : DateTime.parse(json["created_on"]),
+    isMarketing: json["is_marketing"],
+    url: json["url"],
+    isRead: json["is_read"],
+    rideId: json["ride_id"],
+    type: json["type"],
+    orderId: json["order_id"],
+    text: json["text"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "_id": id,
+    "created_on": createdOn?.toIso8601String(),
+    "is_marketing": isMarketing,
+    "url": url,
+    "is_read": isRead,
+    "ride_id":rideId,
+    "type": type,
+    "order_id": orderId,
+    "text": text,
+  };
+}
+
+
+
+class Pagination {
+  int? page;
+  int? limit;
+  int? total;
+  int? totalPages;
+
+  Pagination({
+    this.page,
+    this.limit,
+    this.total,
+    this.totalPages,
+  });
+
+  Pagination copyWith({
+    int? page,
+    int? limit,
+    int? total,
+    int? totalPages,
+  }) =>
+      Pagination(
+        page: page ?? this.page,
+        limit: limit ?? this.limit,
+        total: total ?? this.total,
+        totalPages: totalPages ?? this.totalPages,
+      );
+
+  factory Pagination.fromJson(Map<String, dynamic> json) => Pagination(
+    page: json["page"],
+    limit: json["limit"],
+    total: json["total"],
+    totalPages: json["total_pages"],
+  );
 
   Map<String, dynamic> toJson() => {
     "page": page,
@@ -112,191 +192,65 @@ class NotificationPaginationModel {
   };
 }
 
-class NotificationModel {
-  final String id;
-  final String text;
-  final String createdOn;
-  final bool isRead;
-  final bool isMarketing;
-  final String url;
+class FCMNotificationData {
   final String? rideId;
   final String? orderId;
-  final int? type;
-
-  NotificationModel({
-    required this.id,
-    required this.text,
-    required this.createdOn,
-    required this.isRead,
-    required this.isMarketing,
-    required this.url,
-    required this.rideId,
-    required this.orderId,
-    this.type,
-  });
-
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    return NotificationModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      text: json['text'] ?? json['message'] ?? '',
-      createdOn: json['created_on'] ?? json['timestamp'] ?? '',
-      isRead: json['is_read'] ?? false,
-      isMarketing: json['is_marketing'] ?? false,
-      url: json['url'] ?? '',
-      rideId: json['ride_id']?.toString(),
-      orderId: json['order_id']?.toString(),
-      type: json['type'] ?? 0,
-    );
-  }
-
-  NotificationModel copyWith({
-    String? id,
-    String? text,
-    String? createdOn,
-    bool? isRead,
-    bool? isMarketing,
-    String? url,
-    String? rideId,
-    String? orderId,
-    int? type,
-  }) {
-    return NotificationModel(
-      id: id ?? this.id,
-      text: text ?? this.text,
-      createdOn: createdOn ?? this.createdOn,
-      isRead: isRead ?? this.isRead,
-      isMarketing: isMarketing ?? this.isMarketing,
-      url: url ?? this.url,
-      rideId: rideId ?? this.rideId,
-      orderId: orderId ?? this.orderId,
-      type: type ?? this.type,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    "_id": id,
-    "text": text,
-    "created_on": createdOn,
-    "is_read": isRead,
-    "is_marketing": isMarketing,
-    "url": url,
-    "ride_id": rideId,
-    "order_id": orderId,
-    "type": type,
-  };
-}
-
-class FCMNotificationData {
   final String? status;
-  final String? rideId;
   final String? title;
   final String? body;
-  final bool? sound;
-  final int? type;
-  final String? clickAction;
-
-  // 🚗 Ride Tracking Telemetry
+  final String? type;
   final String? driverName;
   final String? vehicleName;
   final String? plateNumber;
-  final String? driverAvatarUrl;
   final double? etaSeconds;
-  final bool? isCompleted;
-  final bool? isRiderDelivering;
-  final int? step;
-  final int? totalSteps;
-  final String? pickupDistance;
-  final String? deliveryDistance;
 
   FCMNotificationData({
-    this.status,
     this.rideId,
+    this.orderId,
+    this.status,
     this.title,
     this.body,
-    this.sound,
     this.type,
-    this.clickAction,
     this.driverName,
     this.vehicleName,
     this.plateNumber,
-    this.driverAvatarUrl,
     this.etaSeconds,
-    this.isCompleted,
-    this.isRiderDelivering,
-    this.step,
-    this.totalSteps,
-    this.pickupDistance,
-    this.deliveryDistance,
   });
 
   factory FCMNotificationData.fromJson(Map<String, dynamic> json) {
-    // 📡 Robust ETA Decoding
-    final rawEta = json['eta_seconds'] ?? json['eta'] ?? json['eta_minutes'];
-    double? eta;
-    if (rawEta != null) {
-      eta = double.tryParse(rawEta.toString());
-      // If the key was 'eta_minutes', convert to seconds
-      if (json.containsKey('eta_minutes') && !json.containsKey('eta_seconds')) {
-        eta = (eta ?? 0) * 60;
-      }
+    double? parseEta(dynamic v) {
+      if (v == null) return null;
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString());
     }
 
-    // 📡 Robust Phase Decoding (Is Rider In Ride?)
-    final rawPhase =
-        json['is_rider_delivering'] ??
-        json['is_rider_in_ride'] ??
-        json['rider_in_ride'];
-    final bool isInRide =
-        rawPhase?.toString() == 'true' ||
-        rawPhase?.toString() == '1' ||
-        rawPhase == true ||
-        rawPhase == 1;
-
     return FCMNotificationData(
+      rideId: json['ride_id']?.toString() ?? json['rideId']?.toString(),
+      orderId: json['order_id']?.toString() ?? json['orderId']?.toString(),
       status: json['status']?.toString(),
-      rideId: json['ride_id']?.toString() ?? json['order_id']?.toString(),
       title: json['title']?.toString(),
       body: json['body']?.toString(),
-      sound: json['sound']?.toString() == 'true',
-      type: int.tryParse(json['type']?.toString() ?? ''),
-      clickAction: json['click_action']?.toString(),
-
-      // Parse Telemetry
-      driverName: json['driver_name']?.toString(),
-      vehicleName:
-          json['vehicle_name']?.toString() ?? json['vehicle_desc']?.toString(),
-      plateNumber: json['plate_number']?.toString(),
-      driverAvatarUrl: json['driver_avatar_url']?.toString(),
-      etaSeconds: eta,
-      isCompleted:
-          json['is_completed']?.toString() == 'true' ||
-          json['is_completed']?.toString() == '1',
-      isRiderDelivering: isInRide,
-      step: int.tryParse(json['step']?.toString() ?? ''),
-      totalSteps: int.tryParse(json['total_steps']?.toString() ?? ''),
-      pickupDistance: json['pickup_distance']?.toString(),
-      deliveryDistance: json['delivery_distance']?.toString(),
+      type: json['type']?.toString(),
+      driverName: json['driver_name']?.toString() ?? json['driverName']?.toString(),
+      vehicleName: json['vehicle_name']?.toString() ?? json['vehicleName']?.toString(),
+      plateNumber: json['plate_number']?.toString() ?? json['plateNumber']?.toString(),
+      etaSeconds: parseEta(json['eta_seconds'] ?? json['etaSeconds']),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'status': status,
-    'ride_id': rideId,
-    'title': title,
-    'body': body,
-    'sound': sound,
-    'type': type,
-    'click_action': clickAction,
-    'driver_name': driverName,
-    'vehicle_name': vehicleName,
-    'plate_number': plateNumber,
-    'driver_avatar_url': driverAvatarUrl,
-    'eta_seconds': etaSeconds,
-    'is_completed': isCompleted,
-    'is_rider_delivering': isRiderDelivering,
-    'step': step,
-    'total_steps': totalSteps,
-    'pickup_distance': pickupDistance,
-    'delivery_distance': deliveryDistance,
-  };
+        if (rideId != null) 'ride_id': rideId,
+        if (orderId != null) 'order_id': orderId,
+        if (status != null) 'status': status,
+        if (title != null) 'title': title,
+        if (body != null) 'body': body,
+        if (type != null) 'type': type,
+        if (driverName != null) 'driver_name': driverName,
+        if (vehicleName != null) 'vehicle_name': vehicleName,
+        if (plateNumber != null) 'plate_number': plateNumber,
+        if (etaSeconds != null) 'eta_seconds': etaSeconds,
+      };
 }
+
+
