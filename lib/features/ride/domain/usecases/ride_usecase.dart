@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/ride_model.dart';

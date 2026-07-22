@@ -10,7 +10,9 @@ import '../../domain/repositories/profile_repository.dart';
 import '../cache/user_profile_cache.dart';
 import '../datasources/profile_remote_data_source.dart';
 import '../models/contact_us_models.dart';
+import '../models/country_response.dart';
 import '../models/request/update_profile_request.dart';
+import '../models/state_model.dart';
 import '../models/update_profile_response.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -148,6 +150,30 @@ class ProfileRepositoryImpl implements ProfileRepository {
   ) async {
     try {
       final result = await remoteDataSource.sendEmail(request);
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CountriesResponse>>> getCountries() async {
+    try {
+      final result = await remoteDataSource.getCountries();
+      return Right(result);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<StateResponse>>> getStatesByCountry(
+    String countryId,
+  ) async {
+    try {
+      final result = await remoteDataSource.getStatesByCountry(countryId);
       return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

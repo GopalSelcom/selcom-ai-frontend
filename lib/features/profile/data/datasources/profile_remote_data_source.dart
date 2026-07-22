@@ -10,8 +10,10 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../models/contact_us_models.dart';
+import '../models/country_response.dart';
 import '../models/profile_response_model.dart';
 import '../models/request/update_profile_request.dart';
+import '../models/state_model.dart';
 import '../models/update_profile_response.dart';
 
 abstract class ProfileRemoteDataSource {
@@ -32,6 +34,10 @@ abstract class ProfileRemoteDataSource {
   Future<EmailSubjectResponseModel> getEmailSubjects();
 
   Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
+
+  Future<List<CountriesResponse>> getCountries();
+
+  Future<List<StateResponse>> getStatesByCountry(String countryId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -228,5 +234,51 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
     }
     throw Exception('Failed to send email');
+  }
+
+  @override
+  Future<List<CountriesResponse>> getCountries() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.common.countries,
+        method: ApiMethod.post,
+        body: const {},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data is Map) {
+      final model = CountriesModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+      return model.response ?? const [];
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const [];
+    }
+    throw Exception('Failed to get countries');
+  }
+
+  @override
+  Future<List<StateResponse>> getStatesByCountry(String countryId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.common.stateByCountry,
+        method: ApiMethod.post,
+        body: {'country_id': countryId},
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data is Map) {
+      final model = SelectStateModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
+      return model.response ?? const [];
+    }
+    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
+      return const [];
+    }
+    throw Exception('Failed to get states');
   }
 }
