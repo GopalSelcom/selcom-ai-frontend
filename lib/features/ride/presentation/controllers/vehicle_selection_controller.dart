@@ -13,8 +13,8 @@ import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rid
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/ride_model.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/errors/failures.dart';
@@ -701,7 +701,7 @@ class VehicleSelectionController extends GetxController {
     }
   }
 
-  /// Fallback rows when estimate API fails; uses real `VehicleTypeModel.id` from `getVehicleTypes()`.
+  /// Fallback rows when estimate API fails; uses real vehicle type id from `getVehicleTypes()`.
   List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
     final sorted = (types.where((t) => t.isActive).toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));

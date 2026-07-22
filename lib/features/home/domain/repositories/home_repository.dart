@@ -6,7 +6,7 @@ import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/geocode_response_model.dart';
 import '../../data/models/places_models.dart';

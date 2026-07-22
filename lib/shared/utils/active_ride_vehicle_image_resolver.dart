@@ -1,5 +1,5 @@
+import '../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../core/data/models/ride_model.dart';
-import '../../core/domain/entities/vehicle_type_entity.dart';
 import 'vehicle_image_utils.dart';
 
 /// Home active-ride banner vehicle illustration.
@@ -13,7 +13,7 @@ abstract final class ActiveRideVehicleImageResolver {
 
   static String resolveAsset({
     required RideModel ride,
-    Iterable<VehicleTypeEntity>? vehicleTypeCatalog,
+    Iterable<VehicleTypeModel>? vehicleTypeCatalog,
   }) {
     if (_hasAssignedDriver(ride)) {
       final assigned = _assignedVehicleTypeLabel(ride);
@@ -51,7 +51,7 @@ abstract final class ActiveRideVehicleImageResolver {
 
   static String? _bookedVehicleTypeLabel(
     RideModel ride,
-    Iterable<VehicleTypeEntity>? vehicleTypeCatalog,
+    Iterable<VehicleTypeModel>? vehicleTypeCatalog,
   ) {
     final key = ride.vehicleKey?.trim();
     if (key != null && key.isNotEmpty) return key;
@@ -68,7 +68,7 @@ abstract final class ActiveRideVehicleImageResolver {
   /// Maps `vehicle_type_id` (Mongo id string) to catalog `name` / `key` for image lookup.
   static String? catalogLabelForVehicleTypeId(
     String vehicleTypeId,
-    Iterable<VehicleTypeEntity>? catalog,
+    Iterable<VehicleTypeModel>? catalog,
   ) {
     final id = vehicleTypeId.trim();
     if (id.isEmpty || catalog == null) return null;

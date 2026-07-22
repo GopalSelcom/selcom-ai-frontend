@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
@@ -14,7 +15,6 @@ import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
 import '../../../../core/data/models/ride_model.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';

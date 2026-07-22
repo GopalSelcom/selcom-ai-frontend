@@ -6,7 +6,7 @@ import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -42,8 +42,7 @@ class HomeRepositoryImpl implements HomeRepository {
       return Right(cached);
     }
     try {
-      final inFlight = _vehicleTypesInFlight ??=
-          remoteDataSource.getVehicleTypes();
+      final inFlight = _vehicleTypesInFlight ??= _fetchVehicleTypes();
       final result = await inFlight;
       if (result.isNotEmpty) {
         _vehicleTypesCache = result;
@@ -55,6 +54,14 @@ class HomeRepositoryImpl implements HomeRepository {
     } finally {
       _vehicleTypesInFlight = null;
     }
+  }
+
+  Future<List<VehicleTypeModel>> _fetchVehicleTypes() async {
+    final response = await remoteDataSource.getVehicleTypes();
+    if (!response.isSuccess) {
+      return const [];
+    }
+    return response.vehicleTypes;
   }
 
   @override

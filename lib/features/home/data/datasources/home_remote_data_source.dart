@@ -5,7 +5,6 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
 import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
@@ -14,7 +13,7 @@ import '../models/geocode_response_model.dart';
 import '../models/places_models.dart';
 
 abstract class HomeRemoteDataSource {
-  Future<List<VehicleTypeModel>> getVehicleTypes();
+  Future<VehicleTypesResponseModel> getVehicleTypes();
 
   Future<AutocompletePredictionModel?> autocomplete({required String input});
 
@@ -47,7 +46,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   HomeRemoteDataSourceImpl();
 
   @override
-  Future<List<VehicleTypeModel>> getVehicleTypes() async {
+  Future<VehicleTypesResponseModel> getVehicleTypes() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.getVehicleTypes,
@@ -56,10 +55,13 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final vehicleResponse = VehicleTypesResponseModel.fromJson(response.data);
-      return vehicleResponse.data?.vehicleTypes ?? [];
+      return VehicleTypesResponseModel.fromJson(response.data);
     }
-    return [];
+
+    return VehicleTypesResponseModel(
+      statusCode: response.statusCode,
+      message: null,
+    );
   }
 
   @override

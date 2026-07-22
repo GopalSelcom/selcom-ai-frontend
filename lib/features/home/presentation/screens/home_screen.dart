@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/data/models/vehicle_type_model.dart';
+import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/app_map_type_service.dart';
