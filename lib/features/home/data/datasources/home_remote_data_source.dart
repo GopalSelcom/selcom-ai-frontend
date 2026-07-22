@@ -6,6 +6,7 @@ import '../../../../core/data/models/responses/rides/promo_available_response.da
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/config/ride_payment_endpoints.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -72,7 +73,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.places.autocomplete,
         method: ApiMethod.get,
-        queryParams: {'input': input},
+        queryParams: {Params.input: input},
       ),
     );
 
@@ -91,7 +92,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.places.reverseGeocode,
         method: ApiMethod.get,
-        queryParams: {'lat': lat, 'lng': lng},
+        queryParams: {Params.lat: lat, Params.lng: lng},
       ),
     );
 
@@ -110,7 +111,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.places.geocode,
         method: ApiMethod.get,
-        queryParams: {'address': address},
+        queryParams: {Params.address: address},
       ),
     );
 

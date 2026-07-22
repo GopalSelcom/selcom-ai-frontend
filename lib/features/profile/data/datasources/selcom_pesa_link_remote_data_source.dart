@@ -1,6 +1,7 @@
 import 'package:selcom_rides_frontend/features/profile/data/models/sp_link_response.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/selcom_pesa_link_headers.dart';
@@ -82,7 +83,7 @@ class SelcomPesaLinkRemoteDataSourceImpl
   }) async {
     final queryParams = <String, dynamic>{};
     if (statusFilter != null && statusFilter != SelcomPesaLinkStatus.unknown) {
-      queryParams['status'] = statusFilter.name.toUpperCase();
+      queryParams[Params.status] = statusFilter.name.toUpperCase();
     }
 
     final response = await ApiService().call(

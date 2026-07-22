@@ -122,7 +122,7 @@ class AddCardController extends GetxController {
           endpoint: URLS.common.stateByCountry,
           method: ApiMethod.post,
           body: {
-            'country_id': countryId,
+            Params.countryId: countryId,
           },
         ),
       );

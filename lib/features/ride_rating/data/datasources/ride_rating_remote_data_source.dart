@@ -1,4 +1,5 @@
 import '../../../../core/data/models/requests/submit_ride_rating_request.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -56,7 +57,7 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.reviewTags,
         method: ApiMethod.get,
-        queryParams: {'rating': rating},
+        queryParams: {Params.rating: rating},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
