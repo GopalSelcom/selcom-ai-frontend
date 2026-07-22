@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -75,7 +76,7 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.settings.ridePinPreference,
         method: ApiMethod.put,
-        body: {'enabled': enabled},
+        body: {Params.enabled: enabled},
       ),
     );
 

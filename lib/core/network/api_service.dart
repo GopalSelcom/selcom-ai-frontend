@@ -1230,7 +1230,7 @@ class AuthInterceptor extends Interceptor {
         request: ApiRequest(
           endpoint: URLS.auth.refreshToken,
           method: ApiMethod.post,
-          body: {'refresh_token': refreshToken},
+          body: {Params.refreshToken: refreshToken},
           skipAuthInterceptor: true,
           shouldQueue: false,
           errorPresentationType: ErrorPresentationType.none,

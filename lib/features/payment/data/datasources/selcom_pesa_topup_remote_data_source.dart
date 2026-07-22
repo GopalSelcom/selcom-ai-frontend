@@ -1,4 +1,5 @@
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -125,7 +126,7 @@ class SelcomPesaTopupRemoteDataSourceImpl
       request: ApiRequest(
         endpoint: URLS.wallet.checkSelcomPesaTopUpStatus,
         method: ApiMethod.post,
-        body: {'transid': trimmedTransid},
+        body: {Params.transid: trimmedTransid},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );

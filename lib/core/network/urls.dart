@@ -152,8 +152,6 @@ class _PaymentEndpoints {
 
   final validateRidePayment = "go/validate_ride_payment";
   final devPaymentCallback = "go/dev/payment_callback";
-  final makePayment = "unified_payment";
-  final checkPaymentStatus = "check_payment_status";
 }
 
 /// ─────────────────────────────────

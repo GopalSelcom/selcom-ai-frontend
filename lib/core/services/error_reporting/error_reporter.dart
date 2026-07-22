@@ -16,6 +16,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../config/app_config.dart';
 import '../../data/models/user_model.dart';
+import '../../network/api_constants.dart';
 import '../../network/api_service.dart';
 import '../../network/network_connectivity_service.dart';
 import '../../network/urls.dart';
@@ -242,20 +243,20 @@ class ErrorReporter {
         customBaseUrl: errorBaseUrl,
         skipAuthInterceptor: true,
         body: {
-          "error_key": report.errorKey,
+          Params.errorKey: report.errorKey,
           if (report.customMessage != null)
-            "custom_message": report.customMessage,
-          "exception": report.exception,
-          "stack_trace": report.stackTrace,
-          "timestamp": report.timestamp.toIso8601String(),
-          "device": jsonEncode(report.deviceInfo),
-          "app": jsonEncode(report.appInfo),
-          "app_name": "selcom_go",
-          "user": jsonEncode(report.userContext),
-          "state": jsonEncode(report.appState),
+            Params.customMessage: report.customMessage,
+          Params.exception: report.exception,
+          Params.stack_trace: report.stackTrace,
+          Params.timestamp: report.timestamp.toIso8601String(),
+          Params.device: jsonEncode(report.deviceInfo),
+          Params.app: jsonEncode(report.appInfo),
+          Params.app_name: "selcom_go",
+          Params.user: jsonEncode(report.userContext),
+          Params.state: jsonEncode(report.appState),
           if (report.extraData != null)
-            "extra_data": jsonEncode(report.extraData),
-          "logs": report.logs.join("\n"),
+            Params.extra_data: jsonEncode(report.extraData),
+          Params.logs: report.logs.join("\n"),
         },
         multipartFiles:
             report.screenshotPath != null &&

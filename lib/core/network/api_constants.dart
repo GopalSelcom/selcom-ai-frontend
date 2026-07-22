@@ -24,6 +24,8 @@ class Params {
   static const String email = "email";
   static const String mobileNumber = "mobile_number";
   static const String countryCode = "country_code";
+  static const String country = "country";
+  static const String postalcode = "postalcode";
   static const String countryId = "country_id";
   static const String firstName = "first_name";
   static const String lastName = "last_name";
@@ -63,6 +65,7 @@ class Params {
   static String CARD_CVN = "card_cvn";
   static String CARD_EXPIRY_DATE = "card_expiry_date";
   static String app_referal_code = "app_referal_code";
+  static String refreshToken = "refresh_token";
 
   // ── Additional Request Params ──
   static const String reason = "reason";
@@ -80,6 +83,55 @@ class Params {
   static const String expiryYear = "expiry_year";
   static const String cvv = "cvv";
   static const String name = "name";
+  static const String code = "code";
+  static const String vehicleTypeID = "vehicle_type_id";
+  static const String flareEstimate = "fare_estimate";
+  static const String enabled = "enabled";
+
+
+  ///error reported
+  static const String errorKey = "error_key";
+  static const String customMessage = "custom_message";
+  static const String exception = "exception";
+  static const String stack_trace = "stack_trace";
+  static const String timestamp = "timestamp";
+  static const String device = "device";
+  static const String app = "app";
+  static const String app_name = "app_name";
+  static const String user = "user";
+  static const String state = "state";
+  static const String extra_data = "extra_data";
+  static const String logs = "logs";
+
+
+
+  static const String transid = "transid";
+  static const String payment_method = "payment_method";
+
+
+
+  static const String send_amount = "send_amount";
+  static const String newCard = "newCard";
+  static const String card_token = "card_token";
+  static const String cardBin = "cardBin";
+
+
+  static const String fname = "fname";
+  static const String lname = "lname";
+  static const String city = "city";
+  // static const String address = "address";
+
+
+
+
+
+
+
+
+
+  // static get flareEstimate => null;
+
+  // static get code => 'code';
 }
 
 /// Standard HTTP status/result codes for API response handling.

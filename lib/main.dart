@@ -124,9 +124,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  debugPrint("==========================================================================");
-  debugPrint("[NATIVE_DEEPLINK_LOG] main() EXECUTED. PID: $pid, Time: ${DateTime.now().toIso8601String()}");
-  debugPrint("==========================================================================");
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();

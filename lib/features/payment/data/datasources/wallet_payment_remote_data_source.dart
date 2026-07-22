@@ -1,4 +1,5 @@
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -126,7 +127,7 @@ class WalletPaymentRemoteDataSourceImpl
       request: ApiRequest(
         endpoint: URLS.wallet.checkWalletPaymentTopUpStatus,
         method: ApiMethod.post,
-        body: {'transid': trimmedTransid},
+        body: {Params.transid: trimmedTransid},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );
@@ -171,8 +172,8 @@ class WalletPaymentRemoteDataSourceImpl
         endpoint: URLS.wallet.cancelUssdOrder,
         method: ApiMethod.post,
         body: {
-          'transid': trimmedTransid,
-          'payment_method': trimmedPaymentMethod,
+          Params.transid: trimmedTransid,
+          Params.payment_method: trimmedPaymentMethod,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),
@@ -305,9 +306,9 @@ class WalletPaymentRemoteDataSourceImpl
         endpoint: URLS.wallet.goAddCardNew,
         method: ApiMethod.post,
         body: {
-          'amount': amount,
-          'send_amount':0,
-          'newCard': newCard,
+          Params.amount: amount,
+          Params.send_amount:0,
+          Params.newCard: newCard,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),
@@ -343,8 +344,8 @@ class WalletPaymentRemoteDataSourceImpl
         endpoint: URLS.wallet.goPayByExistingCard,
         method: ApiMethod.post,
         body: {
-          'transid': transId,
-          'card_token': cardToken,
+          Params.transid: transId,
+          Params.card_token: cardToken,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),
@@ -388,19 +389,19 @@ class WalletPaymentRemoteDataSourceImpl
         endpoint: URLS.wallet.goInitCardSession,
         method: ApiMethod.post,
         body: {
-          'amount': "100",
-          'newCard': newCard,
-          'email': email,
-          'mobile_number': mobileNumber,
-          'country_code': countryCode,
-          'cardBin': cardBin,
-          if (fname != null) 'fname': fname,
-          if (lname != null) 'lname': lname,
-          if (address != null) 'address': address,
-          if (city != null) 'city': city,
-          if (state != null) 'state': state,
-          if (country != null) 'country': country,
-          if (postalcode != null) 'postalcode': postalcode,
+          Params.amount: "100",
+          Params.newCard: newCard,
+          Params.email: email,
+          Params.mobileNumber: mobileNumber,
+          Params.countryCode: countryCode,
+          Params.cardBin: cardBin,
+          if (fname != null) Params.fname: fname,
+          if (lname != null) Params.lname: lname,
+          if (address != null) Params.address: address,
+          if (city != null) Params.city: city,
+          if (state != null) Params.state: state,
+          if (country != null) Params.country: country,
+          if (postalcode != null) Params.postalcode: postalcode,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),
@@ -430,7 +431,7 @@ class WalletPaymentRemoteDataSourceImpl
       request: ApiRequest(
         endpoint: URLS.wallet.deleteCard,
         method: ApiMethod.post,
-        body: {'id': id},
+        body: {Params.id: id},
         errorPresentationType: ErrorPresentationType.none,
       ),
     );

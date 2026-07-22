@@ -252,9 +252,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         endpoint: URLS.ride.promoValidate,
         method: ApiMethod.post,
         body: {
-          'code': code.trim().toUpperCase(),
-          'vehicle_type_id': vehicleTypeId,
-          'fare_estimate': fareEstimate,
+          Params.code: code.trim().toUpperCase(),
+          Params.vehicleTypeID: vehicleTypeId,
+          Params.flareEstimate: fareEstimate,
         },
         errorPresentationType: ErrorPresentationType.none,
         showLoader: false,
@@ -276,10 +276,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     final query = <String, dynamic>{};
     final vid = vehicleTypeId?.trim();
     if (vid != null && vid.isNotEmpty) {
-      query['vehicle_type_id'] = vid;
+      query[Params.vehicleTypeID] = vid;
     }
     if (fareEstimate != null && fareEstimate > 0) {
-      query['fare_estimate'] = fareEstimate;
+      query[Params.flareEstimate] = fareEstimate;
     }
 
     final response = await ApiService().call(
