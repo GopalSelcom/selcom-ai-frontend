@@ -1,7 +1,9 @@
 import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/requests/send_email_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/send_email_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
@@ -31,7 +33,7 @@ abstract class ProfileRemoteDataSource {
 
   Future<EmailSubjectResponseModel> getEmailSubjects();
 
-  Future<SendEmailResponseModel> sendEmail(SendEmailRequestModel request);
+  Future<SendEmailResponse> sendEmail(SendEmailRequest request);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -211,9 +213,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<SendEmailResponseModel> sendEmail(
-    SendEmailRequestModel request,
-  ) async {
+  Future<SendEmailResponse> sendEmail(SendEmailRequest request) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.profile.sendEmail,
@@ -222,12 +222,16 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       ),
     );
 
-    if (response.data != null) {
-      return SendEmailResponseModel.fromJson(response.data);
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      return SendEmailResponse.fromJson(body);
+    }
+    if (body is Map) {
+      return SendEmailResponse.fromJson(Map<String, dynamic>.from(body));
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return SendEmailResponseModel(
-        statusCode: response.statusCode ?? 400,
+      return SendEmailResponse(
+        statusCode: response.statusCode,
         message: '',
       );
     }

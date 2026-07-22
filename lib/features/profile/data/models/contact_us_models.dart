@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+/// Envelope for `GET go/get_email_subject`.
+/// Note: subjects are under `response` (not `data`).
 class EmailSubjectResponseModel {
   final int? statusCode;
   final String? message;
@@ -7,7 +11,7 @@ class EmailSubjectResponseModel {
   final String? whatsAppText;
   final String? emailText;
 
-  EmailSubjectResponseModel({
+  const EmailSubjectResponseModel({
     this.statusCode,
     this.message,
     this.subjects,
@@ -17,42 +21,45 @@ class EmailSubjectResponseModel {
     this.emailText,
   });
 
+  factory EmailSubjectResponseModel.fromRawJson(String str) =>
+      EmailSubjectResponseModel.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
   factory EmailSubjectResponseModel.fromJson(Map<String, dynamic> json) {
+    final raw = json['response'];
+    final list = <String>[];
+    if (raw is List) {
+      for (final item in raw) {
+        final s = item?.toString().trim();
+        if (s != null && s.isNotEmpty) list.add(s);
+      }
+    }
+
     return EmailSubjectResponseModel(
-      statusCode: json['status_code'],
-      message: json['message'],
-      subjects: json['response'] != null
-          ? List<String>.from(json['response'])
-          : null,
-      supportNumber: json['support_number'],
-      supportEmail: json['support_email'],
-      whatsAppText: json['whats_app_text'],
-      emailText: json['email_text'],
+      statusCode: json['status_code'] is num
+          ? (json['status_code'] as num).toInt()
+          : int.tryParse('${json['status_code'] ?? ''}'),
+      message: json['message']?.toString(),
+      subjects: list,
+      supportNumber: json['support_number']?.toString(),
+      supportEmail: json['support_email']?.toString(),
+      whatsAppText: json['whats_app_text']?.toString(),
+      emailText: json['email_text']?.toString(),
     );
   }
-}
 
-class SendEmailRequestModel {
-  final String subject;
-  final String message;
+  bool get isSuccess => statusCode == 200;
 
-  SendEmailRequestModel({required this.subject, required this.message});
+  List<String> get subjectList => subjects ?? const [];
 
-  Map<String, dynamic> toJson() {
-    return {'subject': subject, 'message': message};
-  }
-}
-
-class SendEmailResponseModel {
-  final int statusCode;
-  final String message;
-
-  SendEmailResponseModel({required this.statusCode, required this.message});
-
-  factory SendEmailResponseModel.fromJson(Map<String, dynamic> json) {
-    return SendEmailResponseModel(
-      statusCode: json['status_code'] ?? 0,
-      message: json['message'] ?? '',
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    'status_code': statusCode,
+    'message': message,
+    'response': subjects,
+    'support_number': supportNumber,
+    'support_email': supportEmail,
+    'whats_app_text': whatsAppText,
+    'email_text': emailText,
+  };
 }

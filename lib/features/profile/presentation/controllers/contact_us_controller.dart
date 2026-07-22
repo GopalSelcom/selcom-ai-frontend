@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/data/models/requests/send_email_request.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_reason_picker_bottom_sheet.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
-import '../../data/models/contact_us_models.dart';
 import '../../domain/repositories/profile_repository.dart';
 
 class ContactUsController extends GetxController {
@@ -43,11 +43,10 @@ class ContactUsController extends GetxController {
     result.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (data) {
-        final res = data;
-        subjects.assignAll(res.subjects ?? []);
-        supportNumber.value = res.supportNumber ?? '';
-        supportEmail.value = res.supportEmail ?? '';
-        emailText.value = res.emailText ?? '';
+        subjects.assignAll(data.subjectList);
+        supportNumber.value = data.supportNumber ?? '';
+        supportEmail.value = data.supportEmail ?? '';
+        emailText.value = data.emailText ?? '';
       },
     );
 
@@ -68,7 +67,7 @@ class ContactUsController extends GetxController {
 
     await Loader.withFlag(isSubmitting, () async {
       final result = await profileRepository.sendEmail(
-        SendEmailRequestModel(
+        SendEmailRequest(
           subject: selectedReason.value,
           message: messageController.text,
         ),
@@ -78,7 +77,7 @@ class ContactUsController extends GetxController {
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (success) {
           Get.back();
-          AppDialogs.showSuccessDialog(message: success.message);
+          AppDialogs.showSuccessDialog(message: success.message ?? '');
         },
       );
     });

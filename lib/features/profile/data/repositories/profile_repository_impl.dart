@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/requests/send_email_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/send_email_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -143,8 +145,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, SendEmailResponseModel>> sendEmail(
-    SendEmailRequestModel request,
+  Future<Either<Failure, SendEmailResponse>> sendEmail(
+    SendEmailRequest request,
   ) async {
     try {
       final result = await remoteDataSource.sendEmail(request);
