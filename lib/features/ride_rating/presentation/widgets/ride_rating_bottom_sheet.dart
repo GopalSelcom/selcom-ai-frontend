@@ -81,14 +81,14 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                       backgroundColor:
                                           AppColors.bgAvatarLightPink,
                                       backgroundImage:
-                                          ride.driverImage.trim().isEmpty
+                                          controller.driverImage.isEmpty
                                           ? null
-                                          : NetworkImage(ride.driverImage),
-                                      child: ride.driverImage.trim().isEmpty
+                                          : NetworkImage(controller.driverImage),
+                                      child: controller.driverImage.isEmpty
                                           ? Text(
-                                              ride.driverName.isEmpty
+                                              controller.driverName.isEmpty
                                                   ? '?'
-                                                  : ride
+                                                  : controller
                                                         .driverName
                                                         .characters
                                                         .first
@@ -159,7 +159,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                         VehicleTypeImage(
                                           assetPath: controller
                                               .vehicleImageAssetForType(
-                                                ride.vehicleType,
+                                                controller.vehicleTypeForImage,
                                               ),
                                           height: 52.h,
                                           fit: BoxFit.contain,
@@ -169,10 +169,7 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
                                       ],
                                     ),
                                     SizedBox(height: 18.h),
-                                    if (ride.pickupAddress.trim().isNotEmpty ||
-                                        ride.destinationAddress
-                                            .trim()
-                                            .isNotEmpty)
+                                    if (controller.hasRouteAddresses)
                                       _routeSummaryCard(),
                                     SizedBox(height: 14.h),
                                   ],
@@ -203,8 +200,6 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
   }
 
   Widget _routeSummaryCard() {
-    final ride = controller.pendingReviewRide.value;
-    if (ride == null) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(14.w),
@@ -216,15 +211,18 @@ class RideRatingBottomSheet extends GetView<RideRatingController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (ride.pickupAddress.trim().isNotEmpty)
-            _routeLine(label: AppStrings.pickup.tr, value: ride.pickupAddress),
-          if (ride.pickupAddress.trim().isNotEmpty &&
-              ride.destinationAddress.trim().isNotEmpty)
+          if (controller.pickupAddress.isNotEmpty)
+            _routeLine(
+              label: AppStrings.pickup.tr,
+              value: controller.pickupAddress,
+            ),
+          if (controller.pickupAddress.isNotEmpty &&
+              controller.destinationAddress.isNotEmpty)
             SizedBox(height: 10.h),
-          if (ride.destinationAddress.trim().isNotEmpty)
+          if (controller.destinationAddress.isNotEmpty)
             _routeLine(
               label: AppStrings.destination.tr,
-              value: ride.destinationAddress,
+              value: controller.destinationAddress,
             ),
           if (controller.rideFareLabel.isNotEmpty) ...[
             SizedBox(height: 10.h),

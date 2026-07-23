@@ -4,10 +4,10 @@ import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import '../models/ride_rating_ride_model.dart';
+import '../models/pending_review_response.dart';
 
 abstract class RideRatingRemoteDataSource {
-  Future<RideRatingRideModel?> getLastCompletedRide();
+  Future<PendingReview?> getLastCompletedRide();
 
   Future<ReviewTagsResponse> getReviewTags({required int rating});
 
@@ -20,7 +20,7 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
   RideRatingRemoteDataSourceImpl();
 
   @override
-  Future<RideRatingRideModel?> getLastCompletedRide() async {
+  Future<PendingReview?> getLastCompletedRide() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.pendingReview,
@@ -30,13 +30,12 @@ class RideRatingRemoteDataSourceImpl implements RideRatingRemoteDataSource {
     );
 
     if (response.statusCode == 200) {
-      final data = response.data;
-      final payload = data is Map<String, dynamic>
-          ? (data['data'] as Map<String, dynamic>?)
-          : null;
-      final pendingReview = payload?['pending_review'];
-      if (pendingReview is Map<String, dynamic>) {
-        return RideRatingRideModel.fromPendingReviewJson(pendingReview);
+      final raw = response.data;
+      if (raw is Map) {
+        final parsed = PendingReviewResponse.fromMap(
+          Map<String, dynamic>.from(raw),
+        );
+        return parsed.data?.pendingReview;
       }
       return null;
     }

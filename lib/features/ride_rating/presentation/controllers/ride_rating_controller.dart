@@ -11,7 +11,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../domain/entities/ride_rating_ride_entity.dart';
+import '../../data/models/pending_review_response.dart';
 import '../../domain/usecases/get_last_completed_ride_usecase.dart';
 import '../../domain/usecases/get_review_tags_usecase.dart';
 import '../../domain/usecases/skip_ride_rating_usecase.dart';
@@ -33,8 +33,7 @@ class RideRatingController extends GetxController {
   final SkipRideRatingUseCase skipRideRatingUseCase;
   final AnalyticsService analyticsService;
 
-  final Rxn<RideRatingRideEntity> pendingReviewRide =
-      Rxn<RideRatingRideEntity>();
+  final Rxn<PendingReview> pendingReviewRide = Rxn<PendingReview>();
   final availableTags = <ReviewTagModel>[].obs;
   final selectedTags = <String>[].obs;
   final selectedRating = 0.obs;
@@ -94,7 +93,7 @@ class RideRatingController extends GetxController {
   }
 
   /// Prepares controller state for rendering rating UI in another sheet/screen.
-  Future<void> prepareRatingForRide(RideRatingRideEntity ride) async {
+  Future<void> prepareRatingForRide(PendingReview ride) async {
     _resetSheetState(clearPendingRide: true);
     pendingReviewRide.value = ride;
     final initialRating = ride.riderRating;
@@ -108,7 +107,7 @@ class RideRatingController extends GetxController {
   }
 
   /// Opens the rating flow for a specific ride source (e.g. My Rides details).
-  void openRatingForRide(RideRatingRideEntity ride) {
+  void openRatingForRide(PendingReview ride) {
     _resetSheetState(clearPendingRide: true);
     pendingReviewRide.value = ride;
     final initialRating = ride.riderRating;
@@ -212,9 +211,10 @@ class RideRatingController extends GetxController {
     commentValidationError.value = null;
 
     await Loader.withFlag(isSubmitting, () async {
+      final rideId = ride.rideId?.trim() ?? '';
       final result = await submitRideRatingUseCase(
         SubmitRideRatingRequest(
-          rideId: ride.rideId,
+          rideId: rideId,
           rating: selectedRating.value,
           tags: selectedTags.toList(),
           comment: comment,
@@ -232,7 +232,7 @@ class RideRatingController extends GetxController {
         await analyticsService.logEvent(
           'ride_rating_submitted',
           parameters: {
-            'ride_id': ride.rideId,
+            'ride_id': rideId,
             'rating': selectedRating.value,
             'tags_count': selectedTags.length,
           },
@@ -258,7 +258,8 @@ class RideRatingController extends GetxController {
     }
 
     await Loader.withFlag(isSubmitting, () async {
-      final result = await skipRideRatingUseCase(rideId: ride.rideId);
+      final rideId = ride.rideId?.trim() ?? '';
+      final result = await skipRideRatingUseCase(rideId: rideId);
 
       result.fold((failure) => _handleFailure(failure), (ok) async {
         if (!ok) {
@@ -270,7 +271,7 @@ class RideRatingController extends GetxController {
         }
         await analyticsService.logEvent(
           'ride_rating_skipped',
-          parameters: {'ride_id': ride.rideId},
+          parameters: {'ride_id': rideId},
         );
         _resetSheetState(clearPendingRide: true);
         closeBottomSheet();
@@ -311,16 +312,42 @@ class RideRatingController extends GetxController {
 
   bool isTagSelected(String key) => selectedTags.contains(key);
 
+  String get driverName =>
+      pendingReviewRide.value?.driverSnapshot?.name?.trim() ?? '';
+
+  String get driverImage =>
+      pendingReviewRide.value?.driverSnapshot?.avatarUrl?.trim() ?? '';
+
+  String get vehicleTypeForImage {
+    final ride = pendingReviewRide.value;
+    if (ride == null) return '';
+    return ride.vehicleSnapshot?.vehicleName?.trim() ??
+        ride.driverSnapshot?.vehicleType?.trim() ??
+        '';
+  }
+
+  String get pickupAddress =>
+      pendingReviewRide.value?.pickup?.address?.trim() ?? '';
+
+  String get destinationAddress =>
+      pendingReviewRide.value?.destination?.address?.trim() ?? '';
+
+  bool get hasRouteAddresses =>
+      pickupAddress.isNotEmpty || destinationAddress.isNotEmpty;
+
   String get rideTitle {
     final ride = pendingReviewRide.value;
     if (ride == null) return '';
-    final displayName = ride.vehicleDisplayName.trim();
+    final displayName = ride.vehicleSnapshot?.displayName?.trim() ?? '';
     if (displayName.isNotEmpty) return displayName;
-    return ride.vehicleType;
+    return ride.vehicleSnapshot?.vehicleName?.trim() ??
+        ride.driverSnapshot?.vehicleType?.trim() ??
+        '';
   }
 
   String get rideDateLabel {
-    final date = pendingReviewRide.value?.rideCompletedAt;
+    final raw = pendingReviewRide.value?.rideCompletedAt?.trim() ?? '';
+    final date = DateTime.tryParse(raw);
     if (date == null) return '';
     return DateFormat("dd MMM yyyy . hh:mma").format(date.toLocal());
   }
@@ -331,9 +358,10 @@ class RideRatingController extends GetxController {
     return CurrencyFormatter.format(fare);
   }
 
-  bool _isWithinPendingReviewWindow(RideRatingRideEntity? ride) {
-    final completedAt = ride?.rideCompletedAt;
-    if (ride == null || completedAt == null) return ride != null;
+  bool _isWithinPendingReviewWindow(PendingReview? ride) {
+    if (ride == null) return false;
+    final completedAt = DateTime.tryParse(ride.rideCompletedAt?.trim() ?? '');
+    if (completedAt == null) return true;
     final age = DateTime.now().toUtc().difference(completedAt.toUtc());
     return !age.isNegative && age <= const Duration(hours: 24);
   }

@@ -15,7 +15,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
-import '../../../ride_rating/domain/entities/ride_rating_ride_entity.dart';
+import '../../../ride_rating/data/models/pending_review_response.dart';
 import '../../../ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
 import '../../../ride_rating/domain/usecases/get_review_tags_usecase.dart';
 import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
@@ -87,7 +87,7 @@ class RideDetailsController extends GetxController {
 
   void _primeRatingIfNeeded() {
     if (!hasExistingRating && canShowReviewInput) {
-      ratingController.prepareRatingForRide(_toRatingEntity(ride));
+      ratingController.prepareRatingForRide(_toPendingReview(ride));
     }
   }
 
@@ -322,30 +322,40 @@ class RideDetailsController extends GetxController {
     return receipt.copyWith(transactionId: fallback);
   }
 
-  // Map ride details into the rating module contract.
-  RideRatingRideEntity _toRatingEntity(RideEntity source) {
+  // Map ride details into the pending-review model used by rating UI.
+  PendingReview _toPendingReview(RideEntity source) {
     final fareValue =
         source.fareBreakdown?.totalAmount ??
         source.finalFare ??
         source.fareEstimate;
-    return RideRatingRideEntity(
+    final driver = source.driverSnapshot;
+    return PendingReview(
       rideId: source.id,
-      transactionId: source.transactionId.trim().isNotEmpty
+      transid: source.transactionId.trim().isNotEmpty
           ? source.transactionId.trim()
           : source.id,
-      driverName: source.driverSnapshot?.name ?? '',
-      driverImage: source.driverSnapshot?.avatarUrl ?? '',
-      vehicleType: vehicleTypeForImage,
-      vehicleDisplayName: vehicleDisplayName,
-      pickupAddress: source.pickup.address,
-      destinationAddress: source.destination.address,
-      pickupLat: source.pickup.lat,
-      pickupLng: source.pickup.lng,
-      destinationLat: source.destination.lat,
-      destinationLng: source.destination.lng,
+      driverSnapshot: DriverSnapshot(
+        name: driver?.name,
+        avatarUrl: driver?.avatarUrl,
+        vehicleType: vehicleTypeForImage,
+      ),
+      vehicleSnapshot: VehicleSnapshot(
+        vehicleName: vehicleTypeForImage,
+        displayName: vehicleDisplayName,
+      ),
+      pickup: Pickup(
+        lat: source.pickup.lat,
+        lng: source.pickup.lng,
+        address: source.pickup.address,
+      ),
+      destination: Destination(
+        lat: source.destination.lat,
+        lng: source.destination.lng,
+        address: source.destination.address,
+      ),
       finalFare: fareValue,
       riderRating: source.riderRating,
-      rideCompletedAt: source.createdAt,
+      rideCompletedAt: source.createdAt.toUtc().toIso8601String(),
     );
   }
 
