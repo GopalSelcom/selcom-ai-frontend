@@ -32,7 +32,7 @@ class RideRepositoryImpl implements RideRepository {
   RideRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes() async {
+  Future<Either<Failure, List<VehicleType>>> getVehicleTypes() async {
     try {
       final response = await remoteDataSource.getVehicleTypes();
       if (!response.isSuccess) {

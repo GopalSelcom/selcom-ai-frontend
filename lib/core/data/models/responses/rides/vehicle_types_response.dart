@@ -1,138 +1,157 @@
 import 'dart:convert';
 
-/// Envelope for `GET go/vehicles/types`.
-class VehicleTypesResponseModel {
-  final int? statusCode;
-  final String? message;
-  final List<VehicleTypeModel> vehicleTypes;
+class VehicleTypesResponse {
+  int? statusCode;
+  String? message;
+  VehicleTypeData? data;
 
-  const VehicleTypesResponseModel({
-    this.statusCode,
-    this.message,
-    this.vehicleTypes = const [],
-  });
+  VehicleTypesResponse({this.statusCode, this.message, this.data});
 
-  factory VehicleTypesResponseModel.fromRawJson(String str) =>
-      VehicleTypesResponseModel.fromJson(json.decode(str));
+  factory VehicleTypesResponse.fromJson(String str) =>
+      VehicleTypesResponse.fromMap(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  String toJson() => json.encode(toMap());
 
-  factory VehicleTypesResponseModel.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
-    final rows = data is Map<String, dynamic> ? data['vehicle_types'] : null;
+  factory VehicleTypesResponse.fromMap(Map<String, dynamic> json) =>
+      VehicleTypesResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null
+            ? null
+            : VehicleTypeData.fromMap(
+                Map<String, dynamic>.from(json["data"] as Map),
+              ),
+      );
 
-    return VehicleTypesResponseModel(
-      statusCode: json['status_code'],
-      message: json['message'],
-      vehicleTypes: rows == null
-          ? const []
-          : List<VehicleTypeModel>.from(
-              rows.map((x) => VehicleTypeModel.fromJson(x)),
-            ),
-    );
-  }
-
-  bool get isSuccess => statusCode == 200;
-
-  Map<String, dynamic> toJson() => {
-    'status_code': statusCode,
-    'message': message,
-    'data': {
-      'vehicle_types': List<dynamic>.from(vehicleTypes.map((x) => x.toJson())),
-    },
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
   };
 }
 
-class VehicleTypeModel {
-  final String id;
-  final String name;
-  final String key;
-  final String displayName;
-  final int maxPassengers;
-  final int baseFare;
-  final int perKmRate;
-  final int perMinRate;
-  final int minimumFare;
-  final int? cancellationFee;
-  final int? cashbackPercent;
-  final int bookingFee;
-  final int waypointFee;
-  final int maxDistanceKm;
-  final bool bookAnyEligible;
-  final bool isActive;
-  final int sortOrder;
-  final String? createdAt;
-  final String? updatedAt;
+class VehicleTypeData {
+  List<VehicleType>? vehicleTypes;
 
-  const VehicleTypeModel({
-    required this.id,
-    required this.name,
-    required this.key,
-    required this.displayName,
-    required this.maxPassengers,
-    required this.baseFare,
-    required this.perKmRate,
-    required this.perMinRate,
-    required this.minimumFare,
+  VehicleTypeData({this.vehicleTypes});
+
+  factory VehicleTypeData.fromJson(String str) =>
+      VehicleTypeData.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory VehicleTypeData.fromMap(Map<String, dynamic> json) => VehicleTypeData(
+    vehicleTypes: json["vehicle_types"] == null
+        ? []
+        : List<VehicleType>.from(
+            json["vehicle_types"]!.map(
+              (x) => VehicleType.fromMap(Map<String, dynamic>.from(x as Map)),
+            ),
+          ),
+  );
+
+  Map<String, dynamic> toMap() => {
+    "vehicle_types": vehicleTypes == null
+        ? []
+        : List<dynamic>.from(vehicleTypes!.map((x) => x.toMap())),
+  };
+}
+
+class VehicleType {
+  int? cancellationFee;
+  int? bookingFee;
+  int? waypointFee;
+  int? cashbackPercent;
+  int? maxDistanceKm;
+  bool? bookAnyEligible;
+  bool? isActive;
+  int? sortOrder;
+  String? id;
+  String? name;
+  int? baseFare;
+  String? createdAt;
+  String? displayName;
+  String? key;
+  int? maxPassengers;
+  int? minimumFare;
+  int? perKmRate;
+  int? perMinRate;
+  String? updatedAt;
+
+  VehicleType({
     this.cancellationFee,
+    this.bookingFee,
+    this.waypointFee,
     this.cashbackPercent,
-    this.bookingFee = 0,
-    this.waypointFee = 0,
-    this.maxDistanceKm = 0,
-    this.bookAnyEligible = false,
-    required this.isActive,
-    required this.sortOrder,
+    this.maxDistanceKm,
+    this.bookAnyEligible,
+    this.isActive,
+    this.sortOrder,
+    this.id,
+    this.name,
+    this.baseFare,
     this.createdAt,
+    this.displayName,
+    this.key,
+    this.maxPassengers,
+    this.minimumFare,
+    this.perKmRate,
+    this.perMinRate,
     this.updatedAt,
   });
 
-  factory VehicleTypeModel.fromRawJson(String str) =>
-      VehicleTypeModel.fromJson(json.decode(str));
+  factory VehicleType.fromJson(String str) =>
+      VehicleType.fromMap(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  String toJson() => json.encode(toMap());
 
-  factory VehicleTypeModel.fromJson(Map<String, dynamic> json) =>
-      VehicleTypeModel(
-        id: json['_id'] ?? '',
-        name: json['name'] ?? '',
-        key: json['key'] ?? '',
-        displayName: json['display_name'] ?? '',
-        maxPassengers: json['max_passengers'] ?? 0,
-        baseFare: json['base_fare'] ?? 0,
-        perKmRate: json['per_km_rate'] ?? 0,
-        perMinRate: json['per_min_rate'] ?? 0,
-        minimumFare: json['minimum_fare'] ?? 0,
-        cancellationFee: (json['cancellation_fee'] as num?)?.toInt(),
-        cashbackPercent: (json['cashback_percent'] as num?)?.toInt(),
-        bookingFee: (json['booking_fee'] as num?)?.toInt() ?? 0,
-        waypointFee: (json['waypoint_fee'] as num?)?.toInt() ?? 0,
-        maxDistanceKm: (json['max_distance_km'] as num?)?.toInt() ?? 0,
-        bookAnyEligible: json['book_any_eligible'] == true,
-        isActive: json['is_active'] ?? false,
-        sortOrder: json['sort_order'] ?? 0,
-        createdAt: json['createdAt'],
-        updatedAt: json['updatedAt'],
-      );
+  factory VehicleType.fromMap(Map<String, dynamic> json) => VehicleType(
+    cancellationFee: json["cancellation_fee"],
+    bookingFee: json["booking_fee"],
+    waypointFee: json["waypoint_fee"],
+    cashbackPercent: json["cashback_percent"],
+    maxDistanceKm: json["max_distance_km"],
+    bookAnyEligible: json["book_any_eligible"],
+    isActive: json["is_active"],
+    sortOrder: json["sort_order"],
+    id: json["_id"],
+    name: json["name"],
+    baseFare: json["base_fare"],
+    createdAt: json["createdAt"],
+    displayName: json["display_name"],
+    key: json["key"],
+    maxPassengers: json["max_passengers"],
+    minimumFare: json["minimum_fare"],
+    perKmRate: json["per_km_rate"],
+    perMinRate: json["per_min_rate"],
+    updatedAt: json["updatedAt"],
+  );
 
-  Map<String, dynamic> toJson() => {
-    '_id': id,
-    'name': name,
-    'key': key,
-    'display_name': displayName,
-    'max_passengers': maxPassengers,
-    'base_fare': baseFare,
-    'per_km_rate': perKmRate,
-    'per_min_rate': perMinRate,
-    'minimum_fare': minimumFare,
-    'cancellation_fee': cancellationFee,
-    'cashback_percent': cashbackPercent,
-    'booking_fee': bookingFee,
-    'waypoint_fee': waypointFee,
-    'max_distance_km': maxDistanceKm,
-    'book_any_eligible': bookAnyEligible,
-    'is_active': isActive,
-    'sort_order': sortOrder,
-    'createdAt': createdAt,
-    'updatedAt': updatedAt,
+  Map<String, dynamic> toMap() => {
+    "cancellation_fee": cancellationFee,
+    "booking_fee": bookingFee,
+    "waypoint_fee": waypointFee,
+    "cashback_percent": cashbackPercent,
+    "max_distance_km": maxDistanceKm,
+    "book_any_eligible": bookAnyEligible,
+    "is_active": isActive,
+    "sort_order": sortOrder,
+    "_id": id,
+    "name": name,
+    "base_fare": baseFare,
+    "createdAt": createdAt,
+    "display_name": displayName,
+    "key": key,
+    "max_passengers": maxPassengers,
+    "minimum_fare": minimumFare,
+    "per_km_rate": perKmRate,
+    "per_min_rate": perMinRate,
+    "updatedAt": updatedAt,
   };
+}
+
+extension VehicleTypesResponseX on VehicleTypesResponse {
+  bool get isSuccess => statusCode == 200;
+
+  List<VehicleType> get vehicleTypes => data?.vehicleTypes ?? const [];
 }

@@ -105,7 +105,7 @@ class VehicleSelectionController extends GetxController {
   FareEstimateResponseModel? _initialFareEstimate;
   DateTime? _initialFareEstimateAt;
   static const _initialFareEstimateMaxAge = Duration(seconds: 30);
-  final _vehicleTypes = <VehicleTypeModel>[];
+  final _vehicleTypes = <VehicleType>[];
   AppSocketService get _socketService => Get.find<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
@@ -270,7 +270,7 @@ class VehicleSelectionController extends GetxController {
     final req = _fareEstimateRequest();
 
     final vehicleTypesResult = await rideRepository.getVehicleTypes();
-    List<VehicleTypeModel> vehicleTypes = [];
+    List<VehicleType> vehicleTypes = [];
     vehicleTypesResult.fold((_) {}, (list) => vehicleTypes = list);
     _vehicleTypes
       ..clear()
@@ -323,7 +323,7 @@ class VehicleSelectionController extends GetxController {
 
   void _applyEstimateModel(
     FareEstimateResponseModel model,
-    List<VehicleTypeModel> vehicleTypes,
+    List<VehicleType> vehicleTypes,
   ) {
     AppLogger.d(
       '[VehicleSelection] Fare estimate applied => '
@@ -535,24 +535,26 @@ class VehicleSelectionController extends GetxController {
     return false;
   }
 
-  VehicleTypeModel? _matchVehicleTypeFromEstimate(
+  VehicleType? _matchVehicleTypeFromEstimate(
     FareEstimateItem e,
-    List<VehicleTypeModel> types,
+    List<VehicleType> types,
   ) {
     final id = (e.vehicleTypeId ?? '').trim();
     final vn = (e.vehicleName ?? '').trim().toLowerCase();
     final dn = (e.displayName ?? '').trim().toLowerCase();
     for (final vt in types) {
-      if (id.isNotEmpty && vt.id == id) return vt;
-      if (id.isNotEmpty &&
-          vt.id.isNotEmpty &&
-          vt.key.toLowerCase() == id.toLowerCase()) {
+      final vtId = vt.id ?? '';
+      final vtKey = (vt.key ?? '').toLowerCase();
+      final vtName = (vt.name ?? '').toLowerCase();
+      final vtDisplay = (vt.displayName ?? '').toLowerCase();
+      if (id.isNotEmpty && vtId == id) return vt;
+      if (id.isNotEmpty && vtId.isNotEmpty && vtKey == id.toLowerCase()) {
         return vt;
       }
-      if (id.isNotEmpty && vt.name.toLowerCase() == id.toLowerCase()) return vt;
-      if (vn.isNotEmpty && vt.key.toLowerCase() == vn) return vt;
-      if (vn.isNotEmpty && vt.name.toLowerCase() == vn) return vt;
-      if (dn.isNotEmpty && vt.displayName.toLowerCase() == dn) return vt;
+      if (id.isNotEmpty && vtName == id.toLowerCase()) return vt;
+      if (vn.isNotEmpty && vtKey == vn) return vt;
+      if (vn.isNotEmpty && vtName == vn) return vt;
+      if (dn.isNotEmpty && vtDisplay == dn) return vt;
     }
     return null;
   }
@@ -632,7 +634,7 @@ class VehicleSelectionController extends GetxController {
 
   FareEstimateItem _withResolvedVehicleTypeId(
     FareEstimateItem e,
-    List<VehicleTypeModel> types,
+    List<VehicleType> types,
   ) {
     if (e.isBookAnyOption) return e;
     if (types.isEmpty) return e;
@@ -697,9 +699,9 @@ class VehicleSelectionController extends GetxController {
   }
 
   /// Fallback rows when estimate API fails; uses real vehicle type id from `getVehicleTypes()`.
-  List<FareEstimateItem> _dummyEstimates(List<VehicleTypeModel> types) {
-    final sorted = (types.where((t) => t.isActive).toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)));
+  List<FareEstimateItem> _dummyEstimates(List<VehicleType> types) {
+    final sorted = (types.where((t) => t.isActive == true).toList()
+      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0)));
     final list = sorted.isNotEmpty ? sorted : types;
     if (list.isEmpty) {
       return [
@@ -718,11 +720,13 @@ class VehicleSelectionController extends GetxController {
       ];
     }
     return list.map((vt) {
-      final fare = vt.baseFare > 0 ? vt.baseFare : 500;
+      final fare = (vt.baseFare ?? 0) > 0 ? vt.baseFare! : 500;
+      final name = vt.name ?? '';
+      final display = vt.displayName ?? '';
       return FareEstimateItem(
         vehicleTypeId: vt.id,
-        vehicleName: vt.name,
-        displayName: vt.displayName.isNotEmpty ? vt.displayName : vt.name,
+        vehicleName: name,
+        displayName: display.isNotEmpty ? display : name,
         fareEstimate: fare,
         distanceKm: 4.2,
         durationMinutes: 10,
@@ -1571,7 +1575,7 @@ class VehicleSelectionController extends GetxController {
     final matched = _vehicleTypes.firstWhereOrNull(
       (v) => v.id == estimateTypeId,
     );
-    final key = matched?.key.trim();
+    final key = matched?.key?.trim();
     if (key == null || key.isEmpty) return null;
     return key;
   }

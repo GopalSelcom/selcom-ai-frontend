@@ -19,7 +19,7 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 
 abstract class HomeRepository {
-  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes();
+  Future<Either<Failure, List<VehicleType>>> getVehicleTypes();
 
   Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations();
 

@@ -20,7 +20,7 @@ import '../../../../core/data/models/responses/rides/vehicle_types_response.dart
 import '../../../wallet/data/models/go_card_balance_response.dart';
 
 abstract class RideRepository {
-  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes();
+  Future<Either<Failure, List<VehicleType>>> getVehicleTypes();
 
   Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
     FareEstimateRequest request,

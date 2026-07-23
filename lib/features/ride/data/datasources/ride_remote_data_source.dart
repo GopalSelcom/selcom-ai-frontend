@@ -33,7 +33,7 @@ import '../../../../core/data/models/responses/rides/vehicle_types_response.dart
 import '../../../wallet/data/models/go_card_balance_response.dart';
 
 abstract class RideRemoteDataSource {
-  Future<VehicleTypesResponseModel> getVehicleTypes();
+  Future<VehicleTypesResponse> getVehicleTypes();
 
   Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
 
@@ -119,7 +119,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   RideRemoteDataSourceImpl();
 
   @override
-  Future<VehicleTypesResponseModel> getVehicleTypes() async {
+  Future<VehicleTypesResponse> getVehicleTypes() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.getVehicleTypes,
@@ -128,10 +128,13 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return VehicleTypesResponseModel.fromJson(response.data);
+      final raw = response.data;
+      if (raw is Map) {
+        return VehicleTypesResponse.fromMap(Map<String, dynamic>.from(raw));
+      }
     }
 
-    return VehicleTypesResponseModel(
+    return VehicleTypesResponse(
       statusCode: response.statusCode,
       message: null,
     );

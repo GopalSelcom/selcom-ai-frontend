@@ -23,7 +23,7 @@ import '../../../profile/data/models/profile_response_model.dart';
 import '../../../ride/data/models/ride_management_models.dart';
 
 abstract class HomeRemoteDataSource {
-  Future<VehicleTypesResponseModel> getVehicleTypes();
+  Future<VehicleTypesResponse> getVehicleTypes();
 
   Future<List<RecentDestinationModel>> getRecentDestinations();
 
@@ -70,7 +70,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   HomeRemoteDataSourceImpl();
 
   @override
-  Future<VehicleTypesResponseModel> getVehicleTypes() async {
+  Future<VehicleTypesResponse> getVehicleTypes() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.getVehicleTypes,
@@ -79,10 +79,13 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return VehicleTypesResponseModel.fromJson(response.data);
+      final raw = response.data;
+      if (raw is Map) {
+        return VehicleTypesResponse.fromMap(Map<String, dynamic>.from(raw));
+      }
     }
 
-    return VehicleTypesResponseModel(
+    return VehicleTypesResponse(
       statusCode: response.statusCode,
       message: null,
     );

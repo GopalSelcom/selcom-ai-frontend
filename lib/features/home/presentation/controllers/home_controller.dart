@@ -82,7 +82,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final isProceedingToBooking = false.obs;
 
   // Home Data
-  final vehicleTypes = <VehicleTypeModel>[].obs;
+  final vehicleTypes = <VehicleType>[].obs;
   final recentDestinations = <RecentDestinationModel>[].obs;
   final recentDestinationsScreen = <RecentDestinationModel>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
@@ -446,7 +446,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       // Handle Vehicle Types
       results[0].fold(
         (_) => null,
-        (types) => vehicleTypes.assignAll(types as List<VehicleTypeModel>),
+        (types) => vehicleTypes.assignAll(types as List<VehicleType>),
       );
 
       // Handle Recent Destinations
@@ -1823,7 +1823,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// Opens location flow with current [activePickupAddress] / [activePickupLatLng].
   /// Optional [preferredVehicle] is forwarded to booking → vehicle selection.
   Future<void> openLocationSelection({
-    VehicleTypeModel? preferredVehicle,
+    VehicleType? preferredVehicle,
   }) async {
     await analyticsService.logEvent('search_opened');
     final args = <String, dynamic>{
@@ -1832,13 +1832,13 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       'pickupLng': activePickupLatLng.longitude,
     };
     if (preferredVehicle != null) {
-      if (preferredVehicle.id.isNotEmpty) {
+      if ((preferredVehicle.id ?? '').isNotEmpty) {
         args['preferredVehicleTypeId'] = preferredVehicle.id;
       }
-      if (preferredVehicle.name.isNotEmpty) {
+      if ((preferredVehicle.name ?? '').isNotEmpty) {
         args['preferredVehicleName'] = preferredVehicle.name;
       }
-      if (preferredVehicle.key.isNotEmpty) {
+      if ((preferredVehicle.key ?? '').isNotEmpty) {
         args['preferredVehicleKey'] = preferredVehicle.key;
       }
     }
@@ -1849,7 +1849,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> openLocationSelectionWithPreferredVehicle(
-    VehicleTypeModel vehicle,
+    VehicleType vehicle,
   ) {
     return openLocationSelection(preferredVehicle: vehicle);
   }

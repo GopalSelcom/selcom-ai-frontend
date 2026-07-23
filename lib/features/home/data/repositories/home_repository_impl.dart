@@ -30,10 +30,10 @@ class HomeRepositoryImpl implements HomeRepository {
   /// but Home load and every vehicle-selection estimate refresh ask for it.
   /// Static because bindings may create multiple repository instances.
   /// Empty results and failures are not cached, so the next call retries.
-  static List<VehicleTypeModel>? _vehicleTypesCache;
+  static List<VehicleType>? _vehicleTypesCache;
 
   /// Shared in-flight fetch so parallel callers reuse one request.
-  static Future<List<VehicleTypeModel>>? _vehicleTypesInFlight;
+  static Future<List<VehicleType>>? _vehicleTypesInFlight;
 
   /// Drops the cached catalog (logout / session expiry) so the next session
   /// refetches — pricing config may change between users.
@@ -43,7 +43,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes() async {
+  Future<Either<Failure, List<VehicleType>>> getVehicleTypes() async {
     final cached = _vehicleTypesCache;
     if (cached != null && cached.isNotEmpty) {
       return Right(cached);
@@ -63,7 +63,7 @@ class HomeRepositoryImpl implements HomeRepository {
     }
   }
 
-  Future<List<VehicleTypeModel>> _fetchVehicleTypes() async {
+  Future<List<VehicleType>> _fetchVehicleTypes() async {
     final response = await remoteDataSource.getVehicleTypes();
     if (!response.isSuccess) {
       return const [];

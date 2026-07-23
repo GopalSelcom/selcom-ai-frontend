@@ -13,7 +13,7 @@ abstract final class ActiveRideVehicleImageResolver {
 
   static String resolveAsset({
     required RideModel ride,
-    Iterable<VehicleTypeModel>? vehicleTypeCatalog,
+    Iterable<VehicleType>? vehicleTypeCatalog,
   }) {
     if (_hasAssignedDriver(ride)) {
       final assigned = _assignedVehicleTypeLabel(ride);
@@ -51,7 +51,7 @@ abstract final class ActiveRideVehicleImageResolver {
 
   static String? _bookedVehicleTypeLabel(
     RideModel ride,
-    Iterable<VehicleTypeModel>? vehicleTypeCatalog,
+    Iterable<VehicleType>? vehicleTypeCatalog,
   ) {
     final key = ride.vehicleKey?.trim();
     if (key != null && key.isNotEmpty) return key;
@@ -68,16 +68,18 @@ abstract final class ActiveRideVehicleImageResolver {
   /// Maps `vehicle_type_id` (Mongo id string) to catalog `name` / `key` for image lookup.
   static String? catalogLabelForVehicleTypeId(
     String vehicleTypeId,
-    Iterable<VehicleTypeModel>? catalog,
+    Iterable<VehicleType>? catalog,
   ) {
     final id = vehicleTypeId.trim();
     if (id.isEmpty || catalog == null) return null;
 
     for (final type in catalog) {
       if (type.id != id) continue;
-      if (type.name.trim().isNotEmpty) return type.name.trim();
-      if (type.key.trim().isNotEmpty) return type.key.trim();
-      final display = type.displayName.trim();
+      final name = type.name?.trim() ?? '';
+      if (name.isNotEmpty) return name;
+      final key = type.key?.trim() ?? '';
+      if (key.isNotEmpty) return key;
+      final display = type.displayName?.trim() ?? '';
       if (display.isNotEmpty) return display;
     }
     return null;

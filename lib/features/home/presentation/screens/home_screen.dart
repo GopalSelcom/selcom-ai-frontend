@@ -573,8 +573,8 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildVehicleCard(VehicleTypeModel vehicle) {
-    final imagePath = controller.vehicleExploreImageAsset(vehicle.name);
+  Widget _buildVehicleCard(VehicleType vehicle) {
+    final imagePath = controller.vehicleExploreImageAsset(vehicle.name ?? '');
 
     return GestureDetector(
       onTap: () =>
@@ -589,7 +589,7 @@ class HomeScreen extends GetView<HomeController> {
             Padding(
               padding: EdgeInsets.only(bottom: 2.h),
               child: Text(
-                vehicle.displayName,
+                vehicle.displayName ?? vehicle.name ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.homeCaption.copyWith(
