@@ -461,10 +461,10 @@ class DriverAcceptedController extends GetxController
         newDistanceKm: 0,
         newDurationMin: 0,
         waypointCharge: 0,
-        legs: [],
+        legs: const [],
         stopsDiff: StopUpdateDiffModel(
-          added: [],
-          removed: [],
+          added: const [],
+          removed: const [],
           reordered: false,
         ),
       );
@@ -2890,15 +2890,12 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _finalizeStopsConfirm(StopUpdateAppliedModel applied) async {
-    if (applied.blockUpdateRequired &&
-        (applied.blockUpdateValidationId ?? '').isNotEmpty) {
+    // Confirm sample has no validation_id; payment resume uses pendingStopsUpdate.
+    if (applied.blockUpdateRequired == true) {
       isUpdatingStops.value = true;
       stopUpdateProgressStep.value = 1;
       _clearRouteAwaitingTrackingUpdate();
-      await _processPaymentHold(
-        applied.blockUpdateValidationId!,
-        applied.direction,
-      );
+      await _fetchRideDetails();
       return;
     }
 

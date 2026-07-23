@@ -757,11 +757,20 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final data = response.data['data'] ?? {};
-      if (confirm) {
-        return StopUpdateAppliedModel.fromJson(data);
-      } else {
-        return StopUpdatePreviewModel.fromJson(data);
+      final raw = response.data;
+      final Map<String, dynamic>? body = switch (raw) {
+        final Map<String, dynamic> m => m,
+        final Map m => Map<String, dynamic>.from(m),
+        _ => null,
+      };
+      if (body != null) {
+        if (confirm) {
+          final parsed = UpdateStopsConfirmResponse.fromMap(body);
+          if (parsed.data != null) return parsed.data!;
+        } else {
+          final parsed = UpdateStopsPreviewResponse.fromMap(body);
+          if (parsed.data != null) return parsed.data!;
+        }
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -771,9 +780,9 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         throw Exception(message);
       }
       if (confirm) {
-        return StopUpdateAppliedModel.fromJson({});
+        return StopUpdateAppliedModel();
       }
-      return StopUpdatePreviewModel.fromJson({});
+      return StopUpdatePreviewModel();
     }
     _throwIfInsufficientWalletBalance(response.data);
     throw Exception(response.data?['message'] ?? 'Failed to update stops');

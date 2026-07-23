@@ -380,8 +380,11 @@ class StopEditorScreen extends GetView<StopEditorController> {
       final preview = driverController.stopUpdatePreview.value;
       if (preview == null) return const SizedBox.shrink();
 
-      final isIncrease = preview.direction == 'up';
-      final isDecrease = preview.direction == 'down';
+      final direction = preview.direction ?? '';
+      final newFare = preview.newFareEstimate ?? 0;
+      final delta = preview.deltaAmount ?? 0;
+      final isIncrease = direction == 'up';
+      final isDecrease = direction == 'down';
       final color = isIncrease
           ? AppColors.error
           : (isDecrease ? AppColors.success : AppColors.textBody);
@@ -412,7 +415,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
-                  '${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(preview.newFareEstimate)}',
+                  '${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(newFare)}',
                   style: AppTextStyles.price.copyWith(fontSize: 16.sp),
                 ),
               ],
@@ -432,7 +435,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
                     borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Text(
-                    '$sign ${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(preview.deltaAmount)}',
+                    '$sign ${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(delta)}',
                     style: AppTextStyles.price.copyWith(
                       color: color,
                       fontWeight: FontWeight.w700,
@@ -442,7 +445,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
                 ),
               ],
             ),
-            if (preview.deltaAmount > 0) ...[
+            if (delta > 0) ...[
               SizedBox(height: 12.h),
               Row(
                 children: [

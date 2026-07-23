@@ -1,142 +1,417 @@
-import '../../../../core/data/models/ride_model.dart';
+import 'dart:convert';
 
+/// Envelope for `PUT .../stops` with `confirm: false`.
+class UpdateStopsPreviewResponse {
+  int? statusCode;
+  String? message;
+  StopUpdatePreviewModel? data;
+
+  UpdateStopsPreviewResponse({this.statusCode, this.message, this.data});
+
+  factory UpdateStopsPreviewResponse.fromJson(String str) =>
+      UpdateStopsPreviewResponse.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory UpdateStopsPreviewResponse.fromMap(Map<String, dynamic> json) =>
+      UpdateStopsPreviewResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null
+            ? null
+            : StopUpdatePreviewModel.fromMap(json["data"]),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
+  };
+}
+
+/// `data` for confirm=false preview.
 class StopUpdatePreviewModel {
-  final bool fareChanged;
-  final int oldFareEstimate;
-  final int newFareEstimate;
-  final int deltaAmount;
-  final String direction;
-  final double newDistanceKm;
-  final int newDurationMin;
-  final int waypointCharge;
-  final Map<String, dynamic>? routeGeometry;
-  final List<StopUpdateLegModel> legs;
-  final StopUpdateDiffModel stopsDiff;
+  bool? fareChanged;
+  int? oldFareEstimate;
+  int? newFareEstimate;
+  int? deltaAmount;
+  String? direction;
+  double? newDistanceKm;
+  int? newDurationMin;
+  int? waypointCharge;
+  StopUpdateRouteGeometry? routeGeometry;
+  List<StopUpdateLegModel>? legs;
+  StopUpdateDiffModel? stopsDiff;
 
   StopUpdatePreviewModel({
-    required this.fareChanged,
-    required this.oldFareEstimate,
-    required this.newFareEstimate,
-    required this.deltaAmount,
-    required this.direction,
-    required this.newDistanceKm,
-    required this.newDurationMin,
-    required this.waypointCharge,
+    this.fareChanged,
+    this.oldFareEstimate,
+    this.newFareEstimate,
+    this.deltaAmount,
+    this.direction,
+    this.newDistanceKm,
+    this.newDurationMin,
+    this.waypointCharge,
     this.routeGeometry,
-    required this.legs,
-    required this.stopsDiff,
+    this.legs,
+    this.stopsDiff,
   });
 
-  factory StopUpdatePreviewModel.fromJson(Map<String, dynamic> json) {
-    final legsJson = json['legs'] as List? ?? [];
-    final legs = legsJson.map((e) => StopUpdateLegModel.fromJson(e)).toList();
+  factory StopUpdatePreviewModel.fromJson(String str) =>
+      StopUpdatePreviewModel.fromMap(json.decode(str));
 
-    return StopUpdatePreviewModel(
-      fareChanged: json['fare_changed'] ?? false,
-      oldFareEstimate: json['old_fare_estimate'] ?? 0,
-      newFareEstimate: json['new_fare_estimate'] ?? 0,
-      deltaAmount: json['delta_amount'] ?? 0,
-      direction: json['direction'] ?? '',
-      newDistanceKm: (json['new_distance_km'] ?? 0.0).toDouble(),
-      newDurationMin: json['new_duration_min'] ?? 0,
-      waypointCharge: json['waypoint_charge'] ?? 0,
-      routeGeometry: json['route_geometry'],
-      legs: legs,
-      stopsDiff: StopUpdateDiffModel.fromJson(json['stops_diff'] ?? {}),
-    );
-  }
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdatePreviewModel.fromMap(Map<String, dynamic> json) =>
+      StopUpdatePreviewModel(
+        fareChanged: json["fare_changed"],
+        oldFareEstimate: json["old_fare_estimate"],
+        newFareEstimate: json["new_fare_estimate"],
+        deltaAmount: json["delta_amount"],
+        direction: json["direction"],
+        newDistanceKm: json["new_distance_km"]?.toDouble(),
+        newDurationMin: json["new_duration_min"],
+        waypointCharge: json["waypoint_charge"],
+        routeGeometry: json["route_geometry"] == null
+            ? null
+            : StopUpdateRouteGeometry.fromMap(json["route_geometry"]),
+        legs: json["legs"] == null
+            ? []
+            : List<StopUpdateLegModel>.from(
+                json["legs"]!.map((x) => StopUpdateLegModel.fromMap(x)),
+              ),
+        stopsDiff: json["stops_diff"] == null
+            ? null
+            : StopUpdateDiffModel.fromMap(json["stops_diff"]),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "fare_changed": fareChanged,
+    "old_fare_estimate": oldFareEstimate,
+    "new_fare_estimate": newFareEstimate,
+    "delta_amount": deltaAmount,
+    "direction": direction,
+    "new_distance_km": newDistanceKm,
+    "new_duration_min": newDurationMin,
+    "waypoint_charge": waypointCharge,
+    "route_geometry": routeGeometry?.toMap(),
+    "legs": legs == null
+        ? []
+        : List<dynamic>.from(legs!.map((x) => x.toMap())),
+    "stops_diff": stopsDiff?.toMap(),
+  };
+}
+
+class StopUpdateRouteGeometry {
+  String? type;
+  List<List<double>>? coordinates;
+
+  StopUpdateRouteGeometry({this.type, this.coordinates});
+
+  factory StopUpdateRouteGeometry.fromJson(String str) =>
+      StopUpdateRouteGeometry.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateRouteGeometry.fromMap(Map<String, dynamic> json) =>
+      StopUpdateRouteGeometry(
+        type: json["type"],
+        coordinates: json["coordinates"] == null
+            ? []
+            : List<List<double>>.from(
+                json["coordinates"]!.map(
+                  (x) => List<double>.from(x.map((e) => e?.toDouble())),
+                ),
+              ),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "type": type,
+    "coordinates": coordinates == null
+        ? []
+        : List<dynamic>.from(
+            coordinates!.map((x) => List<dynamic>.from(x.map((e) => e))),
+          ),
+  };
 }
 
 class StopUpdateLegModel {
-  final double distance;
-  final int duration;
+  double? distance;
+  int? duration;
 
-  StopUpdateLegModel({required this.distance, required this.duration});
+  StopUpdateLegModel({this.distance, this.duration});
 
-  factory StopUpdateLegModel.fromJson(Map<String, dynamic> json) {
-    return StopUpdateLegModel(
-      distance: (json['distance'] ?? 0.0).toDouble(),
-      duration: json['duration'] ?? 0,
-    );
-  }
+  factory StopUpdateLegModel.fromJson(String str) =>
+      StopUpdateLegModel.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateLegModel.fromMap(Map<String, dynamic> json) =>
+      StopUpdateLegModel(
+        distance: json["distance"]?.toDouble(),
+        duration: json["duration"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "distance": distance,
+    "duration": duration,
+  };
 }
 
 class StopUpdateDiffModel {
-  final List<StopDiffItemModel> added;
-  final List<dynamic> removed;
-  final bool reordered;
+  List<StopDiffItemModel>? added;
+  List<dynamic>? removed;
+  bool? reordered;
 
-  StopUpdateDiffModel({
-    required this.added,
-    required this.removed,
-    required this.reordered,
-  });
+  StopUpdateDiffModel({this.added, this.removed, this.reordered});
 
-  factory StopUpdateDiffModel.fromJson(Map<String, dynamic> json) {
-    final addedJson = json['added'] as List? ?? [];
-    final added = addedJson.map((e) => StopDiffItemModel.fromJson(e)).toList();
+  factory StopUpdateDiffModel.fromJson(String str) =>
+      StopUpdateDiffModel.fromMap(json.decode(str));
 
-    return StopUpdateDiffModel(
-      added: added,
-      removed: json['removed'] as List? ?? [],
-      reordered: json['reordered'] ?? false,
-    );
-  }
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateDiffModel.fromMap(Map<String, dynamic> json) =>
+      StopUpdateDiffModel(
+        added: json["added"] == null
+            ? []
+            : List<StopDiffItemModel>.from(
+                json["added"]!.map((x) => StopDiffItemModel.fromMap(x)),
+              ),
+        removed: json["removed"] == null
+            ? []
+            : List<dynamic>.from(json["removed"]!.map((x) => x)),
+        reordered: json["reordered"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "added": added == null
+        ? []
+        : List<dynamic>.from(added!.map((x) => x.toMap())),
+    "removed": removed == null
+        ? []
+        : List<dynamic>.from(removed!.map((x) => x)),
+    "reordered": reordered,
+  };
 }
 
 class StopDiffItemModel {
-  final int targetIndex;
-  final String address;
+  int? targetIndex;
+  String? address;
 
-  StopDiffItemModel({required this.targetIndex, required this.address});
+  StopDiffItemModel({this.targetIndex, this.address});
 
-  factory StopDiffItemModel.fromJson(Map<String, dynamic> json) {
-    return StopDiffItemModel(
-      targetIndex: json['target_index'] ?? 0,
-      address: json['address'] ?? '',
-    );
-  }
+  factory StopDiffItemModel.fromJson(String str) =>
+      StopDiffItemModel.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopDiffItemModel.fromMap(Map<String, dynamic> json) =>
+      StopDiffItemModel(
+        targetIndex: json["target_index"],
+        address: json["address"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "target_index": targetIndex,
+    "address": address,
+  };
 }
 
+/// Envelope for `PUT .../stops` with `confirm: true`.
+class UpdateStopsConfirmResponse {
+  int? statusCode;
+  String? message;
+  StopUpdateAppliedModel? data;
+
+  UpdateStopsConfirmResponse({this.statusCode, this.message, this.data});
+
+  factory UpdateStopsConfirmResponse.fromJson(String str) =>
+      UpdateStopsConfirmResponse.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory UpdateStopsConfirmResponse.fromMap(Map<String, dynamic> json) =>
+      UpdateStopsConfirmResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null
+            ? null
+            : StopUpdateAppliedModel.fromMap(json["data"]),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
+  };
+}
+
+/// `data` for confirm=true apply (keys from API sample).
 class StopUpdateAppliedModel {
-  final String rideId;
-  final int fareEstimate;
-  final List<RideStopModel> stops;
-  final bool blockUpdateRequired;
-  final String? blockUpdateValidationId;
-  final String? socketRoom;
-  final int deltaAmount;
-  final String direction;
-  final DateTime? expiresAt;
+  String? rideId;
+  int? fareEstimate;
+  StopUpdateFareBreakdown? fareBreakdown;
+  List<StopUpdateStopModel>? stops;
+  bool? blockUpdateRequired;
+  int? deltaAmount;
+  String? direction;
 
   StopUpdateAppliedModel({
-    required this.rideId,
-    required this.fareEstimate,
-    required this.stops,
-    required this.blockUpdateRequired,
-    this.blockUpdateValidationId,
-    this.socketRoom,
-    required this.deltaAmount,
-    required this.direction,
-    this.expiresAt,
+    this.rideId,
+    this.fareEstimate,
+    this.fareBreakdown,
+    this.stops,
+    this.blockUpdateRequired,
+    this.deltaAmount,
+    this.direction,
   });
 
-  factory StopUpdateAppliedModel.fromJson(Map<String, dynamic> json) {
-    final stopsJson = json['stops'] as List? ?? [];
-    final stops = stopsJson.map((e) => RideStopModel.fromJson(e)).toList();
+  factory StopUpdateAppliedModel.fromJson(String str) =>
+      StopUpdateAppliedModel.fromMap(json.decode(str));
 
-    return StopUpdateAppliedModel(
-      rideId: json['ride_id'] ?? '',
-      fareEstimate: json['fare_estimate'] ?? 0,
-      stops: stops,
-      blockUpdateRequired: json['block_update_required'] ?? false,
-      blockUpdateValidationId: json['block_update_validation_id'],
-      socketRoom: json['socket_room'],
-      deltaAmount: json['delta_amount'] ?? 0,
-      direction: json['direction'] ?? '',
-      expiresAt: json['expires_at'] != null
-          ? DateTime.parse(json['expires_at'])
-          : null,
-    );
-  }
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateAppliedModel.fromMap(Map<String, dynamic> json) =>
+      StopUpdateAppliedModel(
+        rideId: json["ride_id"],
+        fareEstimate: json["fare_estimate"],
+        fareBreakdown: json["fare_breakdown"] == null
+            ? null
+            : StopUpdateFareBreakdown.fromMap(json["fare_breakdown"]),
+        stops: json["stops"] == null
+            ? []
+            : List<StopUpdateStopModel>.from(
+                json["stops"]!.map((x) => StopUpdateStopModel.fromMap(x)),
+              ),
+        blockUpdateRequired: json["block_update_required"],
+        deltaAmount: json["delta_amount"],
+        direction: json["direction"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "ride_id": rideId,
+    "fare_estimate": fareEstimate,
+    "fare_breakdown": fareBreakdown?.toMap(),
+    "stops": stops == null
+        ? []
+        : List<dynamic>.from(stops!.map((x) => x.toMap())),
+    "block_update_required": blockUpdateRequired,
+    "delta_amount": deltaAmount,
+    "direction": direction,
+  };
+}
+
+class StopUpdateFareBreakdown {
+  int? rideCharge;
+  int? bookingFee;
+  int? totalAmount;
+
+  StopUpdateFareBreakdown({
+    this.rideCharge,
+    this.bookingFee,
+    this.totalAmount,
+  });
+
+  factory StopUpdateFareBreakdown.fromJson(String str) =>
+      StopUpdateFareBreakdown.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateFareBreakdown.fromMap(Map<String, dynamic> json) =>
+      StopUpdateFareBreakdown(
+        rideCharge: json["ride_charge"],
+        bookingFee: json["booking_fee"],
+        totalAmount: json["total_amount"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "ride_charge": rideCharge,
+    "booking_fee": bookingFee,
+    "total_amount": totalAmount,
+  };
+}
+
+class StopUpdateStopModel {
+  int? index;
+  double? lat;
+  double? lng;
+  String? address;
+  StopUpdateLocation? location;
+  String? status;
+  dynamic subtaskId;
+  dynamic arrivedAt;
+  dynamic completedAt;
+
+  StopUpdateStopModel({
+    this.index,
+    this.lat,
+    this.lng,
+    this.address,
+    this.location,
+    this.status,
+    this.subtaskId,
+    this.arrivedAt,
+    this.completedAt,
+  });
+
+  factory StopUpdateStopModel.fromJson(String str) =>
+      StopUpdateStopModel.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateStopModel.fromMap(Map<String, dynamic> json) =>
+      StopUpdateStopModel(
+        index: json["index"],
+        lat: json["lat"]?.toDouble(),
+        lng: json["lng"]?.toDouble(),
+        address: json["address"],
+        location: json["location"] == null
+            ? null
+            : StopUpdateLocation.fromMap(json["location"]),
+        status: json["status"],
+        subtaskId: json["subtask_id"],
+        arrivedAt: json["arrived_at"],
+        completedAt: json["completed_at"],
+      );
+
+  Map<String, dynamic> toMap() => {
+    "index": index,
+    "lat": lat,
+    "lng": lng,
+    "address": address,
+    "location": location?.toMap(),
+    "status": status,
+    "subtask_id": subtaskId,
+    "arrived_at": arrivedAt,
+    "completed_at": completedAt,
+  };
+}
+
+class StopUpdateLocation {
+  String? type;
+  List<double>? coordinates;
+
+  StopUpdateLocation({this.type, this.coordinates});
+
+  factory StopUpdateLocation.fromJson(String str) =>
+      StopUpdateLocation.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory StopUpdateLocation.fromMap(Map<String, dynamic> json) =>
+      StopUpdateLocation(
+        type: json["type"],
+        coordinates: json["coordinates"] == null
+            ? []
+            : List<double>.from(
+                json["coordinates"]!.map((x) => x?.toDouble()),
+              ),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "type": type,
+    "coordinates": coordinates == null
+        ? []
+        : List<dynamic>.from(coordinates!.map((x) => x)),
+  };
 }
