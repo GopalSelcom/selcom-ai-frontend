@@ -102,7 +102,7 @@ class VehicleSelectionController extends GetxController {
 
   /// Estimate already fetched by the pre-navigation validation call; consumed
   /// once (if fresh) to avoid estimating the same route twice.
-  FareEstimateResponseModel? _initialFareEstimate;
+  FareEstimateResponse? _initialFareEstimate;
   DateTime? _initialFareEstimateAt;
   static const _initialFareEstimateMaxAge = Duration(seconds: 30);
   final _vehicleTypes = <VehicleType>[];
@@ -227,7 +227,7 @@ class VehicleSelectionController extends GetxController {
     _forceRefreshActiveRides = args['forceRefreshActiveRides'] == true;
 
     final initialEstimate = args['initialFareEstimate'];
-    if (initialEstimate is FareEstimateResponseModel) {
+    if (initialEstimate is FareEstimateResponse) {
       _initialFareEstimate = initialEstimate;
       _initialFareEstimateAt = args['initialFareEstimateAt'] as DateTime?;
     }
@@ -308,7 +308,7 @@ class VehicleSelectionController extends GetxController {
 
   /// Returns the pre-navigation estimate exactly once, and only when it is
   /// still fresh and no promo code is applied (a promo changes the request).
-  FareEstimateResponseModel? _takeFreshInitialEstimate() {
+  FareEstimateResponse? _takeFreshInitialEstimate() {
     final estimate = _initialFareEstimate;
     final estimatedAt = _initialFareEstimateAt;
     _initialFareEstimate = null;
@@ -322,25 +322,26 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _applyEstimateModel(
-    FareEstimateResponseModel model,
+    FareEstimateResponse model,
     List<VehicleType> vehicleTypes,
   ) {
     AppLogger.d(
       '[VehicleSelection] Fare estimate applied => '
-      'estimates=${model.estimates.length}, '
-      'routeGeometry=${model.routeGeometry != null}, '
-      'points=${model.routeGeometry?.coordinates?.length ?? 0}',
+      'estimates=${model.data?.estimates?.length ?? 0}, '
+      'routeGeometry=${model.data?.routeGeometry != null}, '
+      'points=${model.data?.routeGeometry?.coordinates?.length ?? 0}',
       tag: 'VehicleSelection',
     );
-    if (model.estimates.isEmpty) {
+    final estimateItems = model.data?.estimates ?? const <FareEstimateItem>[];
+    if (estimateItems.isEmpty) {
       estimates.assignAll(_dummyEstimates(vehicleTypes));
       return;
     }
 
-    final normalized = model.estimates
+    final normalized = estimateItems
         .map((e) => _withResolvedVehicleTypeId(e, vehicleTypes))
         .toList();
-    estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
+    estimates.assignAll(_estimatesWithBookAny(normalized, model.data?.bookAny));
     final pending = _pendingPromoApplyResult;
     if (pending != null) {
       _applyPromoValidationToEstimates(pending);
@@ -349,9 +350,10 @@ class VehicleSelectionController extends GetxController {
       promoValidatedAt.value = DateTime.now();
     }
 
-    if (model.routeGeometry?.coordinates != null &&
-        model.routeGeometry!.coordinates!.isNotEmpty) {
-      final coords = model.routeGeometry!.coordinates!;
+    final routeGeometry = model.data?.routeGeometry;
+    if (routeGeometry?.coordinates != null &&
+        routeGeometry!.coordinates!.isNotEmpty) {
+      final coords = routeGeometry.coordinates!;
       final mapped = coords
           .map((c) {
             if (c.length >= 2) return LatLng(c[1], c[0]);
@@ -476,9 +478,9 @@ class VehicleSelectionController extends GetxController {
 
   List<FareEstimateItem> _estimatesWithBookAny(
     List<FareEstimateItem> items,
-    BookAnyEstimate? bookAny,
+    BookAny? bookAny,
   ) {
-    if (bookAny == null || !bookAny.eligible || items.length < 2) {
+    if (bookAny == null || bookAny.eligible != true || items.length < 2) {
       return items;
     }
     final first = items.first;
@@ -495,8 +497,8 @@ class VehicleSelectionController extends GetxController {
       currency: bookAny.currency ?? first.currency,
       maxPassengers: maxPassengers,
       isBookAnyOption: true,
-      bookAnyMinFare: bookAny.minFare,
-      bookAnyMaxFare: bookAny.maxFare,
+      bookAnyMinFare: bookAny.fareRange?.min,
+      bookAnyMaxFare: bookAny.fareRange?.max,
     );
     return [...items, anyItem];
   }
@@ -618,7 +620,7 @@ class VehicleSelectionController extends GetxController {
     final discounted = validation.discountedFare;
     final updated = estimates.map((e) {
       if (!_estimateMatchesVehicleType(e, vid)) return e;
-      final original = e.originalFare;
+      final original = e.fareEstimate ?? 0;
       if (original <= 0 || discounted < 0 || discounted >= original) return e;
       return _copyFareEstimateItem(
         e,
@@ -744,9 +746,12 @@ class VehicleSelectionController extends GetxController {
     return estimates[i];
   }
 
-  int get selectedPayableFareAmount => selectedEstimate?.displayFare ?? 0;
+  int get selectedPayableFareAmount =>
+      selectedEstimate?.discountedFare ??
+      selectedEstimate?.fareEstimate ??
+      0;
 
-  int get selectedOriginalFareAmount => selectedEstimate?.originalFare ?? 0;
+  int get selectedOriginalFareAmount => selectedEstimate?.fareEstimate ?? 0;
 
   int get selectedPromoSavingsAmount {
     final e = selectedEstimate;
@@ -869,7 +874,8 @@ class VehicleSelectionController extends GetxController {
           return false;
         },
         (model) async {
-          if (model.estimates.isEmpty) {
+          final estimateItems = model.data?.estimates ?? const <FareEstimateItem>[];
+          if (estimateItems.isEmpty) {
             AppDialogs.showErrorDialog(
               title: AppStrings.estimateFailed.tr,
               message: AppStrings
@@ -879,10 +885,12 @@ class VehicleSelectionController extends GetxController {
             return false;
           }
 
-          final normalized = model.estimates
+          final normalized = estimateItems
               .map((e) => _withResolvedVehicleTypeId(e, _vehicleTypes))
               .toList();
-          estimates.assignAll(_estimatesWithBookAny(normalized, model.bookAny));
+          estimates.assignAll(
+            _estimatesWithBookAny(normalized, model.data?.bookAny),
+          );
 
           _restoreVehicleSelectionAfterRefresh(
             wasBookAny: isBookAny,
@@ -898,9 +906,10 @@ class VehicleSelectionController extends GetxController {
             }
           }
 
-          if (model.routeGeometry?.coordinates != null &&
-              model.routeGeometry!.coordinates!.isNotEmpty) {
-            final mapped = model.routeGeometry!.coordinates!
+          final routeGeometry = model.data?.routeGeometry;
+          if (routeGeometry?.coordinates != null &&
+              routeGeometry!.coordinates!.isNotEmpty) {
+            final mapped = routeGeometry.coordinates!
                 .map((c) => c.length >= 2 ? LatLng(c[1], c[0]) : null)
                 .whereType<LatLng>()
                 .toList();
@@ -941,10 +950,15 @@ class VehicleSelectionController extends GetxController {
       final bookingBookAny = refreshedSelectedEstimate?.isBookAnyOption == true;
       final requiredFare = bookingBookAny
           ? (refreshedSelectedEstimate?.fareEstimate ??
-                refreshedSelectedEstimate?.displayFare ??
+                refreshedSelectedEstimate?.discountedFare ??
                 est.fareEstimate ??
-                est.displayFare)
-          : (refreshedSelectedEstimate?.displayFare ?? est.displayFare);
+                est.discountedFare ??
+                0)
+          : (refreshedSelectedEstimate?.discountedFare ??
+                refreshedSelectedEstimate?.fareEstimate ??
+                est.discountedFare ??
+                est.fareEstimate ??
+                0);
       if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
         return;
       }
@@ -1736,7 +1750,7 @@ class VehicleSelectionController extends GetxController {
     if (vid.isEmpty || !_looksLikeBackendVehicleTypeId(vid)) {
       return true;
     }
-    final fare = est!.originalFare;
+    final fare = est!.fareEstimate ?? 0;
     final result = await rideRepository.validatePromo(
       code: code,
       vehicleTypeId: vid,
@@ -1794,7 +1808,7 @@ class VehicleSelectionController extends GetxController {
       final result = await Get.toNamed<dynamic>(
         AppRoutes.promotions,
         arguments: PromoCodeRouteArgs(
-          fareEstimate: est.fareEstimate ?? est.originalFare,
+          fareEstimate: est.fareEstimate ?? 0,
           bookAny: true,
         ).toMap(),
       );
@@ -1817,7 +1831,7 @@ class VehicleSelectionController extends GetxController {
       AppRoutes.promotions,
       arguments: PromoCodeRouteArgs(
         vehicleTypeId: vid,
-        fareEstimate: est.originalFare,
+        fareEstimate: est.fareEstimate ?? 0,
         appliedCode: appliedPromoCode.value.trim(),
       ).toMap(),
     );
@@ -1931,7 +1945,7 @@ class VehicleSelectionController extends GetxController {
 
     // Reuse the estimate fetched by the edit-flow validation (if provided).
     final editedEstimate = edited['initialFareEstimate'];
-    if (editedEstimate is FareEstimateResponseModel) {
+    if (editedEstimate is FareEstimateResponse) {
       _initialFareEstimate = editedEstimate;
       _initialFareEstimateAt = edited['initialFareEstimateAt'] as DateTime?;
     }

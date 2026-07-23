@@ -49,7 +49,7 @@ abstract class HomeRepository {
     required String address,
   });
 
-  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
+  Future<Either<Failure, FareEstimateResponse>> estimateFare(
     FareEstimateRequest request,
   );
 

@@ -22,7 +22,7 @@ import '../../data/models/ride_management_models.dart';
 abstract class RideRepository {
   Future<Either<Failure, List<VehicleType>>> getVehicleTypes();
 
-  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
+  Future<Either<Failure, FareEstimateResponse>> estimateFare(
     FareEstimateRequest request,
   );
 

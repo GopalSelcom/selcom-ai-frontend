@@ -131,7 +131,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   final Rxn<LatLng> deviceGpsLocation = Rxn<LatLng>();
 
   final selectedVehicle = ''.obs;
-  final fareEstimate = Rxn<FareEstimateResponseModel>();
+  final fareEstimate = Rxn<FareEstimateResponse>();
   GoogleMapController? _mapController;
   final AppSocketService _socketService = AppSocketService();
   bool _ignoreSelectionReset = false;
@@ -2562,11 +2562,11 @@ class EstimateValidationOutcome {
 
   /// Fare estimate returned by the validation call; passed to vehicle
   /// selection so the same route is not estimated twice.
-  final FareEstimateResponseModel? estimate;
+  final FareEstimateResponse? estimate;
   final DateTime? estimatedAt;
 
   factory EstimateValidationOutcome.success({
-    FareEstimateResponseModel? estimate,
+    FareEstimateResponse? estimate,
   }) {
     return EstimateValidationOutcome._(
       canProceed: true,

@@ -761,7 +761,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         SizedBox(height: 2.h),
         Text(
           CurrencyFormatter.formatPayableOrFree(
-            item.displayFare,
+            item.discountedFare ?? item.fareEstimate ?? 0,
             item.currency,
             freeLabel: AppStrings.rideFreeLabel.tr,
           ),

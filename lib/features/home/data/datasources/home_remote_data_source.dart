@@ -47,7 +47,7 @@ abstract class HomeRemoteDataSource {
 
   Future<GeocodeResponse> getGeocode({required String address});
 
-  Future<FareEstimateResponseModel> estimateFare(FareEstimateRequest request);
+  Future<FareEstimateResponse> estimateFare(FareEstimateRequest request);
 
   Future<BookRideResponse> bookRide(BookRideRequest request);
 
@@ -274,7 +274,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<FareEstimateResponseModel> estimateFare(
+  Future<FareEstimateResponse> estimateFare(
     FareEstimateRequest request,
   ) async {
     final response = await ApiService().call(
@@ -298,9 +298,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       if (httpStatus != null && !map.containsKey('status_code')) {
         map['status_code'] = httpStatus;
       }
-      late final FareEstimateResponseModel model;
+      late final FareEstimateResponse model;
       try {
-        model = FareEstimateResponseModel.fromJson(map);
+        model = FareEstimateResponse.fromMap(map);
       } catch (_) {
         final code = map['error_code']?.toString().trim();
         if (code == 'VALID_DISTANCE_EXCEEDED') {
@@ -312,7 +312,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             final String s => int.tryParse(s.trim()),
             _ => int.tryParse(sc.toString()),
           };
-          model = FareEstimateResponseModel(
+          model = FareEstimateResponse(
             statusCode: parsedStatus ?? httpStatus ?? 400,
             message: map['message'].toString(),
           );
@@ -320,7 +320,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           rethrow;
         }
       }
-      if (!model.isSuccess) {
+      if (model.statusCode != 200 || model.data == null) {
         if (model.errorCode?.trim() == 'VALID_DISTANCE_EXCEEDED') {
           return model;
         }
@@ -336,7 +336,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
 
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return FareEstimateResponseModel(
+      return FareEstimateResponse(
         statusCode: response.statusCode,
         message: null,
         errorCode: null,

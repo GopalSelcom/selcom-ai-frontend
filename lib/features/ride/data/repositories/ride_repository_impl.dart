@@ -46,12 +46,12 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, FareEstimateResponseModel>> estimateFare(
+  Future<Either<Failure, FareEstimateResponse>> estimateFare(
     FareEstimateRequest request,
   ) async {
     try {
       final response = await remoteDataSource.estimateFare(request);
-      if (!response.isSuccess) {
+      if (response.statusCode != 200 || response.data == null) {
         final msg = (response.message ?? '').trim();
         final display = msg.isEmpty
             ? 'Unable to estimate fare for this route.'
