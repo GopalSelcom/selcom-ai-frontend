@@ -1,5 +1,5 @@
 /// Saved place in `POST from-recent` response `data.place`.
-/// List screens use [SavedPlace] from get_saved_places_response.dart instead.
+/// List screens use [SavedPlace] from [SavedPlacesResponse] instead.
 class SavedPlaceModel {
   final String? id;
   final String? userId;

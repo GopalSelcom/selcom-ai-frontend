@@ -22,7 +22,7 @@ abstract class ProfileRepository {
     UserProfileUpdateRequest profileRequest,
   );
 
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
+  Future<Either<Failure, SavedPlacesResponse?>> getSavedPlaces();
 
   Future<Either<Failure, bool>> saveRecentAsFavorite(
     SaveRecentAsFavoriteRequest request,

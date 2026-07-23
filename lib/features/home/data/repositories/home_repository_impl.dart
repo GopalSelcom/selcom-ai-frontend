@@ -84,7 +84,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() async {
+  Future<Either<Failure, SavedPlacesResponse?>> getSavedPlaces() async {
     try {
       final result = await remoteDataSource.getSavedPlaces();
       return Right(result);

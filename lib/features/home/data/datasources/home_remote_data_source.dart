@@ -26,7 +26,7 @@ abstract class HomeRemoteDataSource {
 
   Future<List<RecentDestination>> getRecentDestinations();
 
-  Future<GetSavedPlacesResponseModel?> getSavedPlaces();
+  Future<SavedPlacesResponse?> getSavedPlaces();
 
   Future<ActiveRideResponseModel?> getActiveRide();
 
@@ -107,7 +107,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<GetSavedPlacesResponseModel?> getSavedPlaces() async {
+  Future<SavedPlacesResponse?> getSavedPlaces() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.address.savedPlaces,
@@ -116,7 +116,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return GetSavedPlacesResponseModel.fromJson(
+      return SavedPlacesResponse.fromMap(
         response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
             : Map<String, dynamic>.from(response.data as Map),

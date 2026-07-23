@@ -28,7 +28,7 @@ class ProfileUseCase {
     return repository.getWalletBalance();
   }
 
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces() {
+  Future<Either<Failure, SavedPlacesResponse?>> getSavedPlaces() {
     return repository.getSavedPlaces();
   }
 }

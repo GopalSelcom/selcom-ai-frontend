@@ -23,7 +23,7 @@ abstract class ProfileRemoteDataSource {
     UserProfileUpdateRequest profileRequest,
   );
 
-  Future<GetSavedPlacesResponseModel?> getSavedPlaces();
+  Future<SavedPlacesResponse?> getSavedPlaces();
 
   Future<bool> saveRecentAsFavorite(SaveRecentAsFavoriteRequest request);
 
@@ -104,7 +104,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   /// `GET go/user/saved-places` — full list; `saved_places: []` when empty.
-  Future<GetSavedPlacesResponseModel?> getSavedPlaces() async {
+  Future<SavedPlacesResponse?> getSavedPlaces() async {
     try {
       final response = await ApiService().call(
         request: ApiRequest(
@@ -114,7 +114,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        return GetSavedPlacesResponseModel.fromJson(
+        return SavedPlacesResponse.fromMap(
           response.data is Map<String, dynamic>
               ? response.data as Map<String, dynamic>
               : Map<String, dynamic>.from(response.data as Map),

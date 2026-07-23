@@ -22,7 +22,7 @@ abstract class HomeRepository {
 
   Future<Either<Failure, List<RecentDestination>>> getRecentDestinations();
 
-  Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
+  Future<Either<Failure, SavedPlacesResponse?>> getSavedPlaces();
 
   Future<Either<Failure, ActiveRideResponseModel?>> getActiveRide();
 

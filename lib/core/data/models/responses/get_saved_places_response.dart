@@ -1,72 +1,89 @@
+import 'dart:convert';
+
 /// Models for `GET go/user/saved-places`.
 ///
 /// There is no separate favourites endpoint in the app: `data.saved_places` is the
 /// single source of truth. Empty list is valid: `saved_places: []`.
 /// See `docs/SAVED-PLACES-FLOW.md`.
-class GetSavedPlacesResponseModel {
-  final int? statusCode;
-  final SavedPlacesData? data;
+class SavedPlacesResponse {
+  int? statusCode;
+  SavedPlacesData? data;
 
-  GetSavedPlacesResponseModel({this.statusCode, this.data});
+  SavedPlacesResponse({this.statusCode, this.data});
 
-  factory GetSavedPlacesResponseModel.fromJson(Map<String, dynamic> json) =>
-      GetSavedPlacesResponseModel(
-        statusCode: (json['status_code'] as num?)?.toInt(),
-        data: json['data'] == null
+  factory SavedPlacesResponse.fromJson(String str) =>
+      SavedPlacesResponse.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory SavedPlacesResponse.fromMap(Map<String, dynamic> json) =>
+      SavedPlacesResponse(
+        statusCode: json["status_code"],
+        data: json["data"] == null
             ? null
-            : SavedPlacesData.fromJson(
-                json['data'] is Map<String, dynamic>
-                    ? json['data'] as Map<String, dynamic>
-                    : Map<String, dynamic>.from(json['data'] as Map),
+            : SavedPlacesData.fromMap(
+                json["data"] is Map<String, dynamic>
+                    ? json["data"] as Map<String, dynamic>
+                    : Map<String, dynamic>.from(json["data"] as Map),
               ),
       );
 
-  Map<String, dynamic> toJson() => {
-    'status_code': statusCode,
-    'data': data?.toJson(),
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "data": data?.toMap(),
   };
 }
 
 class SavedPlacesData {
-  final List<SavedPlace> savedPlaces;
+  List<SavedPlace>? savedPlaces;
 
-  SavedPlacesData({this.savedPlaces = const []});
+  SavedPlacesData({this.savedPlaces});
 
-  factory SavedPlacesData.fromJson(Map<String, dynamic> json) {
-    // Only `saved_places` — not `favourite_places` (no favourites list API).
-    final raw = json['saved_places'];
-    if (raw is! List) return SavedPlacesData();
-    return SavedPlacesData(
-      savedPlaces: raw
-          .whereType<Map>()
-          .map((e) => SavedPlace.fromJson(Map<String, dynamic>.from(e)))
-          .toList(growable: false),
-    );
-  }
+  factory SavedPlacesData.fromJson(String str) =>
+      SavedPlacesData.fromMap(json.decode(str));
 
-  Map<String, dynamic> toJson() => {
-    'saved_places': savedPlaces.map((x) => x.toJson()).toList(),
+  String toJson() => json.encode(toMap());
+
+  factory SavedPlacesData.fromMap(Map<String, dynamic> json) => SavedPlacesData(
+    savedPlaces: json["saved_places"] == null
+        ? []
+        : List<SavedPlace>.from(
+            (json["saved_places"] as List).map(
+              (x) => SavedPlace.fromMap(
+                x is Map<String, dynamic>
+                    ? x
+                    : Map<String, dynamic>.from(x as Map),
+              ),
+            ),
+          ),
+  );
+
+  Map<String, dynamic> toMap() => {
+    "saved_places": savedPlaces == null
+        ? []
+        : List<dynamic>.from(savedPlaces!.map((x) => x.toMap())),
   };
 }
 
 /// Saved place row from `data.saved_places`.
 /// Backend sets `is_favourite: true` for all saved places; UI uses list membership.
 class SavedPlace {
-  final SavedPlaceLocation? location;
-  final String? id;
-  final String? label;
-  final String? userId;
-  final int? v;
-  final String? address;
-  final DateTime? createdAt;
-  final double? lat;
-  final double? lng;
-  final String? name;
-  final DateTime? updatedAt;
-  final bool? isFavourite;
+  SavedPlaceLocation? location;
+  bool? isFavourite;
+  String? id;
+  String? label;
+  String? userId;
+  int? v;
+  String? address;
+  String? createdAt;
+  double? lat;
+  double? lng;
+  String? name;
+  String? updatedAt;
 
   SavedPlace({
     this.location,
+    this.isFavourite,
     this.id,
     this.label,
     this.userId,
@@ -77,70 +94,77 @@ class SavedPlace {
     this.lng,
     this.name,
     this.updatedAt,
-    this.isFavourite,
   });
 
-  factory SavedPlace.fromJson(Map<String, dynamic> json) => SavedPlace(
-    location: json['location'] == null
+  factory SavedPlace.fromJson(String str) =>
+      SavedPlace.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory SavedPlace.fromMap(Map<String, dynamic> json) => SavedPlace(
+    location: json["location"] == null
         ? null
-        : SavedPlaceLocation.fromJson(
-            json['location'] is Map<String, dynamic>
-                ? json['location'] as Map<String, dynamic>
-                : Map<String, dynamic>.from(json['location'] as Map),
+        : SavedPlaceLocation.fromMap(
+            json["location"] is Map<String, dynamic>
+                ? json["location"] as Map<String, dynamic>
+                : Map<String, dynamic>.from(json["location"] as Map),
           ),
-    id: json['_id']?.toString(),
-    label: json['label']?.toString(),
-    userId: json['user_id']?.toString(),
-    v: (json['__v'] as num?)?.toInt(),
-    address: json['address']?.toString(),
-    createdAt: json['createdAt'] == null
-        ? null
-        : DateTime.tryParse(json['createdAt'].toString()),
-    lat: (json['lat'] as num?)?.toDouble(),
-    lng: (json['lng'] as num?)?.toDouble(),
-    name: json['name']?.toString(),
-    updatedAt: json['updatedAt'] == null
-        ? null
-        : DateTime.tryParse(json['updatedAt'].toString()),
-    isFavourite: json['is_favourite'] as bool? ?? json['isFavourite'] as bool?,
+    isFavourite: json["is_favourite"],
+    id: json["_id"]?.toString(),
+    label: json["label"]?.toString(),
+    userId: json["user_id"]?.toString(),
+    v: json["__v"],
+    address: json["address"]?.toString(),
+    createdAt: json["createdAt"]?.toString(),
+    lat: json["lat"]?.toDouble(),
+    lng: json["lng"]?.toDouble(),
+    name: json["name"]?.toString(),
+    updatedAt: json["updatedAt"]?.toString(),
   );
 
-  Map<String, dynamic> toJson() => {
-    'location': location?.toJson(),
-    '_id': id,
-    'label': label,
-    'user_id': userId,
-    '__v': v,
-    'address': address,
-    'createdAt': createdAt?.toIso8601String(),
-    'lat': lat,
-    'lng': lng,
-    'name': name,
-    'updatedAt': updatedAt?.toIso8601String(),
-    'is_favourite': isFavourite,
+  Map<String, dynamic> toMap() => {
+    "location": location?.toMap(),
+    "is_favourite": isFavourite,
+    "_id": id,
+    "label": label,
+    "user_id": userId,
+    "__v": v,
+    "address": address,
+    "createdAt": createdAt,
+    "lat": lat,
+    "lng": lng,
+    "name": name,
+    "updatedAt": updatedAt,
   };
 }
 
+/// GeoJSON-style point on a saved place (`location`).
+/// Named distinctly to avoid clashing with other API `Location` classes.
 class SavedPlaceLocation {
-  final String? type;
-  final List<double>? coordinates;
+  String? type;
+  List<double>? coordinates;
 
   SavedPlaceLocation({this.type, this.coordinates});
 
-  factory SavedPlaceLocation.fromJson(Map<String, dynamic> json) =>
+  factory SavedPlaceLocation.fromJson(String str) =>
+      SavedPlaceLocation.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory SavedPlaceLocation.fromMap(Map<String, dynamic> json) =>
       SavedPlaceLocation(
-        type: json['type']?.toString(),
-        coordinates: json['coordinates'] == null
-            ? null
+        type: json["type"]?.toString(),
+        coordinates: json["coordinates"] == null
+            ? []
             : List<double>.from(
-                (json['coordinates'] as List).map(
-                  (x) => (x as num).toDouble(),
-                ),
+                (json["coordinates"] as List).map((x) => x?.toDouble()),
               ),
       );
 
-  Map<String, dynamic> toJson() => {
-    'type': type,
-    'coordinates': coordinates,
+  Map<String, dynamic> toMap() => {
+    "type": type,
+    "coordinates": coordinates == null
+        ? []
+        : List<dynamic>.from(coordinates!.map((x) => x)),
   };
 }

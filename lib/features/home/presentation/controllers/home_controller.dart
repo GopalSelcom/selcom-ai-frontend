@@ -458,7 +458,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       // Handle Saved Places
       results[2].fold((_) => null, (response) {
-        final res = response as GetSavedPlacesResponseModel?;
+        final res = response as SavedPlacesResponse?;
         savedPlaces.assignAll(
           SavedPlacesOrdering.sortForDisplay(
             res?.data?.savedPlaces ?? const [],
