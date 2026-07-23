@@ -51,7 +51,7 @@ class PendingReview {
   DriverSnapshot? driverSnapshot;
   VehicleSnapshot? vehicleSnapshot;
   Pickup? pickup;
-  Destination? destination;
+  PendingReviewDestination? destination;
   int? finalFare;
   String? rideCompletedAt;
   int? riderRating;
@@ -85,7 +85,7 @@ class PendingReview {
     pickup: json["pickup"] == null ? null : Pickup.fromMap(json["pickup"]),
     destination: json["destination"] == null
         ? null
-        : Destination.fromMap(json["destination"]),
+        : PendingReviewDestination.fromMap(json["destination"]),
     finalFare: json["final_fare"],
     rideCompletedAt: json["ride_completed_at"],
     riderRating: json["rider_rating"],
@@ -104,7 +104,7 @@ class PendingReview {
   };
 }
 
-class Destination {
+class PendingReviewDestination {
   Location? location;
   dynamic index;
   String? status;
@@ -115,7 +115,7 @@ class Destination {
   double? lng;
   String? address;
 
-  Destination({
+  PendingReviewDestination({
     this.location,
     this.index,
     this.status,
@@ -127,12 +127,12 @@ class Destination {
     this.address,
   });
 
-  factory Destination.fromJson(String str) =>
-      Destination.fromMap(json.decode(str));
+  factory PendingReviewDestination.fromJson(String str) =>
+      PendingReviewDestination.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory Destination.fromMap(Map<String, dynamic> json) => Destination(
+  factory PendingReviewDestination.fromMap(Map<String, dynamic> json) => PendingReviewDestination(
     location: json["location"] == null
         ? null
         : Location.fromMap(json["location"]),

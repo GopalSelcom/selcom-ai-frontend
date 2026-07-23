@@ -83,8 +83,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   // Home Data
   final vehicleTypes = <VehicleType>[].obs;
-  final recentDestinations = <Destination>[].obs;
-  final recentDestinationsScreen = <Destination>[].obs;
+  final recentDestinations = <RecentDestination>[].obs;
+  final recentDestinationsScreen = <RecentDestination>[].obs;
   final savedPlaces = <SavedPlace>[].obs;
   final activeRide = Rxn<RideModel>();
   final activeRides = <RideModel>[].obs;
@@ -451,7 +451,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
       // Handle Recent Destinations
       results[1].fold((_) => null, (destinations) {
-        if (destinations is List<Destination>) {
+        if (destinations is List<RecentDestination>) {
           recentDestinations.assignAll(destinations);
         }
       });
@@ -498,7 +498,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-  List<Destination> get recentDestinationsPreview {
+  List<RecentDestination> get recentDestinationsPreview {
     if (recentDestinations.length <= 3) return recentDestinations;
     return recentDestinations.take(3).toList(growable: false);
   }
@@ -1035,7 +1035,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> saveRecentAsFavorite({
-    required Destination loc,
+    required RecentDestination loc,
     required String label,
   }) async {
     if (isSavingPlace.value) return;
@@ -1062,7 +1062,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  Future<void> toggleFavoriteForRecent(Destination loc) async {
+  Future<void> toggleFavoriteForRecent(RecentDestination loc) async {
     final saved = getSavedPlaceFor(loc.address ?? '', null);
     if (saved?.id != null) {
       await _confirmAndDeleteSavedPlace(saved!);
@@ -1557,7 +1557,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// Opens location selection with [loc] as destination; pickup empty (GPS off).
   Future<void> openLocationSelectionForRecentDestination(
-    Destination loc,
+    RecentDestination loc,
   ) async {
     await _openLocationSelectionWithDestination(
       destAddr: loc.address ?? '',
@@ -1568,7 +1568,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  /// Pickup = current map center; destination = [Destination].
+  /// Pickup = current map center; destination = [RecentDestination].
   ///
   /// When GPS/location is unavailable, opens location selection so the user can
   /// pick pickup; [loc] is pre-filled as destination.
@@ -1576,7 +1576,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   /// Set [showHomeFareEstimateLoader] when the tap originates from the home
   /// sheet so the home overlay can run during fare estimate.
   Future<void> navigateToVehicleSelectionForRecentDestination(
-    Destination loc, {
+    RecentDestination loc, {
     bool showHomeFareEstimateLoader = false,
   }) async {
     final destAddr = (loc.address ?? '').trim();
@@ -2031,7 +2031,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     return VehicleImageUtils.imageAssetForVehicleType(vehicleName);
   }
 
-  String recentDestinationTitleLine(Destination loc) {
+  String recentDestinationTitleLine(RecentDestination loc) {
     final address = loc.address ?? '';
     final parts = address.split(',');
     if (parts.isEmpty) return address;
@@ -2203,7 +2203,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   void applyRecentDestinationToLocationSelection({
-    required Destination destination,
+    required RecentDestination destination,
     required int activeSegmentIndex,
     required TextEditingController pickupController,
     required TextEditingController destinationController,
@@ -2310,7 +2310,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> toggleAddAddressBottomSheetForRecent(
-    Destination loc,
+    RecentDestination loc,
   ) async {
     final saved = getSavedPlaceFor(loc.address ?? '', null);
     if (saved?.id != null) {
@@ -2451,7 +2451,7 @@ class HomeController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> saveAddressFromRecentLocation({
-    required Destination loc,
+    required RecentDestination loc,
     required String label,
     required String address,
   }) async {

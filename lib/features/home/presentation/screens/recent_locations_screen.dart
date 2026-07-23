@@ -76,7 +76,7 @@ class RecentLocationsScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildRecentLocationItem(Destination loc) {
+  Widget _buildRecentLocationItem(RecentDestination loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
       final savedPlace = controller.getSavedPlaceFor(loc.address ?? '', null);

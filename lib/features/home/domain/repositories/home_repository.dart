@@ -4,10 +4,8 @@ import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart'
-    hide Destination;
-import '../../../../core/data/models/responses/rides/book_rides_response.dart'
-    hide Destination;
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
@@ -22,7 +20,7 @@ import '../../data/models/places_models.dart';
 abstract class HomeRepository {
   Future<Either<Failure, List<VehicleType>>> getVehicleTypes();
 
-  Future<Either<Failure, List<Destination>>> getRecentDestinations();
+  Future<Either<Failure, List<RecentDestination>>> getRecentDestinations();
 
   Future<Either<Failure, GetSavedPlacesResponseModel?>> getSavedPlaces();
 

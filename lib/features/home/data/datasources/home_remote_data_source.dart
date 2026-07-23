@@ -1,33 +1,30 @@
+import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart'
-    hide Destination;
+import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
+import '../../../../core/data/models/responses/create_saved_place_response.dart';
+import '../../../../core/data/models/responses/get_saved_places_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart';
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/config/ride_payment_endpoints.dart';
+import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
-import '../models/geocode_response_model.dart';
-import '../models/places_models.dart';
-
-import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
-import '../../../../core/data/models/responses/create_saved_place_response.dart';
-import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart'
-    hide Destination;
-import '../../../../core/data/models/ride_model.dart';
-import '../../../../core/data/models/user_model.dart';
 import '../../../profile/data/models/profile_response_model.dart';
 import '../../../ride/data/models/recent_destinations_response.dart';
+import '../models/geocode_response_model.dart';
+import '../models/places_models.dart';
 
 abstract class HomeRemoteDataSource {
   Future<VehicleTypesResponse> getVehicleTypes();
 
-  Future<List<Destination>> getRecentDestinations();
+  Future<List<RecentDestination>> getRecentDestinations();
 
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
 
@@ -87,14 +84,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
     }
 
-    return VehicleTypesResponse(
-      statusCode: response.statusCode,
-      message: null,
-    );
+    return VehicleTypesResponse(statusCode: response.statusCode, message: null);
   }
 
   @override
-  Future<List<Destination>> getRecentDestinations() async {
+  Future<List<RecentDestination>> getRecentDestinations() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.recentDestinations,
@@ -137,7 +131,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       request: ApiRequest(
         endpoint: URLS.ride.activeRide,
         method: ApiMethod.get,
-        errorPresentationType: ErrorPresentationType.none
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
 

@@ -28,7 +28,7 @@ class RecentDestinationsResponse {
 }
 
 class RecentDestinationsData {
-  List<Destination>? destinations;
+  List<RecentDestination>? destinations;
 
   RecentDestinationsData({this.destinations});
 
@@ -41,10 +41,10 @@ class RecentDestinationsData {
       RecentDestinationsData(
         destinations: json["destinations"] == null
             ? []
-            : List<Destination>.from(
+            : List<RecentDestination>.from(
                 json["destinations"]!.map(
                   (x) =>
-                      Destination.fromMap(Map<String, dynamic>.from(x as Map)),
+                      RecentDestination.fromMap(Map<String, dynamic>.from(x as Map)),
                 ),
               ),
       );
@@ -56,20 +56,20 @@ class RecentDestinationsData {
   };
 }
 
-class Destination {
+class RecentDestination {
   String? address;
   double? lat;
   double? lng;
   String? lastUsed;
 
-  Destination({this.address, this.lat, this.lng, this.lastUsed});
+  RecentDestination({this.address, this.lat, this.lng, this.lastUsed});
 
-  factory Destination.fromJson(String str) =>
-      Destination.fromMap(json.decode(str));
+  factory RecentDestination.fromJson(String str) =>
+      RecentDestination.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory Destination.fromMap(Map<String, dynamic> json) => Destination(
+  factory RecentDestination.fromMap(Map<String, dynamic> json) => RecentDestination(
     address: json["address"],
     lat: json["lat"]?.toDouble(),
     lng: json["lng"]?.toDouble(),

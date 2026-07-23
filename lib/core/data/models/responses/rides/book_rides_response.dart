@@ -699,5 +699,4 @@ class BookRidePreauth {
 }
 
 /// Backward-compatible aliases for older call sites / generated names.
-typedef Destination = BookRidePlace;
 typedef Location = RideGeoLocation;

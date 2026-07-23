@@ -348,7 +348,7 @@ class RideDetailsController extends GetxController {
         lng: source.pickup.lng,
         address: source.pickup.address,
       ),
-      destination: Destination(
+      destination: PendingReviewDestination(
         lat: source.destination.lat,
         lng: source.destination.lng,
         address: source.destination.address,

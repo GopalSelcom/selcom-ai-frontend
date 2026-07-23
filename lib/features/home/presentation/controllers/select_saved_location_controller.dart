@@ -111,7 +111,7 @@ class SelectSavedLocationController extends GetxController {
     );
   }
 
-  Future<void> handleRecentSelection(Destination loc) async {
+  Future<void> handleRecentSelection(RecentDestination loc) async {
     final address = loc.address ?? '';
     final title = address.split(',').first;
     final subtitle = address;

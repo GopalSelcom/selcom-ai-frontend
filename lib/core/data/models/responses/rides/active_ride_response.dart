@@ -125,8 +125,8 @@ class ActiveRide {
   String? id;
   String? status;
   FareBreakdown? fareBreakdown;
-  Destination? pickup;
-  Destination? destination;
+  ActiveRidePlace? pickup;
+  ActiveRidePlace? destination;
   int? fareEstimate;
   String? vehicleTypeId;
   String? paymentMethod;
@@ -166,10 +166,10 @@ class ActiveRide {
         : FareBreakdown.fromJson(json["fare_breakdown"]),
     pickup: json["pickup"] == null
         ? null
-        : Destination.fromJson(json["pickup"]),
+        : ActiveRidePlace.fromJson(json["pickup"]),
     destination: json["destination"] == null
         ? null
-        : Destination.fromJson(json["destination"]),
+        : ActiveRidePlace.fromJson(json["destination"]),
     fareEstimate: json["fare_estimate"],
     vehicleTypeId: json["vehicle_type_id"] is Map
         ? json["vehicle_type_id"]["_id"]?.toString()
@@ -229,15 +229,15 @@ class FareBreakdown {
   };
 }
 
-class Destination {
+class ActiveRidePlace {
   Location? location;
   double? lat;
   double? lng;
   String? address;
 
-  Destination({this.location, this.lat, this.lng, this.address});
+  ActiveRidePlace({this.location, this.lat, this.lng, this.address});
 
-  factory Destination.fromJson(Map<String, dynamic> json) => Destination(
+  factory ActiveRidePlace.fromJson(Map<String, dynamic> json) => ActiveRidePlace(
     location: json["location"] == null
         ? null
         : Location.fromJson(json["location"]),

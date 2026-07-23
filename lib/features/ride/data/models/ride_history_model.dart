@@ -96,8 +96,8 @@ class Ride {
   List<String>? ratingTags;
   VehicleTypeId? vehicleTypeId;
   Pickup? pickup;
-  Destination? destination;
-  List<Destination>? stops;
+  RideHistoryPlace? destination;
+  List<RideHistoryPlace>? stops;
   int? fareEstimate;
   double? distanceKm;
   int? durationMinutes;
@@ -151,8 +151,8 @@ class Ride {
     ratingTags: json["rating_tags"] == null ? [] : List<String>.from(json["rating_tags"]!.map((x) => x)),
     vehicleTypeId: json["vehicle_type_id"] == null ? null : VehicleTypeId.fromJson(json["vehicle_type_id"]),
     pickup: json["pickup"] == null ? null : Pickup.fromJson(json["pickup"]),
-    destination: json["destination"] == null ? null : Destination.fromJson(json["destination"]),
-    stops: json["stops"] == null ? [] : List<Destination>.from(json["stops"]!.map((x) => Destination.fromJson(x))),
+    destination: json["destination"] == null ? null : RideHistoryPlace.fromJson(json["destination"]),
+    stops: json["stops"] == null ? [] : List<RideHistoryPlace>.from(json["stops"]!.map((x) => RideHistoryPlace.fromJson(x))),
     fareEstimate: json["fare_estimate"],
     distanceKm: json["distance_km"]?.toDouble(),
     durationMinutes: json["duration_minutes"],
@@ -188,7 +188,7 @@ class Ride {
   };
 }
 
-class Destination {
+class RideHistoryPlace {
   Location? location;
   int? index;
   String? status;
@@ -199,7 +199,7 @@ class Destination {
   double? lng;
   String? address;
 
-  Destination({
+  RideHistoryPlace({
     this.location,
     this.index,
     this.status,
@@ -211,11 +211,11 @@ class Destination {
     this.address,
   });
 
-  factory Destination.fromRawJson(String str) => Destination.fromJson(json.decode(str));
+  factory RideHistoryPlace.fromRawJson(String str) => RideHistoryPlace.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Destination.fromJson(Map<String, dynamic> json) => Destination(
+  factory RideHistoryPlace.fromJson(Map<String, dynamic> json) => RideHistoryPlace(
     location: json["location"] == null ? null : Location.fromJson(json["location"]),
     index: json["index"],
     status: json["status"],
