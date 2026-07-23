@@ -1,65 +1,45 @@
 import 'dart:convert';
 
-/// Envelope for `POST go/validate_ride_payment`.
+/// Envelope for `POST go/validate_ride_payment` (from `model/model.dart`).
 class ValidateRidePaymentResponse {
-  final int? statusCode;
-  final String? message;
-  final ValidateRidePaymentData? data;
+  int? statusCode;
+  String? message;
+  ValidateRidePaymentData? data;
 
-  const ValidateRidePaymentResponse({
-    this.statusCode,
-    this.message,
-    this.data,
-  });
+  ValidateRidePaymentResponse({this.statusCode, this.message, this.data});
 
-  factory ValidateRidePaymentResponse.fromRawJson(String str) =>
-      ValidateRidePaymentResponse.fromJson(json.decode(str));
+  factory ValidateRidePaymentResponse.fromJson(String str) =>
+      ValidateRidePaymentResponse.fromMap(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  String toJson() => json.encode(toMap());
 
-  factory ValidateRidePaymentResponse.fromJson(Map<String, dynamic> json) =>
+  factory ValidateRidePaymentResponse.fromMap(Map<String, dynamic> json) =>
       ValidateRidePaymentResponse(
-        statusCode: json['status_code'],
-        message: json['message']?.toString(),
-        data: json['data'] == null
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null
             ? null
-            : ValidateRidePaymentData.fromJson(
-                json['data'] is Map<String, dynamic>
-                    ? json['data'] as Map<String, dynamic>
-                    : Map<String, dynamic>.from(json['data'] as Map),
-              ),
+            : ValidateRidePaymentData.fromMap(json["data"]),
       );
 
-  bool get isSuccess =>
-      statusCode == 200 && (validationId?.trim().isNotEmpty ?? false);
-
-  String? get validationId => data?.validationId;
-
-  bool get canProceedDirectly =>
-      isSuccess &&
-      (data?.callbackRequired != true) &&
-      (data?.blockStatus == null ||
-          data!.blockStatus!.trim().isEmpty ||
-          data!.blockStatus!.trim().toLowerCase() == 'confirmed');
-
-  Map<String, dynamic> toJson() => {
-    'status_code': statusCode,
-    'message': message,
-    'data': data?.toJson(),
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
   };
 }
 
 class ValidateRidePaymentData {
-  final String? validationId;
-  final int? totalPayableAmount;
-  final String? blockStatus;
-  final bool? callbackRequired;
-  final String? callbackUrl;
-  final String? socketRoom;
-  final bool? walletEligible;
-  final ValidatePaymentWalletSnapshot? walletSnapshot;
+  String? validationId;
+  int? totalPayableAmount;
+  String? blockStatus;
+  bool? callbackRequired;
+  dynamic callbackUrl;
+  dynamic socketRoom;
+  bool? walletEligible;
+  ValidateRidePaymentWalletSnapshot? walletSnapshot;
 
-  const ValidateRidePaymentData({
+  ValidateRidePaymentData({
     this.validationId,
     this.totalPayableAmount,
     this.blockStatus,
@@ -70,73 +50,68 @@ class ValidateRidePaymentData {
     this.walletSnapshot,
   });
 
-  factory ValidateRidePaymentData.fromRawJson(String str) =>
-      ValidateRidePaymentData.fromJson(json.decode(str));
+  factory ValidateRidePaymentData.fromJson(String str) =>
+      ValidateRidePaymentData.fromMap(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  String toJson() => json.encode(toMap());
 
-  factory ValidateRidePaymentData.fromJson(Map<String, dynamic> json) =>
+  factory ValidateRidePaymentData.fromMap(Map<String, dynamic> json) =>
       ValidateRidePaymentData(
-        validationId: json['validation_id']?.toString(),
-        totalPayableAmount: (json['total_payable_amount'] as num?)?.toInt(),
-        blockStatus: json['block_status']?.toString(),
-        callbackRequired: json['callback_required'] as bool?,
-        callbackUrl: json['callback_url']?.toString(),
-        socketRoom: json['socket_room']?.toString(),
-        walletEligible: json['wallet_eligible'] as bool?,
-        walletSnapshot: json['wallet_snapshot'] == null
+        validationId: json["validation_id"],
+        totalPayableAmount: json["total_payable_amount"],
+        blockStatus: json["block_status"],
+        callbackRequired: json["callback_required"],
+        callbackUrl: json["callback_url"],
+        socketRoom: json["socket_room"],
+        walletEligible: json["wallet_eligible"],
+        walletSnapshot: json["wallet_snapshot"] == null
             ? null
-            : ValidatePaymentWalletSnapshot.fromJson(
-                json['wallet_snapshot'] is Map<String, dynamic>
-                    ? json['wallet_snapshot'] as Map<String, dynamic>
-                    : Map<String, dynamic>.from(
-                        json['wallet_snapshot'] as Map,
-                      ),
-              ),
+            : ValidateRidePaymentWalletSnapshot.fromMap(json["wallet_snapshot"]),
       );
 
-  Map<String, dynamic> toJson() => {
-    'validation_id': validationId,
-    'total_payable_amount': totalPayableAmount,
-    'block_status': blockStatus,
-    'callback_required': callbackRequired,
-    'callback_url': callbackUrl,
-    'socket_room': socketRoom,
-    'wallet_eligible': walletEligible,
-    'wallet_snapshot': walletSnapshot?.toJson(),
+  Map<String, dynamic> toMap() => {
+    "validation_id": validationId,
+    "total_payable_amount": totalPayableAmount,
+    "block_status": blockStatus,
+    "callback_required": callbackRequired,
+    "callback_url": callbackUrl,
+    "socket_room": socketRoom,
+    "wallet_eligible": walletEligible,
+    "wallet_snapshot": walletSnapshot?.toMap(),
   };
 }
 
-class ValidatePaymentWalletSnapshot {
-  final String? pan;
-  final num? available;
-  final num? reserved;
-  final String? currency;
+class ValidateRidePaymentWalletSnapshot {
+  String? pan;
+  int? available;
+  int? reserved;
+  String? currency;
 
-  const ValidatePaymentWalletSnapshot({
+  ValidateRidePaymentWalletSnapshot({
     this.pan,
     this.available,
     this.reserved,
     this.currency,
   });
 
-  factory ValidatePaymentWalletSnapshot.fromRawJson(String str) =>
-      ValidatePaymentWalletSnapshot.fromJson(json.decode(str));
+  factory ValidateRidePaymentWalletSnapshot.fromJson(String str) =>
+      ValidateRidePaymentWalletSnapshot.fromMap(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
+  String toJson() => json.encode(toMap());
 
-  factory ValidatePaymentWalletSnapshot.fromJson(Map<String, dynamic> json) =>
-      ValidatePaymentWalletSnapshot(
-        pan: json['pan']?.toString(),
-        available: json['available'] as num?,
-        reserved: json['reserved'] as num?,
-        currency: json['currency']?.toString(),
-      );
+  factory ValidateRidePaymentWalletSnapshot.fromMap(
+    Map<String, dynamic> json,
+  ) => ValidateRidePaymentWalletSnapshot(
+    pan: json["pan"],
+    available: json["available"],
+    reserved: json["reserved"],
+    currency: json["currency"],
+  );
 
-  Map<String, dynamic> toJson() => {
-    'pan': pan,
-    'available': available,
-    'reserved': reserved,
-    'currency': currency,
+  Map<String, dynamic> toMap() => {
+    "pan": pan,
+    "available": available,
+    "reserved": reserved,
+    "currency": currency,
   };
 }

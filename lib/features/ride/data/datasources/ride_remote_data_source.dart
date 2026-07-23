@@ -586,7 +586,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     if (response.statusCode == 200 && response.data != null) {
       final body = _apiResponseMap(response.data);
       if (body != null) {
-        return ValidateRidePaymentResponse.fromJson(body);
+        return ValidateRidePaymentResponse.fromMap(body);
       }
       return ValidateRidePaymentResponse(statusCode: response.statusCode);
     }

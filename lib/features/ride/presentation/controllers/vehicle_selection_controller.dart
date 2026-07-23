@@ -1009,7 +1009,7 @@ class VehicleSelectionController extends GetxController {
           );
         },
         (validation) async {
-          final validationId = (validation.validationId ?? '').trim();
+          final validationId = (validation.data?.validationId ?? '').trim();
           if (validationId.isEmpty) {
             AppDialogs.showErrorDialog(
               title: AppStrings.paymentValidationFailed.tr,
@@ -1028,14 +1028,15 @@ class VehicleSelectionController extends GetxController {
           Loader.instance.show();
           while (true) {
             String? roomValidationId;
-            final needsCallback = !latestValidation.canProceedDirectly;
+            final needsCallback =
+                !_canProceedDirectlyFromValidation(latestValidation);
             if (AppConfig.ridePaymentBypass || needsCallback) {
               roomValidationId = blockValidationId;
               _socketService.joinPaymentRoom(validationId: roomValidationId);
             }
             final paymentConfirmed = AppConfig.ridePaymentBypass
                 ? await _confirmDevPaymentCallback(roomValidationId ?? '')
-                : latestValidation.canProceedDirectly
+                : _canProceedDirectlyFromValidation(latestValidation)
                 ? true
                 : await _waitForPaymentBlockStatus();
 
@@ -1063,7 +1064,7 @@ class VehicleSelectionController extends GetxController {
                 return null;
               },
               (value) {
-                final t = (value.validationId ?? '').trim();
+                final t = (value.data?.validationId ?? '').trim();
                 if (t.isEmpty) {
                   AppDialogs.showErrorDialog(
                     title: AppStrings.paymentValidationFailed.tr,
@@ -1079,7 +1080,8 @@ class VehicleSelectionController extends GetxController {
               return;
             }
             latestValidation = nextValidation;
-            blockValidationId = (nextValidation.validationId ?? '').trim();
+            blockValidationId =
+                (nextValidation.data?.validationId ?? '').trim();
           }
 
           // 2) Only after validation, submit ride booking (may retry if API OK but payment not applied).
@@ -1351,6 +1353,15 @@ class VehicleSelectionController extends GetxController {
       },
     );
     return completer.future;
+  }
+
+  /// Mirrors former `ValidateRidePaymentResponse.canProceedDirectly`.
+  bool _canProceedDirectlyFromValidation(ValidateRidePaymentResponse v) {
+    final id = (v.data?.validationId ?? '').trim();
+    if (v.statusCode != 200 || id.isEmpty) return false;
+    if (v.data?.callbackRequired == true) return false;
+    final status = (v.data?.blockStatus ?? '').trim().toLowerCase();
+    return status.isEmpty || status == 'confirmed';
   }
 
   /// Dev bypass: join room, await `payment_callback`, then allow book ride.
