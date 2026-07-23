@@ -1,58 +1,72 @@
-import '../user_profile_models.dart';
+import 'dart:convert';
+
+import 'get_saved_places_response.dart';
 
 /// Envelope for `POST go/user/saved-places/from-recent`.
 /// Creates a saved place (favourite by default). Success → refetch list on client.
 /// See `docs/SAVED-PLACES-FLOW.md`.
-class CreateSavedPlaceResponseModel {
-  final int? statusCode;
-  final String? message;
-  final CreateSavedPlaceData? data;
+class CreateSavedPlaceFromRecentResponse {
+  int? statusCode;
+  String? message;
+  CreateSavedPlaceFromRecentData? data;
 
-  CreateSavedPlaceResponseModel({this.statusCode, this.message, this.data});
+  CreateSavedPlaceFromRecentResponse({
+    this.statusCode,
+    this.message,
+    this.data,
+  });
 
-  factory CreateSavedPlaceResponseModel.fromJson(Map<String, dynamic> json) {
-    return CreateSavedPlaceResponseModel(
-      statusCode: (json['status_code'] as num?)?.toInt(),
-      message: json['message']?.toString(),
-      data: json['data'] != null
-          ? CreateSavedPlaceData.fromJson(
-              json['data'] is Map<String, dynamic>
-                  ? json['data'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['data'] as Map),
-            )
-          : null,
-    );
-  }
+  factory CreateSavedPlaceFromRecentResponse.fromJson(String str) =>
+      CreateSavedPlaceFromRecentResponse.fromMap(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {
-      'status_code': statusCode,
-      'message': message,
-      'data': data?.toJson(),
-    };
-  }
+  String toJson() => json.encode(toMap());
+
+  factory CreateSavedPlaceFromRecentResponse.fromMap(
+    Map<String, dynamic> json,
+  ) => CreateSavedPlaceFromRecentResponse(
+    statusCode: json["status_code"],
+    message: json["message"]?.toString(),
+    data: json["data"] == null
+        ? null
+        : CreateSavedPlaceFromRecentData.fromMap(
+            json["data"] is Map<String, dynamic>
+                ? json["data"] as Map<String, dynamic>
+                : Map<String, dynamic>.from(json["data"] as Map),
+          ),
+  );
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
+  };
 
   bool get isSuccess => statusCode == 200;
 }
 
-class CreateSavedPlaceData {
-  final SavedPlaceModel? place;
+class CreateSavedPlaceFromRecentData {
+  /// Same shape as list items from `GET go/user/saved-places`.
+  SavedPlace? place;
 
-  CreateSavedPlaceData({this.place});
+  CreateSavedPlaceFromRecentData({this.place});
 
-  factory CreateSavedPlaceData.fromJson(Map<String, dynamic> json) {
-    return CreateSavedPlaceData(
-      place: json['place'] != null
-          ? SavedPlaceModel.fromJson(
-              json['place'] is Map<String, dynamic>
-                  ? json['place'] as Map<String, dynamic>
-                  : Map<String, dynamic>.from(json['place'] as Map),
-            )
-          : null,
-    );
-  }
+  factory CreateSavedPlaceFromRecentData.fromJson(String str) =>
+      CreateSavedPlaceFromRecentData.fromMap(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {'place': place?.toJson()};
-  }
+  String toJson() => json.encode(toMap());
+
+  factory CreateSavedPlaceFromRecentData.fromMap(Map<String, dynamic> json) =>
+      CreateSavedPlaceFromRecentData(
+        place: json["place"] == null
+            ? null
+            : SavedPlace.fromMap(
+                json["place"] is Map<String, dynamic>
+                    ? json["place"] as Map<String, dynamic>
+                    : Map<String, dynamic>.from(json["place"] as Map),
+              ),
+      );
+
+  Map<String, dynamic> toMap() => {
+    "place": place?.toMap(),
+  };
 }

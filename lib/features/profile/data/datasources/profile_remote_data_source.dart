@@ -140,8 +140,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.data != null) {
-      final createResponse = CreateSavedPlaceResponseModel.fromJson(
-        response.data,
+      final createResponse = CreateSavedPlaceFromRecentResponse.fromMap(
+        response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : Map<String, dynamic>.from(response.data as Map),
       );
       return createResponse.isSuccess;
     }
