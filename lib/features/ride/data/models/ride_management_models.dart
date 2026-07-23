@@ -1,36 +1,6 @@
 import '../../../../core/constants/currency_code.dart';
 import '../../../../core/data/models/ride_model.dart';
 
-class BookingResponseModel {
-  final String id;
-  final String status;
-  final int pinCode;
-  final int fare;
-  final String currency;
-
-  BookingResponseModel({
-    required this.id,
-    required this.status,
-    required this.pinCode,
-    required this.fare,
-    required this.currency,
-  });
-
-  factory BookingResponseModel.fromJson(Map<String, dynamic> json) {
-    return BookingResponseModel(
-      id: json['_id'] ?? '',
-      status: json['status'] ?? '',
-      pinCode: (json['pin_code'] is int)
-          ? json['pin_code']
-          : int.parse(json['pin_code'].toString()),
-      fare: (json['fare'] is int)
-          ? json['fare']
-          : int.parse(json['fare'].toString()),
-      currency: json['currency'] ?? CurrencyCode.tzs,
-    );
-  }
-}
-
 String receiptTransactionIdFromJson(Map<String, dynamic> json) {
   final direct =
       json['transid'] ??

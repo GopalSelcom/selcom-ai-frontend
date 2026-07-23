@@ -42,7 +42,7 @@ class FareEstimateData {
   EstimateRouteGeometry? routeGeometry;
   List<FareLeg>? legs;
   EstimatePlace? pickup;
-  List<dynamic>? stops;
+  List<EstimatePlace>? stops;
   EstimatePlace? destination;
   bool? isMultiStop;
   BookAny? bookAny;
@@ -75,13 +75,23 @@ class FareEstimateData {
         routeGeometry: json["route_geometry"] == null
             ? null
             : EstimateRouteGeometry.fromMap(json["route_geometry"]),
-        legs: json["legs"],
+        legs: json["legs"] == null
+            ? []
+            : List<FareLeg>.from(
+                json["legs"]!.map((x) => FareLeg.fromJson(
+                      x is Map<String, dynamic>
+                          ? x
+                          : Map<String, dynamic>.from(x as Map),
+                    )),
+              ),
         pickup: json["pickup"] == null
             ? null
             : EstimatePlace.fromMap(json["pickup"]),
         stops: json["stops"] == null
             ? []
-            : List<dynamic>.from(json["stops"]!.map((x) => x)),
+            : List<EstimatePlace>.from(
+                json["stops"]!.map((x) => EstimatePlace.fromMap(x)),
+              ),
         destination: json["destination"] == null
             ? null
             : EstimatePlace.fromMap(json["destination"]),
@@ -97,9 +107,13 @@ class FareEstimateData {
         ? []
         : List<dynamic>.from(estimates!.map((x) => x.toMap())),
     "route_geometry": routeGeometry?.toMap(),
-    "legs": legs,
+    "legs": legs == null
+        ? []
+        : List<dynamic>.from(legs!.map((x) => x.toJson())),
     "pickup": pickup?.toMap(),
-    "stops": stops == null ? [] : List<dynamic>.from(stops!.map((x) => x)),
+    "stops": stops == null
+        ? []
+        : List<dynamic>.from(stops!.map((x) => x.toMap())),
     "destination": destination?.toMap(),
     "is_multi_stop": isMultiStop,
     "book_any": bookAny?.toMap(),
