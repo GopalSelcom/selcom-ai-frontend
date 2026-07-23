@@ -12,7 +12,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   SettingsRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, AppSettingsModel>> getAppSettings() async {
+  Future<Either<Failure, Settings>> getAppSettings() async {
     try {
       final result = await remoteDataSource.getAppSettings();
       return Right(result);

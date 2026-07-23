@@ -8,7 +8,7 @@ import '../../../../core/network/urls.dart';
 import '../models/settings_models.dart';
 
 abstract class SettingsRemoteDataSource {
-  Future<AppSettingsModel> getAppSettings();
+  Future<Settings> getAppSettings();
 
   Future<RidePinPreferenceModel> getRidePinPreference();
 
@@ -19,7 +19,7 @@ abstract class SettingsRemoteDataSource {
 
 class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
   @override
-  Future<AppSettingsModel> getAppSettings() async {
+  Future<Settings> getAppSettings() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.settings.appSettings,
@@ -29,16 +29,24 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final data = response.data['data'];
-      if (data is Map<String, dynamic>) {
-        final settings = data['settings'];
-        if (settings is Map<String, dynamic>) {
-          return AppSettingsModel.fromJson(settings);
+      final raw = response.data;
+      if (raw is Map) {
+        final parsed = AppSettingsResponse.fromMap(
+          Map<String, dynamic>.from(raw),
+        );
+        final settings = parsed.data?.settings;
+        if (settings != null) return settings;
+
+        final data = raw['data'];
+        if (data is Map && data['settings'] is Map) {
+          return Settings.fromMap(
+            Map<String, dynamic>.from(data['settings'] as Map),
+          );
         }
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return AppSettingsModel.fromJson({});
+      return Settings();
     }
     throw Exception(
       response.data?['message'] ?? AppStrings.failedToLoadSettings.tr,

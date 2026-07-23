@@ -64,7 +64,7 @@ class SelcomPesaTopupController extends GetxController {
   bool get textFieldsDisposed => _textFieldsDisposed;
 
   final ValueNotifier<int> pendingCountdown = ValueNotifier<int>(
-    AppSettingsModel.defaultPaymentTimerSeconds,
+    AppSettingsDefaults.paymentTimerSeconds,
   );
 
   late final PaymentCountdownTimer _paymentCountdown;

@@ -58,8 +58,8 @@ class _OptionsContent extends StatelessWidget {
         .toList(growable: false);
   }
 
-  _AddMoneyOption? _optionFromApiMethod(TopupMethodSettings method) {
-    final title = method.title.trim();
+  _AddMoneyOption? _optionFromApiMethod(TopupMethod method) {
+    final title = method.title?.trim() ?? '';
     if (title.isEmpty) return null;
 
     final onTap = _flowForKey(method.key);
@@ -67,21 +67,21 @@ class _OptionsContent extends StatelessWidget {
 
     return _AddMoneyOption(
       title: title,
-      subtitle: method.subtitle.trim(),
+      subtitle: method.subtitle?.trim() ?? '',
       onTap: onTap,
     );
   }
 
   /// Maps `/go/settings` `topup_methods[].key` → in-app top-up flow.
-  VoidCallback? _flowForKey(String key) {
+  VoidCallback? _flowForKey(String? key) {
     switch (key) {
-      case TopupMethodSettings.keySelcomPesa:
+      case TopupMethodKeys.selcomPesa:
         return _onSelcomPesaTap;
-      case TopupMethodSettings.keyLocalBank:
+      case TopupMethodKeys.localBank:
         return _onLocalBanksTap;
-      case TopupMethodSettings.keyMobileMoney:
+      case TopupMethodKeys.mobileMoney:
         return _onMobileMoneyTap;
-      case TopupMethodSettings.keyCard:
+      case TopupMethodKeys.card:
         return _onSavedCardTap;
     }
     // Unknown key from a newer backend — no flow in this app version.

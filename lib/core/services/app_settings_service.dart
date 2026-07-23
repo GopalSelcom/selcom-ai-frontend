@@ -12,25 +12,25 @@ class AppSettingsService {
   final isLoaded = false.obs;
 
   /// `/go/settings` `payment_timer` (seconds). Default 5 minutes until loaded.
-  final paymentWaitSeconds = AppSettingsModel.defaultPaymentTimerSeconds.obs;
-  final bookForOtherSettings = Rxn<BookForOtherSettings>();
+  final paymentWaitSeconds = AppSettingsDefaults.paymentTimerSeconds.obs;
+  final bookForOtherSettings = Rxn<BookForOther>();
 
   /// Cached `cancellation_reasons` from `/go/settings` (populated by [preload]).
   final cancellationReasons = <String>[].obs;
 
   /// Cached `features.max_stops` from `/go/settings` (populated by [preload]).
-  final maxStops = AppSettingsModel.defaultMaxStops.obs;
+  final maxStops = AppSettingsDefaults.maxStops.obs;
 
   /// Cached `topup_methods` from `/go/settings` (populated by [preload]).
   ///
   /// Used by the Add Money bottom sheet for title, subtitle, order, and
   /// enabled visibility. Flow navigation uses each method's `key`.
-  final topupMethods = <TopupMethodSettings>[].obs;
+  final topupMethods = <TopupMethod>[].obs;
 
   /// Add-money options to display: `enabled == true` only, sorted by `order`.
-  List<TopupMethodSettings> get enabledTopupMethods {
-    final methods = topupMethods.where((m) => m.enabled).toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+  List<TopupMethod> get enabledTopupMethods {
+    final methods = topupMethods.where((m) => m.enabled == true).toList()
+      ..sort((a, b) => (a.order ?? 0).compareTo(b.order ?? 0));
     return methods;
   }
 
@@ -60,7 +60,8 @@ class AppSettingsService {
     return List<String>.from(cancellationReasons);
   }
 
-  /// `/go/settings` `payment_timer` (seconds), defaulting to [AppSettingsModel.defaultPaymentTimerSeconds].
+  /// `/go/settings` `payment_timer` (seconds), defaulting to
+  /// [AppSettingsDefaults.paymentTimerSeconds].
   Future<int> resolvePaymentTimerSeconds() async {
     if (!isLoaded.value) {
       await preload();
@@ -76,20 +77,48 @@ class AppSettingsService {
       (_) {
         features.clear();
         bookForOtherSettings.value = null;
-        paymentWaitSeconds.value = AppSettingsModel.defaultPaymentTimerSeconds;
+        paymentWaitSeconds.value = AppSettingsDefaults.paymentTimerSeconds;
         cancellationReasons.clear();
-        maxStops.value = AppSettingsModel.defaultMaxStops;
+        maxStops.value = AppSettingsDefaults.maxStops;
         topupMethods.clear();
       },
       (settings) {
-        features.assignAll(settings.features);
-        bookForOtherSettings.value = settings.bookForOther;
-        paymentWaitSeconds.value = settings.paymentTimerSeconds;
-        cancellationReasons.assignAll(settings.cancellationReasons);
-        maxStops.value = settings.maxStops;
-        topupMethods.assignAll(settings.topupMethods);
+        features.assignAll(_featureFlagsFrom(settings));
+        bookForOtherSettings.value = settings.features?.bookForOther;
+        paymentWaitSeconds.value = _positiveOrDefault(
+          settings.paymentTimer,
+          AppSettingsDefaults.paymentTimerSeconds,
+        );
+        cancellationReasons.assignAll(settings.cancellationReasons ?? const []);
+        maxStops.value = _positiveOrDefault(
+          settings.features?.maxStops,
+          AppSettingsDefaults.maxStops,
+        );
+        topupMethods.assignAll(settings.topupMethods ?? const []);
       },
     );
     isLoaded.value = true;
+  }
+
+  Map<String, bool> _featureFlagsFrom(Settings settings) {
+    final f = settings.features;
+    if (f == null) return const {};
+
+    final map = <String, bool>{};
+    if (f.ridePinAdminRequired != null) {
+      map['ride_pin_admin_required'] = f.ridePinAdminRequired!;
+    }
+    if (f.bookForOther?.enabled != null) {
+      map['book_for_other'] = f.bookForOther!.enabled!;
+    }
+    if (f.lowRatingDriverBlock?.enabled != null) {
+      map['low_rating_driver_block'] = f.lowRatingDriverBlock!.enabled!;
+    }
+    return map;
+  }
+
+  int _positiveOrDefault(int? value, int fallback) {
+    if (value == null || value <= 0) return fallback;
+    return value;
   }
 }

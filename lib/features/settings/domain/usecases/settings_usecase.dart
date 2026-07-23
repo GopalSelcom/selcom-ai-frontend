@@ -9,7 +9,7 @@ class SettingsUseCase {
 
   SettingsUseCase(this.repository);
 
-  Future<Either<Failure, AppSettingsModel>> getAppSettings() {
+  Future<Either<Failure, Settings>> getAppSettings() {
     return repository.getAppSettings();
   }
 
