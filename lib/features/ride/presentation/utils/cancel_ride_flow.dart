@@ -10,7 +10,7 @@ import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../data/models/ride_management_models.dart';
+import '../../data/models/cancellation_charges_response.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../widgets/cancel_ride_dialogs.dart';
 
@@ -57,7 +57,7 @@ class CancelRideFlow {
     }
 
     String? selectedReason;
-    RideCancellationChargesModel? cancellationData;
+    RideCancellationChargesData? cancellationData;
 
     // 3. Reason selection + fetch cancellation charges.
     final reasonDialog = CancelReasonSelectionDialog(
@@ -99,16 +99,16 @@ class CancelRideFlow {
     final charges = cancellationData!;
 
     // 4. No fee — cancel immediately; otherwise show fee/refund summary first.
-    if (charges.cancellationFee <= 0) {
+    if ((charges.cancellationFee ?? 0) <= 0) {
       await _cancelRideAndNavigateHome(selectedReason!);
       return;
     }
 
     await AppDialogs.showAnimatedDialog<bool>(
       child: CancellationChargesDialog(
-        canCancel: charges.canCancel,
-        cancellationFee: charges.cancellationFee,
-        netRefund: charges.netRefund,
+        canCancel: charges.canCancel ?? false,
+        cancellationFee: charges.cancellationFee ?? 0,
+        netRefund: charges.netRefund ?? 0,
         onConfirmTap: () => _cancelRideAndNavigateHome(selectedReason!),
       ),
       barrierDismissible: false,
@@ -129,16 +129,8 @@ class CancelRideFlow {
             message: AppStrings.couldNotCancelTryAgain.tr,
           );
         },
-        (success) {
-          if (success) {
-            cancelSucceeded = true;
-          } else {
-            onCancelApiFailed?.call();
-            AppDialogs.showErrorDialog(
-              title: AppStrings.cancelFailed.tr,
-              message: AppStrings.pleaseTryAgain.tr,
-            );
-          }
+        (_) {
+          cancelSucceeded = true;
         },
       );
     });

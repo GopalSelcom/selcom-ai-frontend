@@ -689,7 +689,7 @@ class FindingDriverController extends GetxController {
         await LiveActivityManager().endActivity(rideId);
         _applyNoDriverFoundSheetState();
       },
-      (success) async {
+      (_) async {
         await LiveActivityManager().endActivity(rideId);
         _applyNoDriverFoundSheetState();
       },

@@ -4,6 +4,7 @@ import '../../../../core/data/models/requests/validate_ride_payment_request.dart
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
+import '../../data/models/cancel_ride_response.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_history_model.dart';
@@ -30,7 +31,10 @@ class RideUseCase {
     return repository.getRideDetails(rideId);
   }
 
-  Future<Either<Failure, bool>> cancelRide(String rideId, String reason) {
+  Future<Either<Failure, CancelRideData>> cancelRide(
+    String rideId,
+    String reason,
+  ) {
     return repository.cancelRide(rideId, reason);
   }
 

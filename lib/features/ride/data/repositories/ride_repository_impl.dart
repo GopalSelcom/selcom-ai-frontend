@@ -24,6 +24,8 @@ import '../models/emergency_contacts_response.dart';
 import '../models/mid_ride_cancel_models.dart';
 import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
+import '../models/cancel_ride_response.dart';
+import '../models/cancellation_charges_response.dart';
 import '../models/ride_management_models.dart';
 
 class RideRepositoryImpl implements RideRepository {
@@ -174,7 +176,7 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, RideCancellationChargesModel>> getCancellationCharges(
+  Future<Either<Failure, RideCancellationChargesData>> getCancellationCharges(
     String rideId,
   ) async {
     try {
@@ -187,7 +189,10 @@ class RideRepositoryImpl implements RideRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> cancelRide(String rideId, String reason) async {
+  Future<Either<Failure, CancelRideData>> cancelRide(
+    String rideId,
+    String reason,
+  ) async {
     try {
       final result = await remoteDataSource.cancelRide(rideId, reason);
       return Right(result);

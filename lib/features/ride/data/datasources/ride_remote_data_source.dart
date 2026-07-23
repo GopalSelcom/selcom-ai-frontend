@@ -29,6 +29,8 @@ import '../models/emergency_contacts_response.dart';
 import '../models/mid_ride_cancel_models.dart';
 import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
+import '../models/cancel_ride_response.dart';
+import '../models/cancellation_charges_response.dart';
 import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
@@ -58,9 +60,9 @@ abstract class RideRemoteDataSource {
 
   Future<RideModel> getRideDetails(String rideId);
 
-  Future<RideCancellationChargesModel> getCancellationCharges(String rideId);
+  Future<RideCancellationChargesData> getCancellationCharges(String rideId);
 
-  Future<bool> cancelRide(String rideId, String reason);
+  Future<CancelRideData> cancelRide(String rideId, String reason);
 
   Future<DisputeChargeResult> disputeCharge(String rideId, {String? reason});
 
@@ -412,7 +414,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<RideCancellationChargesModel> getCancellationCharges(
+  Future<RideCancellationChargesData> getCancellationCharges(
     String rideId,
   ) async {
     final response = await ApiService().call(
@@ -423,17 +425,25 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final data = Map<String, dynamic>.from(response.data['data'] ?? {});
-      return RideCancellationChargesModel.fromJson(data);
+      final raw = response.data;
+      if (raw is Map<String, dynamic>) {
+        final parsed = RideCancellationChargesResponse.fromMap(raw);
+        if (parsed.data != null) return parsed.data!;
+      } else if (raw is Map) {
+        final parsed = RideCancellationChargesResponse.fromMap(
+          Map<String, dynamic>.from(raw),
+        );
+        if (parsed.data != null) return parsed.data!;
+      }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return RideCancellationChargesModel.fromJson({'ride_id': rideId});
+      return RideCancellationChargesData(rideId: rideId);
     }
     throw Exception('Failed to fetch cancellation charges');
   }
 
   @override
-  Future<bool> cancelRide(String rideId, String reason) async {
+  Future<CancelRideData> cancelRide(String rideId, String reason) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.cancelRide(rideId),
@@ -441,7 +451,17 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         body: {Params.reason: reason},
       ),
     );
-    return response.statusCode == 200 || response.statusCode == 201;
+    if ((response.statusCode == 200 || response.statusCode == 201) &&
+        response.data != null) {
+      final raw = response.data;
+      final map = raw is Map<String, dynamic>
+          ? raw
+          : Map<String, dynamic>.from(raw as Map);
+      final parsed = CancelRideResponse.fromMap(map);
+      if (parsed.data != null) return parsed.data!;
+      return CancelRideData(rideId: rideId);
+    }
+    throw Exception('Failed to cancel ride');
   }
 
   @override

@@ -17,6 +17,8 @@ import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/mid_ride_cancel_models.dart';
 import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_history_model.dart';
+import '../../data/models/cancel_ride_response.dart';
+import '../../data/models/cancellation_charges_response.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
@@ -45,11 +47,14 @@ abstract class RideRepository {
 
   Future<Either<Failure, RideModel>> getRideDetails(String rideId);
 
-  Future<Either<Failure, RideCancellationChargesModel>> getCancellationCharges(
+  Future<Either<Failure, RideCancellationChargesData>> getCancellationCharges(
     String rideId,
   );
 
-  Future<Either<Failure, bool>> cancelRide(String rideId, String reason);
+  Future<Either<Failure, CancelRideData>> cancelRide(
+    String rideId,
+    String reason,
+  );
 
   Future<Either<Failure, DisputeChargeResult>> disputeCharge(
     String rideId, {
