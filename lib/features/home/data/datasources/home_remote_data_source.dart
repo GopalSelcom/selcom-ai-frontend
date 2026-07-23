@@ -441,9 +441,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       ),
     );
 
-    return PromoAvailableResponse.fromHttpResponse(
-      httpStatus: response.statusCode,
-      body: response.data,
-    );
+    return PromoAvailableResponse.fromMap(response.data);
   }
 }

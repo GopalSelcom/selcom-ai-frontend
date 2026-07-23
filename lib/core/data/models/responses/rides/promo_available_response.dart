@@ -1,134 +1,123 @@
-/// Response envelope for `GET go/promo/available`.
-class AvailablePromoItem {
-  final String id;
-  final String code;
-  final String type;
-  final int discountValue;
-  final int? maxDiscountAmount;
-  final int minRideAmount;
-  final List<String> applicableVehicleTypes;
-  final DateTime? validUntil;
-  final String description;
+import 'dart:convert';
 
-  const AvailablePromoItem({
-    required this.id,
-    required this.code,
-    required this.type,
-    required this.discountValue,
-    this.maxDiscountAmount,
-    required this.minRideAmount,
-    required this.applicableVehicleTypes,
-    this.validUntil,
-    required this.description,
-  });
-
-  factory AvailablePromoItem.fromJson(Map<String, dynamic> json) {
-    final vehicleRaw = json['applicable_vehicle_types'];
-    final vehicles = <String>[];
-    if (vehicleRaw is List) {
-      for (final v in vehicleRaw) {
-        final s = v?.toString().trim();
-        if (s != null && s.isNotEmpty) vehicles.add(s);
-      }
-    }
-
-    DateTime? validUntil;
-    final untilRaw = json['valid_until'];
-    if (untilRaw != null) {
-      validUntil = DateTime.tryParse(untilRaw.toString());
-    }
-
-    return AvailablePromoItem(
-      id: (json['id'] ?? '').toString(),
-      code: (json['code'] ?? '').toString().trim().toUpperCase(),
-      type: (json['type'] ?? '').toString(),
-      discountValue: (json['discount_value'] as num?)?.toInt() ?? 0,
-      maxDiscountAmount: (json['max_discount_amount'] as num?)?.toInt(),
-      minRideAmount: (json['min_ride_amount'] as num?)?.toInt() ?? 0,
-      applicableVehicleTypes: vehicles,
-      validUntil: validUntil,
-      description: (json['description'] ?? '').toString().trim(),
-    );
-  }
-}
-
-class PromoAvailableData {
-  final List<AvailablePromoItem> promos;
-  final int total;
-
-  const PromoAvailableData({required this.promos, required this.total});
-
-  factory PromoAvailableData.fromJson(Map<String, dynamic> json) {
-    final raw = json['promos'];
-    final list = <AvailablePromoItem>[];
-    if (raw is List) {
-      for (final item in raw) {
-        if (item is Map) {
-          list.add(
-            AvailablePromoItem.fromJson(
-              item is Map<String, dynamic>
-                  ? item
-                  : Map<String, dynamic>.from(item),
-            ),
-          );
-        }
-      }
-    }
-    return PromoAvailableData(
-      promos: list,
-      total: (json['total'] as num?)?.toInt() ?? list.length,
-    );
-  }
-}
-
+/// Models for `GET go/promo/available` (from `model/model.dart`).
 class PromoAvailableResponse {
-  final int? httpStatus;
-  final int? statusCode;
-  final String? message;
-  final PromoAvailableData? data;
+  int? statusCode;
+  String? message;
+  PromoAvailableData? data;
 
-  const PromoAvailableResponse({
-    this.httpStatus,
+  PromoAvailableResponse({
     this.statusCode,
     this.message,
     this.data,
   });
 
-  bool get isSuccess => (statusCode ?? httpStatus) == 200 && data != null;
+  factory PromoAvailableResponse.fromJson(String str) =>
+      PromoAvailableResponse.fromMap(json.decode(str));
 
-  factory PromoAvailableResponse.fromHttpResponse({
-    required int? httpStatus,
-    required dynamic body,
-  }) {
-    if (body is! Map) {
-      return PromoAvailableResponse(
-        httpStatus: httpStatus,
-        message: 'Invalid response',
+  String toJson() => json.encode(toMap());
+
+  factory PromoAvailableResponse.fromMap(Map<String, dynamic> json) =>
+      PromoAvailableResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        data: json["data"] == null
+            ? null
+            : PromoAvailableData.fromMap(json["data"]),
       );
-    }
-    final map = Map<String, dynamic>.from(body);
-    final scRaw = map['status_code'];
-    final statusCode = switch (scRaw) {
-      null => httpStatus,
-      final int i => i,
-      final num n => n.toInt(),
-      final String s => int.tryParse(s.trim()),
-      _ => int.tryParse(scRaw.toString()),
-    };
-    final dataRaw = map['data'];
-    PromoAvailableData? data;
-    if (dataRaw is Map) {
-      data = PromoAvailableData.fromJson(
-        dataRaw is Map<String, dynamic>
-            ? dataRaw
-            : Map<String, dynamic>.from(dataRaw),
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
+  };
+}
+
+class PromoAvailableData {
+  List<AvailablePromo>? promos;
+  int? total;
+
+  PromoAvailableData({
+    this.promos,
+    this.total,
+  });
+
+  factory PromoAvailableData.fromJson(String str) =>
+      PromoAvailableData.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory PromoAvailableData.fromMap(Map<String, dynamic> json) =>
+      PromoAvailableData(
+        promos: json["promos"] == null
+            ? []
+            : List<AvailablePromo>.from(
+                json["promos"]!.map((x) => AvailablePromo.fromMap(x)),
+              ),
+        total: json["total"],
       );
-    }
-    return PromoAvailableResponse(
-      httpStatus: httpStatus,
-      statusCode: statusCode,
-      message: map['message']?.toString(),
-      data: data,
-    );
-  }
+
+  Map<String, dynamic> toMap() => {
+    "promos": promos == null
+        ? []
+        : List<dynamic>.from(promos!.map((x) => x.toMap())),
+    "total": total,
+  };
+}
+
+class AvailablePromo {
+  String? id;
+  String? code;
+  String? type;
+  int? discountValue;
+  dynamic maxDiscountAmount;
+  int? minRideAmount;
+  List<String>? applicableVehicleTypes;
+  String? validUntil;
+  String? description;
+
+  AvailablePromo({
+    this.id,
+    this.code,
+    this.type,
+    this.discountValue,
+    this.maxDiscountAmount,
+    this.minRideAmount,
+    this.applicableVehicleTypes,
+    this.validUntil,
+    this.description,
+  });
+
+  factory AvailablePromo.fromJson(String str) =>
+      AvailablePromo.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory AvailablePromo.fromMap(Map<String, dynamic> json) => AvailablePromo(
+    id: json["id"],
+    code: json["code"],
+    type: json["type"],
+    discountValue: json["discount_value"],
+    maxDiscountAmount: json["max_discount_amount"],
+    minRideAmount: json["min_ride_amount"],
+    applicableVehicleTypes: json["applicable_vehicle_types"] == null
+        ? []
+        : List<String>.from(json["applicable_vehicle_types"]!.map((x) => x)),
+    validUntil: json["valid_until"],
+    description: json["description"],
+  );
+
+  Map<String, dynamic> toMap() => {
+    "id": id,
+    "code": code,
+    "type": type,
+    "discount_value": discountValue,
+    "max_discount_amount": maxDiscountAmount,
+    "min_ride_amount": minRideAmount,
+    "applicable_vehicle_types": applicableVehicleTypes == null
+        ? []
+        : List<dynamic>.from(applicableVehicleTypes!.map((x) => x)),
+    "valid_until": validUntil,
+    "description": description,
+  };
 }

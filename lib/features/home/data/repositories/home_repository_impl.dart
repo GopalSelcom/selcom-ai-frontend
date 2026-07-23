@@ -262,7 +262,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<AvailablePromoItem>>> getAvailablePromos({
+  Future<Either<Failure, List<AvailablePromo>>> getAvailablePromos({
     String? vehicleTypeId,
     int? fareEstimate,
   }) async {
@@ -271,8 +271,8 @@ class HomeRepositoryImpl implements HomeRepository {
         vehicleTypeId: vehicleTypeId,
         fareEstimate: fareEstimate,
       );
-      if (r.isSuccess && r.data != null) {
-        return Right(r.data!.promos);
+      if (r.statusCode == 200 && r.data != null) {
+        return Right(r.data!.promos ?? const []);
       }
       final msg = (r.message ?? '').trim();
       return Left(

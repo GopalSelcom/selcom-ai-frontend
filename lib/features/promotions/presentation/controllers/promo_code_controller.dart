@@ -65,48 +65,52 @@ class PromoCodeController extends GetxController {
     );
   }
 
-  bool _isPromoApplicable(AvailablePromoItem item) {
+  bool _isPromoApplicable(AvailablePromo item) {
     final args = _rideArgs;
     if (args == null) return true;
 
-    if (item.minRideAmount > 0 && args.fareEstimate < item.minRideAmount) {
+    final minRide = item.minRideAmount ?? 0;
+    if (minRide > 0 && args.fareEstimate < minRide) {
       return false;
     }
     if (args.bookAny) {
       return false;
     }
-    if (item.applicableVehicleTypes.isNotEmpty &&
-        !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
+    final vehicles = item.applicableVehicleTypes ?? const <String>[];
+    if (vehicles.isNotEmpty && !vehicles.contains(args.vehicleTypeId)) {
       return false;
     }
     return true;
   }
 
-  String? _inapplicableHint(AvailablePromoItem item) {
+  String? _inapplicableHint(AvailablePromo item) {
     if (_isPromoApplicable(item)) return null;
     final args = _rideArgs;
     if (args == null) return null;
 
-    if (item.minRideAmount > 0 && args.fareEstimate < item.minRideAmount) {
+    final minRide = item.minRideAmount ?? 0;
+    if (minRide > 0 && args.fareEstimate < minRide) {
       return AppStrings.promoMinRideAmount.trParams({
-        'amount': CurrencyFormatter.format(item.minRideAmount),
+        'amount': CurrencyFormatter.format(minRide),
       });
     }
     if (args.bookAny) {
       return AppStrings.promoCodeNotValidForVehicle.tr;
     }
-    if (item.applicableVehicleTypes.isNotEmpty &&
-        !item.applicableVehicleTypes.contains(args.vehicleTypeId)) {
+    final vehicles = item.applicableVehicleTypes ?? const <String>[];
+    if (vehicles.isNotEmpty && !vehicles.contains(args.vehicleTypeId)) {
       return AppStrings.promoCodeNotValidForVehicle.tr;
     }
     return AppStrings.promoErrorNotApplicable.tr;
   }
 
-  PromoCodeModel _mapToDisplayModel(AvailablePromoItem item) {
-    final title = item.description.isNotEmpty ? item.description : item.code;
+  PromoCodeModel _mapToDisplayModel(AvailablePromo item) {
+    final description = (item.description ?? '').trim();
+    final code = (item.code ?? '').trim().toUpperCase();
+    final title = description.isNotEmpty ? description : code;
     final applicable = _isPromoApplicable(item);
     return PromoCodeModel(
-      code: item.code,
+      code: code,
       title: title,
       subtitle: _subtitleFor(item),
       footer: _footerFor(item.validUntil),
@@ -115,19 +119,23 @@ class PromoCodeController extends GetxController {
     );
   }
 
-  String _subtitleFor(AvailablePromoItem item) {
-    final parts = <String>[item.code];
-    if (item.minRideAmount > 0) {
+  String _subtitleFor(AvailablePromo item) {
+    final code = (item.code ?? '').trim().toUpperCase();
+    final parts = <String>[if (code.isNotEmpty) code];
+    final minRide = item.minRideAmount ?? 0;
+    if (minRide > 0) {
       parts.add(
         AppStrings.promoMinRideAmount.trParams({
-          'amount': CurrencyFormatter.format(item.minRideAmount),
+          'amount': CurrencyFormatter.format(minRide),
         }),
       );
     }
     return parts.join(' · ');
   }
 
-  String _footerFor(DateTime? validUntil) {
+  String _footerFor(String? validUntilRaw) {
+    if (validUntilRaw == null || validUntilRaw.trim().isEmpty) return '';
+    final validUntil = DateTime.tryParse(validUntilRaw);
     if (validUntil == null) return '';
     final now = DateTime.now();
     final endLocal = validUntil.toLocal();

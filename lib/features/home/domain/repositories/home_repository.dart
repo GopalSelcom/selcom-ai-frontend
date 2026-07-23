@@ -61,7 +61,7 @@ abstract class HomeRepository {
     required int fareEstimate,
   });
 
-  Future<Either<Failure, List<AvailablePromoItem>>> getAvailablePromos({
+  Future<Either<Failure, List<AvailablePromo>>> getAvailablePromos({
     String? vehicleTypeId,
     int? fareEstimate,
   });
