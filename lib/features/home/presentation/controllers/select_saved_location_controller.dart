@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
-import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
 import '../../data/models/places_models.dart';
 import 'home_controller.dart';
 
@@ -111,9 +111,10 @@ class SelectSavedLocationController extends GetxController {
     );
   }
 
-  Future<void> handleRecentSelection(RecentDestinationModel loc) async {
-    final title = loc.address.split(',').first;
-    final subtitle = loc.address;
+  Future<void> handleRecentSelection(Destination loc) async {
+    final address = loc.address ?? '';
+    final title = address.split(',').first;
+    final subtitle = address;
 
     if (isSelectingStop) {
       final result = await Get.toNamed(

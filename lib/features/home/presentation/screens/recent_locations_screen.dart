@@ -6,7 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
-import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/recent_location_tile.dart';
 import '../widgets/recent_locations_screen_shimmer.dart';
@@ -76,14 +76,14 @@ class RecentLocationsScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
+  Widget _buildRecentLocationItem(Destination loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
-      final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+      final savedPlace = controller.getSavedPlaceFor(loc.address ?? '', null);
       final isFavorite = savedPlace?.isFavourite ?? false;
       return RecentLocationTile(
         title: controller.recentDestinationTitleLine(loc),
-        address: loc.address,
+        address: loc.address ?? '',
         distance: distance,
         isFavorite: isFavorite,
         onTap: () =>

@@ -195,11 +195,12 @@ class SelectSavedLocationScreen extends GetView<SelectSavedLocationController> {
       itemBuilder: (context, index) {
         final loc = recentItems[index];
         return Obx(() {
-          final savedPlace = homeController.getSavedPlaceFor(loc.address, null);
+          final address = loc.address ?? '';
+          final savedPlace = homeController.getSavedPlaceFor(address, null);
           final isFavorite = savedPlace?.isFavourite ?? false;
           return _locationTile(
-            title: loc.address.split(',').first,
-            subtitle: loc.address,
+            title: address.split(',').first,
+            subtitle: address,
             onTap: () => controller.handleRecentSelection(loc),
             onFavorite: () => homeController.toggleFavoriteForRecent(loc),
             isFavorite: isFavorite,

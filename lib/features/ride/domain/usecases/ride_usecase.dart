@@ -1,11 +1,13 @@
 import 'package:dartz/dartz.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart'
+    hide Destination;
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/destination_update_models.dart';
+import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_management_models.dart';
 import '../repositories/ride_repository.dart';
 
@@ -21,8 +23,7 @@ class RideUseCase {
     return repository.getRideHistory(page: page, limit: limit);
   }
 
-  Future<Either<Failure, List<RecentDestinationModel>>>
-  getRecentDestinations() {
+  Future<Either<Failure, List<Destination>>> getRecentDestinations() {
     return repository.getRecentDestinations();
   }
 

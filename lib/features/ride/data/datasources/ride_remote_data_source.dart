@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart';
+import 'package:selcom_rides_frontend/features/ride/data/models/ride_history_model.dart'
+    hide Destination;
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/ride_payment_endpoints.dart';
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/chat_quick_replies_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart'
+    hide Destination;
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
@@ -21,12 +23,14 @@ import '../../../payment/domain/models/insufficient_wallet_balance_details.dart'
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
 import '../models/mid_ride_cancel_models.dart';
+import '../models/recent_destinations_response.dart';
 import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart'
+    hide Destination;
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
@@ -49,7 +53,7 @@ abstract class RideRemoteDataSource {
 
   Future<ActiveRideResponseModel?> getActiveRide();
 
-  Future<List<RecentDestinationModel>> getRecentDestinations();
+  Future<List<Destination>> getRecentDestinations();
 
   Future<RideHistoryModelResponse?> getRideHistory({int page = 1, int limit = 10});
 
@@ -357,7 +361,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<List<RecentDestinationModel>> getRecentDestinations() async {
+  Future<List<Destination>> getRecentDestinations() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.recentDestinations,
@@ -369,7 +373,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       final body = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : Map<String, dynamic>.from(response.data as Map);
-      final parsed = RecentDestinationsResponseModel.fromJson(body);
+      final parsed = RecentDestinationsResponse.fromMap(body);
       return parsed.data?.destinations ?? [];
     }
     return [];

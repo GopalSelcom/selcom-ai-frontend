@@ -22,7 +22,7 @@ import '../../../../shared/widgets/app_map_top_header.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
 import '../../../../shared/widgets/app_vehicle_explore_tile.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
-import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/home_active_ride_card.dart';
 import '../widgets/home_active_rides_panel.dart';
@@ -518,14 +518,14 @@ class HomeScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildRecentLocationItem(RecentDestinationModel loc) {
+  Widget _buildRecentLocationItem(Destination loc) {
     return Obx(() {
       final distance = controller.calculateDistanceKm(loc.lat, loc.lng);
-      final savedPlace = controller.getSavedPlaceFor(loc.address, null);
+      final savedPlace = controller.getSavedPlaceFor(loc.address ?? '', null);
       final isFavorite = savedPlace?.isFavourite ?? false;
       return RecentLocationTile(
         title: controller.recentDestinationTitleLine(loc),
-        address: loc.address,
+        address: loc.address ?? '',
         distance: distance,
         isFavorite: isFavorite,
         onTap: () => controller.navigateToVehicleSelectionForRecentDestination(

@@ -1,6 +1,7 @@
 import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/book_rides_response.dart'
+    hide Destination;
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
@@ -16,16 +17,17 @@ import '../models/places_models.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/create_saved_place_response.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart'
+    hide Destination;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../profile/data/models/profile_response_model.dart';
-import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
 
 abstract class HomeRemoteDataSource {
   Future<VehicleTypesResponse> getVehicleTypes();
 
-  Future<List<RecentDestinationModel>> getRecentDestinations();
+  Future<List<Destination>> getRecentDestinations();
 
   Future<GetSavedPlacesResponseModel?> getSavedPlaces();
 
@@ -92,7 +94,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<List<RecentDestinationModel>> getRecentDestinations() async {
+  Future<List<Destination>> getRecentDestinations() async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.recentDestinations,
@@ -104,7 +106,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       final body = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : Map<String, dynamic>.from(response.data as Map);
-      final parsed = RecentDestinationsResponseModel.fromJson(body);
+      final parsed = RecentDestinationsResponse.fromMap(body);
       return parsed.data?.destinations ?? [];
     }
     return [];

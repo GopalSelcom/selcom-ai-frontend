@@ -4,8 +4,10 @@ import '../../../../core/data/models/requests/book_ride_request.dart';
 import '../../../../core/data/models/requests/fare_estimate_request.dart';
 import '../../../../core/data/models/requests/save_recent_as_favorite_request.dart';
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
-import '../../../../core/data/models/responses/rides/active_ride_response.dart';
-import '../../../../core/data/models/responses/rides/book_rides_response.dart';
+import '../../../../core/data/models/responses/rides/active_ride_response.dart'
+    hide Destination;
+import '../../../../core/data/models/responses/rides/book_rides_response.dart'
+    hide Destination;
 import '../../../../core/data/models/responses/rides/fare_estimate_response.dart';
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
@@ -15,7 +17,7 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../profile/data/cache/user_profile_cache.dart';
-import '../../../ride/data/models/ride_management_models.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
 import '../models/geocode_response_model.dart';
@@ -72,7 +74,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<RecentDestinationModel>>> getRecentDestinations() async {
+  Future<Either<Failure, List<Destination>>> getRecentDestinations() async {
     try {
       final result = await remoteDataSource.getRecentDestinations();
       return Right(result);

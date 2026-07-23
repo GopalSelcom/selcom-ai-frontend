@@ -810,10 +810,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         tiles.add(SizedBox(height: 8.h));
       }
       final destination = controller.recentDestinations[index];
-      final savedPlace = controller.getSavedPlaceFor(
-        destination.address,
-        null,
-      );
+      final address = destination.address ?? '';
+      final savedPlace = controller.getSavedPlaceFor(address, null);
       final isFavorite = savedPlace?.isFavourite ?? false;
       final showFavorite = savedPlace != null;
 
@@ -825,17 +823,17 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
       tiles.add(
         _locationTile(
           kmText: dist.isEmpty ? AppStrings.recentTag.tr : dist,
-          title: destination.address.split(',').first,
-          subtitle: destination.address,
+          title: address.split(',').first,
+          subtitle: address,
           isFavorite: isFavorite,
           showFavorite: showFavorite,
           onTap: () {
             if (Get.arguments is Map &&
                 Get.arguments['isSelectingStop'] == true) {
               _handleStopSelection(
-                address: destination.address,
-                lat: destination.lat,
-                lng: destination.lng,
+                address: address,
+                lat: destination.lat ?? 0,
+                lng: destination.lng ?? 0,
               );
               return;
             }
@@ -857,9 +855,9 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             );
           },
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
-            address: destination.address,
-            lat: destination.lat,
-            lng: destination.lng,
+            address: address,
+            lat: destination.lat ?? 0,
+            lng: destination.lng ?? 0,
           ),
         ),
       );
