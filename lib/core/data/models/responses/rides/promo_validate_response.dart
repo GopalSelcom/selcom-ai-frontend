@@ -1,84 +1,80 @@
-/// Response envelope for `POST go/promo/validate`.
-class PromoValidateData {
-  final String code;
-  final String type;
-  final int discountValue;
-  final int discountAmount;
-  final int discountedFare;
-  final String? description;
+import 'dart:convert';
 
-  const PromoValidateData({
-    required this.code,
-    required this.type,
-    required this.discountValue,
-    required this.discountAmount,
-    required this.discountedFare,
-    this.description,
-  });
-
-  factory PromoValidateData.fromJson(Map<String, dynamic> json) {
-    return PromoValidateData(
-      code: (json['code'] ?? '').toString().trim().toUpperCase(),
-      type: (json['type'] ?? '').toString(),
-      discountValue: (json['discount_value'] as num?)?.toInt() ?? 0,
-      discountAmount: (json['discount_amount'] as num?)?.toInt() ?? 0,
-      discountedFare: (json['discounted_fare'] as num?)?.toInt() ?? 0,
-      description: json['description']?.toString(),
-    );
-  }
-}
-
+/// Models for `POST go/promo/validate` (from `model/model.dart` + `error_code`).
 class PromoValidateResponse {
-  final int? httpStatus;
-  final int? statusCode;
-  final String? message;
-  final String? errorCode;
-  final PromoValidateData? data;
+  int? statusCode;
+  String? message;
+  String? errorCode;
+  PromoValidateData? data;
 
-  const PromoValidateResponse({
-    this.httpStatus,
+  PromoValidateResponse({
     this.statusCode,
     this.message,
     this.errorCode,
     this.data,
   });
 
-  bool get isSuccess => (statusCode ?? httpStatus) == 200 && data != null;
+  factory PromoValidateResponse.fromJson(String str) =>
+      PromoValidateResponse.fromMap(json.decode(str));
 
-  factory PromoValidateResponse.fromHttpResponse({
-    required int? httpStatus,
-    required dynamic body,
-  }) {
-    if (body is! Map) {
-      return PromoValidateResponse(
-        httpStatus: httpStatus,
-        message: 'Invalid response',
+  String toJson() => json.encode(toMap());
+
+  factory PromoValidateResponse.fromMap(Map<String, dynamic> json) =>
+      PromoValidateResponse(
+        statusCode: json["status_code"],
+        message: json["message"],
+        errorCode: json["error_code"],
+        data: json["data"] == null
+            ? null
+            : PromoValidateData.fromMap(json["data"]),
       );
-    }
-    final map = Map<String, dynamic>.from(body);
-    final scRaw = map['status_code'];
-    final statusCode = switch (scRaw) {
-      null => httpStatus,
-      final int i => i,
-      final num n => n.toInt(),
-      final String s => int.tryParse(s.trim()),
-      _ => int.tryParse(scRaw.toString()),
-    };
-    final dataRaw = map['data'];
-    PromoValidateData? data;
-    if (dataRaw is Map) {
-      data = PromoValidateData.fromJson(
-        dataRaw is Map<String, dynamic>
-            ? dataRaw
-            : Map<String, dynamic>.from(dataRaw),
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "error_code": errorCode,
+    "data": data?.toMap(),
+  };
+}
+
+class PromoValidateData {
+  String? code;
+  String? type;
+  int? discountValue;
+  int? discountAmount;
+  int? discountedFare;
+  String? description;
+
+  PromoValidateData({
+    this.code,
+    this.type,
+    this.discountValue,
+    this.discountAmount,
+    this.discountedFare,
+    this.description,
+  });
+
+  factory PromoValidateData.fromJson(String str) =>
+      PromoValidateData.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory PromoValidateData.fromMap(Map<String, dynamic> json) =>
+      PromoValidateData(
+        code: json["code"],
+        type: json["type"],
+        discountValue: json["discount_value"],
+        discountAmount: json["discount_amount"],
+        discountedFare: json["discounted_fare"],
+        description: json["description"],
       );
-    }
-    return PromoValidateResponse(
-      httpStatus: httpStatus,
-      statusCode: statusCode,
-      message: map['message']?.toString(),
-      errorCode: map['error_code']?.toString(),
-      data: data,
-    );
-  }
+
+  Map<String, dynamic> toMap() => {
+    "code": code,
+    "type": type,
+    "discount_value": discountValue,
+    "discount_amount": discountAmount,
+    "discounted_fare": discountedFare,
+    "description": description,
+  };
 }

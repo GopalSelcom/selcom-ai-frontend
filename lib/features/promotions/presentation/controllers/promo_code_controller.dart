@@ -222,15 +222,18 @@ class PromoCodeController extends GetxController {
           },
           (data) async {
             applyResult = PromoCodeApplyResult(
-              code: data.code,
+              code: (data.code ?? code).trim().toUpperCase(),
               vehicleTypeId: args.vehicleTypeId,
-              discountedFare: data.discountedFare,
-              discountAmount: data.discountAmount,
+              discountedFare: data.discountedFare ?? 0,
+              discountAmount: data.discountAmount ?? 0,
             );
             unawaited(
               di.sl<AnalyticsService>().logEvent(
                 'promo_validated',
-                parameters: {'success': 'true', 'code': data.code},
+                parameters: {
+                  'success': 'true',
+                  'code': (data.code ?? code).trim().toUpperCase(),
+                },
               ),
             );
           },

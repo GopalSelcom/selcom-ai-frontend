@@ -244,7 +244,7 @@ class HomeRepositoryImpl implements HomeRepository {
         vehicleTypeId: vehicleTypeId,
         fareEstimate: fareEstimate,
       );
-      if (r.isSuccess && r.data != null) {
+      if (r.statusCode == 200 && r.data != null) {
         return Right(r.data!);
       }
       final err = r.errorCode?.trim();

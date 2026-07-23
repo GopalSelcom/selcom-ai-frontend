@@ -277,11 +277,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
 
-    final body = response.data;
-    return PromoValidateResponse.fromHttpResponse(
-      httpStatus: response.statusCode,
-      body: body,
-    );
+    return PromoValidateResponse.fromMap(response.data);
   }
 
   @override

@@ -1771,7 +1771,7 @@ class VehicleSelectionController extends GetxController {
         return false;
       },
       (data) async {
-        appliedPromoCode.value = data.code;
+        appliedPromoCode.value = (data.code ?? code).trim().toUpperCase();
         promoValidatedAt.value = DateTime.now();
         return true;
       },
