@@ -7,8 +7,8 @@ import '../../../../core/errors/failures.dart';
 import '../../data/models/cancel_ride_response.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/recent_destinations_response.dart';
+import '../../data/models/receipt_response.dart';
 import '../../data/models/ride_history_model.dart';
-import '../../data/models/ride_management_models.dart';
 import '../repositories/ride_repository.dart';
 
 class RideUseCase {

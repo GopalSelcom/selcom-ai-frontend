@@ -26,6 +26,7 @@ import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
 import '../models/cancel_ride_response.dart';
 import '../models/cancellation_charges_response.dart';
+import '../models/receipt_response.dart';
 import '../models/ride_management_models.dart';
 
 class RideRepositoryImpl implements RideRepository {

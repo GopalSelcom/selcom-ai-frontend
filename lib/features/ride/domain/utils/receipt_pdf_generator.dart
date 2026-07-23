@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../data/models/ride_management_models.dart';
+import '../../data/models/receipt_response.dart';
 import 'receipt_image_generator.dart';
 
 /// Builds a PDF by embedding the same high-resolution receipt PNG used for gallery download.

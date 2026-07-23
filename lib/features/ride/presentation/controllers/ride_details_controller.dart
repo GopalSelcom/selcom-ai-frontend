@@ -22,7 +22,7 @@ import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
 import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
-import '../../data/models/ride_management_models.dart';
+import '../../data/models/receipt_response.dart';
 import '../../domain/utils/receipt_image_generator.dart';
 import '../../domain/utils/receipt_pdf_generator.dart';
 import '../widgets/receipt_options_bottom_sheet.dart';

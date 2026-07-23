@@ -31,6 +31,7 @@ import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
 import '../models/cancel_ride_response.dart';
 import '../models/cancellation_charges_response.dart';
+import '../models/receipt_response.dart';
 import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
@@ -581,12 +582,17 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final receiptJson =
-          (response.data['data'] as Map?)?['receipt'] as Map<String, dynamic>?;
-      return ReceiptModel.fromJson(receiptJson ?? {});
+      final raw = response.data;
+      final map = raw is Map<String, dynamic>
+          ? raw
+          : Map<String, dynamic>.from(raw as Map);
+      final parsed = ReceiptResponse.fromMap(map);
+      final receipt = parsed.data?.receipt;
+      if (receipt != null) return ReceiptModel.fromRideReceipt(receipt);
+      return ReceiptModel.empty(rideId: rideId);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return ReceiptModel.fromJson({'ride_id': rideId});
+      return ReceiptModel.empty(rideId: rideId);
     }
     throw Exception('Failed to get receipt');
   }

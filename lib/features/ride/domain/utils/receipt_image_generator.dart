@@ -12,7 +12,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_route_location_pin_icon.dart';
-import '../../data/models/ride_management_models.dart';
+import '../../data/models/receipt_response.dart';
 import 'receipt_format_utils.dart';
 
 class ReceiptImageGenerator {

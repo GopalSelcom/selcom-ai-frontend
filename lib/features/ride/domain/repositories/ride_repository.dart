@@ -19,6 +19,7 @@ import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_history_model.dart';
 import '../../data/models/cancel_ride_response.dart';
 import '../../data/models/cancellation_charges_response.dart';
+import '../../data/models/receipt_response.dart';
 import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
