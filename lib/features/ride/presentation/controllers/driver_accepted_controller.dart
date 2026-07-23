@@ -3191,96 +3191,14 @@ class DriverAcceptedController extends GetxController
   }
 
   Future<void> _finalizeDestinationConfirm(
-    DestinationUpdateAppliedModel applied,
+    DestinationUpdateAppliedModel _,
   ) async {
-    final priorFare = ride.value?.fareEstimate ?? _seedRideCharge ?? 0;
-    // If backend requires payment block update, run payment-hold flow first.
-    // Otherwise mark success and refresh ride immediately.
-    if (applied.blockUpdateRequired &&
-        (applied.blockUpdateValidationId ?? '').isNotEmpty) {
-      final dir = applied.fareEstimate > priorFare
-          ? 'up'
-          : applied.fareEstimate < priorFare
-          ? 'down'
-          : '';
-      await _processDestinationPaymentHold(
-        applied.blockUpdateValidationId!,
-        dir,
-      );
-    } else {
-      isDestinationUpdateFlow.value = false;
-      await _ensureRideRealtimeAfterLocationUpdate();
-      await _fetchRideDetails();
-      stopUpdateProgressStep.value = 0;
-      isUpdatingDestination.value = false;
-    }
-  }
-
-  Future<void> _processDestinationPaymentHold(
-    String validationId,
-    String direction,
-  ) async {
-    isUpdatingDestination.value = true;
-    _clearRouteAwaitingTrackingUpdate();
-    // Mirrors stop-update payment behavior:
-    // - up: request payment authorization
-    // - down/flat: skip to route sync step
-    if (direction == 'up') {
-      stopUpdateProgressStep.value = 1;
-      try {
-        await _socketService.ensureConnected();
-      } catch (e, stackTrace) {
-        ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      }
-      _socketService.joinPaymentRoom(validationId: validationId);
-      _joinRideRoomIfNeeded();
-      if (AppConfig.ridePaymentBypass) {
-        await rideRepository.walletDummyPaymentRequest(
-          DummyPaymentRequest(
-            result: 'SUCCESS',
-            transId: 'TXN-${const Uuid().v4()}',
-            validationId: validationId,
-          ),
-        );
-      }
-    } else if (direction == 'down') {
-      stopUpdateProgressStep.value = 2;
-      unawaited(_ensureRideRealtimeAfterLocationUpdate());
-    } else {
-      stopUpdateProgressStep.value = 2;
-      unawaited(_ensureRideRealtimeAfterLocationUpdate());
-    }
-    _startDestinationUpdateTimeout();
-  }
-
-  void _startDestinationUpdateTimeout() {
-    // Safety timeout + polling fallback in case socket events are delayed/missed.
-    Future.delayed(const Duration(seconds: 90), () {
-      if (isUpdatingDestination.value) {
-        isUpdatingDestination.value = false;
-        stopUpdateProgressStep.value = 0;
-        isDestinationUpdateFlow.value = false;
-        _pendingDestinationTargetLat = null;
-        _pendingDestinationTargetLng = null;
-        AppDialogs.showInfoDialog(
-          title: AppStrings.takingLongerThanExpected.tr,
-          message:
-              AppStrings.theUpdateIsTakingSomeTimePleaseCheckBackShortly.tr,
-        );
-        unawaited(_fetchRideDetails());
-      }
-    });
-    _pollForDestinationUpdateResult();
-  }
-
-  void _pollForDestinationUpdateResult() {
-    Future.delayed(const Duration(seconds: 8), () {
-      if (!isUpdatingDestination.value || stopUpdateProgressStep.value != 2) {
-        return;
-      }
-      unawaited(_fetchRideDetails());
-      _pollForDestinationUpdateResult();
-    });
+    // Confirm payload is fare/distance/duration only — refresh ride state.
+    isDestinationUpdateFlow.value = false;
+    await _ensureRideRealtimeAfterLocationUpdate();
+    await _fetchRideDetails();
+    stopUpdateProgressStep.value = 0;
+    isUpdatingDestination.value = false;
   }
 
   String priceFormatter(int? amount) {

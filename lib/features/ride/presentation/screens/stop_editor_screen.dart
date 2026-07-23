@@ -259,13 +259,15 @@ class StopEditorScreen extends GetView<StopEditorController> {
       final preview = driverController.destinationUpdatePreview.value;
       if (preview == null) return const SizedBox.shrink();
 
-      final isIncrease = preview.newFareEstimate > preview.oldFareEstimate;
-      final isDecrease = preview.newFareEstimate < preview.oldFareEstimate;
+      final oldFare = preview.oldFareEstimate ?? 0;
+      final newFare = preview.newFareEstimate ?? 0;
+      final isIncrease = newFare > oldFare;
+      final isDecrease = newFare < oldFare;
       final color = isIncrease
           ? AppColors.error
           : (isDecrease ? AppColors.success : AppColors.textBody);
       final sign = isIncrease ? '+' : (isDecrease ? '-' : '');
-      final delta = (preview.newFareEstimate - preview.oldFareEstimate).abs();
+      final delta = (newFare - oldFare).abs();
 
       return Container(
         padding: EdgeInsets.all(20.w),
@@ -292,7 +294,7 @@ class StopEditorScreen extends GetView<StopEditorController> {
                   style: AppTextStyles.homeSubtitle.copyWith(fontSize: 14.sp),
                 ),
                 Text(
-                  '${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(preview.newFareEstimate)}',
+                  '${CurrencyFormatter.displaySymbol} ${driverController.priceFormatter(newFare)}',
                   style: AppTextStyles.price.copyWith(fontSize: 16.sp),
                 ),
               ],

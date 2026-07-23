@@ -487,14 +487,15 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
     if (response.statusCode == 200 && response.data != null) {
-      final raw = response.data['data'];
+      final raw = response.data;
       if (raw is Map<String, dynamic>) {
-        return DestinationUpdatePreviewModel.fromJson(raw);
-      }
-      if (raw is Map) {
-        return DestinationUpdatePreviewModel.fromJson(
+        final parsed = UpdateDestinationPreviewResponse.fromMap(raw);
+        if (parsed.data != null) return parsed.data!;
+      } else if (raw is Map) {
+        final parsed = UpdateDestinationPreviewResponse.fromMap(
           Map<String, dynamic>.from(raw),
         );
+        if (parsed.data != null) return parsed.data!;
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -503,7 +504,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       if (message != null) {
         throw Exception(message);
       }
-      return DestinationUpdatePreviewModel.fromJson({});
+      return DestinationUpdatePreviewModel();
     }
     _throwIfInsufficientWalletBalance(response.data);
     throw Exception(
@@ -525,14 +526,15 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       ),
     );
     if (response.statusCode == 200 && response.data != null) {
-      final raw = response.data['data'];
+      final raw = response.data;
       if (raw is Map<String, dynamic>) {
-        return DestinationUpdateAppliedModel.fromJson(raw);
-      }
-      if (raw is Map) {
-        return DestinationUpdateAppliedModel.fromJson(
+        final parsed = UpdateDestinationConfirmResponse.fromMap(raw);
+        if (parsed.data != null) return parsed.data!;
+      } else if (raw is Map) {
+        final parsed = UpdateDestinationConfirmResponse.fromMap(
           Map<String, dynamic>.from(raw),
         );
+        if (parsed.data != null) return parsed.data!;
       }
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
@@ -541,7 +543,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       if (message != null) {
         throw Exception(message);
       }
-      return DestinationUpdateAppliedModel.fromJson({});
+      return DestinationUpdateAppliedModel();
     }
     _throwIfInsufficientWalletBalance(response.data);
     throw Exception(
