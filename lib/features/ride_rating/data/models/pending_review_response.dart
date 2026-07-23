@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class PendingReviewResponse {
   int? statusCode;
-  Data? data;
+  PendingReviewData? data;
 
   PendingReviewResponse({this.statusCode, this.data});
 
@@ -14,7 +14,9 @@ class PendingReviewResponse {
   factory PendingReviewResponse.fromMap(Map<String, dynamic> json) =>
       PendingReviewResponse(
         statusCode: json["status_code"],
-        data: json["data"] == null ? null : Data.fromMap(json["data"]),
+        data: json["data"] == null
+            ? null
+            : PendingReviewData.fromMap(json["data"]),
       );
 
   Map<String, dynamic> toMap() => {
@@ -23,20 +25,22 @@ class PendingReviewResponse {
   };
 }
 
-class Data {
+class PendingReviewData {
   PendingReview? pendingReview;
 
-  Data({this.pendingReview});
+  PendingReviewData({this.pendingReview});
 
-  factory Data.fromJson(String str) => Data.fromMap(json.decode(str));
+  factory PendingReviewData.fromJson(String str) =>
+      PendingReviewData.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory Data.fromMap(Map<String, dynamic> json) => Data(
-    pendingReview: json["pending_review"] == null
-        ? null
-        : PendingReview.fromMap(json["pending_review"]),
-  );
+  factory PendingReviewData.fromMap(Map<String, dynamic> json) =>
+      PendingReviewData(
+        pendingReview: json["pending_review"] == null
+            ? null
+            : PendingReview.fromMap(json["pending_review"]),
+      );
 
   Map<String, dynamic> toMap() => {"pending_review": pendingReview?.toMap()};
 }
