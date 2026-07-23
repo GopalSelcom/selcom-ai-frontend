@@ -13,14 +13,17 @@ import '../../core/data/models/responses/rides/active_ride_response.dart'
 import '../../core/data/models/ride_model.dart';
 
 /// Parses active rides from `GET /go/rides/active` using full ride payloads.
-List<RideModel> parseActiveRidesFromResponse(active_ride_api.Data? data) {
+List<RideModel> parseActiveRidesFromResponse(
+  active_ride_api.ActiveRideData? data,
+) {
   if (data == null) return const [];
 
   final fromList = data.rides;
   if (fromList != null && fromList.isNotEmpty) {
     return sortActiveRides(
       fromList
-          .map((entry) => RideModel.fromJson(entry.rideJson))
+          .where((entry) => entry.ride != null)
+          .map((entry) => RideModel.fromJson(entry.ride!.toMap()))
           .toList(growable: false),
     );
   }
@@ -28,13 +31,13 @@ List<RideModel> parseActiveRidesFromResponse(active_ride_api.Data? data) {
   final parsed = <RideModel>[];
   final primary = data.ride;
   if (primary != null) {
-    parsed.add(RideModel.fromJson(primary.toJson()));
+    parsed.add(RideModel.fromJson(primary.toMap()));
   }
 
   final extras = data.additionalRides;
   if (extras != null) {
     for (final ride in extras) {
-      parsed.add(RideModel.fromJson(ride.toJson()));
+      parsed.add(RideModel.fromJson(ride.toMap()));
     }
   }
 
