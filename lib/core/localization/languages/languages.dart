@@ -386,11 +386,6 @@ abstract class Languages {
   String get tripEndedByDriver;
   String get midRideSorrySubtitle;
   String get midRideReasonLead;
-  String get midRideDisputeCharge;
-  String get midRideDisputeSuccess;
-  String get midRideDisputeFailed;
-  String get midRideDisputeUnavailable;
-  String get midRideDisputeWindowClosed;
   String get midRideCancelledByDriverPartialCharge;
   String get midRideReasonVehicleBreakdown;
   String get midRideReasonAccident;

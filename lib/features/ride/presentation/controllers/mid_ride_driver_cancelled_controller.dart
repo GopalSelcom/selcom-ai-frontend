@@ -3,11 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
-import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
-import '../../../../core/services/progress_indicator/loader.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/models/mid_ride_cancel_models.dart';
 import '../../domain/repositories/ride_repository.dart';
@@ -36,11 +32,8 @@ class MidRideDriverCancelledController extends GetxController {
 
   final midRideCancel = Rxn<MidRideCancelModel>();
   final now = DateTime.now().toUtc().obs;
-  final isDisputing = false.obs;
-  final disputeSubmitted = false.obs;
 
   StreamSubscription<RideChargeSettledPayload>? _chargeSettledSub;
-  StreamSubscription<RideChargeDisputedPayload>? _chargeDisputedSub;
   Timer? _clockTimer;
   bool _didRefreshPastCapture = false;
 
@@ -74,12 +67,6 @@ class MidRideDriverCancelledController extends GetxController {
       if (payload.rideId.trim() != rideId) return;
       _applyChargeSettled(payload);
     });
-    _chargeDisputedSub = _socketService.rideChargeDisputedStream.listen((
-      payload,
-    ) {
-      if (payload.rideId.trim() != rideId) return;
-      _applyChargeDisputed(payload);
-    });
   }
 
   Future<void> _refreshFromRideDetails() async {
@@ -107,20 +94,6 @@ class MidRideDriverCancelledController extends GetxController {
     unawaited(_refreshFromRideDetails());
   }
 
-  void _applyChargeDisputed(RideChargeDisputedPayload payload) {
-    final current = midRideCancel.value;
-    if (current == null) return;
-    disputeSubmitted.value = true;
-    midRideCancel.value = current.merge(
-      message: payload.message,
-      releasedAmount: payload.releasedAmount,
-      captureStatus: payload.captureStatus ?? MidRideCaptureStatus.disputed,
-      canDispute: false,
-    );
-    unawaited(WalletRefresh.afterBalanceChange());
-    unawaited(_refreshFromRideDetails());
-  }
-
   String get reasonLabel => midRideCancelReasonLabel(
     reason: midRideCancel.value?.reason,
     reasonText: midRideCancel.value?.reasonText,
@@ -136,17 +109,14 @@ class MidRideDriverCancelledController extends GetxController {
     final block = midRideCancel.value;
     if (block == null) return null;
 
-    if (disputeSubmitted.value ||
-        block.captureStatus == MidRideCaptureStatus.disputed) {
-      return MidRideDialogStatusKind.underReview;
-    }
-
     switch (block.captureStatus) {
       case MidRideCaptureStatus.captured:
         return MidRideDialogStatusKind.captured;
       case MidRideCaptureStatus.released:
       case MidRideCaptureStatus.waived:
         return MidRideDialogStatusKind.noCharge;
+      case MidRideCaptureStatus.disputed:
+        return MidRideDialogStatusKind.underReview;
       case MidRideCaptureStatus.scheduled:
       case null:
         final captureAt = block.captureAt;
@@ -156,74 +126,13 @@ class MidRideDriverCancelledController extends GetxController {
           return MidRideDialogStatusKind.finalising;
         }
         return MidRideDialogStatusKind.scheduled;
-      case MidRideCaptureStatus.disputed:
-        return MidRideDialogStatusKind.underReview;
     }
-  }
-
-  bool get showDisputeButton {
-    final block = midRideCancel.value;
-    if (block == null || disputeSubmitted.value || isDisputing.value) {
-      return false;
-    }
-    if (block.captureStatus == MidRideCaptureStatus.captured ||
-        block.captureStatus == MidRideCaptureStatus.released ||
-        block.captureStatus == MidRideCaptureStatus.waived ||
-        block.captureStatus == MidRideCaptureStatus.disputed) {
-      return false;
-    }
-    return block.canDispute;
-  }
-
-  Future<void> disputeCharge() async {
-    if (rideId.isEmpty || isDisputing.value) return;
-    isDisputing.value = true;
-    await Loader.run(() async {
-      final result = await rideRepository.disputeCharge(rideId);
-      result.fold(
-        (failure) {
-          if (failure.message.contains('dispute_window_closed')) {
-            AppDialogs.showErrorDialog(
-              title: AppStrings.midRideDisputeUnavailable.tr,
-              message: AppStrings.midRideDisputeWindowClosed.tr,
-              onConfirm: () => Get.toNamed(AppRoutes.contactUs),
-            );
-            return;
-          }
-          AppDialogs.showErrorDialog(
-            title: AppStrings.midRideDisputeFailed.tr,
-            message: AppStrings.pleaseTryAgain.tr,
-          );
-        },
-        (data) async {
-          disputeSubmitted.value = true;
-          final current = midRideCancel.value;
-          if (current != null) {
-            midRideCancel.value = current.merge(
-              message: data.message,
-              releasedAmount: data.releasedAmount,
-              captureStatus:
-                  midRideCaptureStatusFromApi(data.status) ??
-                  MidRideCaptureStatus.disputed,
-              canDispute: false,
-            );
-          }
-          await WalletRefresh.afterBalanceChange();
-          await _refreshFromRideDetails();
-          AppDialogs.showSuccessDialog(
-            message: AppStrings.midRideDisputeSuccess.tr,
-          );
-        },
-      );
-    });
-    isDisputing.value = false;
   }
 
   @override
   void onClose() {
     _clockTimer?.cancel();
     _chargeSettledSub?.cancel();
-    _chargeDisputedSub?.cancel();
     super.onClose();
   }
 }

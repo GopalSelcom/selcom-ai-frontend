@@ -507,12 +507,6 @@ class AppStrings {
   static const String tripEndedByDriver = 'trip_ended_by_driver';
   static const String midRideSorrySubtitle = 'mid_ride_sorry_subtitle';
   static const String midRideReasonLead = 'mid_ride_reason_lead';
-  static const String midRideDisputeCharge = 'mid_ride_dispute_charge';
-  static const String midRideDisputeSuccess = 'mid_ride_dispute_success';
-  static const String midRideDisputeFailed = 'mid_ride_dispute_failed';
-  static const String midRideDisputeUnavailable = 'mid_ride_dispute_unavailable';
-  static const String midRideDisputeWindowClosed =
-      'mid_ride_dispute_window_closed';
   static const String midRideCancelledByDriverPartialCharge =
       'mid_ride_cancelled_by_driver_partial_charge';
   static const String midRideReasonVehicleBreakdown =

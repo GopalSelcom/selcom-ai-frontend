@@ -22,7 +22,6 @@ import '../../domain/repositories/ride_repository.dart';
 import '../datasources/ride_remote_data_source.dart';
 import '../models/destination_update_models.dart';
 import '../models/emergency_contacts_response.dart';
-import '../models/mid_ride_cancel_models.dart';
 import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
 import '../models/cancel_ride_response.dart';
@@ -201,27 +200,6 @@ class RideRepositoryImpl implements RideRepository {
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, DisputeChargeResult>> disputeCharge(
-    String rideId, {
-    String? reason,
-  }) async {
-    try {
-      final result = await remoteDataSource.disputeCharge(
-        rideId,
-        reason: reason,
-      );
-      return Right(result);
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      final message = e.toString();
-      if (message.contains('dispute_window_closed')) {
-        return Left(ServerFailure('dispute_window_closed'));
-      }
-      return Left(ServerFailure(message));
     }
   }
 

@@ -403,13 +403,6 @@ class LanguageSw extends Languages {
     'trip_ended_by_driver': 'Safari imeishia na dereva',
     'mid_ride_sorry_subtitle': 'Samahani, safari yako haikuweza kukamilika.',
     'mid_ride_reason_lead': 'Sababu: ',
-    'mid_ride_dispute_charge': 'Pinga malipo',
-    'mid_ride_dispute_success':
-        'Zuio limetolewa. Timu yetu itakagua — hautalipishwa tunapokagua.',
-    'mid_ride_dispute_failed': 'Imeshindikana kuwasilisha pingamizi',
-    'mid_ride_dispute_unavailable': 'Pingamizi halipatikani',
-    'mid_ride_dispute_window_closed':
-        'Muda wa kupinga umekwisha. Wasiliana na msaada ikiwa bado unahitaji usaidizi.',
     'mid_ride_cancelled_by_driver_partial_charge':
         'Imeghairiwa na dereva',
     'mid_ride_reason_vehicle_breakdown': 'Gari limevunjika',
@@ -2083,23 +2076,6 @@ class LanguageSw extends Languages {
 
   @override
   String get midRideReasonLead => values['mid_ride_reason_lead'] ?? '';
-
-  @override
-  String get midRideDisputeCharge => values['mid_ride_dispute_charge'] ?? '';
-
-  @override
-  String get midRideDisputeSuccess => values['mid_ride_dispute_success'] ?? '';
-
-  @override
-  String get midRideDisputeFailed => values['mid_ride_dispute_failed'] ?? '';
-
-  @override
-  String get midRideDisputeUnavailable =>
-      values['mid_ride_dispute_unavailable'] ?? '';
-
-  @override
-  String get midRideDisputeWindowClosed =>
-      values['mid_ride_dispute_window_closed'] ?? '';
 
   @override
   String get midRideCancelledByDriverPartialCharge =>

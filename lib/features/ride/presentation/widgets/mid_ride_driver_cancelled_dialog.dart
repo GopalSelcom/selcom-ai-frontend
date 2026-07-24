@@ -85,8 +85,6 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
 
     return Obx(() {
       c.midRideCancel.value;
-      c.disputeSubmitted.value;
-      c.isDisputing.value;
       c.now.value;
 
       final chargeMessage = _buildChargeMessage(c);
@@ -107,19 +105,6 @@ class MidRideDriverCancelledDialog extends StatelessWidget {
               chargeMessage,
             ],
             SizedBox(height: 20.h),
-            if (c.showDisputeButton) ...[
-              AppPrimaryButton(
-                label: AppStrings.midRideDisputeCharge.tr,
-                isLoading: c.isDisputing.value,
-                onPressed: c.disputeCharge,
-                outlined: true,
-                outlinedBorderColor: AppColors.textNeutralButton,
-                outlinedTextColor: AppColors.textNeutralButton,
-                height: 50.h,
-                borderRadius: 12.r,
-              ),
-              SizedBox(height: 10.h),
-            ],
             AppPrimaryButton(
               label: navigateHomeOnDismiss
                   ? AppStrings.backToHome.tr

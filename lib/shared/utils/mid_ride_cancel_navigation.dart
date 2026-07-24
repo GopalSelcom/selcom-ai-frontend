@@ -7,7 +7,7 @@ bool rideHasMidRideDriverCancel(RideModel ride) {
   return ride.midRideCancel?.isDriverMidRideCancel == true;
 }
 
-/// Live charge / dispute UI — scheduled capture or open dispute window.
+/// Live charge UI — scheduled capture window.
 bool rideNeedsMidRideCancelScreen(RideModel ride) {
   final block = ride.midRideCancel;
   if (block == null) return false;

@@ -64,7 +64,6 @@ class AppSocketService {
   static const String evtRideFareSettled = 'ride:fare_settled';
   static const String evtRideDriverCancelled = 'ride:driver_cancelled';
   static const String evtRideChargeSettled = 'ride:charge_settled';
-  static const String evtRideChargeDisputed = 'ride:charge_disputed';
   static const String trackingDriverLocation = 'ride:tracking_update';
 
   // Payment
@@ -106,8 +105,6 @@ class AppSocketService {
       StreamController<RideDriverCancelledPayload>.broadcast();
   final _chargeSettledController =
       StreamController<RideChargeSettledPayload>.broadcast();
-  final _chargeDisputedController =
-      StreamController<RideChargeDisputedPayload>.broadcast();
 
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
@@ -134,9 +131,6 @@ class AppSocketService {
 
   Stream<RideChargeSettledPayload> get rideChargeSettledStream =>
       _chargeSettledController.stream;
-
-  Stream<RideChargeDisputedPayload> get rideChargeDisputedStream =>
-      _chargeDisputedController.stream;
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
@@ -325,12 +319,6 @@ class AppSocketService {
       if (payload is! Map) return;
       _chargeSettledController.add(
         RideChargeSettledPayload.fromJson(Map<String, dynamic>.from(payload)),
-      );
-    });
-    _socket!.on(evtRideChargeDisputed, (payload) {
-      if (payload is! Map) return;
-      _chargeDisputedController.add(
-        RideChargeDisputedPayload.fromJson(Map<String, dynamic>.from(payload)),
       );
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {

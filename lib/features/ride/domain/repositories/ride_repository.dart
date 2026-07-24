@@ -15,7 +15,6 @@ import '../../../../core/errors/failures.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
-import '../../data/models/mid_ride_cancel_models.dart';
 import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_history_model.dart';
 import '../../data/models/cancel_ride_response.dart';
@@ -57,11 +56,6 @@ abstract class RideRepository {
     String rideId,
     String reason,
   );
-
-  Future<Either<Failure, DisputeChargeResult>> disputeCharge(
-    String rideId, {
-    String? reason,
-  });
 
   Future<Either<Failure, DestinationUpdatePreviewModel>>
   previewUpdateDestination(String rideId, Map<String, dynamic> destination);

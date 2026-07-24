@@ -441,13 +441,6 @@ class LanguageEn extends Languages {
     'mid_ride_sorry_subtitle':
         'We\'re sorry your trip couldn\'t be completed.',
     'mid_ride_reason_lead': 'Reason: ',
-    'mid_ride_dispute_charge': 'Dispute charge',
-    'mid_ride_dispute_success':
-        'Hold released. Our team will review — you won\'t be charged while we check.',
-    'mid_ride_dispute_failed': 'Could not submit dispute',
-    'mid_ride_dispute_unavailable': 'Dispute unavailable',
-    'mid_ride_dispute_window_closed':
-        'The dispute window has closed. Contact support if you still need help.',
     'mid_ride_cancelled_by_driver_partial_charge':
         'Cancelled by driver',
     'mid_ride_reason_vehicle_breakdown': 'Vehicle breakdown',
@@ -2162,23 +2155,6 @@ class LanguageEn extends Languages {
 
   @override
   String get midRideReasonLead => values['mid_ride_reason_lead'] ?? '';
-
-  @override
-  String get midRideDisputeCharge => values['mid_ride_dispute_charge'] ?? '';
-
-  @override
-  String get midRideDisputeSuccess => values['mid_ride_dispute_success'] ?? '';
-
-  @override
-  String get midRideDisputeFailed => values['mid_ride_dispute_failed'] ?? '';
-
-  @override
-  String get midRideDisputeUnavailable =>
-      values['mid_ride_dispute_unavailable'] ?? '';
-
-  @override
-  String get midRideDisputeWindowClosed =>
-      values['mid_ride_dispute_window_closed'] ?? '';
 
   @override
   String get midRideCancelledByDriverPartialCharge =>

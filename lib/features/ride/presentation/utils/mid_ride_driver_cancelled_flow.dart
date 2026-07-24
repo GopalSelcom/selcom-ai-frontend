@@ -9,7 +9,7 @@ import '../../domain/repositories/ride_repository.dart';
 import '../controllers/mid_ride_driver_cancelled_controller.dart';
 import '../widgets/mid_ride_driver_cancelled_dialog.dart';
 
-/// Shows the mid-ride driver cancellation modal (charge summary + dispute).
+/// Shows the mid-ride driver cancellation modal (charge summary).
 abstract final class MidRideDriverCancelledFlow {
   MidRideDriverCancelledFlow._();
 
