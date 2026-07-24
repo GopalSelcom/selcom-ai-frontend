@@ -829,14 +829,19 @@ class VehicleSelectionController extends GetxController {
     return e.promoApplied == true && e.promoAutoApplied == true;
   }
 
-  /// Chip / Remove should show for typed code or auto-applied discount.
-  bool get hasRemovablePromo {
+  /// Chip label should show for typed code or auto-applied promo.
+  bool get hasActivePromo {
     if (promoMode.value == PromoMode.manualCode &&
         appliedPromoCode.value.trim().isNotEmpty) {
       return true;
     }
     return selectedHasAutoAppliedPromo;
   }
+
+  /// Remove (X) only for a rider-selected/typed code — not for auto-apply.
+  bool get showPromoRemoveButton =>
+      promoMode.value == PromoMode.manualCode &&
+      appliedPromoCode.value.trim().isNotEmpty;
 
   /// Label for the header promo chip (typed code or auto-applied code).
   String get promoChipLabel {
@@ -1906,7 +1911,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> clearAppliedPromo() async {
-    if (!hasRemovablePromo) return;
+    if (!showPromoRemoveButton) return;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
     _pendingPromoApplyResult = null;

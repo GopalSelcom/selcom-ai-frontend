@@ -21,7 +21,8 @@ class VehicleSelectionPromoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final hasPromo = controller.hasRemovablePromo;
+      final hasPromo = controller.hasActivePromo;
+      final showRemove = controller.showPromoRemoveButton;
       final label = controller.promoChipLabel;
       final fg = hasPromo ? AppColors.primary : AppColors.promotionBlue;
 
@@ -61,7 +62,7 @@ class VehicleSelectionPromoChip extends StatelessWidget {
               ],
             ),
           ),
-          if (hasPromo)
+          if (showRemove)
             IconButton(
               style: IconButton.styleFrom(
                 padding: EdgeInsets.zero,
