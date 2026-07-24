@@ -19,7 +19,7 @@ import '../models/update_profile_response.dart';
 abstract class ProfileRemoteDataSource {
   Future<UserModel> getProfile();
 
-  Future<UserProfileUpdateResponse> updateProfile(
+  Future<UpdateProfileResponse> updateProfile(
     UserProfileUpdateRequest profileRequest,
   );
 
@@ -61,7 +61,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<UserProfileUpdateResponse> updateProfile(
+  Future<UpdateProfileResponse> updateProfile(
     UserProfileUpdateRequest profileRequest,
   ) async {
     final response = await ApiService().call(
@@ -83,17 +83,21 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return UserProfileUpdateResponse.fromJson(response.data);
+      final raw = response.data;
+      final map = raw is Map<String, dynamic>
+          ? raw
+          : Map<String, dynamic>.from(raw as Map);
+      return UpdateProfileResponse.fromMap(map);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
       final d = response.data;
       if (d is Map<String, dynamic>) {
-        return UserProfileUpdateResponse.fromJson(d);
+        return UpdateProfileResponse.fromMap(d);
       }
       if (d is Map) {
-        return UserProfileUpdateResponse.fromJson(Map<String, dynamic>.from(d));
+        return UpdateProfileResponse.fromMap(Map<String, dynamic>.from(d));
       }
-      return UserProfileUpdateResponse(
+      return UpdateProfileResponse(
         statusCode: response.statusCode,
         message: null,
         data: null,

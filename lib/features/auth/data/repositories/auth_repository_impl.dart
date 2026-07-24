@@ -96,7 +96,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, SendOtpResponseModel?>> sendPhoneOtp({
+  Future<Either<Failure, SendOtpResponse?>> sendPhoneOtp({
     required GoPhoneOtpRequest request,
   }) async {
     try {
@@ -109,7 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, SendOtpResponseModel?>> resendPhoneOtp({
+  Future<Either<Failure, SendOtpResponse?>> resendPhoneOtp({
     required GoPhoneOtpRequest request,
   }) async {
     try {

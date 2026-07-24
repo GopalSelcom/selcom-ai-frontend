@@ -1,44 +1,60 @@
+import 'dart:convert';
+
 import '../../../../core/data/models/user_model.dart';
 import '../cache/user_profile_cache.dart';
 
-class UserProfileUpdateResponse {
-  final int? statusCode;
-  final String? message;
-  final UserData? data;
+/// Envelope for `edit_profile` / update profile.
+class UpdateProfileResponse {
+  int? statusCode;
+  String? message;
+  UpdateProfileData? data;
 
-  UserProfileUpdateResponse({
+  UpdateProfileResponse({
     this.statusCode,
     this.message,
     this.data,
   });
 
-  factory UserProfileUpdateResponse.fromJson(Map<String, dynamic> json) =>
-      UserProfileUpdateResponse(
-        statusCode: json['status_code'] as int?,
-        message: json['message'] as String?,
-        data: json['data'] == null ? null : UserData.fromJson(json['data']),
-      );
+  factory UpdateProfileResponse.fromJson(String str) =>
+      UpdateProfileResponse.fromMap(json.decode(str));
 
-  Map<String, dynamic> toJson() => {
-        'status_code': statusCode,
-        'message': message,
-        'data': data?.toJson(),
-      };
+  String toJson() => json.encode(toMap());
+
+  factory UpdateProfileResponse.fromMap(Map<String, dynamic> json) {
+    final rawData = json["data"];
+    Map<String, dynamic>? dataMap;
+    if (rawData is Map<String, dynamic>) {
+      dataMap = rawData;
+    } else if (rawData is Map) {
+      dataMap = Map<String, dynamic>.from(rawData);
+    }
+    return UpdateProfileResponse(
+      statusCode: json["status_code"],
+      message: json["message"],
+      data: dataMap == null ? null : UpdateProfileData.fromMap(dataMap),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    "status_code": statusCode,
+    "message": message,
+    "data": data?.toMap(),
+  };
 
   UserModel? toUserModel({String? preserveUserId}) {
     return data?.toUserModel(preserveUserId: preserveUserId);
   }
 }
 
-class UserData {
-  final String? profileImage;
-  final int? number;
-  final String? countryCode;
-  final int? userRating;
-  final String? email;
-  final String? name;
+class UpdateProfileData {
+  String? profileImage;
+  String? number;
+  String? countryCode;
+  num? userRating;
+  String? email;
+  String? name;
 
-  UserData({
+  UpdateProfileData({
     this.profileImage,
     this.number,
     this.countryCode,
@@ -47,27 +63,29 @@ class UserData {
     this.name,
   });
 
-  factory UserData.fromJson(Map<String, dynamic> json) => UserData(
-        profileImage: json['profile_image'] as String?,
-        number: json['number'] is int
-            ? json['number'] as int
-            : int.tryParse(json['number']?.toString() ?? ''),
-        countryCode: json['country_code'] as String?,
-        userRating: json['user_rating'] is int
-            ? json['user_rating'] as int
-            : (json['user_rating'] as num?)?.toInt(),
-        email: json['email'] as String?,
-        name: json['name'] as String?,
+  factory UpdateProfileData.fromJson(String str) =>
+      UpdateProfileData.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory UpdateProfileData.fromMap(Map<String, dynamic> json) =>
+      UpdateProfileData(
+        profileImage: json["profile_image"]?.toString(),
+        number: json["number"]?.toString(),
+        countryCode: json["country_code"]?.toString(),
+        userRating: json["user_rating"],
+        email: json["email"]?.toString(),
+        name: json["name"]?.toString(),
       );
 
-  Map<String, dynamic> toJson() => {
-        'profile_image': profileImage,
-        'number': number,
-        'country_code': countryCode,
-        'user_rating': userRating,
-        'email': email,
-        'name': name,
-      };
+  Map<String, dynamic> toMap() => {
+    "profile_image": profileImage,
+    "number": number,
+    "country_code": countryCode,
+    "user_rating": userRating,
+    "email": email,
+    "name": name,
+  };
 
   UserModel toUserModel({String? preserveUserId}) {
     final existingUser = UserProfileCache.user;
@@ -75,14 +93,18 @@ class UserData {
         ? preserveUserId
         : (existingUser?.id ?? '');
 
+    final parsedNumber = number == null || number!.trim().isEmpty
+        ? null
+        : int.tryParse(number!.trim());
+
     return UserModel(
       id: fallbackId,
       name: name ?? existingUser?.name,
       emailId: email ?? existingUser?.emailId,
-      mobileNumber: number ?? existingUser?.mobileNumber,
+      mobileNumber: parsedNumber ?? existingUser?.mobileNumber,
       countryCode: countryCode ?? existingUser?.countryCode,
       image: profileImage ?? existingUser?.image,
-      goAvgRating: userRating != null ? userRating!.toDouble() : existingUser?.goAvgRating,
+      goAvgRating: userRating ?? existingUser?.goAvgRating,
       accessToken: existingUser?.accessToken,
       activeToken: existingUser?.activeToken,
       accountNumber: existingUser?.accountNumber,

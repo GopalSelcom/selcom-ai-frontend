@@ -7,13 +7,13 @@ import '../../../../core/usecases/usecase.dart';
 import '../repositories/auth_repository.dart';
 
 class SendPhoneOtpUseCase
-    implements UseCase<SendOtpResponseModel?, GoPhoneOtpRequest> {
+    implements UseCase<SendOtpResponse?, GoPhoneOtpRequest> {
   SendPhoneOtpUseCase(this.repository);
 
   final AuthRepository repository;
 
   @override
-  Future<Either<Failure, SendOtpResponseModel?>> call(
+  Future<Either<Failure, SendOtpResponse?>> call(
     GoPhoneOtpRequest params,
   ) {
     return repository.sendPhoneOtp(request: params);

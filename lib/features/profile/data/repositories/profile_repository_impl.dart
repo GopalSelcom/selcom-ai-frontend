@@ -67,7 +67,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(
+  Future<Either<Failure, UpdateProfileResponse>> updateProfile(
     UserProfileUpdateRequest profileRequest,
   ) async {
     try {

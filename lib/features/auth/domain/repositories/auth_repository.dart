@@ -25,11 +25,11 @@ abstract class AuthRepository {
     double? longitude,
   });
 
-  Future<Either<Failure, SendOtpResponseModel?>> sendPhoneOtp({
+  Future<Either<Failure, SendOtpResponse?>> sendPhoneOtp({
     required GoPhoneOtpRequest request,
   });
 
-  Future<Either<Failure, SendOtpResponseModel?>> resendPhoneOtp({
+  Future<Either<Failure, SendOtpResponse?>> resendPhoneOtp({
     required GoPhoneOtpRequest request,
   });
 

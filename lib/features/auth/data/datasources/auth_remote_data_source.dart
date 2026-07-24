@@ -20,11 +20,11 @@ abstract class AuthRemoteDataSource {
     required FirebaseLoginRequest request,
   });
 
-  Future<SendOtpResponseModel?> sendPhoneOtp({
+  Future<SendOtpResponse?> sendPhoneOtp({
     required GoPhoneOtpRequest request,
   });
 
-  Future<SendOtpResponseModel?> resendPhoneOtp({
+  Future<SendOtpResponse?> resendPhoneOtp({
     required GoPhoneOtpRequest request,
   });
 
@@ -74,7 +74,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<SendOtpResponseModel?> sendPhoneOtp({
+  Future<SendOtpResponse?> sendPhoneOtp({
     required GoPhoneOtpRequest request,
   }) async {
     try {
@@ -88,7 +88,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.data != null) {
-        return SendOtpResponseModel.fromJson(_responseMap(response.data));
+        return SendOtpResponse.fromMap(_responseMap(response.data));
       }
     } catch (_) {
       // Intentionally avoid logging request payload details.
@@ -97,7 +97,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<SendOtpResponseModel?> resendPhoneOtp({
+  Future<SendOtpResponse?> resendPhoneOtp({
     required GoPhoneOtpRequest request,
   }) async {
     try {
@@ -111,7 +111,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.data != null) {
-        return SendOtpResponseModel.fromJson(_responseMap(response.data));
+        return SendOtpResponse.fromMap(_responseMap(response.data));
       }
     } catch (_) {
       // Intentionally avoid logging request payload details.

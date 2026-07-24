@@ -18,7 +18,7 @@ abstract class ProfileRepository {
   /// Drops cached profile (logout / session expiry).
   void invalidateProfileCache();
 
-  Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(
+  Future<Either<Failure, UpdateProfileResponse>> updateProfile(
     UserProfileUpdateRequest profileRequest,
   );
 

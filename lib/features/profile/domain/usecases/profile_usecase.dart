@@ -18,7 +18,7 @@ class ProfileUseCase {
     return repository.getProfile(forceRefresh: forceRefresh);
   }
 
-  Future<Either<Failure, UserProfileUpdateResponse>> updateProfile(
+  Future<Either<Failure, UpdateProfileResponse>> updateProfile(
     UserProfileUpdateRequest profileRequest,
   ) {
     return repository.updateProfile(profileRequest);

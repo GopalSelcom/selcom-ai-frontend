@@ -128,8 +128,8 @@ class AuthController extends GetxController {
           return false;
         },
         (response) {
-          if (response?.isSuccess == true) {
-            generatedOtp.value = response?.response?.otp ?? '';
+          if (response?.statusCode == 200) {
+            generatedOtp.value = response?.data?.otp ?? '';
             return true;
           }
           errorMessage.value =
@@ -263,8 +263,8 @@ class AuthController extends GetxController {
           return false;
         },
         (response) {
-          if (response?.isSuccess == true) {
-            generatedOtp.value = response?.response?.otp ?? '';
+          if (response?.statusCode == 200) {
+            generatedOtp.value = response?.data?.otp ?? '';
             return true;
           }
           errorMessage.value =
