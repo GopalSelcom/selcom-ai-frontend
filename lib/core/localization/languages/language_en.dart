@@ -222,7 +222,7 @@ class LanguageEn extends Languages {
     'fallback_ride_name': 'Ride',
     'favourite_locations': 'Favourite Locations',
     'saved_locations': 'Saved Locations',
-    'get_started': 'Get Started',
+    'get_started': "Let's Go",
     'home_label': 'Home',
     'get_verification_code': 'Get Verification Code',
     'havent_got_the_confirmation_code_yet':

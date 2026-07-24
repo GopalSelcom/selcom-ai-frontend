@@ -90,7 +90,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                                   Text(
                                     slide.title,
                                     textAlign: TextAlign.start,
-                                    maxLines: 2,
+                                    maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTextStyles.onboardingTitle,
                                   ),
@@ -98,7 +98,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                                   Text(
                                     slide.subtitle,
                                     textAlign: TextAlign.start,
-                                    maxLines: 2,
+                                    maxLines: 3,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTextStyles.onboardingSubtitle,
                                   ),
