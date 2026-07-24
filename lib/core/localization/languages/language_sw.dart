@@ -638,7 +638,7 @@ class LanguageSw extends Languages {
     'your_ride_was_cancelled': 'Safari yako imeghairiwa.',
     'thanks_for_using_go': 'Asante kwa kutumia Go!',
     'your_rides': 'Safari Zangu',
-    'welcome_to_selcom_go': 'Karibu Selcom GO',
+    'welcome_to_selcom_go': 'Karibu Selcom Go',
     'full_name': 'Majina kamili',
     'enter_your_full_name': 'Ingiza majina yako kamili',
     'email': 'Barua pepe',

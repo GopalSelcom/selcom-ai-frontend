@@ -703,7 +703,7 @@ class LanguageEn extends Languages {
     'your_ride_was_cancelled': 'Your ride was cancelled.',
     'thanks_for_using_go': 'Thanks for using Go!',
     'your_rides': 'Your Rides',
-    'welcome_to_selcom_go': 'Welcome to Selcom GO',
+    'welcome_to_selcom_go': 'Welcome to Selcom Go',
     'full_name': 'Full name',
     'enter_your_full_name': 'Enter your full name',
     'email': 'Email',
