@@ -22,7 +22,7 @@ class LocationSelectionController extends GetxController {
   late final FocusNode destinationFocusNode;
 
   /// 0 = pickup, 1 = first destination, 2+ = extra stop index `segment - 2`.
-  final RxInt activeSegmentIndex = 1.obs;
+  final RxInt activeSegmentIndex = 0.obs;
   final extraDestinationControllers = <TextEditingController>[].obs;
   final extraDestinationFocusNodes = <FocusNode>[].obs;
 
@@ -164,17 +164,29 @@ class LocationSelectionController extends GetxController {
         routeDestinationLng.value != null;
   }
 
+  bool _isExtraStopReady(int index) {
+    if (index < 0 || index >= extraDestinationControllers.length) {
+      return false;
+    }
+    final text = extraDestinationControllers[index].text.trim();
+    if (text.isEmpty) return false;
+    return index < extraStopSelected.length && extraStopSelected[index];
+  }
+
+  /// Visual order: pickup → intermediate stops → final destination.
+  /// Returns null when every segment is confirmed.
+  int? firstIncompleteSegmentInVisualOrder() {
+    if (!_isPickupSegmentReady) return 0;
+    for (var i = 0; i < extraDestinationControllers.length; i++) {
+      if (!_isExtraStopReady(i)) return 2 + i;
+    }
+    if (!_isDestinationSegmentReady) return 1;
+    return null;
+  }
+
   /// Pickup + final destination + every intermediate row (if any) confirmed from search/recent/saved.
   bool get areAllSegmentsReadyForBooking {
-    if (!_isPickupSegmentReady) return false;
-    if (!_isDestinationSegmentReady) return false;
-    final n = extraDestinationControllers.length;
-    if (extraStopSelected.length != n) return false;
-    for (var i = 0; i < n; i++) {
-      if (extraDestinationControllers[i].text.trim().isEmpty) return false;
-      if (!extraStopSelected[i]) return false;
-    }
-    return true;
+    return firstIncompleteSegmentInVisualOrder() == null;
   }
 
   void confirmSelectionForSegment(int segmentIndex) {
@@ -189,7 +201,42 @@ class LocationSelectionController extends GetxController {
         extraStopSelected.refresh();
       }
     }
+    focusNextEmptyOrUnfocus();
     _scheduleAutoProceedIfAllSegmentsReady();
+  }
+
+  /// After a place is chosen (or on open): focus the next empty field, or close
+  /// the keyboard when the route is complete.
+  void focusNextEmptyOrUnfocus({bool immediate = false}) {
+    if (_isDisposed) return;
+    final next = firstIncompleteSegmentInVisualOrder();
+    if (next == null) {
+      unfocusAllLocationFields();
+      homeController.searchQuery.value = '';
+      return;
+    }
+    activeSegmentIndex.value = next;
+    _syncSearchQueryForActiveSegment();
+    focusActiveSegment(immediate: immediate);
+  }
+
+  void _syncSearchQueryForActiveSegment() {
+    final seg = activeSegmentIndex.value;
+    if (seg == 0) {
+      homeController.searchQuery.value = pickupController.text.trim();
+      return;
+    }
+    if (seg == 1) {
+      homeController.searchQuery.value = destinationController.text.trim();
+      return;
+    }
+    final i = seg - 2;
+    if (i >= 0 && i < extraDestinationControllers.length) {
+      homeController.searchQuery.value =
+          extraDestinationControllers[i].text.trim();
+    } else {
+      homeController.searchQuery.value = '';
+    }
   }
 
   void _scheduleAutoProceedIfAllSegmentsReady() {
@@ -392,7 +439,7 @@ class LocationSelectionController extends GetxController {
     final raw = Get.arguments;
     String initialPickup = homeController.currentMapAddress.value;
     String initialDestination = '';
-    var initialActiveSegment = 1;
+    var initialActiveSegment = 0;
     var clearPickupOnOpen = false;
     var clearDestinationOnOpen = false;
     final initialExtraStops = <String>[];
@@ -492,7 +539,11 @@ class LocationSelectionController extends GetxController {
       extraDestinationFocusNodes.add(FocusNode());
       extraStopSelected.add(true);
     }
-    activeSegmentIndex.value = initialActiveSegment;
+
+    // Prefer first empty field (pickup → stops → destination). Fall back to
+    // route-arg segment only when the route is already complete (e.g. edit).
+    final firstIncomplete = firstIncompleteSegmentInVisualOrder();
+    activeSegmentIndex.value = firstIncomplete ?? initialActiveSegment;
 
     if (routePickupLat.value != null && initialPickup.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -506,9 +557,21 @@ class LocationSelectionController extends GetxController {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 350), () {
-        if (!_isDisposed) {
+        if (_isDisposed) return;
+        final stillIncomplete = firstIncompleteSegmentInVisualOrder();
+        if (stillIncomplete != null) {
+          activeSegmentIndex.value = stillIncomplete;
+          _syncSearchQueryForActiveSegment();
           focusActiveSegment(immediate: true);
+          return;
         }
+        if (isVehicleSelectionEditMode.value) {
+          _syncSearchQueryForActiveSegment();
+          focusActiveSegment(immediate: true);
+          return;
+        }
+        unfocusAllLocationFields();
+        homeController.searchQuery.value = '';
       });
     });
   }
@@ -587,8 +650,7 @@ class LocationSelectionController extends GetxController {
     extraDestinationFocusNodes.add(FocusNode());
     extraStopSelected.add(false);
     activeSegmentIndex.value = 2 + extraDestinationControllers.length - 1;
-    homeController.searchQuery.value = extraDestinationControllers.last.text
-        .trim();
+    homeController.searchQuery.value = '';
     focusActiveSegment();
   }
 
