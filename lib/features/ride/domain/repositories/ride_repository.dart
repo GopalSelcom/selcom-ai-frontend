@@ -19,8 +19,8 @@ import '../../data/models/recent_destinations_response.dart';
 import '../../data/models/ride_history_model.dart';
 import '../../data/models/cancel_ride_response.dart';
 import '../../data/models/cancellation_charges_response.dart';
+import '../../data/models/check_book_mode_response.dart';
 import '../../data/models/receipt_response.dart';
-import '../../data/models/ride_management_models.dart';
 
 abstract class RideRepository {
   Future<Either<Failure, List<VehicleType>>> getVehicleTypes();
@@ -92,7 +92,7 @@ abstract class RideRepository {
     required String idempotencyKey,
   });
 
-  Future<Either<Failure, CheckBookModeResult>> checkBookMode({
+  Future<Either<Failure, CheckBookModeData>> checkBookMode({
     required double riderLat,
     required double riderLng,
     required double pickupLat,

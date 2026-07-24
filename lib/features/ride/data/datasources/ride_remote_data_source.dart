@@ -31,8 +31,8 @@ import '../models/recent_destinations_response.dart';
 import '../models/ride_history_model.dart';
 import '../models/cancel_ride_response.dart';
 import '../models/cancellation_charges_response.dart';
+import '../models/check_book_mode_response.dart';
 import '../models/receipt_response.dart';
-import '../models/ride_management_models.dart';
 import '../models/stop_update_models.dart';
 
 abstract class RideRemoteDataSource {
@@ -104,7 +104,7 @@ abstract class RideRemoteDataSource {
     required String idempotencyKey,
   });
 
-  Future<CheckBookModeResult> checkBookMode({
+  Future<CheckBookModeData> checkBookMode({
     required double riderLat,
     required double riderLng,
     required double pickupLat,
@@ -829,7 +829,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<CheckBookModeResult> checkBookMode({
+  Future<CheckBookModeData> checkBookMode({
     required double riderLat,
     required double riderLng,
     required double pickupLat,
@@ -849,16 +849,16 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      return CheckBookModeResult.fromJson(
-        Map<String, dynamic>.from(response.data),
-      );
+      final raw = response.data;
+      final map = raw is Map<String, dynamic>
+          ? raw
+          : Map<String, dynamic>.from(raw as Map);
+      final parsed = CheckBookModeResponse.fromMap(map);
+      if (parsed.data != null) return parsed.data!;
+      return CheckBookModeData(showBookForOtherOption: false);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return const CheckBookModeResult(
-        showBookForOtherOption: false,
-        distanceKm: null,
-        thresholdKm: 1.0,
-      );
+      return CheckBookModeData(showBookForOtherOption: false);
     }
     throw Exception('Failed to check book mode');
   }

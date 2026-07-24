@@ -532,7 +532,7 @@ class ConfirmLocationController extends GetxController {
 
       return checkResult.fold(
         (_) => CheckBookModeGate.unavailable,
-        (result) => result.showBookForOtherOption
+        (result) => result.showBookForOtherOption == true
             ? CheckBookModeGate.pickupFarFromRider
             : CheckBookModeGate.pickupNearRider,
       );
