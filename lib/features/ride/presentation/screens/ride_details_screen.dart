@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -19,7 +19,7 @@ import '../widgets/ride_details_screen_layout.dart';
 import '../widgets/ride_details_screen_shimmer.dart';
 
 class RideDetailsScreen extends StatelessWidget {
-  final RideEntity ride;
+  final RideDetailsRide ride;
   final bool openedFromCompletionFlow;
   /// Passed to [RideDetailsController]; false when caller pre-fetched ride details.
   final bool refreshOnInit;
@@ -152,7 +152,7 @@ class RideDetailsScreen extends StatelessWidget {
                     child: RideDetailsScreenShimmer.content(
                       showReviewAtTop: showReviewAtTop,
                       showReviewAtBottom: showReviewAtBottom,
-                      showBookedForOther: ride.isBookedForOther,
+                      showBookedForOther: ride.isBookedForOther ?? false,
                       showPassengerPhone: ride.passengerPhone != null,
                       showPromoLine: controller.showPromoFareLine,
                       showDownloadSlip: controller.isCompleted,
@@ -220,13 +220,13 @@ class RideDetailsScreen extends StatelessWidget {
                         ),
                         child: RideLocationsTimeline(
                           startLocation: controller.pickupTitle,
-                          startAddress: ride.pickup.address,
+                          startAddress: ride.pickup?.address ?? '',
                           endLocation: controller.destinationTitle,
-                          endAddress: ride.destination.address,
-                          stops: ride.stops,
+                          endAddress: ride.destination?.address ?? '',
+                          stops: controller.timelineStops,
                         ),
                       ),
-                      if (ride.isBookedForOther) ...[
+                      if (ride.isBookedForOther ?? false) ...[
                         SizedBox(height: RideDetailsScreenLayout.sectionGap),
                         Container(
                           padding: EdgeInsets.all(16.w),
@@ -260,11 +260,11 @@ class RideDetailsScreen extends StatelessWidget {
                                     Text(
                                       AppStrings.bookingForName.trParams({
                                         'name':
-                                            (ride.passengerName ?? '')
-                                                .trim()
+                                            (ride.passengerName?.toString().trim() ??
+                                                    '')
                                                 .isEmpty
                                             ? AppStrings.someone.tr
-                                            : ride.passengerName!,
+                                            : ride.passengerName.toString(),
                                       }),
                                       style: TextStyle(
                                         fontFamily:
@@ -279,7 +279,9 @@ class RideDetailsScreen extends StatelessWidget {
                                         AppStrings.phoneWithNumber.trParams({
                                           'phone':
                                               PhoneNationalRules.formatE164DigitsForDisplay(
-                                                ride.passengerPhone ?? '',
+                                                ride.passengerPhone
+                                                        ?.toString() ??
+                                                    '',
                                               ),
                                         }),
                                         style: TextStyle(

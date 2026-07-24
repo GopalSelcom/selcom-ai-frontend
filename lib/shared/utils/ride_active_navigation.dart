@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 
 import '../../core/data/models/ride_model.dart';
-import '../../core/domain/entities/ride_entity.dart';
 import '../../core/routes/app_routes.dart';
 import 'map_route_marker_utils.dart';
 import 'mid_ride_cancel_navigation.dart';
@@ -281,17 +280,12 @@ void navigateToDriverAcceptedForRide(
                 'name': driver.name,
                 'phone': driver.phone,
                 'avatar_url': driver.avatarUrl,
-                if (driver is DriverSnapshotModel)
-                  'vehicle_color': driver.vehicleColor,
-                if (driver is DriverSnapshotModel)
-                  'vehicle_model': driver.vehicleModel,
-                if (driver is DriverSnapshotModel)
-                  'vehicle_registration_number':
-                      driver.vehicleRegistrationNumber,
-                if (driver is DriverSnapshotModel)
-                  'vehicle_type': driver.vehicleType,
-                if (driver is DriverSnapshotModel)
-                  'verification_code': driver.verificationCode,
+                'vehicle_color': driver.vehicleColor,
+                'vehicle_model': driver.vehicleModel,
+                'vehicle_registration_number':
+                    driver.vehicleRegistrationNumber,
+                'vehicle_type': driver.vehicleType,
+                'verification_code': driver.verificationCode,
               },
         'vehicle_snapshot': vehicle == null
             ? null

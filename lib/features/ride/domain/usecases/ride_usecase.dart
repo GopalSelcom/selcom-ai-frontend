@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/data/models/requests/validate_ride_payment_request.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
-import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/errors/failures.dart';
 import '../../data/models/cancel_ride_response.dart';
 import '../../data/models/destination_update_models.dart';
@@ -27,7 +27,7 @@ class RideUseCase {
     return repository.getRecentDestinations();
   }
 
-  Future<Either<Failure, RideModel>> getRideDetails(String rideId) {
+  Future<Either<Failure, RideDetailsRide>> getRideDetails(String rideId) {
     return repository.getRideDetails(rideId);
   }
 

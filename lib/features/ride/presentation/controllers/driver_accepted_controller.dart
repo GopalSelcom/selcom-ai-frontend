@@ -22,7 +22,6 @@ import '../../../../core/data/models/responses/nearbyRiders/response/tracking_up
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
-import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -179,7 +178,6 @@ class DriverAcceptedController extends GetxController
   bool _openedCompletedRideDetails = false;
   /// Guards completion handoff so socket + tracking cannot start parallel fetches.
   bool _completionHandoffInProgress = false;
-  Future<void>? _completionRideDetailsFetch;
   /// Coalesces concurrent getRideDetails calls (resume, handoff, stop-update poll).
   Future<void>? _rideDetailsFetchInFlight;
   bool _hasReceivedTrackingUpdate = false;
@@ -216,7 +214,7 @@ class DriverAcceptedController extends GetxController
       Rxn<StopUpdateAppliedModel>();
   final stopUpdateProgressStep =
       0.obs; // 0: Idle, 1: Payment, 2: Route, 3: Success
-  final stopUpdateWorkingStops = <RideStopEntity>[].obs;
+  final stopUpdateWorkingStops = <RideStopModel>[].obs;
 
   final RxBool isUpdatingDestination = false.obs;
   final RxBool isDestinationUpdateFlow = false.obs;
@@ -480,14 +478,14 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  List<RideStopEntity> get mapIntermediateStops {
+  List<RideStopModel> get mapIntermediateStops {
     final fromRide = _intermediateStopsFromRideStops();
     if (fromRide.isNotEmpty) return fromRide;
     return _intermediateStopsFromRouteDestinations();
   }
 
-  List<RideStopEntity> _intermediateStopsFromRideStops() {
-    final stops = ride.value?.stops ?? const <RideStopEntity>[];
+  List<RideStopModel> _intermediateStopsFromRideStops() {
+    final stops = ride.value?.stops ?? const <RideStopModel>[];
     if (stops.isEmpty) return const [];
 
     final filtered = stops
@@ -527,7 +525,7 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  List<RideStopEntity> _intermediateStopsFromRouteDestinations() {
+  List<RideStopModel> _intermediateStopsFromRouteDestinations() {
     if (routeDestinations.length <= 1) return const [];
 
     final candidates = routeDestinations
@@ -536,7 +534,7 @@ class DriverAcceptedController extends GetxController
         .asMap()
         .entries
         .map(
-          (entry) => RideStopEntity(
+          (entry) => RideStopModel(
             index: entry.key + 1,
             lat: entry.value.lat,
             lng: entry.value.lng,
@@ -922,7 +920,7 @@ class DriverAcceptedController extends GetxController
         );
       },
       (r) async {
-        await _applyRideDetailsFromModel(r);
+        await _applyRideDetailsFromModel(r.toRideModel());
       },
     );
     if (!_navigatedAway) {
@@ -950,7 +948,7 @@ class DriverAcceptedController extends GetxController
     }
 
     if (rideNeedsMidRideCancelScreen(r)) {
-      final block = _midRideCancelModelFromRide(r);
+      final block = r.midRideCancel;
       if (block != null) {
         await _maybeNavigateMidRideDriverCancelled(block);
         return;
@@ -1052,7 +1050,7 @@ class DriverAcceptedController extends GetxController
 
   void _applyRide(RideModel r) {
     isPinRequired.value = r.pinRequired;
-    final d = r.driverSnapshot as DriverSnapshotModel?;
+    final d = r.driverSnapshot;
     final v = r.vehicleSnapshot;
     String plateForVehicleLine = '';
     _syncBottomSheetVehicleImage(d?.vehicleType);
@@ -1589,45 +1587,9 @@ class DriverAcceptedController extends GetxController
     if (rideId.isEmpty) return null;
     final result = await rideRepository.getRideDetails(rideId);
     return result.fold((_) => null, (r) {
-      if (!rideHasMidRideDriverCancel(r)) return null;
-      final block = r.midRideCancel;
-      if (block is MidRideCancelModel) return block;
-      if (block == null) return null;
-      return MidRideCancelModel(
-        reason: block.reason,
-        reasonText: block.reasonText,
-        message: block.message,
-        distanceCoveredKm: block.distanceCoveredKm,
-        partialFare: block.partialFare,
-        capturedAmount: block.capturedAmount,
-        netRefund: block.netRefund,
-        releasedAmount: block.releasedAmount,
-        captureAt: block.captureAt,
-        disputeDeadline: block.disputeDeadline,
-        canDispute: block.canDispute,
-        captureStatus: block.captureStatus,
-      );
+      if (!r.isMidRideDriverCancel) return null;
+      return r.toRideModel().midRideCancel;
     });
-  }
-
-  MidRideCancelModel? _midRideCancelModelFromRide(RideModel r) {
-    final block = r.midRideCancel;
-    if (block is MidRideCancelModel) return block;
-    if (block == null) return null;
-    return MidRideCancelModel(
-      reason: block.reason,
-      reasonText: block.reasonText,
-      message: block.message,
-      distanceCoveredKm: block.distanceCoveredKm,
-      partialFare: block.partialFare,
-      capturedAmount: block.capturedAmount,
-      netRefund: block.netRefund,
-      releasedAmount: block.releasedAmount,
-      captureAt: block.captureAt,
-      disputeDeadline: block.disputeDeadline,
-      canDispute: block.canDispute,
-      captureStatus: block.captureStatus,
-    );
   }
 
   void _syncBottomSheetVehicleImage(String? vehicleType) {
@@ -2004,18 +1966,10 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  Future<void> _fetchRideDetailsForCompletionHandoff() {
-    // Socket/tracking can fire completion multiple times before ride.value updates.
-    _completionRideDetailsFetch ??= _fetchRideDetails().whenComplete(() {
-      _completionRideDetailsFetch = null;
-    });
-    return _completionRideDetailsFetch!;
-  }
-
   /// Opens post-completion Ride Details once. Trusts realtime status over lagging HTTP.
   void _openCompletedRideDetailsScreen() {
     if (_openedCompletedRideDetails) return;
-    if (_completionHandoffInProgress || _completionRideDetailsFetch != null) {
+    if (_completionHandoffInProgress) {
       return;
     }
     final normalizedCurrentStatus = currentRideStatus.value
@@ -2025,36 +1979,36 @@ class DriverAcceptedController extends GetxController
         normalizedCurrentStatus != 'ride_completed') {
       return;
     }
-
-    final currentRide = ride.value;
-    if (currentRide != null) {
-      // Realtime status already says completed — use in-memory ride snapshot
-      // instead of waiting on HTTP (avoids a second fetch when API status lags).
-      _presentCompletedRideDetailsScreen(currentRide);
-      return;
-    }
+    if (rideId.isEmpty) return;
 
     _completionHandoffInProgress = true;
     unawaited(
-      _fetchRideDetailsForCompletionHandoff().whenComplete(() {
+      _presentCompletedRideDetailsScreen().whenComplete(() {
         _completionHandoffInProgress = false;
-        if (_openedCompletedRideDetails) return;
-        final refreshed = ride.value;
-        if (refreshed != null) {
-          _presentCompletedRideDetailsScreen(refreshed);
-        }
       }),
     );
   }
 
-  void _presentCompletedRideDetailsScreen(RideModel currentRide) {
+  /// Fetches fresh details for the completed-ride screen.
+  Future<void> _presentCompletedRideDetailsScreen() async {
     if (_openedCompletedRideDetails) return;
-    // Normalize payload for details screen: force completed status and review UI.
-    // Socket/status payloads can be slightly delayed, so we make this explicit.
-    final completedRide = currentRide.copyWith(
-      status: RideStatus.rideCompleted,
-      showReviewUi: true,
-    );
+    if (rideId.isEmpty) return;
+
+    final result = await rideRepository.getRideDetails(rideId);
+    if (_openedCompletedRideDetails || _navigatedAway) return;
+
+    final details = result.fold((_) => null, (r) => r);
+    if (details == null) {
+      AppDialogs.showErrorDialog(
+        message: AppStrings.failedToLoadRideDetails.tr,
+      );
+      return;
+    }
+
+    // Normalize for details screen: force completed status and review UI.
+    details.status = 'ride_completed';
+    details.showReviewUi = true;
+
     _openedCompletedRideDetails = true;
     if (Get.isRegistered<RideDetailsController>()) {
       Get.delete<RideDetailsController>();
@@ -2062,14 +2016,14 @@ class DriverAcceptedController extends GetxController
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.off(
         () => RideDetailsScreen(
-          ride: completedRide,
+          ride: details,
           openedFromCompletionFlow: true,
           refreshOnInit: false,
         ),
         binding: BindingsBuilder(() {
           Get.put(
             RideDetailsController(
-              ride: completedRide,
+              ride: details,
               openedFromCompletionFlow: true,
               refreshOnInit: false,
             ),
@@ -2742,7 +2696,7 @@ class DriverAcceptedController extends GetxController
       if (p.isNotEmpty) return snap.plateNumber;
     }
     final d = r.driverSnapshot;
-    if (d is DriverSnapshotModel) {
+    if (d != null) {
       return (d.vehicleRegistrationNumber ?? '').trim();
     }
     return '';
@@ -2802,7 +2756,7 @@ class DriverAcceptedController extends GetxController
     Get.toNamed(AppRoutes.stopEditor, arguments: {'ride': ride.value});
   }
 
-  Future<void> previewStopsUpdate(List<RideStopEntity> stops) async {
+  Future<void> previewStopsUpdate(List<RideStopModel> stops) async {
     final stopsJson = _buildStopsPayloadForUpdate(stops);
 
     final result = await rideRepository.updateStops(
@@ -2830,7 +2784,7 @@ class DriverAcceptedController extends GetxController
     );
   }
 
-  Future<bool> applyStopsUpdate(List<RideStopEntity> stops) async {
+  Future<bool> applyStopsUpdate(List<RideStopModel> stops) async {
     final pending = ride.value?.pendingStopsUpdate;
     if (pending != null &&
         pending.status == 'pending_payment' &&
@@ -2966,7 +2920,7 @@ class DriverAcceptedController extends GetxController
   }
 
   List<Map<String, dynamic>> _buildStopsPayloadForUpdate(
-    List<RideStopEntity> stops,
+    List<RideStopModel> stops,
   ) {
     return stops
         .map(

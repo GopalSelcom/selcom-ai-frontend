@@ -16,7 +16,6 @@ import '../../../../core/data/models/responses/rides/active_ride_response.dart'
     as active_ride_api;
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
-import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
@@ -758,14 +757,15 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     final detailsResult = await homeRepository.getRideDetails(rideId);
     detailsResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
-      (freshRide) async {
-        final freshId = freshRide.id.trim();
+      (freshRideDetails) async {
+        final freshId = (freshRideDetails.id ?? '').trim();
         if (freshId.isEmpty || freshId != rideId) {
           AppDialogs.showErrorDialog(
             message: AppStrings.failedToLoadRideDetails.tr,
           );
           return;
         }
+        final freshRide = freshRideDetails.toRideModel();
         await _socketService.connect();
         _socketService.switchRideRoom(rideId: freshId);
         // 🛰️ Sync Live Activity view when user taps "View Trip"

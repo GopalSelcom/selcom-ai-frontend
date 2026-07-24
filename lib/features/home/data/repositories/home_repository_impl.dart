@@ -10,7 +10,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -145,7 +145,7 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Either<Failure, RideModel>> getRideDetails(String rideId) async {
+  Future<Either<Failure, RideDetailsRide>> getRideDetails(String rideId) async {
     try {
       final result = await remoteDataSource.getRideDetails(rideId);
       return Right(result);

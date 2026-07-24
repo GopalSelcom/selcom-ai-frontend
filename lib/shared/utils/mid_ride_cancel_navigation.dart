@@ -1,6 +1,5 @@
-import '../../../core/data/models/mid_ride_cancel_model.dart';
-import '../../../core/data/models/ride_model.dart';
-import '../../../core/domain/entities/mid_ride_cancel_entity.dart';
+import '../../core/data/models/mid_ride_cancel_model.dart';
+import '../../core/data/models/ride_model.dart';
 import '../../features/ride/presentation/utils/mid_ride_driver_cancelled_flow.dart';
 
 /// True when the ride payload includes a driver mid-ride cancellation block.
@@ -18,30 +17,12 @@ bool rideNeedsMidRideCancelScreen(RideModel ride) {
 /// Shows the themed mid-ride driver cancellation dialog.
 Future<void> showMidRideDriverCancelledDialog({
   required String rideId,
-  required MidRideCancelEntity cancel,
+  required MidRideCancelModel cancel,
   bool navigateHomeOnDismiss = true,
 }) {
   return MidRideDriverCancelledFlow.show(
     rideId: rideId,
     cancel: cancel,
     navigateHomeOnDismiss: navigateHomeOnDismiss,
-  );
-}
-
-MidRideCancelModel midRideCancelToModel(MidRideCancelEntity cancel) {
-  if (cancel is MidRideCancelModel) return cancel;
-  return MidRideCancelModel(
-    reason: cancel.reason,
-    reasonText: cancel.reasonText,
-    message: cancel.message,
-    distanceCoveredKm: cancel.distanceCoveredKm,
-    partialFare: cancel.partialFare,
-    capturedAmount: cancel.capturedAmount,
-    netRefund: cancel.netRefund,
-    releasedAmount: cancel.releasedAmount,
-    captureAt: cancel.captureAt,
-    disputeDeadline: cancel.disputeDeadline,
-    canDispute: cancel.canDispute,
-    captureStatus: cancel.captureStatus,
   );
 }

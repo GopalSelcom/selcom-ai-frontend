@@ -347,7 +347,10 @@ class FindingDriverController extends GetxController {
       return;
     }
     final result = await rideRepository.getRideDetails(rideId);
-    result.fold((_) {}, _applyInitialRideStatusFromModel);
+    result.fold(
+      (_) {},
+      (freshRide) => _applyInitialRideStatusFromModel(freshRide.toRideModel()),
+    );
   }
 
   void _applyInitialRideStatusFromModel(RideModel ride) {
@@ -372,7 +375,7 @@ class FindingDriverController extends GetxController {
 
     final d = ride.driverSnapshot;
     DriverSnapshot? driverSnapshot;
-    if (d is DriverSnapshotModel) {
+    if (d != null) {
       driverSnapshot = DriverSnapshot(
         name: d.name,
         phone: d.phone,
@@ -382,13 +385,6 @@ class FindingDriverController extends GetxController {
         vehicleRegistrationNumber: d.vehicleRegistrationNumber,
         vehicleType: d.vehicleType,
         verificationCode: d.verificationCode,
-        rating: d.rating,
-      );
-    } else if (d != null) {
-      driverSnapshot = DriverSnapshot(
-        name: d.name,
-        phone: d.phone,
-        avatarUrl: d.avatarUrl,
         rating: d.rating,
       );
     }

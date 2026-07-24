@@ -9,6 +9,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
@@ -46,7 +47,7 @@ abstract class RideRepository {
     int limit = 10,
   });
 
-  Future<Either<Failure, RideModel>> getRideDetails(String rideId);
+  Future<Either<Failure, RideDetailsRide>> getRideDetails(String rideId);
 
   Future<Either<Failure, RideCancellationChargesData>> getCancellationCharges(
     String rideId,

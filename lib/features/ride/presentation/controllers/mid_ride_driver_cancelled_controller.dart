@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
-import '../../../../core/domain/entities/mid_ride_cancel_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -87,24 +86,9 @@ class MidRideDriverCancelledController extends GetxController {
     if (rideId.isEmpty) return;
     final result = await rideRepository.getRideDetails(rideId);
     result.fold((_) {}, (ride) {
-      final block = ride.midRideCancel;
-      if (block is MidRideCancelModel) {
+      final block = ride.toRideModel().midRideCancel;
+      if (block != null) {
         midRideCancel.value = block;
-      } else if (block != null) {
-        midRideCancel.value = MidRideCancelModel(
-          reason: block.reason,
-          reasonText: block.reasonText,
-          message: block.message,
-          distanceCoveredKm: block.distanceCoveredKm,
-          partialFare: block.partialFare,
-          capturedAmount: block.capturedAmount,
-          netRefund: block.netRefund,
-          releasedAmount: block.releasedAmount,
-          captureAt: block.captureAt,
-          disputeDeadline: block.disputeDeadline,
-          canDispute: block.canDispute,
-          captureStatus: block.captureStatus,
-        );
       }
     });
   }

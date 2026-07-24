@@ -1,51 +1,120 @@
 import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
-import '../../domain/entities/mid_ride_cancel_entity.dart';
-import '../../domain/entities/ride_entity.dart';
 import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
 
-class RideModel extends RideEntity {
+enum RideStatus {
+  searching,
+  driverAssigned,
+  driverArriving,
+  driverArrived,
+  rideStarted,
+  rideInProgress,
+  nearDestination,
+  rideCompleted,
+  cancelled,
+  noDriverFound,
+}
+
+enum PaymentStatus { pending, blocked, completed, failed, refunded }
+
+enum PaymentMethod { wallet, selcomPesa, mobileMoney, card }
+
+/// In-app ride model for live/ongoing flows — the only in-app ride type.
+///
+/// Built from `GET go/rides/active` / `GET go/rides/:id` payloads (see
+/// [ActiveRideResponse] / [RideDetailsResponse] and their `toRideModel()`).
+class RideModel {
+  final String id;
+  final String riderId;
+  final String? driverId;
+  final String vehicleTypeId;
+  final String? vehicleKey;
+  final String? vehicleDisplayName;
+  final RideStatus status;
+  final LocationEntity pickup;
+  final LocationEntity destination;
+  final List<RideStopModel> stops;
+  final bool isMultiStop;
+  final int currentStopIndex;
+  final int fareEstimate;
+  final int? finalFare;
+  final double distanceKm;
+  final int durationMinutes;
+  final String pinCode;
+  final bool pinRequired;
+  final PaymentMethod paymentMethod;
+  final PaymentStatus paymentStatus;
+  final int? cancellationFee;
+  final int? riderRating;
+  final bool showReviewUi;
+  final FareBreakdownModel? fareBreakdown;
+  final DriverSnapshotModel? driverSnapshot;
+  final VehicleSnapshotModel? vehicleSnapshot;
+  final DateTime createdAt;
+  final PendingStopsUpdateModel? pendingStopsUpdate;
+  final bool isBookedForOther;
+  final bool isBookAny;
+  final String? passengerName;
+  final String? passengerPhone;
+  final List<PdfLinkModel>? pdfLinks;
+
+  /// Applied promo on this ride (GET ride / history payloads).
+  final String? promoCode;
+  final int? promoDiscount;
+
+  /// Wallet/payment transaction id from ride payload (`transid`).
+  final String transactionId;
+
+  /// Present when the driver ended the trip mid-ride (partial charge flow).
+  final MidRideCancelModel? midRideCancel;
+
+  /// Driver-search window length from API `cancel_time` (milliseconds).
+  final int? cancelTime;
+
+  /// When the driver search phase started (`search_started_at`).
+  final DateTime? searchStartedAt;
+
   const RideModel({
-    required super.id,
-    required super.riderId,
-    super.driverId,
-    required super.vehicleTypeId,
-    super.vehicleKey,
-    super.vehicleDisplayName,
-    required super.status,
-    required super.pickup,
-    required super.destination,
-    required super.stops,
-    super.isMultiStop,
-    super.currentStopIndex,
-    required super.fareEstimate,
-    super.finalFare,
-    required super.distanceKm,
-    required super.durationMinutes,
-    required super.pinCode,
-    required super.pinRequired,
-    required super.paymentMethod,
-    required super.paymentStatus,
-    super.cancellationFee,
-    super.riderRating,
-    super.showReviewUi,
-    super.fareBreakdown,
-    super.driverSnapshot,
-    super.vehicleSnapshot,
-    required super.createdAt,
-    super.pendingStopsUpdate,
-    super.isBookedForOther = false,
-    super.isBookAny = false,
-    super.passengerName,
-    super.passengerPhone,
-    super.pdfLinks,
-    super.promoCode,
-    super.promoDiscount,
-    super.transactionId = '',
-    super.midRideCancel,
-    super.cancelTime,
-    super.searchStartedAt,
+    required this.id,
+    required this.riderId,
+    this.driverId,
+    required this.vehicleTypeId,
+    this.vehicleKey,
+    this.vehicleDisplayName,
+    required this.status,
+    required this.pickup,
+    required this.destination,
+    required this.stops,
+    this.isMultiStop = false,
+    this.currentStopIndex = 0,
+    required this.fareEstimate,
+    this.finalFare,
+    required this.distanceKm,
+    required this.durationMinutes,
+    required this.pinCode,
+    required this.pinRequired,
+    required this.paymentMethod,
+    required this.paymentStatus,
+    this.cancellationFee,
+    this.riderRating,
+    this.showReviewUi = true,
+    this.fareBreakdown,
+    this.driverSnapshot,
+    this.vehicleSnapshot,
+    required this.createdAt,
+    this.pendingStopsUpdate,
+    this.isBookedForOther = false,
+    this.isBookAny = false,
+    this.passengerName,
+    this.passengerPhone,
+    this.pdfLinks,
+    this.promoCode,
+    this.promoDiscount,
+    this.transactionId = '',
+    this.midRideCancel,
+    this.cancelTime,
+    this.searchStartedAt,
   });
 
   factory RideModel.fromJson(Map<String, dynamic> json) {
@@ -82,9 +151,6 @@ class RideModel extends RideEntity {
     final stopsJson = json['stops'] as List? ?? [];
     final stops = stopsJson.map((e) => RideStopModel.fromJson(e)).toList();
     final vehicleTypeIdRaw = json['vehicle_type_id'];
-    final vehicleTypeId = vehicleTypeIdRaw is Map
-        ? (vehicleTypeIdRaw['_id']?.toString() ?? '')
-        : (vehicleTypeIdRaw?.toString() ?? '');
     final vehicleTypeKey = vehicleTypeIdRaw is Map
         ? vehicleTypeIdRaw['key']?.toString()
         : json['vehicle_key']?.toString();
@@ -173,7 +239,6 @@ class RideModel extends RideEntity {
     );
   }
 
-  @override
   RideModel copyWith({
     String? id,
     String? riderId,
@@ -184,7 +249,7 @@ class RideModel extends RideEntity {
     RideStatus? status,
     LocationEntity? pickup,
     LocationEntity? destination,
-    List<RideStopEntity>? stops,
+    List<RideStopModel>? stops,
     bool? isMultiStop,
     int? currentStopIndex,
     int? fareEstimate,
@@ -198,20 +263,20 @@ class RideModel extends RideEntity {
     int? cancellationFee,
     int? riderRating,
     bool? showReviewUi,
-    FareBreakdownEntity? fareBreakdown,
-    DriverSnapshotEntity? driverSnapshot,
-    VehicleSnapshotEntity? vehicleSnapshot,
+    FareBreakdownModel? fareBreakdown,
+    DriverSnapshotModel? driverSnapshot,
+    VehicleSnapshotModel? vehicleSnapshot,
     DateTime? createdAt,
-    PendingStopsUpdateEntity? pendingStopsUpdate,
+    PendingStopsUpdateModel? pendingStopsUpdate,
     bool? isBookedForOther,
     bool? isBookAny,
     String? passengerName,
     String? passengerPhone,
-    List<PdfLinkEntity>? pdfLinks,
+    List<PdfLinkModel>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
     String? transactionId,
-    MidRideCancelEntity? midRideCancel,
+    MidRideCancelModel? midRideCancel,
     int? cancelTime,
     DateTime? searchStartedAt,
   }) {
@@ -271,15 +336,23 @@ class RideModel extends RideEntity {
   }
 }
 
-class RideStopModel extends RideStopEntity {
+class RideStopModel {
+  final int index;
+  final double lat;
+  final double lng;
+  final String address;
+  final String status;
+  final DateTime? arrivedAt;
+  final DateTime? completedAt;
+
   const RideStopModel({
-    required super.index,
-    required super.lat,
-    required super.lng,
-    required super.address,
-    required super.status,
-    super.arrivedAt,
-    super.completedAt,
+    required this.index,
+    required this.lat,
+    required this.lng,
+    required this.address,
+    required this.status,
+    this.arrivedAt,
+    this.completedAt,
   });
 
   factory RideStopModel.fromJson(Map<String, dynamic> json) {
@@ -299,7 +372,11 @@ class RideStopModel extends RideStopEntity {
   }
 }
 
-class DriverSnapshotModel extends DriverSnapshotEntity {
+class DriverSnapshotModel {
+  final String name;
+  final String phone;
+  final String? avatarUrl;
+  final double rating;
   final String? verificationCode;
   final String? vehicleRegistrationNumber;
   final String? vehicleModel;
@@ -307,10 +384,10 @@ class DriverSnapshotModel extends DriverSnapshotEntity {
   final String? vehicleColor;
 
   const DriverSnapshotModel({
-    required super.name,
-    required super.phone,
-    super.avatarUrl,
-    required super.rating,
+    required this.name,
+    required this.phone,
+    this.avatarUrl,
+    required this.rating,
     this.verificationCode,
     this.vehicleRegistrationNumber,
     this.vehicleModel,
@@ -334,13 +411,19 @@ class DriverSnapshotModel extends DriverSnapshotEntity {
   }
 }
 
-class VehicleSnapshotModel extends VehicleSnapshotEntity {
+class VehicleSnapshotModel {
+  final String vehicleType;
+  final String vehicleMake;
+  final String vehicleModel;
+  final String vehicleColor;
+  final String plateNumber;
+
   const VehicleSnapshotModel({
-    required super.vehicleType,
-    required super.vehicleMake,
-    required super.vehicleModel,
-    required super.vehicleColor,
-    required super.plateNumber,
+    required this.vehicleType,
+    required this.vehicleMake,
+    required this.vehicleModel,
+    required this.vehicleColor,
+    required this.plateNumber,
   });
 
   factory VehicleSnapshotModel.fromJson(Map<String, dynamic> json) {
@@ -358,11 +441,15 @@ class VehicleSnapshotModel extends VehicleSnapshotEntity {
   }
 }
 
-class FareBreakdownModel extends FareBreakdownEntity {
+class FareBreakdownModel {
+  final int rideCharge;
+  final int bookingFee;
+  final int totalAmount;
+
   const FareBreakdownModel({
-    required super.rideCharge,
-    required super.bookingFee,
-    required super.totalAmount,
+    required this.rideCharge,
+    required this.bookingFee,
+    required this.totalAmount,
   });
 
   factory FareBreakdownModel.fromJson(Map<String, dynamic> json) {
@@ -374,16 +461,25 @@ class FareBreakdownModel extends FareBreakdownEntity {
   }
 }
 
-class PendingStopsUpdateModel extends PendingStopsUpdateEntity {
+class PendingStopsUpdateModel {
+  final List<RideStopModel> stops;
+  final String status;
+  final int deltaAmount;
+  final String direction;
+  final int? newFare;
+  final String? validationId;
+  final DateTime? expiresAt;
+  final String? idempotencyKey;
+
   const PendingStopsUpdateModel({
-    required super.stops,
-    required super.status,
-    required super.deltaAmount,
-    required super.direction,
-    super.newFare,
-    super.validationId,
-    super.expiresAt,
-    super.idempotencyKey,
+    required this.stops,
+    required this.status,
+    required this.deltaAmount,
+    required this.direction,
+    this.newFare,
+    this.validationId,
+    this.expiresAt,
+    this.idempotencyKey,
   });
 
   factory PendingStopsUpdateModel.fromJson(Map<String, dynamic> json) {
@@ -405,13 +501,19 @@ class PendingStopsUpdateModel extends PendingStopsUpdateEntity {
   }
 }
 
-class PdfLinkModel extends PdfLinkEntity {
+class PdfLinkModel {
+  final String url;
+  final String token;
+  final String originalName;
+  final DateTime? expiresAt;
+  final DateTime? uploadedAt;
+
   const PdfLinkModel({
-    required super.url,
-    required super.token,
-    required super.originalName,
-    super.expiresAt,
-    super.uploadedAt,
+    required this.url,
+    required this.token,
+    required this.originalName,
+    this.expiresAt,
+    this.uploadedAt,
   });
 
   factory PdfLinkModel.fromJson(Map<String, dynamic> json) {

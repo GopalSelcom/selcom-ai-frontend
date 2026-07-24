@@ -10,7 +10,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
@@ -36,7 +36,7 @@ abstract class HomeRemoteDataSource {
 
   Future<bool> deleteSavedPlace(String id);
 
-  Future<RideModel> getRideDetails(String rideId);
+  Future<RideDetailsRide> getRideDetails(String rideId);
 
   Future<AutocompletePredictionModel?> autocomplete({required String input});
 
@@ -195,7 +195,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<RideModel> getRideDetails(String rideId) async {
+  Future<RideDetailsRide> getRideDetails(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.rideDetails(rideId),
@@ -204,12 +204,13 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final rideData =
-          response.data['data']?['ride'] ?? response.data['data'] ?? {};
-      return RideModel.fromJson(rideData);
+      final parsed = RideDetailsResponse.fromJson(response.data);
+      final ride = parsed.data?.ride;
+      if (ride != null) return ride;
+      return RideDetailsRide(id: rideId);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return RideModel.fromJson({'_id': rideId});
+      return RideDetailsRide(id: rideId);
     }
     throw Exception('Failed to get ride details');
   }

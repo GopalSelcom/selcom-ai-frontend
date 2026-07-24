@@ -38,7 +38,7 @@ abstract final class ActiveRideVehicleImageResolver {
 
   static String? _assignedVehicleTypeLabel(RideModel ride) {
     final driver = ride.driverSnapshot;
-    if (driver is DriverSnapshotModel) {
+    if (driver != null) {
       final fromDriver = driver.vehicleType?.trim();
       if (fromDriver != null && fromDriver.isNotEmpty) return fromDriver;
     }

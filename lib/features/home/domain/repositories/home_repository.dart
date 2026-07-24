@@ -10,7 +10,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_available_response.dart';
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
-import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../ride/data/models/recent_destinations_response.dart';
@@ -34,7 +34,7 @@ abstract class HomeRepository {
 
   Future<Either<Failure, bool>> deleteSavedPlace(String id);
 
-  Future<Either<Failure, RideModel>> getRideDetails(String rideId);
+  Future<Either<Failure, RideDetailsRide>> getRideDetails(String rideId);
 
   Future<Either<Failure, AutocompletePredictionModel?>> autocomplete({
     required String input,

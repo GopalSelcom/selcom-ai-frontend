@@ -1,5 +1,4 @@
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
-import '../../../../core/domain/entities/mid_ride_cancel_entity.dart';
 
 class RideDriverCancelledPayload {
   final String rideId;

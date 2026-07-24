@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_shimmer.dart';
@@ -64,10 +64,10 @@ abstract final class RideDetailsScreenShimmer {
     );
   }
 
-  static int locationRowCountFor(RideEntity ride) {
-    final endAddr = ride.destination.address.trim().toLowerCase();
-    final stopCount = ride.stops.where((stop) {
-      return stop.address.trim().toLowerCase() != endAddr;
+  static int locationRowCountFor(RideDetailsRide ride) {
+    final endAddr = (ride.destination?.address ?? '').trim().toLowerCase();
+    final stopCount = (ride.stops ?? []).where((stop) {
+      return (stop.address ?? '').trim().toLowerCase() != endAddr;
     }).length;
     return 2 + stopCount;
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
-import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
@@ -10,7 +10,7 @@ import 'driver_accepted_controller.dart';
 
 /// Add-stops and change-drop editors opened from [DriverAcceptedScreen].
 ///
-/// Route args: `ride` ([RideEntity]) and optional `editorMode: 'destination'`.
+/// Route args: `ride` ([RideModel]) and optional `editorMode: 'destination'`.
 /// Stops flow uses preview → confirm via [DriverAcceptedController.stopUpdatePreview];
 /// destination flow mirrors that with [DriverAcceptedController.destinationUpdatePreview].
 class StopEditorController extends GetxController {
@@ -18,7 +18,7 @@ class StopEditorController extends GetxController {
       Get.find<DriverAcceptedController>();
 
   /// Working intermediate stops shown in the reorderable list.
-  final stops = <RideStopEntity>[].obs;
+  final stops = <RideStopModel>[].obs;
 
   /// Stable keys per row: `confirmed_*` for server stops, `new_*` for drafts.
   /// Draft rows can be removed; confirmed stops cannot.
@@ -27,7 +27,7 @@ class StopEditorController extends GetxController {
   final selectedDestination = Rxn<Map<String, dynamic>>();
 
   late final bool isDestinationEditor;
-  late List<RideStopEntity> _initialStops;
+  late List<RideStopModel> _initialStops;
   int _newStopCounter = 0;
 
   @override
@@ -40,10 +40,10 @@ class StopEditorController extends GetxController {
         ? Map<String, dynamic>.from(Get.arguments as Map)
         : <String, dynamic>{};
     isDestinationEditor = args['editorMode'] == 'destination';
-    final ride = args['ride'] as RideEntity?;
+    final ride = args['ride'] as RideModel?;
     final confirmedStops = driverController.mapIntermediateStops.isNotEmpty
         ? driverController.mapIntermediateStops
-        : (ride?.stops ?? const <RideStopEntity>[]);
+        : (ride?.stops ?? const <RideStopModel>[]);
 
     if (driverController.stopUpdateWorkingStops.isNotEmpty) {
       stops.assignAll(driverController.stopUpdateWorkingStops);
@@ -57,7 +57,7 @@ class StopEditorController extends GetxController {
     } else {
       stops.assignAll(
         confirmedStops.map(
-          (s) => RideStopEntity(
+          (s) => RideStopModel(
             index: s.index,
             lat: s.lat,
             lng: s.lng,
@@ -132,7 +132,7 @@ class StopEditorController extends GetxController {
     if (result is! Map<String, dynamic>) return;
 
     stops.add(
-      RideStopEntity(
+      RideStopModel(
         index: stops.length,
         lat: (result['lat'] ?? 0.0).toDouble(),
         lng: (result['lng'] ?? 0.0).toDouble(),

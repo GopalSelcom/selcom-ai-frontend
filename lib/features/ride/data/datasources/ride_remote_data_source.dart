@@ -12,6 +12,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
@@ -59,7 +60,7 @@ abstract class RideRemoteDataSource {
     int limit = 10,
   });
 
-  Future<RideModel> getRideDetails(String rideId);
+  Future<RideDetailsRide> getRideDetails(String rideId);
 
   Future<RideCancellationChargesData> getCancellationCharges(String rideId);
 
@@ -395,7 +396,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
   }
 
   @override
-  Future<RideModel> getRideDetails(String rideId) async {
+  Future<RideDetailsRide> getRideDetails(String rideId) async {
     final response = await ApiService().call(
       request: ApiRequest(
         endpoint: URLS.ride.rideDetails(rideId),
@@ -404,12 +405,13 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
     );
 
     if (response.statusCode == 200 && response.data != null) {
-      final rideData =
-          response.data['data']?['ride'] ?? response.data['data'] ?? {};
-      return RideModel.fromJson(rideData);
+      final parsed = RideDetailsResponse.fromJson(response.data);
+      final ride = parsed.data?.ride;
+      if (ride != null) return ride;
+      return RideDetailsRide(id: rideId);
     }
     if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return RideModel.fromJson({'_id': rideId});
+      return RideDetailsRide(id: rideId);
     }
     throw Exception('Failed to get ride details');
   }

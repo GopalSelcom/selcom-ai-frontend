@@ -4,7 +4,7 @@
 // (`RideStatus.driverArriving`), or snake_case. Always normalize first so UI
 // labels and navigation stay in sync.
 
-import '../../core/domain/entities/ride_entity.dart';
+import '../../core/data/models/ride_model.dart';
 
 /// Converts any ride status string to snake_case lowercase.
 ///

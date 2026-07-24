@@ -406,7 +406,8 @@ class NotificationService {
               message: AppStrings.unableToOpenRideDetails.tr,
             );
           },
-          (ride) {
+          (rideDetails) {
+            final ride = rideDetails.toRideModel();
             if (rideNeedsMidRideCancelScreen(ride)) {
               final block = ride.midRideCancel;
               if (block != null) {

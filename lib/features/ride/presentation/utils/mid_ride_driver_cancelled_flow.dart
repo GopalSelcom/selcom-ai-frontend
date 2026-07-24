@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
-import '../../../../core/domain/entities/mid_ride_cancel_entity.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -16,13 +15,12 @@ abstract final class MidRideDriverCancelledFlow {
 
   static Future<void> show({
     required String rideId,
-    required MidRideCancelEntity cancel,
+    required MidRideCancelModel cancel,
     bool navigateHomeOnDismiss = true,
   }) async {
     final id = rideId.trim();
     if (id.isEmpty) return;
 
-    final model = _toModel(cancel);
     final tag =
         'mid_ride_cancel_${id}_${DateTime.now().microsecondsSinceEpoch}';
 
@@ -32,7 +30,7 @@ abstract final class MidRideDriverCancelledFlow {
       MidRideDriverCancelledController(
         rideRepository: di.sl<RideRepository>(),
         rideId: id,
-        initialCancel: model,
+        initialCancel: cancel,
       ),
       tag: tag,
     );
@@ -51,23 +49,5 @@ abstract final class MidRideDriverCancelledFlow {
         await Get.delete<MidRideDriverCancelledController>(tag: tag);
       }
     }
-  }
-
-  static MidRideCancelModel _toModel(MidRideCancelEntity cancel) {
-    if (cancel is MidRideCancelModel) return cancel;
-    return MidRideCancelModel(
-      reason: cancel.reason,
-      reasonText: cancel.reasonText,
-      message: cancel.message,
-      distanceCoveredKm: cancel.distanceCoveredKm,
-      partialFare: cancel.partialFare,
-      capturedAmount: cancel.capturedAmount,
-      netRefund: cancel.netRefund,
-      releasedAmount: cancel.releasedAmount,
-      captureAt: cancel.captureAt,
-      disputeDeadline: cancel.disputeDeadline,
-      canDispute: cancel.canDispute,
-      captureStatus: cancel.captureStatus,
-    );
   }
 }

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_assets.dart';
-import '../../../../core/domain/entities/ride_entity.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -55,7 +55,7 @@ class RideLocationsTimeline extends StatelessWidget {
   final String startAddress;
   final String endLocation;
   final String endAddress;
-  final List<RideStopEntity>? stops;
+  final List<RideStopModel>? stops;
   final bool showStopsAsSummary;
   final bool showAddStopBeforeDestination;
   final VoidCallback? onAddStopTap;

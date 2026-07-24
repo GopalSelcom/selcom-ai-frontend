@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/data/models/responses/rides/ride_details_response.dart';
+import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
-import '../../../../core/domain/entities/ride_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
@@ -34,7 +35,7 @@ class RideDetailsController extends GetxController {
     this.refreshOnInit = true,
   });
 
-  RideEntity ride;
+  RideDetailsRide ride;
   final bool openedFromCompletionFlow;
   /// When false, caller already fetched ride details (My Rides tap, completion handoff).
   final bool refreshOnInit;
@@ -42,13 +43,18 @@ class RideDetailsController extends GetxController {
   late final RideRatingController ratingController;
   final isLoadingRideDetails = true.obs;
 
-  bool get hasExistingRating => (ride.riderRating ?? 0) > 0;
+  int get _riderRatingValue {
+    final raw = ride.riderRating;
+    return raw is num ? raw.toInt() : 0;
+  }
+
+  bool get hasExistingRating => _riderRatingValue > 0;
 
   /// Completion-entry should prioritize collecting feedback immediately.
   /// My Rides keeps backend-driven visibility via showReviewUi.
   bool get canShowReviewInput => openedFromCompletionFlow
       ? !hasExistingRating
-      : (ride.status == RideStatus.rideCompleted && ride.showReviewUi);
+      : (ride.isCompleted && (ride.showReviewUi ?? true));
 
   @override
   void onInit() {
@@ -67,7 +73,7 @@ class RideDetailsController extends GetxController {
     isLoadingRideDetails.value = true;
     try {
       final rideRepository = di.sl<RideRepository>();
-      final result = await rideRepository.getRideDetails(ride.id);
+      final result = await rideRepository.getRideDetails(ride.id ?? '');
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
@@ -92,14 +98,14 @@ class RideDetailsController extends GetxController {
   }
 
   String get vehicleDisplayName {
-    final value = (ride.vehicleDisplayName ?? '').trim();
+    final value = ride.vehicleDisplayNameResolved;
     return value.isNotEmpty ? value : 'Ride';
   }
 
   String get vehicleTypeForImage {
     final candidates = [
-      ride.vehicleKey,
-      ride.vehicleDisplayName,
+      ride.vehicleKeyResolved,
+      ride.vehicleDisplayNameResolved,
       ride.vehicleSnapshot?.vehicleType,
     ];
     for (final value in candidates) {
@@ -117,38 +123,21 @@ class RideDetailsController extends GetxController {
   }
 
   String get formattedDate {
-    return DateFormat('yyyy-MM-dd, hh:mm a').format(ride.createdAt);
+    final date = DateTime.tryParse(ride.createdAt ?? '') ?? DateTime.now();
+    return DateFormat('yyyy-MM-dd, hh:mm a').format(date);
   }
 
-  bool get isCancelled => ride.status.name == 'cancelled';
+  bool get isCancelled => ride.isCancelled;
 
-  bool get isMidRideDriverCancelled =>
-      ride.midRideCancel?.isDriverMidRideCancel == true;
+  bool get isMidRideDriverCancelled => ride.isMidRideDriverCancel;
 
-  bool get isCompleted => ride.status == RideStatus.rideCompleted;
+  bool get isCompleted => ride.isCompleted;
 
-  int get rideCharge {
-    if (isMidRideDriverCancelled) {
-      return ride.midRideCancel?.displayChargeAmount ?? 0;
-    }
-    if (isCancelled) return ride.cancellationFee ?? 0;
-    return ride.fareBreakdown?.rideCharge ?? ride.fareEstimate;
-  }
+  int get rideCharge => ride.displayRideCharge;
 
-  int get bookingFee {
-    if (isCancelled || isMidRideDriverCancelled) return 0;
-    return ride.fareBreakdown?.bookingFee ?? 0;
-  }
+  int get bookingFee => ride.displayBookingFee;
 
-  int get totalAmount {
-    if (isMidRideDriverCancelled) {
-      return ride.midRideCancel?.displayChargeAmount ?? 0;
-    }
-    if (isCancelled) return ride.cancellationFee ?? 0;
-    return ride.fareBreakdown?.totalAmount ??
-        ride.finalFare ??
-        ride.fareEstimate;
-  }
+  int get totalAmount => ride.displayTotalAmount;
 
   String get rideChargeLabel => CurrencyFormatter.format(rideCharge);
 
@@ -158,20 +147,43 @@ class RideDetailsController extends GetxController {
 
   /// Promo row on fare card (GET ride returns [promo_code], [promo_discount]).
   bool get showPromoFareLine {
-    final code = ride.promoCode?.trim() ?? '';
+    final code = ride.promoCode?.toString().trim() ?? '';
     final d = ride.promoDiscount ?? 0;
     return code.isNotEmpty && d > 0;
   }
 
-  String get promoFareLineTitle =>
-      AppStrings.receiptPromoLine.trParams({'code': ride.promoCode!.trim()}).tr;
+  String get promoFareLineTitle => AppStrings.receiptPromoLine.trParams({
+    'code': ride.promoCode.toString().trim(),
+  }).tr;
 
   String get promoFareLineAmountLabel =>
       '-${CurrencyFormatter.format(ride.promoDiscount!)}';
 
-  String get pickupTitle => ride.pickup.address.split(',').first;
+  String get pickupTitle => (ride.pickup?.address ?? '').split(',').first;
 
-  String get destinationTitle => ride.destination.address.split(',').first;
+  String get destinationTitle =>
+      (ride.destination?.address ?? '').split(',').first;
+
+  /// Adapts raw API stop payloads into [RideStopModel] for [RideLocationsTimeline]
+  /// / [RideDetailsScreenShimmer], which are shared across the ride flows.
+  List<RideStopModel> get timelineStops {
+    return (ride.stops ?? []).map((stop) {
+      return RideStopModel(
+        index: stop.index ?? 0,
+        lat: stop.lat ?? 0,
+        lng: stop.lng ?? 0,
+        address: stop.address ?? '',
+        status: stop.status ?? '',
+        arrivedAt: _tryParseDynamicDate(stop.arrivedAt),
+        completedAt: _tryParseDynamicDate(stop.completedAt),
+      );
+    }).toList();
+  }
+
+  DateTime? _tryParseDynamicDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
 
   bool get shouldPrioritizeReviewSection =>
       openedFromCompletionFlow && canShowReviewInput && !hasExistingRating;
@@ -198,7 +210,7 @@ class RideDetailsController extends GetxController {
     await _showReceiptSlipLoading();
     try {
       final rideRepository = di.sl<RideRepository>();
-      final response = await rideRepository.getReceipt(ride.id);
+      final response = await rideRepository.getReceipt(ride.id ?? '');
       final receiptModel = response.fold((l) => null, (r) => r);
 
       if (receiptModel == null) {
@@ -237,12 +249,16 @@ class RideDetailsController extends GetxController {
     try {
       // 1. Check if we already have a PDF link in the ride object
       String? shareUrl;
-      if (ride.pdfLinks != null && ride.pdfLinks!.isNotEmpty) {
+      final existingLinks = ride.pdfLinks;
+      if (existingLinks != null && existingLinks.isNotEmpty) {
         final now = DateTime.now().toUtc();
         // Sort to get the most recent one
-        final sortedLinks = List<PdfLinkEntity>.from(
-          ride.pdfLinks!,
-        )..sort((a, b) => (b.uploadedAt ?? now).compareTo(a.uploadedAt ?? now));
+        final sortedLinks = List<RideDetailsPdfLink>.from(existingLinks)
+          ..sort((a, b) {
+            final aDate = DateTime.tryParse(a.uploadedAt ?? '') ?? now;
+            final bDate = DateTime.tryParse(b.uploadedAt ?? '') ?? now;
+            return bDate.compareTo(aDate);
+          });
         shareUrl = sortedLinks.first.url;
       }
 
@@ -252,7 +268,7 @@ class RideDetailsController extends GetxController {
 
         // 2. No link exists, generate PDF and upload it
         final rideRepository = di.sl<RideRepository>();
-        final response = await rideRepository.getReceipt(ride.id);
+        final response = await rideRepository.getReceipt(ride.id ?? '');
         final receiptModel = response.fold((l) => null, (r) => r);
 
         if (receiptModel == null) {
@@ -270,7 +286,7 @@ class RideDetailsController extends GetxController {
 
         // Upload the generated PDF
         final uploadResult = await rideRepository.uploadReceiptPdf(
-          rideId: ride.id,
+          rideId: ride.id ?? '',
           pdfPath: pdfFile.path,
         );
 
@@ -284,8 +300,14 @@ class RideDetailsController extends GetxController {
 
         final newLink = uploadResult.fold((l) => null, (r) => r)!;
         // Update local ride object to prevent redundant uploads in the same session
-        final updatedLinks = <PdfLinkEntity>[...(ride.pdfLinks ?? []), newLink];
-        ride = ride.copyWith(pdfLinks: updatedLinks);
+        final newDetailsLink = RideDetailsPdfLink(
+          url: newLink.url,
+          token: newLink.token,
+          originalName: newLink.originalName,
+          expiresAt: newLink.expiresAt?.toIso8601String(),
+          uploadedAt: newLink.uploadedAt?.toIso8601String(),
+        );
+        ride.pdfLinks = [...(ride.pdfLinks ?? []), newDetailsLink];
 
         shareUrl = newLink.url;
       }
@@ -315,7 +337,7 @@ class RideDetailsController extends GetxController {
   }
 
   ReceiptModel _receiptForDisplay(ReceiptModel receipt) {
-    final fallback = ride.transactionId.trim();
+    final fallback = (ride.transid ?? '').trim();
     if (receipt.transactionId.trim().isNotEmpty || fallback.isEmpty) {
       return receipt;
     }
@@ -323,17 +345,12 @@ class RideDetailsController extends GetxController {
   }
 
   // Map ride details into the pending-review model used by rating UI.
-  PendingReview _toPendingReview(RideEntity source) {
-    final fareValue =
-        source.fareBreakdown?.totalAmount ??
-        source.finalFare ??
-        source.fareEstimate;
+  PendingReview _toPendingReview(RideDetailsRide source) {
     final driver = source.driverSnapshot;
+    final transid = source.transid?.trim() ?? '';
     return PendingReview(
       rideId: source.id,
-      transid: source.transactionId.trim().isNotEmpty
-          ? source.transactionId.trim()
-          : source.id,
+      transid: transid.isNotEmpty ? transid : source.id,
       driverSnapshot: DriverSnapshot(
         name: driver?.name,
         avatarUrl: driver?.avatarUrl,
@@ -344,18 +361,21 @@ class RideDetailsController extends GetxController {
         displayName: vehicleDisplayName,
       ),
       pickup: Pickup(
-        lat: source.pickup.lat,
-        lng: source.pickup.lng,
-        address: source.pickup.address,
+        lat: source.pickup?.lat,
+        lng: source.pickup?.lng,
+        address: source.pickup?.address,
       ),
       destination: PendingReviewDestination(
-        lat: source.destination.lat,
-        lng: source.destination.lng,
-        address: source.destination.address,
+        lat: source.destination?.lat,
+        lng: source.destination?.lng,
+        address: source.destination?.address,
       ),
-      finalFare: fareValue,
-      riderRating: source.riderRating,
-      rideCompletedAt: source.createdAt.toUtc().toIso8601String(),
+      finalFare: source.displayTotalAmount,
+      riderRating: _riderRatingValue,
+      rideCompletedAt: (DateTime.tryParse(source.createdAt ?? '') ??
+              DateTime.now())
+          .toUtc()
+          .toIso8601String(),
     );
   }
 

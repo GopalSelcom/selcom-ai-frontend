@@ -70,11 +70,12 @@ class MyRidesController extends GetxController {
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
-          if (rideNeedsMidRideCancelScreen(freshRide)) {
-            final block = freshRide.midRideCancel;
+          final rideModel = freshRide.toRideModel();
+          if (rideNeedsMidRideCancelScreen(rideModel)) {
+            final block = rideModel.midRideCancel;
             if (block != null) {
               showMidRideDriverCancelledDialog(
-                rideId: freshRide.id,
+                rideId: freshRide.id ?? '',
                 cancel: block,
                 navigateHomeOnDismiss: false,
               );
@@ -83,7 +84,7 @@ class MyRidesController extends GetxController {
           }
           if (rideStatusIsOngoingActive(freshRide.status)) {
             // Caller already called getRideDetails — live screens must not fetch again.
-            navigateToOngoingRide(freshRide, skipInitialRideDetailsFetch: true);
+            navigateToOngoingRide(rideModel, skipInitialRideDetailsFetch: true);
             return;
           }
           // My Rides entry must always use non-completion mode.
