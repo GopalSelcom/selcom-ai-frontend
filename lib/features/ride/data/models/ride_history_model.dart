@@ -88,6 +88,10 @@ class Ride {
   int? currentStopIndex;
   int? finalFare;
   String? paymentStatus;
+  String? promoCode;
+  int? promoDiscount;
+  bool? promoAutoApplied;
+  int? cashbackAmount;
   int? cancellationFee;
   MidRideCancel? midRideCancel;
   DriverSnapshot? driverSnapshot;
@@ -113,6 +117,10 @@ class Ride {
     this.currentStopIndex,
     this.finalFare,
     this.paymentStatus,
+    this.promoCode,
+    this.promoDiscount,
+    this.promoAutoApplied,
+    this.cashbackAmount,
     this.cancellationFee,
     this.midRideCancel,
     this.driverSnapshot,
@@ -131,34 +139,71 @@ class Ride {
     this.cancelledBy,
   });
 
+  /// Amount shown on history cards: mid-ride / cancel fee, else amount_charged.
+  int get displayCardAmount {
+    final midCharge =
+        midRideCancel?.capturedAmount ?? midRideCancel?.partialFare;
+    if (midCharge != null && midCharge > 0) return midCharge;
+    if (status == 'cancelled') return cancellationFee ?? 0;
+    final amountCharged = fareBreakdown?.amountCharged;
+    if (amountCharged != null && amountCharged > 0) return amountCharged;
+    final total = fareBreakdown?.totalAmount;
+    if (total != null && total > 0) return total;
+    return finalFare ?? fareEstimate ?? 0;
+  }
+
   factory Ride.fromRawJson(String str) => Ride.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory Ride.fromJson(Map<String, dynamic> json) => Ride(
-    id: json["_id"],
-    fareBreakdown: json["fare_breakdown"] == null ? null : FareBreakdown.fromJson(json["fare_breakdown"]),
-    status:json["status"],
-    isMultiStop: json["is_multi_stop"],
-    currentStopIndex: json["current_stop_index"],
-    finalFare: json["final_fare"],
-    paymentStatus: json["payment_status"],
-    cancellationFee: json["cancellation_fee"],
-    midRideCancel: json["mid_ride_cancel"] == null ? null : MidRideCancel.fromJson(json["mid_ride_cancel"]),
-    driverSnapshot: json["driver_snapshot"] == null ? null : DriverSnapshot.fromJson(json["driver_snapshot"]),
-    vehicleSnapshot: json["vehicle_snapshot"] == null ? null : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
-    riderRating: json["rider_rating"],
-    ratingTags: json["rating_tags"] == null ? [] : List<String>.from(json["rating_tags"]!.map((x) => x)),
-    vehicleTypeId: json["vehicle_type_id"] == null ? null : VehicleTypeId.fromJson(json["vehicle_type_id"]),
+    id: json["_id"] ?? '',
+    fareBreakdown: json["fare_breakdown"] == null
+        ? null
+        : FareBreakdown.fromJson(json["fare_breakdown"]),
+    status: json["status"] ?? '',
+    isMultiStop: json["is_multi_stop"] ?? false,
+    currentStopIndex: json["current_stop_index"] ?? 0,
+    finalFare: json["final_fare"] ?? 0,
+    paymentStatus: json["payment_status"] ?? '',
+    promoCode: json["promo_code"] ?? '',
+    promoDiscount: json["promo_discount"] ?? 0,
+    promoAutoApplied: json["promo_auto_applied"] ?? false,
+    cashbackAmount: json["cashback_amount"] ?? 0,
+    cancellationFee: json["cancellation_fee"] ?? 0,
+    midRideCancel: json["mid_ride_cancel"] == null
+        ? null
+        : MidRideCancel.fromJson(json["mid_ride_cancel"]),
+    driverSnapshot: json["driver_snapshot"] == null
+        ? null
+        : DriverSnapshot.fromJson(json["driver_snapshot"]),
+    vehicleSnapshot: json["vehicle_snapshot"] == null
+        ? null
+        : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
+    riderRating: json["rider_rating"] ?? 0,
+    ratingTags: json["rating_tags"] == null
+        ? []
+        : List<String>.from(json["rating_tags"]!.map((x) => x)),
+    vehicleTypeId: json["vehicle_type_id"] == null
+        ? null
+        : VehicleTypeId.fromJson(json["vehicle_type_id"]),
     pickup: json["pickup"] == null ? null : Pickup.fromJson(json["pickup"]),
-    destination: json["destination"] == null ? null : RideHistoryPlace.fromJson(json["destination"]),
-    stops: json["stops"] == null ? [] : List<RideHistoryPlace>.from(json["stops"]!.map((x) => RideHistoryPlace.fromJson(x))),
-    fareEstimate: json["fare_estimate"],
-    distanceKm: json["distance_km"]?.toDouble(),
-    durationMinutes: json["duration_minutes"],
-    paymentMethod: json["payment_method"],
-    createdAt: json["createdAt"] == null ? null : DateTime.parse(json["createdAt"]),
-    cancelledBy: json["cancelled_by"],
+    destination: json["destination"] == null
+        ? null
+        : RideHistoryPlace.fromJson(json["destination"]),
+    stops: json["stops"] == null
+        ? []
+        : List<RideHistoryPlace>.from(
+            json["stops"]!.map((x) => RideHistoryPlace.fromJson(x)),
+          ),
+    fareEstimate: json["fare_estimate"] ?? 0,
+    distanceKm: json["distance_km"]?.toDouble() ?? 0.0,
+    durationMinutes: json["duration_minutes"] ?? 0,
+    paymentMethod: json["payment_method"] ?? '',
+    createdAt: json["createdAt"] == null
+        ? null
+        : DateTime.parse(json["createdAt"]),
+    cancelledBy: json["cancelled_by"] ?? '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -169,16 +214,22 @@ class Ride {
     "current_stop_index": currentStopIndex,
     "final_fare": finalFare,
     "payment_status": paymentStatus,
+    "promo_code": promoCode,
+    "promo_discount": promoDiscount,
+    "promo_auto_applied": promoAutoApplied,
+    "cashback_amount": cashbackAmount,
     "cancellation_fee": cancellationFee,
     "mid_ride_cancel": midRideCancel?.toJson(),
     "driver_snapshot": driverSnapshot?.toJson(),
     "vehicle_snapshot": vehicleSnapshot?.toJson(),
     "rider_rating": riderRating,
-    "rating_tags": ratingTags == null ? [] : List<dynamic>.from(ratingTags!.map((x) => x)),
+    "rating_tags":
+        ratingTags == null ? [] : List<dynamic>.from(ratingTags!.map((x) => x)),
     "vehicle_type_id": vehicleTypeId?.toJson(),
     "pickup": pickup?.toJson(),
     "destination": destination?.toJson(),
-    "stops": stops == null ? [] : List<dynamic>.from(stops!.map((x) => x.toJson())),
+    "stops":
+        stops == null ? [] : List<dynamic>.from(stops!.map((x) => x.toJson())),
     "fare_estimate": fareEstimate,
     "distance_km": distanceKm,
     "duration_minutes": durationMinutes,
@@ -349,30 +400,99 @@ class DriverSnapshot {
 
 
 class FareBreakdown {
+  String? currency;
+  int? baseFare;
+  double? distanceKm;
+  int? distanceCharge;
+  int? durationMinutes;
+  int? timeCharge;
+  int? waypointCharge;
+  int? minimumFare;
+  bool? minimumFareApplied;
+  int? originalFare;
   int? rideCharge;
   int? bookingFee;
+  String? promoCode;
+  int? promoDiscount;
+  bool? promoAutoApplied;
+  String? promoDescription;
+  bool? isCashback;
+  int? cashbackAmount;
   int? totalAmount;
+  int? amountCharged;
 
   FareBreakdown({
+    this.currency,
+    this.baseFare,
+    this.distanceKm,
+    this.distanceCharge,
+    this.durationMinutes,
+    this.timeCharge,
+    this.waypointCharge,
+    this.minimumFare,
+    this.minimumFareApplied,
+    this.originalFare,
     this.rideCharge,
     this.bookingFee,
+    this.promoCode,
+    this.promoDiscount,
+    this.promoAutoApplied,
+    this.promoDescription,
+    this.isCashback,
+    this.cashbackAmount,
     this.totalAmount,
+    this.amountCharged,
   });
 
-  factory FareBreakdown.fromRawJson(String str) => FareBreakdown.fromJson(json.decode(str));
+  factory FareBreakdown.fromRawJson(String str) =>
+      FareBreakdown.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory FareBreakdown.fromJson(Map<String, dynamic> json) => FareBreakdown(
-    rideCharge: json["ride_charge"],
-    bookingFee: json["booking_fee"],
-    totalAmount: json["total_amount"],
+    currency: json["currency"] ?? '',
+    baseFare: json["base_fare"] ?? 0,
+    distanceKm: json["distance_km"]?.toDouble() ?? 0.0,
+    distanceCharge: json["distance_charge"] ?? 0,
+    durationMinutes: json["duration_minutes"] ?? 0,
+    timeCharge: json["time_charge"] ?? 0,
+    waypointCharge: json["waypoint_charge"] ?? 0,
+    minimumFare: json["minimum_fare"] ?? 0,
+    minimumFareApplied: json["minimum_fare_applied"] ?? false,
+    originalFare: json["original_fare"] ?? 0,
+    rideCharge: json["ride_charge"] ?? 0,
+    bookingFee: json["booking_fee"] ?? 0,
+    promoCode: json["promo_code"] ?? '',
+    promoDiscount: json["promo_discount"] ?? 0,
+    promoAutoApplied: json["promo_auto_applied"] ?? false,
+    promoDescription: json["promo_description"] ?? '',
+    isCashback: json["is_cashback"] ?? false,
+    cashbackAmount: json["cashback_amount"] ?? 0,
+    totalAmount: json["total_amount"] ?? 0,
+    amountCharged: json["amount_charged"] ?? 0,
   );
 
   Map<String, dynamic> toJson() => {
+    "currency": currency,
+    "base_fare": baseFare,
+    "distance_km": distanceKm,
+    "distance_charge": distanceCharge,
+    "duration_minutes": durationMinutes,
+    "time_charge": timeCharge,
+    "waypoint_charge": waypointCharge,
+    "minimum_fare": minimumFare,
+    "minimum_fare_applied": minimumFareApplied,
+    "original_fare": originalFare,
     "ride_charge": rideCharge,
     "booking_fee": bookingFee,
+    "promo_code": promoCode,
+    "promo_discount": promoDiscount,
+    "promo_auto_applied": promoAutoApplied,
+    "promo_description": promoDescription,
+    "is_cashback": isCashback,
+    "cashback_amount": cashbackAmount,
     "total_amount": totalAmount,
+    "amount_charged": amountCharged,
   };
 }
 

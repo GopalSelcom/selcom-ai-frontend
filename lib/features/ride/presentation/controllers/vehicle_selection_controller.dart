@@ -51,6 +51,13 @@ import '../../domain/repositories/ride_repository.dart';
 
 enum BookingMode { self, other }
 
+/// Rider promo intent across estimate → validate → book.
+///
+/// - [auto]: default — let backend auto-apply eligible promos
+/// - [manualCode]: rider typed/selected a code (`promo_code` wins)
+/// - [none]: rider removed auto promo — send `disable_auto_promo: true`
+enum PromoMode { auto, manualCode, none }
+
 /// Sentinel id for the synthetic "Book Any" row in [estimates].
 const String kBookAnyVehicleTypeId = '__book_any__';
 
@@ -76,6 +83,7 @@ class VehicleSelectionController extends GetxController {
   final nearbyDriversUnavailable = false.obs;
   final nearbyDriverCount = 0.obs;
   final appliedPromoCode = ''.obs;
+  final promoMode = PromoMode.auto.obs;
   final promoValidatedAt = Rxn<DateTime>();
   PromoCodeApplyResult? _pendingPromoApplyResult;
   Timer? _promoEstimateDebounce;
@@ -242,11 +250,15 @@ class VehicleSelectionController extends GetxController {
 
   FareEstimateRequest _fareEstimateRequest() {
     final trimmed = appliedPromoCode.value.trim();
+    final mode = promoMode.value;
     return FareEstimateRequest(
       pickup: pickupEntity,
       destination: destinationEntity,
       stops: routeStops,
-      promoCode: trimmed.isEmpty ? null : trimmed,
+      promoCode: mode == PromoMode.manualCode && trimmed.isNotEmpty
+          ? trimmed
+          : null,
+      disableAutoPromo: mode == PromoMode.none,
     );
   }
 
@@ -307,7 +319,7 @@ class VehicleSelectionController extends GetxController {
   }
 
   /// Returns the pre-navigation estimate exactly once, and only when it is
-  /// still fresh and no promo code is applied (a promo changes the request).
+  /// still fresh and promo request params match (auto-on, no typed code).
   FareEstimateResponse? _takeFreshInitialEstimate() {
     final estimate = _initialFareEstimate;
     final estimatedAt = _initialFareEstimateAt;
@@ -315,6 +327,7 @@ class VehicleSelectionController extends GetxController {
     _initialFareEstimateAt = null;
 
     if (estimate == null || estimatedAt == null) return null;
+    if (promoMode.value != PromoMode.auto) return null;
     if (appliedPromoCode.value.trim().isNotEmpty) return null;
     final age = DateTime.now().difference(estimatedAt);
     if (age > _initialFareEstimateMaxAge) return null;
@@ -564,9 +577,15 @@ class VehicleSelectionController extends GetxController {
   FareEstimateItem _copyFareEstimateItem(
     FareEstimateItem e, {
     bool? promoApplied,
+    String? promoCode,
+    bool? isCashback,
+    int? cashbackAmount,
     int? promoDiscount,
     int? discountedFare,
+    bool? promoAutoApplied,
+    String? promoDescription,
     String? promoError,
+    bool clearPromoError = false,
   }) {
     return FareEstimateItem(
       vehicleTypeId: e.vehicleTypeId,
@@ -583,9 +602,14 @@ class VehicleSelectionController extends GetxController {
       maxPassengers: e.maxPassengers,
       currency: e.currency,
       promoApplied: promoApplied ?? e.promoApplied,
+      promoCode: promoCode ?? e.promoCode,
+      isCashback: isCashback ?? e.isCashback,
+      cashbackAmount: cashbackAmount ?? e.cashbackAmount,
       promoDiscount: promoDiscount ?? e.promoDiscount,
       discountedFare: discountedFare ?? e.discountedFare,
-      promoError: promoError,
+      promoAutoApplied: promoAutoApplied ?? e.promoAutoApplied,
+      promoDescription: promoDescription ?? e.promoDescription,
+      promoError: clearPromoError ? promoError : (promoError ?? e.promoError),
       isBookAnyOption: e.isBookAnyOption,
       bookAnyMinFare: e.bookAnyMinFare,
       bookAnyMaxFare: e.bookAnyMaxFare,
@@ -603,8 +627,20 @@ class VehicleSelectionController extends GetxController {
 
   /// Called from promo screen after validate succeeds (and from [openPromotions] fallback).
   Future<void> commitPromoApplyResult(PromoCodeApplyResult validation) async {
+    // Auto-apply promos stay in [PromoMode.auto] so the vehicle-card
+    // "Auto-applied" badge is preserved after returning from the promo screen.
+    if (validation.isAutoApply) {
+      appliedPromoCode.value = '';
+      promoValidatedAt.value = null;
+      _pendingPromoApplyResult = null;
+      promoMode.value = PromoMode.auto;
+      await _loadEstimates(silent: true, preserveRoute: true);
+      return;
+    }
+
     _pendingPromoApplyResult = validation;
     appliedPromoCode.value = validation.code;
+    promoMode.value = PromoMode.manualCode;
     promoValidatedAt.value = DateTime.now();
     _applyPromoValidationToEstimates(validation);
     await _loadEstimates(silent: true, preserveRoute: true);
@@ -625,8 +661,13 @@ class VehicleSelectionController extends GetxController {
       return _copyFareEstimateItem(
         e,
         promoApplied: true,
-        promoDiscount: validation.discountAmount,
+        promoCode: validation.code,
+        isCashback: validation.isCashback,
+        cashbackAmount: validation.isCashback ? validation.discountAmount : 0,
+        promoDiscount: validation.isCashback ? 0 : validation.discountAmount,
         discountedFare: discounted,
+        promoAutoApplied: validation.isAutoApply,
+        clearPromoError: true,
         promoError: null,
       );
     }).toList();
@@ -663,8 +704,13 @@ class VehicleSelectionController extends GetxController {
       maxPassengers: e.maxPassengers ?? matched.maxPassengers,
       currency: e.currency,
       promoApplied: e.promoApplied,
+      promoCode: e.promoCode,
+      isCashback: e.isCashback,
+      cashbackAmount: e.cashbackAmount,
       promoDiscount: e.promoDiscount,
       discountedFare: e.discountedFare,
+      promoAutoApplied: e.promoAutoApplied,
+      promoDescription: e.promoDescription,
       promoError: e.promoError,
       isBookAnyOption: e.isBookAnyOption,
       bookAnyMinFare: e.bookAnyMinFare,
@@ -746,21 +792,67 @@ class VehicleSelectionController extends GetxController {
     return estimates[i];
   }
 
-  int get selectedPayableFareAmount =>
-      selectedEstimate?.discountedFare ??
-      selectedEstimate?.fareEstimate ??
-      0;
+  int get selectedPayableFareAmount {
+    final e = selectedEstimate;
+    if (e == null) return 0;
+    // Cashback does not reduce fare; payable stays at original estimate.
+    if (e.hasCashbackPromo) return e.fareEstimate ?? 0;
+    return e.discountedFare ?? e.fareEstimate ?? 0;
+  }
 
   int get selectedOriginalFareAmount => selectedEstimate?.fareEstimate ?? 0;
 
   int get selectedPromoSavingsAmount {
     final e = selectedEstimate;
     if (e == null) return 0;
-    if (e.promoApplied == true && (e.promoDiscount ?? 0) > 0) {
-      return e.promoDiscount!;
-    }
-    return 0;
+    return e.promoBenefitAmount;
   }
+
+  /// Benefit label under vehicle fare (cashback credit vs fare discount).
+  String? promoBenefitLabelFor(FareEstimateItem item) {
+    final amount = item.promoBenefitAmount;
+    if (amount <= 0) return null;
+    final formatted = CurrencyFormatter.formatWithApiCurrency(
+      amount,
+      item.currency,
+    );
+    if (item.hasCashbackPromo) {
+      return AppStrings.promoCashbackAmount.trParams({'amount': formatted});
+    }
+    return '-$formatted';
+  }
+
+  /// Selected estimate has a backend auto-applied promo (not a typed code).
+  bool get selectedHasAutoAppliedPromo {
+    final e = selectedEstimate;
+    if (e == null) return false;
+    return e.promoApplied == true && e.promoAutoApplied == true;
+  }
+
+  /// Chip / Remove should show for typed code or auto-applied discount.
+  bool get hasRemovablePromo {
+    if (promoMode.value == PromoMode.manualCode &&
+        appliedPromoCode.value.trim().isNotEmpty) {
+      return true;
+    }
+    return selectedHasAutoAppliedPromo;
+  }
+
+  /// Label for the header promo chip (typed code or auto-applied code).
+  String get promoChipLabel {
+    final manual = appliedPromoCode.value.trim();
+    if (promoMode.value == PromoMode.manualCode && manual.isNotEmpty) {
+      return manual;
+    }
+    final autoCode = selectedEstimate?.promoCode?.trim() ?? '';
+    if (selectedHasAutoAppliedPromo && autoCode.isNotEmpty) {
+      return autoCode;
+    }
+    return '';
+  }
+
+  bool get showPromoChipAsAutoApplied =>
+      promoMode.value != PromoMode.manualCode && selectedHasAutoAppliedPromo;
 
   String get currency =>
       selectedEstimate?.currency ??
@@ -775,11 +867,16 @@ class VehicleSelectionController extends GetxController {
       appliedPromoCode.value = '';
       promoValidatedAt.value = null;
       _pendingPromoApplyResult = null;
+      if (promoMode.value == PromoMode.manualCode) {
+        promoMode.value = PromoMode.auto;
+      }
     }
     selectedVehicleIndex.value = index;
     await loadDriverIcon();
     _requestNearbyDriversForCurrentSelection();
-    if (appliedPromoCode.value.trim().isNotEmpty && !item.isBookAnyOption) {
+    if (promoMode.value == PromoMode.manualCode &&
+        appliedPromoCode.value.trim().isNotEmpty &&
+        !item.isBookAnyOption) {
       _scheduleSilentPromoEstimateRefresh();
     }
   }
@@ -948,15 +1045,12 @@ class VehicleSelectionController extends GetxController {
 
       final refreshedSelectedEstimate = selectedEstimate;
       final bookingBookAny = refreshedSelectedEstimate?.isBookAnyOption == true;
+      // Block the original fare_estimate (not discounted) so pre-auth holds enough.
       final requiredFare = bookingBookAny
           ? (refreshedSelectedEstimate?.fareEstimate ??
-                refreshedSelectedEstimate?.discountedFare ??
                 est.fareEstimate ??
-                est.discountedFare ??
                 0)
-          : (refreshedSelectedEstimate?.discountedFare ??
-                refreshedSelectedEstimate?.fareEstimate ??
-                est.discountedFare ??
+          : (refreshedSelectedEstimate?.fareEstimate ??
                 est.fareEstimate ??
                 0);
       if (!await _guardWalletBalanceBeforePayment(requiredFare)) {
@@ -1119,9 +1213,11 @@ class VehicleSelectionController extends GetxController {
                       passengerPhone: isBookedForOther ? passengerPhone : null,
                       note: rideNote,
                       fareEstimate: selectedOriginalFareAmount,
-                      promoCode: appliedPromoCode.value.trim().isEmpty
-                          ? null
-                          : appliedPromoCode.value.trim(),
+                      promoCode: promoMode.value == PromoMode.manualCode &&
+                              appliedPromoCode.value.trim().isNotEmpty
+                          ? appliedPromoCode.value.trim()
+                          : null,
+                      disableAutoPromo: promoMode.value == PromoMode.none,
                     );
               final result = await rideRepository.bookRide(request);
               await result.fold<Future<void>>(
@@ -1736,10 +1832,13 @@ class VehicleSelectionController extends GetxController {
   }
 
   void _clearPromoAfterRouteChange() {
-    if (appliedPromoCode.value.trim().isEmpty) return;
+    final hadManual = promoMode.value == PromoMode.manualCode &&
+        appliedPromoCode.value.trim().isNotEmpty;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
     _pendingPromoApplyResult = null;
+    promoMode.value = PromoMode.auto;
+    if (!hadManual) return;
     Get.snackbar(
       AppStrings.promoRemovedTitle.tr,
       AppStrings.promoRemovedDestinationChanged.tr,
@@ -1778,11 +1877,13 @@ class VehicleSelectionController extends GetxController {
         );
         appliedPromoCode.value = '';
         promoValidatedAt.value = null;
+        promoMode.value = PromoMode.auto;
         await _loadEstimates();
         return false;
       },
       (data) async {
         appliedPromoCode.value = (data.code ?? code).trim().toUpperCase();
+        promoMode.value = PromoMode.manualCode;
         promoValidatedAt.value = DateTime.now();
         return true;
       },
@@ -1805,15 +1906,21 @@ class VehicleSelectionController extends GetxController {
   }
 
   Future<void> clearAppliedPromo() async {
-    if (appliedPromoCode.value.trim().isEmpty) return;
+    if (!hasRemovablePromo) return;
     appliedPromoCode.value = '';
     promoValidatedAt.value = null;
-    await _loadEstimates();
+    _pendingPromoApplyResult = null;
+    // Opt out of auto-apply so the same promo does not immediately reappear.
+    promoMode.value = PromoMode.none;
+    await _loadEstimates(silent: true, preserveRoute: true);
   }
 
   Future<void> openPromotions() async {
     final est = selectedEstimate;
     if (est == null) return;
+
+    final modeBeforeOpen = promoMode.value;
+    final manualBeforeOpen = appliedPromoCode.value.trim();
 
     if (est.isBookAnyOption) {
       final result = await Get.toNamed<dynamic>(
@@ -1823,9 +1930,11 @@ class VehicleSelectionController extends GetxController {
           bookAny: true,
         ).toMap(),
       );
-      final applyResult = PromoCodeApplyResult.tryFrom(result);
-      if (applyResult == null) return;
-      await commitPromoApplyResult(applyResult);
+      await _handlePromoScreenResult(
+        result,
+        modeBeforeOpen: modeBeforeOpen,
+        manualBeforeOpen: manualBeforeOpen,
+      );
       return;
     }
 
@@ -1838,18 +1947,61 @@ class VehicleSelectionController extends GetxController {
       return;
     }
 
+    // Prefill only an explicitly selected/typed code — not an auto-applied one —
+    // so backing out does not look like the rider "cleared" a manual code.
+    final appliedForScreen =
+        modeBeforeOpen == PromoMode.manualCode ? manualBeforeOpen : '';
+
     final result = await Get.toNamed<dynamic>(
       AppRoutes.promotions,
       arguments: PromoCodeRouteArgs(
         vehicleTypeId: vid,
         fareEstimate: est.fareEstimate ?? 0,
-        appliedCode: appliedPromoCode.value.trim(),
+        appliedCode: appliedForScreen,
       ).toMap(),
     );
 
+    await _handlePromoScreenResult(
+      result,
+      modeBeforeOpen: modeBeforeOpen,
+      manualBeforeOpen: manualBeforeOpen,
+    );
+  }
+
+  /// Promo screen result:
+  /// - validated code → apply as [PromoMode.manualCode]
+  /// - back with no selection → keep manual if one was already applied; otherwise
+  ///   restore [PromoMode.auto] so backend auto-apply can run again
+  Future<void> _handlePromoScreenResult(
+    dynamic result, {
+    required PromoMode modeBeforeOpen,
+    required String manualBeforeOpen,
+  }) async {
     final applyResult = PromoCodeApplyResult.tryFrom(result);
-    if (applyResult == null) return;
-    await commitPromoApplyResult(applyResult);
+    if (applyResult != null) {
+      await commitPromoApplyResult(applyResult);
+      return;
+    }
+
+    // Rider left without applying a (new) code.
+    if (modeBeforeOpen == PromoMode.manualCode &&
+        manualBeforeOpen.isNotEmpty) {
+      // Keep the previously selected manual promo.
+      return;
+    }
+
+    // Restore auto-apply (covers: was auto, or had opted out via Remove then
+    // opened the list and backed out without picking another code).
+    final needsAutoRestore =
+        promoMode.value != PromoMode.auto ||
+        appliedPromoCode.value.trim().isNotEmpty;
+    appliedPromoCode.value = '';
+    promoValidatedAt.value = null;
+    _pendingPromoApplyResult = null;
+    promoMode.value = PromoMode.auto;
+    if (needsAutoRestore || !selectedHasAutoAppliedPromo) {
+      await _loadEstimates(silent: true, preserveRoute: true);
+    }
   }
 
   void closeVehicleSelection() {

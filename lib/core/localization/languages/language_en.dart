@@ -411,12 +411,18 @@ class LanguageEn extends Languages {
     'promo_error_network': "Couldn't check the code. Try again.",
     'promo_not_applied_title': 'Promo not applied',
     'promo_code_not_valid_for_vehicle': 'Code not valid for this vehicle',
+    'promo_auto_applied': 'Auto-applied (@code)',
+    'promo_auto_applied_badge': 'Auto-applied',
+    'promo_cashback_amount': 'Cashback @amount',
     'ride_free_label': 'FREE',
     'receipt_promo_line': 'Promo (@code)',
+    'receipt_auto_promo_line': 'Auto-applied promo (@code)',
+    'receipt_cashback_promo_line': 'Cashback (@code)',
     'promo_min_ride_amount': 'Min. ride @amount',
     'promo_expires_today': 'Expires today',
     'no_available_promo_codes': 'No promo codes available right now',
     'failed_to_load_promo_codes': 'Could not load promo codes',
+    'promo_auto_apply_list_badge': 'Auto-applied',
     'rating': 'Rating',
     'rating_given': 'rating given',
     'rating_required': 'Rating required',
@@ -2070,10 +2076,26 @@ class LanguageEn extends Languages {
       values['promo_code_not_valid_for_vehicle'] ?? '';
 
   @override
+  String get promoAutoApplied => values['promo_auto_applied'] ?? '';
+
+  @override
+  String get promoAutoAppliedBadge => values['promo_auto_applied_badge'] ?? '';
+
+  @override
+  String get promoCashbackAmount => values['promo_cashback_amount'] ?? '';
+
+  @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
 
   @override
   String get receiptPromoLine => values['receipt_promo_line'] ?? '';
+
+  @override
+  String get receiptAutoPromoLine => values['receipt_auto_promo_line'] ?? '';
+
+  @override
+  String get receiptCashbackPromoLine =>
+      values['receipt_cashback_promo_line'] ?? '';
 
   @override
   String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
@@ -2087,6 +2109,10 @@ class LanguageEn extends Languages {
   @override
   String get failedToLoadPromoCodes =>
       values['failed_to_load_promo_codes'] ?? '';
+
+  @override
+  String get promoAutoApplyListBadge =>
+      values['promo_auto_apply_list_badge'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

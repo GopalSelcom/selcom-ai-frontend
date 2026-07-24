@@ -358,12 +358,18 @@ abstract class Languages {
   String get promoErrorNetwork;
   String get promoNotAppliedTitle;
   String get promoCodeNotValidForVehicle;
+  String get promoAutoApplied;
+  String get promoAutoAppliedBadge;
+  String get promoCashbackAmount;
   String get rideFreeLabel;
   String get receiptPromoLine;
+  String get receiptAutoPromoLine;
+  String get receiptCashbackPromoLine;
   String get promoMinRideAmount;
   String get promoExpiresToday;
   String get noAvailablePromoCodes;
   String get failedToLoadPromoCodes;
+  String get promoAutoApplyListBadge;
   String get rating;
   String get ratingGiven;
   String get ratingRequired;

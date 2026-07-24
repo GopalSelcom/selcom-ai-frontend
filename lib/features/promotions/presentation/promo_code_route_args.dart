@@ -52,18 +52,24 @@ class PromoCodeApplyResult {
     required this.vehicleTypeId,
     required this.discountedFare,
     required this.discountAmount,
+    this.isAutoApply = false,
+    this.isCashback = false,
   });
 
   final String code;
   final String vehicleTypeId;
   final int discountedFare;
   final int discountAmount;
+  final bool isAutoApply;
+  final bool isCashback;
 
   Map<String, dynamic> toMap() => {
     'code': code,
     'vehicle_type_id': vehicleTypeId,
     'discounted_fare': discountedFare,
     'discount_amount': discountAmount,
+    'is_auto_apply': isAutoApply,
+    'is_cashback': isCashback,
   };
 
   static PromoCodeApplyResult? tryFrom(dynamic result) {
@@ -91,6 +97,8 @@ class PromoCodeApplyResult {
       vehicleTypeId: vehicleTypeId,
       discountedFare: discountedFare,
       discountAmount: discountAmount,
+      isAutoApply: map['is_auto_apply'] == true || map['isAutoApply'] == true,
+      isCashback: map['is_cashback'] == true || map['isCashback'] == true,
     );
   }
 }

@@ -62,6 +62,8 @@ class RideModel {
   /// Applied promo on this ride (GET ride / history payloads).
   final String? promoCode;
   final int? promoDiscount;
+  final bool? promoAutoApplied;
+  final int? cashbackAmount;
 
   /// Wallet/payment transaction id from ride payload (`transid`).
   final String transactionId;
@@ -111,6 +113,8 @@ class RideModel {
     this.pdfLinks,
     this.promoCode,
     this.promoDiscount,
+    this.promoAutoApplied,
+    this.cashbackAmount,
     this.transactionId = '',
     this.midRideCancel,
     this.cancelTime,
@@ -173,6 +177,8 @@ class RideModel {
         ? null
         : promoCodeRaw;
     final promoDiscountParsed = (json['promo_discount'] as num?)?.toInt();
+    final cashbackAmountParsed = (json['cashback_amount'] as num?)?.toInt();
+    final promoAutoAppliedParsed = json['promo_auto_applied'] as bool?;
 
     final midRideCancelJson = json['mid_ride_cancel'];
     final midRideCancel = midRideCancelJson is Map
@@ -230,6 +236,8 @@ class RideModel {
       pdfLinks: pdfLinks,
       promoCode: promoCodeParsed,
       promoDiscount: promoDiscountParsed,
+      promoAutoApplied: promoAutoAppliedParsed,
+      cashbackAmount: cashbackAmountParsed,
       transactionId: (json['transid'] ?? json['trans_id'] ?? '')
           .toString()
           .trim(),
@@ -275,6 +283,8 @@ class RideModel {
     List<PdfLinkModel>? pdfLinks,
     String? promoCode,
     int? promoDiscount,
+    bool? promoAutoApplied,
+    int? cashbackAmount,
     String? transactionId,
     MidRideCancelModel? midRideCancel,
     int? cancelTime,
@@ -316,6 +326,8 @@ class RideModel {
       pdfLinks: pdfLinks ?? this.pdfLinks,
       promoCode: promoCode ?? this.promoCode,
       promoDiscount: promoDiscount ?? this.promoDiscount,
+      promoAutoApplied: promoAutoApplied ?? this.promoAutoApplied,
+      cashbackAmount: cashbackAmount ?? this.cashbackAmount,
       transactionId: transactionId ?? this.transactionId,
       midRideCancel: midRideCancel ?? this.midRideCancel,
       cancelTime: cancelTime ?? this.cancelTime,
@@ -445,20 +457,94 @@ class FareBreakdownModel {
   final int rideCharge;
   final int bookingFee;
   final int totalAmount;
+  final String? currency;
+  final int? baseFare;
+  final double? distanceKm;
+  final int? distanceCharge;
+  final int? durationMinutes;
+  final int? timeCharge;
+  final int? waypointCharge;
+  final int? minimumFare;
+  final bool? minimumFareApplied;
+  final int? originalFare;
+  final String? promoCode;
+  final int? promoDiscount;
+  final bool? promoAutoApplied;
+  final String? promoDescription;
+  final bool? isCashback;
+  final int? cashbackAmount;
+  final int? amountCharged;
 
   const FareBreakdownModel({
     required this.rideCharge,
     required this.bookingFee,
     required this.totalAmount,
+    this.currency,
+    this.baseFare,
+    this.distanceKm,
+    this.distanceCharge,
+    this.durationMinutes,
+    this.timeCharge,
+    this.waypointCharge,
+    this.minimumFare,
+    this.minimumFareApplied,
+    this.originalFare,
+    this.promoCode,
+    this.promoDiscount,
+    this.promoAutoApplied,
+    this.promoDescription,
+    this.isCashback,
+    this.cashbackAmount,
+    this.amountCharged,
   });
 
   factory FareBreakdownModel.fromJson(Map<String, dynamic> json) {
     return FareBreakdownModel(
-      rideCharge: ((json['ride_charge'] ?? 0) as num).toInt(),
-      bookingFee: ((json['booking_fee'] ?? 0) as num).toInt(),
-      totalAmount: ((json['total_amount'] ?? 0) as num).toInt(),
+      rideCharge: json['ride_charge'] ?? 0,
+      bookingFee: json['booking_fee'] ?? 0,
+      totalAmount: json['total_amount'] ?? 0,
+      currency: json['currency'] ?? '',
+      baseFare: json['base_fare'] ?? 0,
+      distanceKm: json['distance_km']?.toDouble() ?? 0.0,
+      distanceCharge: json['distance_charge'] ?? 0,
+      durationMinutes: json['duration_minutes'] ?? 0,
+      timeCharge: json['time_charge'] ?? 0,
+      waypointCharge: json['waypoint_charge'] ?? 0,
+      minimumFare: json['minimum_fare'] ?? 0,
+      minimumFareApplied: json['minimum_fare_applied'] ?? false,
+      originalFare: json['original_fare'] ?? 0,
+      promoCode: json['promo_code'] ?? '',
+      promoDiscount: json['promo_discount'] ?? 0,
+      promoAutoApplied: json['promo_auto_applied'] ?? false,
+      promoDescription: json['promo_description'] ?? '',
+      isCashback: json['is_cashback'] ?? false,
+      cashbackAmount: json['cashback_amount'] ?? 0,
+      amountCharged: json['amount_charged'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'ride_charge': rideCharge,
+    'booking_fee': bookingFee,
+    'total_amount': totalAmount,
+    'currency': currency,
+    'base_fare': baseFare,
+    'distance_km': distanceKm,
+    'distance_charge': distanceCharge,
+    'duration_minutes': durationMinutes,
+    'time_charge': timeCharge,
+    'waypoint_charge': waypointCharge,
+    'minimum_fare': minimumFare,
+    'minimum_fare_applied': minimumFareApplied,
+    'original_fare': originalFare,
+    'promo_code': promoCode,
+    'promo_discount': promoDiscount,
+    'promo_auto_applied': promoAutoApplied,
+    'promo_description': promoDescription,
+    'is_cashback': isCashback,
+    'cashback_amount': cashbackAmount,
+    'amount_charged': amountCharged,
+  };
 }
 
 class PendingStopsUpdateModel {

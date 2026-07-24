@@ -98,9 +98,20 @@ abstract final class DriverAcceptedRideStartedLayout {
 
   static int get fareRowCount => 4;
 
+  static int fareRowCountFor({required bool showPromoLine}) =>
+      fareRowCount + (showPromoLine ? 1 : 0);
+
   static double get fareContentHeight =>
       fareTitleLineHeight +
       fareTitleRowsGap +
       (fareRowCount * fareRowLineHeight) +
       ((fareRowCount - 1) * fareRowGap);
+
+  static double fareContentHeightFor({required bool showPromoLine}) {
+    final rows = fareRowCountFor(showPromoLine: showPromoLine);
+    return fareTitleLineHeight +
+        fareTitleRowsGap +
+        (rows * fareRowLineHeight) +
+        ((rows - 1) * fareRowGap);
+  }
 }

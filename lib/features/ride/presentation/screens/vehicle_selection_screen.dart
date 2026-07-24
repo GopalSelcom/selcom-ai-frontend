@@ -608,6 +608,19 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                       ),
                     ],*/
+                    if (item.promoApplied == true &&
+                        item.promoAutoApplied == true) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        AppStrings.promoAutoAppliedBadge.tr,
+                        style: AppTextStyles.homeCaption.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                     if (controller.appliedPromoCode.value.trim().isNotEmpty &&
                         item.promoApplied != true &&
                         (item.promoError?.trim().isNotEmpty ?? false)) ...[
@@ -725,11 +738,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         ),
       );
     }
-    final showPromo =
-        item.promoApplied == true &&
-        (item.discountedFare != null) &&
-        (item.fareEstimate ?? 0) > (item.discountedFare ?? 0);
-    if (!showPromo) {
+
+    final benefitLabel = controller.promoBenefitLabelFor(item);
+    final showFareDiscount = item.hasFareDiscountPromo;
+
+    if (!showFareDiscount && benefitLabel == null) {
       return Text(
         CurrencyFormatter.formatWithApiCurrency(
           item.fareEstimate ?? 0,
@@ -741,6 +754,38 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         ),
       );
     }
+
+    if (!showFareDiscount) {
+      // Cashback (or promo with no fare cut): full fare + benefit line.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            CurrencyFormatter.formatWithApiCurrency(
+              item.fareEstimate ?? 0,
+              item.currency,
+            ),
+            style: AppTextStyles.homeTitle.copyWith(
+              fontSize: 16.sp,
+              letterSpacing: -0.4,
+            ),
+          ),
+          if (benefitLabel != null) ...[
+            SizedBox(height: 2.h),
+            Text(
+              benefitLabel,
+              style: AppTextStyles.homeCaption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 11.sp,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -771,6 +816,18 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
             letterSpacing: -0.4,
           ),
         ),
+        if (benefitLabel != null) ...[
+          SizedBox(height: 2.h),
+          Text(
+            benefitLabel,
+            style: AppTextStyles.homeCaption.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 11.sp,
+              height: 1.2,
+            ),
+          ),
+        ],
       ],
     );
   }

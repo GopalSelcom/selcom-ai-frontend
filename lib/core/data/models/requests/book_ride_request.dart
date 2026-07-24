@@ -16,6 +16,9 @@ class BookRideRequest {
   final int? fareEstimate;
   final String? promoCode;
 
+  /// When `true`, backend must not auto-apply promos (rider opted out).
+  final bool disableAutoPromo;
+
   const BookRideRequest({
     required this.validationId,
     required this.idempotencyKey,
@@ -31,6 +34,7 @@ class BookRideRequest {
     this.note = '',
     this.fareEstimate,
     this.promoCode,
+    this.disableAutoPromo = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -79,6 +83,10 @@ class BookRideRequest {
     final promo = promoCode?.trim();
     if (promo != null && promo.isNotEmpty) {
       data['promo_code'] = promo.toUpperCase();
+    }
+
+    if (disableAutoPromo) {
+      data['disable_auto_promo'] = true;
     }
 
     if (isBookedForOther) {

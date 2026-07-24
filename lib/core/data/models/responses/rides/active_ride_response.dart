@@ -74,35 +74,27 @@ class ActiveRideData {
 
   factory ActiveRideData.fromMap(Map<String, dynamic> json) => ActiveRideData(
     rides: json["rides"] == null
-        ? []
+        ? <ActiveRideEntry>[]
         : List<ActiveRideEntry>.from(
-            json["rides"]!.map((x) => ActiveRideEntry.fromMap(
-                  x is Map<String, dynamic>
-                      ? x
-                      : Map<String, dynamic>.from(x as Map),
-                )),
+            json["rides"].map((x) => ActiveRideEntry.fromMap(x)),
           ),
-    count: json["count"],
+    count: json["count"] ?? 0,
     ride: json["ride"] == null ? null : ActiveRide.fromMap(json["ride"]),
     additionalRides: json["additional_rides"] == null
-        ? null
+        ? <ActiveRide>[]
         : List<ActiveRide>.from(
-            json["additional_rides"]!.map((x) => ActiveRide.fromMap(
-                  x is Map<String, dynamic>
-                      ? x
-                      : Map<String, dynamic>.from(x as Map),
-                )),
+            json["additional_rides"].map((x) => ActiveRide.fromMap(x)),
           ),
     socketRooms: json["socket_rooms"] == null
         ? null
         : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
-    activeRidesCount: json["active_rides_count"],
-    additionalActiveRidesCount: json["additional_active_rides_count"],
+    activeRidesCount: json["active_rides_count"] ?? 0,
+    additionalActiveRidesCount: json["additional_active_rides_count"] ?? 0,
   );
 
   Map<String, dynamic> toMap() => {
     "rides": rides == null
-        ? []
+        ? null
         : List<dynamic>.from(rides!.map((x) => x.toMap())),
     "count": count,
     "ride": ride?.toMap(),
@@ -127,14 +119,9 @@ class ActiveRideEntry {
   String toJson() => json.encode(toMap());
 
   factory ActiveRideEntry.fromMap(Map<String, dynamic> json) {
-    final nestedRide = json["ride"];
-    if (nestedRide is Map) {
+    if (json["ride"] != null) {
       return ActiveRideEntry(
-        ride: ActiveRide.fromMap(
-          nestedRide is Map<String, dynamic>
-              ? nestedRide
-              : Map<String, dynamic>.from(nestedRide),
-        ),
+        ride: ActiveRide.fromMap(json["ride"]),
         socketRooms: json["socket_rooms"] == null
             ? null
             : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
@@ -196,6 +183,7 @@ class ActiveRide {
   dynamic promoCode;
   int? promoDiscount;
   bool? promoAutoApplied;
+  int? cashbackAmount;
   dynamic cancelledAt;
   dynamic cancellationReason;
   int? cancellationFee;
@@ -232,6 +220,7 @@ class ActiveRide {
   String? searchStartedAt;
   List<ActiveRidePreauth>? preauths;
   List<dynamic>? pdfLinks;
+  dynamic pendingStopsUpdate;
   String? createdAt;
   String? updatedAt;
 
@@ -276,6 +265,7 @@ class ActiveRide {
     this.promoCode,
     this.promoDiscount,
     this.promoAutoApplied,
+    this.cashbackAmount,
     this.cancelledAt,
     this.cancellationReason,
     this.cancellationFee,
@@ -312,6 +302,7 @@ class ActiveRide {
     this.searchStartedAt,
     this.preauths,
     this.pdfLinks,
+    this.pendingStopsUpdate,
     this.createdAt,
     this.updatedAt,
   });
@@ -322,8 +313,8 @@ class ActiveRide {
   String toJson() => json.encode(toMap());
 
   factory ActiveRide.fromMap(Map<String, dynamic> json) => ActiveRide(
-    id: json["_id"],
-    status: json["status"],
+    id: json["_id"] ?? '',
+    status: json["status"] ?? '',
     pickup: json["pickup"] == null
         ? null
         : ActiveRidePickup.fromMap(json["pickup"]),
@@ -331,68 +322,63 @@ class ActiveRide {
         ? null
         : ActiveRidePlace.fromMap(json["destination"]),
     stops: json["stops"] == null
-        ? []
+        ? <ActiveRidePlace>[]
         : List<ActiveRidePlace>.from(
-            json["stops"]!.map((x) => ActiveRidePlace.fromMap(x)),
+            json["stops"].map((x) => ActiveRidePlace.fromMap(x)),
           ),
-    isMultiStop: json["is_multi_stop"],
-    currentStopIndex: json["current_stop_index"],
-    fareEstimate: json["fare_estimate"],
+    isMultiStop: json["is_multi_stop"] ?? false,
+    currentStopIndex: json["current_stop_index"] ?? 0,
+    fareEstimate: json["fare_estimate"] ?? 0,
     vehicleTypeId: json["vehicle_type_id"] is Map
-        ? json["vehicle_type_id"]["_id"]?.toString()
-        : json["vehicle_type_id"]?.toString(),
-    paymentMethod: json["payment_method"],
-    paymentStatus: json["payment_status"],
+        ? (json["vehicle_type_id"]["_id"] ?? '')
+        : (json["vehicle_type_id"] ?? ''),
+    paymentMethod: json["payment_method"] ?? '',
+    paymentStatus: json["payment_status"] ?? '',
     driverSnapshot: json["driver_snapshot"] == null
         ? null
         : ActiveRideDriverSnapshot.fromMap(json["driver_snapshot"]),
     vehicleSnapshot: json["vehicle_snapshot"] == null
         ? null
         : ActiveRideVehicleSnapshot.fromMap(json["vehicle_snapshot"]),
-    pinCode: json["pin_code"],
-    rideCreatedAt: json["created_at"],
+    pinCode: json["pin_code"] ?? '',
+    rideCreatedAt: json["created_at"] ?? '',
     fareBreakdown: json["fare_breakdown"] == null
         ? null
         : ActiveRideFareBreakdown.fromMap(json["fare_breakdown"]),
-    isBookedForOther: json["is_booked_for_other"],
+    isBookedForOther: json["is_booked_for_other"] ?? false,
     passengerName: json["passenger_name"],
     passengerPhone: json["passenger_phone"],
-    driverId: json["driver_id"],
-    taskId: json["task_id"],
-    isBookAny: json["is_book_any"],
-    bookAnyVehicleTypeIds: json["book_any_vehicle_type_ids"] == null
-        ? []
-        : List<dynamic>.from(json["book_any_vehicle_type_ids"]!.map((x) => x)),
+    driverId: json["driver_id"] ?? '',
+    taskId: json["task_id"] ?? '',
+    isBookAny: json["is_book_any"] ?? false,
+    bookAnyVehicleTypeIds: json["book_any_vehicle_type_ids"] ?? <dynamic>[],
     bookAnyBlockAmount: json["book_any_block_amount"],
     bookAnyResolvedAt: json["book_any_resolved_at"],
     finalFare: json["final_fare"],
-    additionalFare: json["additional_fare"],
-    pinRequired: json["pin_required"],
-    pinAttempts: json["pin_attempts"],
+    additionalFare: json["additional_fare"] ?? 0,
+    pinRequired: json["pin_required"] ?? false,
+    pinAttempts: json["pin_attempts"] ?? 0,
     pinLockedUntil: json["pin_locked_until"],
     subOrderHistoryId: json["sub_order_history_id"],
-    blockedAmount: json["blocked_amount"],
-    blockValidationId: json["block_validation_id"],
+    blockedAmount: json["blocked_amount"] ?? 0,
+    blockValidationId: json["block_validation_id"] ?? '',
     blockTransid: json["block_transid"],
-    preauthTotal: json["preauth_total"],
-    captureTotal: json["capture_total"],
-    cancellationFeeCaptured: json["cancellation_fee_captured"],
-    promoCode: json["promo_code"],
-    promoDiscount: json["promo_discount"],
-    promoAutoApplied: json["promo_auto_applied"],
+    preauthTotal: json["preauth_total"] ?? 0,
+    captureTotal: json["capture_total"] ?? 0,
+    cancellationFeeCaptured: json["cancellation_fee_captured"] ?? 0,
+    promoCode: json["promo_code"] ?? '',
+    promoDiscount: json["promo_discount"] ?? 0,
+    promoAutoApplied: json["promo_auto_applied"] ?? false,
+    cashbackAmount: json["cashback_amount"] ?? 0,
     cancelledAt: json["cancelled_at"],
     cancellationReason: json["cancellation_reason"],
-    cancellationFee: json["cancellation_fee"],
+    cancellationFee: json["cancellation_fee"] ?? 0,
     midRideCancel: json["mid_ride_cancel"],
-    rejectedDrivers: json["rejected_drivers"] == null
-        ? []
-        : List<dynamic>.from(json["rejected_drivers"]!.map((x) => x)),
-    blockedDrivers: json["blocked_drivers"] == null
-        ? []
-        : List<dynamic>.from(json["blocked_drivers"]!.map((x) => x)),
-    driverAssignedAt: json["driver_assigned_at"],
-    driverArrivedAt: json["driver_arrived_at"],
-    rideStartedAt: json["ride_started_at"],
+    rejectedDrivers: json["rejected_drivers"] ?? <dynamic>[],
+    blockedDrivers: json["blocked_drivers"] ?? <dynamic>[],
+    driverAssignedAt: json["driver_assigned_at"] ?? '',
+    driverArrivedAt: json["driver_arrived_at"] ?? '',
+    rideStartedAt: json["ride_started_at"] ?? '',
     rideCompletedAt: json["ride_completed_at"],
     riderRating: json["rider_rating"],
     riderRatingComment: json["rider_rating_comment"],
@@ -401,39 +387,32 @@ class ActiveRide {
     driverRatingComment: json["driver_rating_comment"],
     driverRatedAt: json["driver_rated_at"],
     feedbackText: json["feedback_text"],
-    feedbackTags: json["feedback_tags"] == null
-        ? []
-        : List<dynamic>.from(json["feedback_tags"]!.map((x) => x)),
-    feedbackImages: json["feedback_images"] == null
-        ? []
-        : List<dynamic>.from(json["feedback_images"]!.map((x) => x)),
+    feedbackTags: json["feedback_tags"] ?? <dynamic>[],
+    feedbackImages: json["feedback_images"] ?? <dynamic>[],
     feedbackAt: json["feedback_at"],
-    ratingTags: json["rating_tags"] == null
-        ? []
-        : List<dynamic>.from(json["rating_tags"]!.map((x) => x)),
-    isReviewSkipped: json["is_review_skipped"],
+    ratingTags: json["rating_tags"] ?? <dynamic>[],
+    isReviewSkipped: json["is_review_skipped"] ?? false,
     iosActivityToken: json["ios_activity_token"],
-    shareToken: json["share_token"],
-    shareLinkExpiresAt: json["share_link_expires_at"],
-    isShared: json["is_shared"],
-    note: json["note"],
+    shareToken: json["share_token"] ?? '',
+    shareLinkExpiresAt: json["share_link_expires_at"] ?? '',
+    isShared: json["is_shared"] ?? false,
+    note: json["note"] ?? '',
     latraReferenceNumber: json["latra_reference_number"],
     latraSubmittedAt: json["latra_submitted_at"],
-    riderId: json["rider_id"],
-    transid: json["transid"],
-    distanceKm: json["distance_km"]?.toDouble(),
-    durationMinutes: json["duration_minutes"],
-    searchStartedAt: json["search_started_at"],
+    riderId: json["rider_id"] ?? '',
+    transid: json["transid"] ?? '',
+    distanceKm: json["distance_km"]?.toDouble() ?? 0.0,
+    durationMinutes: json["duration_minutes"] ?? 0,
+    searchStartedAt: json["search_started_at"] ?? '',
     preauths: json["preauths"] == null
-        ? []
+        ? <ActiveRidePreauth>[]
         : List<ActiveRidePreauth>.from(
-            json["preauths"]!.map((x) => ActiveRidePreauth.fromMap(x)),
+            json["preauths"].map((x) => ActiveRidePreauth.fromMap(x)),
           ),
-    pdfLinks: json["pdf_links"] == null
-        ? []
-        : List<dynamic>.from(json["pdf_links"]!.map((x) => x)),
-    createdAt: json["createdAt"],
-    updatedAt: json["updatedAt"],
+    pdfLinks: json["pdf_links"] ?? <dynamic>[],
+    pendingStopsUpdate: json["pending_stops_update"] ?? <String, dynamic>{},
+    createdAt: json["createdAt"] ?? '',
+    updatedAt: json["updatedAt"] ?? '',
   );
 
   Map<String, dynamic> toMap() => {
@@ -442,7 +421,7 @@ class ActiveRide {
     "pickup": pickup?.toMap(),
     "destination": destination?.toMap(),
     "stops": stops == null
-        ? []
+        ? null
         : List<dynamic>.from(stops!.map((x) => x.toMap())),
     "is_multi_stop": isMultiStop,
     "current_stop_index": currentStopIndex,
@@ -461,9 +440,7 @@ class ActiveRide {
     "driver_id": driverId,
     "task_id": taskId,
     "is_book_any": isBookAny,
-    "book_any_vehicle_type_ids": bookAnyVehicleTypeIds == null
-        ? []
-        : List<dynamic>.from(bookAnyVehicleTypeIds!.map((x) => x)),
+    "book_any_vehicle_type_ids": bookAnyVehicleTypeIds,
     "book_any_block_amount": bookAnyBlockAmount,
     "book_any_resolved_at": bookAnyResolvedAt,
     "final_fare": finalFare,
@@ -481,16 +458,13 @@ class ActiveRide {
     "promo_code": promoCode,
     "promo_discount": promoDiscount,
     "promo_auto_applied": promoAutoApplied,
+    "cashback_amount": cashbackAmount,
     "cancelled_at": cancelledAt,
     "cancellation_reason": cancellationReason,
     "cancellation_fee": cancellationFee,
     "mid_ride_cancel": midRideCancel,
-    "rejected_drivers": rejectedDrivers == null
-        ? []
-        : List<dynamic>.from(rejectedDrivers!.map((x) => x)),
-    "blocked_drivers": blockedDrivers == null
-        ? []
-        : List<dynamic>.from(blockedDrivers!.map((x) => x)),
+    "rejected_drivers": rejectedDrivers,
+    "blocked_drivers": blockedDrivers,
     "driver_assigned_at": driverAssignedAt,
     "driver_arrived_at": driverArrivedAt,
     "ride_started_at": rideStartedAt,
@@ -502,16 +476,10 @@ class ActiveRide {
     "driver_rating_comment": driverRatingComment,
     "driver_rated_at": driverRatedAt,
     "feedback_text": feedbackText,
-    "feedback_tags": feedbackTags == null
-        ? []
-        : List<dynamic>.from(feedbackTags!.map((x) => x)),
-    "feedback_images": feedbackImages == null
-        ? []
-        : List<dynamic>.from(feedbackImages!.map((x) => x)),
+    "feedback_tags": feedbackTags,
+    "feedback_images": feedbackImages,
     "feedback_at": feedbackAt,
-    "rating_tags": ratingTags == null
-        ? []
-        : List<dynamic>.from(ratingTags!.map((x) => x)),
+    "rating_tags": ratingTags,
     "is_review_skipped": isReviewSkipped,
     "ios_activity_token": iosActivityToken,
     "share_token": shareToken,
@@ -526,11 +494,10 @@ class ActiveRide {
     "duration_minutes": durationMinutes,
     "search_started_at": searchStartedAt,
     "preauths": preauths == null
-        ? []
+        ? null
         : List<dynamic>.from(preauths!.map((x) => x.toMap())),
-    "pdf_links": pdfLinks == null
-        ? []
-        : List<dynamic>.from(pdfLinks!.map((x) => x)),
+    "pdf_links": pdfLinks,
+    "pending_stops_update": pendingStopsUpdate,
     "createdAt": createdAt,
     "updatedAt": updatedAt,
   };
@@ -707,14 +674,48 @@ class ActiveRideDriverSnapshot {
 }
 
 class ActiveRideFareBreakdown {
+  String? currency;
+  int? baseFare;
+  double? distanceKm;
+  int? distanceCharge;
+  int? durationMinutes;
+  int? timeCharge;
+  int? waypointCharge;
+  int? minimumFare;
+  bool? minimumFareApplied;
+  int? originalFare;
   int? rideCharge;
   int? bookingFee;
+  String? promoCode;
+  int? promoDiscount;
+  bool? promoAutoApplied;
+  String? promoDescription;
+  bool? isCashback;
+  int? cashbackAmount;
   int? totalAmount;
+  int? amountCharged;
 
   ActiveRideFareBreakdown({
+    this.currency,
+    this.baseFare,
+    this.distanceKm,
+    this.distanceCharge,
+    this.durationMinutes,
+    this.timeCharge,
+    this.waypointCharge,
+    this.minimumFare,
+    this.minimumFareApplied,
+    this.originalFare,
     this.rideCharge,
     this.bookingFee,
+    this.promoCode,
+    this.promoDiscount,
+    this.promoAutoApplied,
+    this.promoDescription,
+    this.isCashback,
+    this.cashbackAmount,
     this.totalAmount,
+    this.amountCharged,
   });
 
   factory ActiveRideFareBreakdown.fromJson(String str) =>
@@ -724,15 +725,49 @@ class ActiveRideFareBreakdown {
 
   factory ActiveRideFareBreakdown.fromMap(Map<String, dynamic> json) =>
       ActiveRideFareBreakdown(
-        rideCharge: json["ride_charge"],
-        bookingFee: json["booking_fee"],
-        totalAmount: json["total_amount"],
+        currency: json["currency"] ?? '',
+        baseFare: json["base_fare"] ?? 0,
+        distanceKm: json["distance_km"]?.toDouble() ?? 0.0,
+        distanceCharge: json["distance_charge"] ?? 0,
+        durationMinutes: json["duration_minutes"] ?? 0,
+        timeCharge: json["time_charge"] ?? 0,
+        waypointCharge: json["waypoint_charge"] ?? 0,
+        minimumFare: json["minimum_fare"] ?? 0,
+        minimumFareApplied: json["minimum_fare_applied"] ?? false,
+        originalFare: json["original_fare"] ?? 0,
+        rideCharge: json["ride_charge"] ?? 0,
+        bookingFee: json["booking_fee"] ?? 0,
+        promoCode: json["promo_code"] ?? '',
+        promoDiscount: json["promo_discount"] ?? 0,
+        promoAutoApplied: json["promo_auto_applied"] ?? false,
+        promoDescription: json["promo_description"] ?? '',
+        isCashback: json["is_cashback"] ?? false,
+        cashbackAmount: json["cashback_amount"] ?? 0,
+        totalAmount: json["total_amount"] ?? 0,
+        amountCharged: json["amount_charged"] ?? 0,
       );
 
   Map<String, dynamic> toMap() => {
+    "currency": currency,
+    "base_fare": baseFare,
+    "distance_km": distanceKm,
+    "distance_charge": distanceCharge,
+    "duration_minutes": durationMinutes,
+    "time_charge": timeCharge,
+    "waypoint_charge": waypointCharge,
+    "minimum_fare": minimumFare,
+    "minimum_fare_applied": minimumFareApplied,
+    "original_fare": originalFare,
     "ride_charge": rideCharge,
     "booking_fee": bookingFee,
+    "promo_code": promoCode,
+    "promo_discount": promoDiscount,
+    "promo_auto_applied": promoAutoApplied,
+    "promo_description": promoDescription,
+    "is_cashback": isCashback,
+    "cashback_amount": cashbackAmount,
     "total_amount": totalAmount,
+    "amount_charged": amountCharged,
   };
 }
 

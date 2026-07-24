@@ -2597,13 +2597,73 @@ class DriverAcceptedController extends GetxController
   }
 
   String get totalAmountLabel {
+    final breakdown = ride.value?.fareBreakdown;
+    final amountCharged = breakdown?.amountCharged;
     final amount =
-        ride.value?.fareBreakdown?.totalAmount ??
-        _seedTotalAmount ??
-        ride.value?.finalFare ??
-        ride.value?.fareEstimate ??
-        100;
+        (amountCharged != null && amountCharged > 0)
+            ? amountCharged
+            : (breakdown?.totalAmount ??
+                _seedTotalAmount ??
+                ride.value?.finalFare ??
+                ride.value?.fareEstimate ??
+                100);
     return CurrencyFormatter.format(amount);
+  }
+
+  String get _promoCodeForDisplay {
+    final r = ride.value;
+    if (r == null) return '';
+    final code =
+        (r.promoCode ?? r.fareBreakdown?.promoCode)?.toString().trim() ?? '';
+    if (code.isEmpty || code == 'null') return '';
+    return code;
+  }
+
+  int get _promoDiscountAmount {
+    final r = ride.value;
+    if (r == null) return 0;
+    return r.promoDiscount ?? r.fareBreakdown?.promoDiscount ?? 0;
+  }
+
+  int get _promoCashbackAmount {
+    final r = ride.value;
+    if (r == null) return 0;
+    return r.cashbackAmount ?? r.fareBreakdown?.cashbackAmount ?? 0;
+  }
+
+  bool get _promoIsCashback {
+    final breakdown = ride.value?.fareBreakdown;
+    if (breakdown?.isCashback == true && _promoCashbackAmount > 0) {
+      return true;
+    }
+    return _promoCashbackAmount > 0 && _promoDiscountAmount <= 0;
+  }
+
+  bool get showPromoFareLine {
+    if (_promoCodeForDisplay.isEmpty) return false;
+    return _promoIsCashback || _promoDiscountAmount > 0;
+  }
+
+  String get promoFareLineTitle {
+    final code = _promoCodeForDisplay;
+    if (_promoIsCashback) {
+      return AppStrings.receiptCashbackPromoLine.trParams({'code': code});
+    }
+    final autoApplied =
+        ride.value?.promoAutoApplied == true ||
+        ride.value?.fareBreakdown?.promoAutoApplied == true;
+    if (autoApplied) {
+      return AppStrings.receiptAutoPromoLine.trParams({'code': code});
+    }
+    return AppStrings.receiptPromoLine.trParams({'code': code});
+  }
+
+  String get promoFareLineAmountLabel {
+    if (_promoIsCashback) {
+      final formatted = CurrencyFormatter.format(_promoCashbackAmount);
+      return AppStrings.promoCashbackAmount.trParams({'amount': formatted});
+    }
+    return '-${CurrencyFormatter.format(_promoDiscountAmount)}';
   }
 
   String get paymentModeLabel {

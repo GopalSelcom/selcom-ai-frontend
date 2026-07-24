@@ -330,28 +330,50 @@ class ReceiptDriverSnapshot {
 }
 
 class ReceiptFareBreakdown {
+  String? currency;
   int? baseFare;
+  double? distanceKm;
   int? distanceCharge;
+  int? durationMinutes;
   int? timeCharge;
+  int? waypointCharge;
+  int? minimumFare;
+  bool? minimumFareApplied;
+  int? originalFare;
+  int? rideCharge;
+  int? bookingFee;
   String? promoCode;
   int? promoDiscount;
   bool? promoAutoApplied;
-  int? totalFare;
-  int? bookingFee;
+  String? promoDescription;
+  bool? isCashback;
+  int? cashbackAmount;
   int? totalAmount;
-  String? currency;
+  int? amountCharged;
+  int? totalFare;
 
   ReceiptFareBreakdown({
+    this.currency,
     this.baseFare,
+    this.distanceKm,
     this.distanceCharge,
+    this.durationMinutes,
     this.timeCharge,
+    this.waypointCharge,
+    this.minimumFare,
+    this.minimumFareApplied,
+    this.originalFare,
+    this.rideCharge,
+    this.bookingFee,
     this.promoCode,
     this.promoDiscount,
     this.promoAutoApplied,
-    this.totalFare,
-    this.bookingFee,
+    this.promoDescription,
+    this.isCashback,
+    this.cashbackAmount,
     this.totalAmount,
-    this.currency,
+    this.amountCharged,
+    this.totalFare,
   });
 
   factory ReceiptFareBreakdown.fromJson(String str) =>
@@ -361,29 +383,51 @@ class ReceiptFareBreakdown {
 
   factory ReceiptFareBreakdown.fromMap(Map<String, dynamic> json) =>
       ReceiptFareBreakdown(
-        baseFare: json["base_fare"],
-        distanceCharge: json["distance_charge"],
-        timeCharge: json["time_charge"],
-        promoCode: json["promo_code"]?.toString(),
-        promoDiscount: json["promo_discount"],
-        promoAutoApplied: json["promo_auto_applied"],
-        totalFare: json["total_fare"],
-        bookingFee: json["booking_fee"],
-        totalAmount: json["total_amount"],
-        currency: json["currency"],
+        currency: json["currency"] ?? '',
+        baseFare: json["base_fare"] ?? 0,
+        distanceKm: json["distance_km"]?.toDouble() ?? 0.0,
+        distanceCharge: json["distance_charge"] ?? 0,
+        durationMinutes: json["duration_minutes"] ?? 0,
+        timeCharge: json["time_charge"] ?? 0,
+        waypointCharge: json["waypoint_charge"] ?? 0,
+        minimumFare: json["minimum_fare"] ?? 0,
+        minimumFareApplied: json["minimum_fare_applied"] ?? false,
+        originalFare: json["original_fare"] ?? 0,
+        rideCharge: json["ride_charge"] ?? 0,
+        bookingFee: json["booking_fee"] ?? 0,
+        promoCode: json["promo_code"] ?? '',
+        promoDiscount: json["promo_discount"] ?? 0,
+        promoAutoApplied: json["promo_auto_applied"] ?? false,
+        promoDescription: json["promo_description"] ?? '',
+        isCashback: json["is_cashback"] ?? false,
+        cashbackAmount: json["cashback_amount"] ?? 0,
+        totalAmount: json["total_amount"] ?? 0,
+        amountCharged: json["amount_charged"] ?? 0,
+        totalFare: json["total_fare"] ?? 0,
       );
 
   Map<String, dynamic> toMap() => {
+    "currency": currency,
     "base_fare": baseFare,
+    "distance_km": distanceKm,
     "distance_charge": distanceCharge,
+    "duration_minutes": durationMinutes,
     "time_charge": timeCharge,
+    "waypoint_charge": waypointCharge,
+    "minimum_fare": minimumFare,
+    "minimum_fare_applied": minimumFareApplied,
+    "original_fare": originalFare,
+    "ride_charge": rideCharge,
+    "booking_fee": bookingFee,
     "promo_code": promoCode,
     "promo_discount": promoDiscount,
     "promo_auto_applied": promoAutoApplied,
-    "total_fare": totalFare,
-    "booking_fee": bookingFee,
+    "promo_description": promoDescription,
+    "is_cashback": isCashback,
+    "cashback_amount": cashbackAmount,
     "total_amount": totalAmount,
-    "currency": currency,
+    "amount_charged": amountCharged,
+    "total_fare": totalFare,
   };
 }
 
@@ -432,6 +476,10 @@ class ReceiptModel {
   final String? completedAt;
   final String? promoCode;
   final int promoDiscountAmount;
+  final bool promoAutoApplied;
+  final bool isCashback;
+  final int cashbackAmount;
+  final int amountCharged;
   final String? driverName;
   final String? vehicleModel;
   final String? vehicleColor;
@@ -461,6 +509,10 @@ class ReceiptModel {
     this.completedAt,
     this.promoCode,
     this.promoDiscountAmount = 0,
+    this.promoAutoApplied = false,
+    this.isCashback = false,
+    this.cashbackAmount = 0,
+    this.amountCharged = 0,
     this.driverName,
     this.vehicleModel,
     this.vehicleColor,
@@ -492,6 +544,10 @@ class ReceiptModel {
       completedAt: completedAt,
       promoCode: promoCode,
       promoDiscountAmount: promoDiscountAmount,
+      promoAutoApplied: promoAutoApplied,
+      isCashback: isCashback,
+      cashbackAmount: cashbackAmount,
+      amountCharged: amountCharged,
       driverName: driverName,
       vehicleModel: vehicleModel,
       vehicleColor: vehicleColor,
@@ -516,10 +572,19 @@ class ReceiptModel {
     final baseFare = fare?.baseFare ?? 0;
     final distanceCharge = fare?.distanceCharge ?? 0;
     final timeCharge = fare?.timeCharge ?? 0;
-    final totalFare = fare?.totalFare ?? (baseFare + distanceCharge + timeCharge);
+    final totalFare =
+        (fare?.totalFare != null && fare!.totalFare! > 0)
+            ? fare.totalFare!
+            : (fare?.rideCharge != null && fare!.rideCharge! > 0)
+            ? fare.rideCharge!
+            : (baseFare + distanceCharge + timeCharge);
     final bookingFee = fare?.bookingFee ?? 0;
-    final totalAmount = fare?.totalAmount ?? (totalFare + bookingFee);
+    final rawTotalAmount = fare?.totalAmount ?? (totalFare + bookingFee);
+    final amountCharged = fare?.amountCharged ?? 0;
+    final displayTotal =
+        amountCharged > 0 ? amountCharged : rawTotalAmount;
     final promoCode = fare?.promoCode?.trim();
+    final isCashback = fare?.isCashback == true;
 
     final stops = (receipt.stops ?? const <ReceiptPlace>[])
         .map(
@@ -538,12 +603,16 @@ class ReceiptModel {
       baseFare: baseFare,
       distanceCharge: distanceCharge,
       timeCharge: timeCharge,
-      total: totalAmount,
+      total: displayTotal,
       currency: fare?.currency ?? CurrencyCode.tzs,
       promoCode: (promoCode == null || promoCode.isEmpty || promoCode == 'null')
           ? null
           : promoCode,
       promoDiscountAmount: fare?.promoDiscount ?? 0,
+      promoAutoApplied: fare?.promoAutoApplied == true,
+      isCashback: isCashback,
+      cashbackAmount: fare?.cashbackAmount ?? 0,
+      amountCharged: amountCharged,
       paymentMethod: receipt.paymentMethod ?? '',
       completedAt: receipt.completedAt,
       driverName: driver?.name,
@@ -560,7 +629,7 @@ class ReceiptModel {
       stops: stops,
       totalFare: totalFare,
       bookingFee: bookingFee,
-      totalAmount: totalAmount,
+      totalAmount: displayTotal,
     );
   }
 

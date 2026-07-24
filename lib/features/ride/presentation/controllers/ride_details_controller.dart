@@ -145,19 +145,27 @@ class RideDetailsController extends GetxController {
 
   String get totalAmountLabel => CurrencyFormatter.format(totalAmount);
 
-  /// Promo row on fare card (GET ride returns [promo_code], [promo_discount]).
-  bool get showPromoFareLine {
-    final code = ride.promoCode?.toString().trim() ?? '';
-    final d = ride.promoDiscount ?? 0;
-    return code.isNotEmpty && d > 0;
+  /// Promo / cashback row on fare card.
+  bool get showPromoFareLine => ride.hasPromoBenefit;
+
+  String get promoFareLineTitle {
+    final code = ride.promoCodeTrimmed;
+    if (ride.hasCashbackPromo) {
+      return AppStrings.receiptCashbackPromoLine.trParams({'code': code});
+    }
+    if (ride.effectivePromoAutoApplied) {
+      return AppStrings.receiptAutoPromoLine.trParams({'code': code});
+    }
+    return AppStrings.receiptPromoLine.trParams({'code': code});
   }
 
-  String get promoFareLineTitle => AppStrings.receiptPromoLine.trParams({
-    'code': ride.promoCode.toString().trim(),
-  }).tr;
-
-  String get promoFareLineAmountLabel =>
-      '-${CurrencyFormatter.format(ride.promoDiscount!)}';
+  String get promoFareLineAmountLabel {
+    final formatted = CurrencyFormatter.format(ride.promoBenefitAmount);
+    if (ride.hasCashbackPromo) {
+      return AppStrings.promoCashbackAmount.trParams({'amount': formatted});
+    }
+    return '-$formatted';
+  }
 
   String get pickupTitle => (ride.pickup?.address ?? '').split(',').first;
 

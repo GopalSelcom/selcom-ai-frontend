@@ -375,12 +375,18 @@ class LanguageSw extends Languages {
     'promo_error_network': 'Imeshindikana kuthibitisha. Jaribu tena.',
     'promo_not_applied_title': 'Promosi haijatumiwa',
     'promo_code_not_valid_for_vehicle': 'Si sahihi kwa chombo hiki',
+    'promo_auto_applied': 'Imetumiwa kiotomatiki (@code)',
+    'promo_auto_applied_badge': 'Imetumiwa kiotomatiki',
+    'promo_cashback_amount': 'Rudisho @amount',
     'ride_free_label': 'BURE',
     'receipt_promo_line': 'Promosi (@code)',
+    'receipt_auto_promo_line': 'Promosi iliyotumiwa kiotomatiki (@code)',
+    'receipt_cashback_promo_line': 'Rudisho (@code)',
     'promo_min_ride_amount': 'Kiasi cha chini @amount',
     'promo_expires_today': 'Inaisha leo',
     'no_available_promo_codes': 'Hakuna misimbo ya promosheni kwa sasa',
     'failed_to_load_promo_codes': 'Imeshindwa kupakia misimbo ya promosheni',
+    'promo_auto_apply_list_badge': 'Kiotomatiki',
     'rating': 'Ukadiriaji',
     'rating_given': 'ukadiriaji uliotolewa',
     'rating_required': 'Ukadiriaji unahitajika',
@@ -1991,10 +1997,26 @@ class LanguageSw extends Languages {
       values['promo_code_not_valid_for_vehicle'] ?? '';
 
   @override
+  String get promoAutoApplied => values['promo_auto_applied'] ?? '';
+
+  @override
+  String get promoAutoAppliedBadge => values['promo_auto_applied_badge'] ?? '';
+
+  @override
+  String get promoCashbackAmount => values['promo_cashback_amount'] ?? '';
+
+  @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
 
   @override
   String get receiptPromoLine => values['receipt_promo_line'] ?? '';
+
+  @override
+  String get receiptAutoPromoLine => values['receipt_auto_promo_line'] ?? '';
+
+  @override
+  String get receiptCashbackPromoLine =>
+      values['receipt_cashback_promo_line'] ?? '';
 
   @override
   String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
@@ -2008,6 +2030,10 @@ class LanguageSw extends Languages {
   @override
   String get failedToLoadPromoCodes =>
       values['failed_to_load_promo_codes'] ?? '';
+
+  @override
+  String get promoAutoApplyListBadge =>
+      values['promo_auto_apply_list_badge'] ?? '';
 
   @override
   String get rating => values['rating'] ?? '';

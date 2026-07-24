@@ -1386,6 +1386,13 @@ class DriverAcceptedScreen extends StatelessWidget {
                   title: AppStrings.bookingFeesAndConvenienceCharges.tr,
                   amount: c.bookingFeeLabel,
                 ),
+                if (c.showPromoFareLine) ...[
+                  SizedBox(height: 4.h),
+                  FareBreakdownRow(
+                    title: c.promoFareLineTitle,
+                    amount: c.promoFareLineAmountLabel,
+                  ),
+                ],
                 SizedBox(height: 4.h),
                 FareBreakdownRow(
                   title: AppStrings.paymentMode.tr,

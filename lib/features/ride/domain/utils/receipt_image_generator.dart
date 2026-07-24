@@ -405,13 +405,29 @@ class ReceiptImageGenerator {
                 receipt.bookingFee,
                 receipt.currency,
               ),
-              if (receipt.promoDiscountAmount > 0 &&
-                  (receipt.promoCode?.trim().isNotEmpty ?? false))
+              if ((receipt.promoCode?.trim().isNotEmpty ?? false) &&
+                  (receipt.promoDiscountAmount > 0 ||
+                      receipt.cashbackAmount > 0 ||
+                      receipt.isCashback))
                 _fareRow(
-                  AppStrings.receiptPromoLine.trParams({
-                    'code': receipt.promoCode!.trim(),
-                  }).tr,
-                  -receipt.promoDiscountAmount,
+                  receipt.isCashback ||
+                          (receipt.cashbackAmount > 0 &&
+                              receipt.promoDiscountAmount <= 0)
+                      ? AppStrings.receiptCashbackPromoLine.trParams({
+                          'code': receipt.promoCode!.trim(),
+                        })
+                      : receipt.promoAutoApplied
+                      ? AppStrings.receiptAutoPromoLine.trParams({
+                          'code': receipt.promoCode!.trim(),
+                        })
+                      : AppStrings.receiptPromoLine.trParams({
+                          'code': receipt.promoCode!.trim(),
+                        }),
+                  receipt.isCashback ||
+                          (receipt.cashbackAmount > 0 &&
+                              receipt.promoDiscountAmount <= 0)
+                      ? receipt.cashbackAmount
+                      : -receipt.promoDiscountAmount,
                   receipt.currency,
                   valueColor: AppColors.iconSuccess,
                 ),
@@ -440,7 +456,9 @@ class ReceiptImageGenerator {
                   ),
                   Text(
                     CurrencyFormatter.formatPayableOrFree(
-                      receipt.totalAmount,
+                      receipt.totalAmount > 0
+                          ? receipt.totalAmount
+                          : receipt.total,
                       receipt.currency,
                       freeLabel: AppStrings.rideFreeLabel.tr,
                     ),

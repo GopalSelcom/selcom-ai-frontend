@@ -293,6 +293,18 @@ class PromoCodeScreen extends StatelessWidget {
                               height: 20 / 15,
                             ),
                           ),
+                          if (promo.isAutoApply) ...[
+                            SizedBox(height: 4.h),
+                            Text(
+                              AppStrings.promoAutoApplyListBadge.tr,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
                           SizedBox(height: 4.h),
                           Text(
                             promo.subtitle,

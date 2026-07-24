@@ -78,11 +78,13 @@ class FareEstimateData {
         legs: json["legs"] == null
             ? []
             : List<FareLeg>.from(
-                json["legs"]!.map((x) => FareLeg.fromJson(
-                      x is Map<String, dynamic>
-                          ? x
-                          : Map<String, dynamic>.from(x as Map),
-                    )),
+                json["legs"]!.map(
+                  (x) => FareLeg.fromJson(
+                    x is Map<String, dynamic>
+                        ? x
+                        : Map<String, dynamic>.from(x as Map),
+                  ),
+                ),
               ),
         pickup: json["pickup"] == null
             ? null
@@ -215,8 +217,13 @@ class FareEstimateItem {
   int? maxPassengers;
   String? currency;
   bool? promoApplied;
+  String? promoCode;
+  bool? isCashback;
+  int? cashbackAmount;
   int? promoDiscount;
   int? discountedFare;
+  bool? promoAutoApplied;
+  String? promoDescription;
   String? promoError;
   bool isBookAnyOption;
   int? bookAnyMinFare;
@@ -237,13 +244,38 @@ class FareEstimateItem {
     this.maxPassengers,
     this.currency,
     this.promoApplied,
+    this.promoCode,
+    this.isCashback,
+    this.cashbackAmount,
     this.promoDiscount,
     this.discountedFare,
+    this.promoAutoApplied,
+    this.promoDescription,
     this.promoError,
     this.isBookAnyOption = false,
     this.bookAnyMinFare,
     this.bookAnyMaxFare,
   });
+
+  /// Cashback promo: fare stays full; rider earns [cashbackAmount].
+  bool get hasCashbackPromo =>
+      promoApplied == true && isCashback == true && (cashbackAmount ?? 0) > 0;
+
+  /// Fare-discount promo (not cashback): payable is [discountedFare].
+  bool get hasFareDiscountPromo {
+    if (promoApplied != true || isCashback == true) return false;
+    final original = fareEstimate ?? 0;
+    final discounted = discountedFare;
+    if (discounted == null) return false;
+    return original > discounted && (promoDiscount ?? 0) > 0;
+  }
+
+  /// Display benefit: cashback amount when [isCashback], else promo discount.
+  int get promoBenefitAmount {
+    if (hasCashbackPromo) return cashbackAmount ?? 0;
+    if (promoApplied == true) return promoDiscount ?? 0;
+    return 0;
+  }
 
   factory FareEstimateItem.fromJson(String str) =>
       FareEstimateItem.fromMap(json.decode(str));
@@ -266,9 +298,14 @@ class FareEstimateItem {
         maxPassengers: json["max_passengers"],
         currency: json["currency"],
         promoApplied: json["promo_applied"],
+        promoCode: json["promo_code"]?.toString(),
+        isCashback: json["is_cashback"],
+        cashbackAmount: json["cashback_amount"],
         promoDiscount: json["promo_discount"],
         discountedFare: json["discounted_fare"],
-        promoError: json["promo_error"],
+        promoAutoApplied: json["promo_auto_applied"],
+        promoDescription: json["promo_description"]?.toString(),
+        promoError: json["promo_error"]?.toString(),
         isBookAnyOption: json["is_book_any_option"] ?? false,
         bookAnyMinFare: json["book_any_min_fare"],
         bookAnyMaxFare: json["book_any_max_fare"],
@@ -289,8 +326,13 @@ class FareEstimateItem {
     "max_passengers": maxPassengers,
     "currency": currency,
     "promo_applied": promoApplied,
+    "promo_code": promoCode,
+    "is_cashback": isCashback,
+    "cashback_amount": cashbackAmount,
     "promo_discount": promoDiscount,
     "discounted_fare": discountedFare,
+    "promo_auto_applied": promoAutoApplied,
+    "promo_description": promoDescription,
     "promo_error": promoError,
     "is_book_any_option": isBookAnyOption,
     "book_any_min_fare": bookAnyMinFare,

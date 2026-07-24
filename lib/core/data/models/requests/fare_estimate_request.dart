@@ -7,12 +7,16 @@ class FareEstimateRequest {
   final String? vehicleTypeId;
   final String? promoCode;
 
+  /// When `true`, backend must not auto-apply promos (rider opted out).
+  final bool disableAutoPromo;
+
   const FareEstimateRequest({
     required this.pickup,
     required this.destination,
     this.stops = const [],
     this.vehicleTypeId,
     this.promoCode,
+    this.disableAutoPromo = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -34,6 +38,10 @@ class FareEstimateRequest {
     final code = promoCode?.trim();
     if (code != null && code.isNotEmpty) {
       data['promo_code'] = code.toUpperCase();
+    }
+
+    if (disableAutoPromo) {
+      data['disable_auto_promo'] = true;
     }
 
     return data;

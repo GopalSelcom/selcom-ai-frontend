@@ -21,8 +21,8 @@ class VehicleSelectionPromoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final code = controller.appliedPromoCode.value.trim();
-      final hasPromo = code.isNotEmpty;
+      final hasPromo = controller.hasRemovablePromo;
+      final label = controller.promoChipLabel;
       final fg = hasPromo ? AppColors.primary : AppColors.promotionBlue;
 
       return Row(
@@ -44,7 +44,10 @@ class VehicleSelectionPromoChip extends StatelessWidget {
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 140.w),
                   child: Text(
-                    hasPromo ? code : AppStrings.promotions.tr,
+                    // Header shows code only — "Auto-applied" lives on the vehicle card.
+                    hasPromo
+                        ? (label.isNotEmpty ? label : AppStrings.promotions.tr)
+                        : AppStrings.promotions.tr,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.homeCaption.copyWith(
@@ -67,6 +70,7 @@ class VehicleSelectionPromoChip extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
               ),
               iconSize: 16.sp,
+              tooltip: AppStrings.remove.tr,
               onPressed: () => unawaited(controller.clearAppliedPromo()),
               icon: Icon(Icons.close, color: fg, size: 16.sp),
             ),

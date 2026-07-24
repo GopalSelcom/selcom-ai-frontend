@@ -116,6 +116,8 @@ class PromoCodeController extends GetxController {
       footer: _footerFor(item.validUntil),
       isApplicable: applicable,
       inapplicableHint: _inapplicableHint(item),
+      isAutoApply: item.isAutoApply == true,
+      isCashback: item.isCashback == true,
     );
   }
 
@@ -157,7 +159,18 @@ class PromoCodeController extends GetxController {
       applyInlineError.value = AppStrings.pleaseEnterAPromoCode.tr;
       return;
     }
-    await _applyCode(code);
+    PromoCodeModel? match;
+    for (final promo in promoCodes) {
+      if (promo.code == code) {
+        match = promo;
+        break;
+      }
+    }
+    await _applyCode(
+      code,
+      isAutoApply: match?.isAutoApply ?? false,
+      isCashback: match?.isCashback ?? false,
+    );
   }
 
   static const Duration _successDisplayDuration = Duration(seconds: 2);
@@ -183,10 +196,18 @@ class PromoCodeController extends GetxController {
     final code = promo.code.trim().toUpperCase();
     if (code.isEmpty) return;
     promoCodeTextController.text = code;
-    await _applyCode(code);
+    await _applyCode(
+      code,
+      isAutoApply: promo.isAutoApply,
+      isCashback: promo.isCashback,
+    );
   }
 
-  Future<void> _applyCode(String code) async {
+  Future<void> _applyCode(
+    String code, {
+    bool isAutoApply = false,
+    bool isCashback = false,
+  }) async {
     applyInlineError.value = null;
     if (!isRideBookingFlow) return;
     if (isApplying.value) return;
@@ -226,6 +247,8 @@ class PromoCodeController extends GetxController {
               vehicleTypeId: args.vehicleTypeId,
               discountedFare: data.discountedFare ?? 0,
               discountAmount: data.discountAmount ?? 0,
+              isAutoApply: isAutoApply,
+              isCashback: isCashback,
             );
             unawaited(
               di.sl<AnalyticsService>().logEvent(
@@ -270,6 +293,8 @@ class PromoCodeModel {
   final String footer;
   final bool isApplicable;
   final String? inapplicableHint;
+  final bool isAutoApply;
+  final bool isCashback;
 
   PromoCodeModel({
     required this.code,
@@ -278,5 +303,7 @@ class PromoCodeModel {
     required this.footer,
     this.isApplicable = true,
     this.inapplicableHint,
+    this.isAutoApply = false,
+    this.isCashback = false,
   });
 }

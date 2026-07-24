@@ -70,6 +70,7 @@ class BookRide {
   String? promoCode;
   int? promoDiscount;
   bool? promoAutoApplied;
+  int? cashbackAmount;
   DateTime? cancelledAt;
   String? cancellationReason;
   int? cancellationFee;
@@ -153,6 +154,7 @@ class BookRide {
     this.promoCode,
     this.promoDiscount,
     this.promoAutoApplied,
+    this.cashbackAmount,
     this.cancelledAt,
     this.cancellationReason,
     this.cancellationFee,
@@ -249,6 +251,7 @@ class BookRide {
     promoCode: json["promo_code"],
     promoDiscount: json["promo_discount"],
     promoAutoApplied: json["promo_auto_applied"],
+    cashbackAmount: json["cashback_amount"],
     cancelledAt: json["cancelled_at"] == null
         ? null
         : DateTime.parse(json["cancelled_at"]),
@@ -383,6 +386,7 @@ class BookRide {
     "promo_code": promoCode,
     "promo_discount": promoDiscount,
     "promo_auto_applied": promoAutoApplied,
+    "cashback_amount": cashbackAmount,
     "cancelled_at": cancelledAt?.toIso8601String(),
     "cancellation_reason": cancellationReason,
     "cancellation_fee": cancellationFee,

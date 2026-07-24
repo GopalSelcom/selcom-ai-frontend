@@ -66,15 +66,7 @@ class RideHistoryCard extends StatelessWidget {
         ? resolvedVehicleType
         : AppStrings.fallbackRideName.tr;
 
-    final num effectiveFare =
-        ride.midRideCancel?.capturedAmount ??
-        ride.midRideCancel?.partialFare ??
-        (parseRideStatus(ride.status) == RideStatus.cancelled
-            ? (ride.cancellationFee ?? 0)
-            : (ride.fareBreakdown?.totalAmount ??
-                ride.finalFare ??
-                ride.fareEstimate ??
-                0));
+    final effectiveFare = ride.displayCardAmount;
 
     final pickupAddress = ride.pickup?.address ?? '';
     final destAddress = ride.destination?.address ?? '';

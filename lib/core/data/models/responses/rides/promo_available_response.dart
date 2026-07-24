@@ -75,6 +75,8 @@ class AvailablePromo {
   List<String>? applicableVehicleTypes;
   String? validUntil;
   String? description;
+  bool? isAutoApply;
+  bool? isCashback;
 
   AvailablePromo({
     this.id,
@@ -86,6 +88,8 @@ class AvailablePromo {
     this.applicableVehicleTypes,
     this.validUntil,
     this.description,
+    this.isAutoApply,
+    this.isCashback,
   });
 
   factory AvailablePromo.fromJson(String str) =>
@@ -105,6 +109,8 @@ class AvailablePromo {
         : List<String>.from(json["applicable_vehicle_types"]!.map((x) => x)),
     validUntil: json["valid_until"],
     description: json["description"],
+    isAutoApply: json["is_auto_apply"],
+    isCashback: json["is_cashback"],
   );
 
   Map<String, dynamic> toMap() => {
@@ -119,5 +125,7 @@ class AvailablePromo {
         : List<dynamic>.from(applicableVehicleTypes!.map((x) => x)),
     "valid_until": validUntil,
     "description": description,
+    "is_auto_apply": isAutoApply,
+    "is_cashback": isCashback,
   };
 }
