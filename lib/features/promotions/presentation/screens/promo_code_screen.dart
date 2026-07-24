@@ -99,19 +99,11 @@ class PromoCodeScreen extends StatelessWidget {
 
     final err = controller.loadError.value;
     if (err != null && err.isNotEmpty) {
-      return _buildListMessage(
-        message: AppStrings.failedToLoadPromoCodes.tr,
-        showRetry: true,
-        onRetry: controller.loadAvailablePromos,
-      );
+      return _buildListMessage(message: AppStrings.failedToLoadPromoCodes.tr);
     }
 
     if (controller.promoCodes.isEmpty) {
-      return _buildListMessage(
-        message: AppStrings.noAvailablePromoCodes.tr,
-        showRetry: true,
-        onRetry: controller.loadAvailablePromos,
-      );
+      return _buildListMessage(message: AppStrings.noAvailablePromoCodes.tr);
     }
 
     final promos = controller.promoCodes;
@@ -125,34 +117,17 @@ class PromoCodeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListMessage({
-    required String message,
-    required bool showRetry,
-    required VoidCallback onRetry,
-  }) {
+  Widget _buildListMessage({required String message}) {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 24.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodySecondary.copyWith(
-                fontSize: 14.sp,
-                color: AppColors.textBody,
-              ),
-            ),
-            if (showRetry) ...[
-              SizedBox(height: 12.h),
-              AppCupertinoTextButton.retry(
-                label: AppStrings.retry.tr,
-                onPressed: onRetry,
-              ),
-            ],
-          ],
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodySecondary.copyWith(
+            fontSize: 14.sp,
+            color: AppColors.textBody,
+          ),
         ),
       ),
     );
