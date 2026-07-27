@@ -886,6 +886,7 @@ class LanguageEn extends Languages {
     'add_new_card_text': '+ Add new card',
     'amount_is_required': 'Amount is required',
     'enter_valid_amount': 'Please enter a valid amount',
+    'add_card_minimum_amount': 'Minimum amount is TZS @amount',
     'set_as_default': 'Set as Default',
     'set_as_default_confirm': 'Make this your default account for transactions',
     'default_account_set_successfully': 'Default account updated successfully',
@@ -3345,6 +3346,9 @@ class LanguageEn extends Languages {
 
   @override
   String get enterValidAmount => values['enter_valid_amount'] ?? '';
+
+  @override
+  String get addCardMinimumAmount => values['add_card_minimum_amount'] ?? '';
 
   @override
   String get cardInformation => values['card_information'] ?? '';

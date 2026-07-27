@@ -389,7 +389,7 @@ class WalletPaymentRemoteDataSourceImpl
         endpoint: URLS.wallet.goInitCardSession,
         method: ApiMethod.post,
         body: {
-          Params.amount: "100",
+          Params.amount: amount.toString(),
           Params.newCard: newCard,
           Params.email: email,
           Params.mobileNumber: mobileNumber,

@@ -11,6 +11,7 @@ import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../controllers/add_card_controller.dart';
 import 'country_select_screen.dart';
 import 'state_select_screen.dart';
@@ -202,9 +203,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                           focusNode: controller.cvvFocus,
                                           keyboardType: TextInputType.number,
                                           textInputAction: TextInputAction.next,
-                                          onSubmitted: (_) => controller
-                                              .phoneFocus
-                                              .requestFocus(),
+                                          onSubmitted: (_) =>
+                                              controller.focusAmount(),
                                           onChanged: (_) =>
                                               controller.onFieldChanged(),
                                           errorText: controller.cvvError.value,
@@ -237,6 +237,48 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                       ),
                                     ),
                                   ],
+                                ),
+                                SizedBox(height: 12.h),
+                                Obx(
+                                  () => AppTextField(
+                                    label: AppStrings.amount.tr,
+                                    hintText: '1,000',
+                                    controller: controller.amountController,
+                                    focusNode: controller.amountFocus,
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) =>
+                                        controller.phoneFocus.requestFocus(),
+                                    onChanged: (_) =>
+                                        controller.onFieldChanged(),
+                                    errorText: controller.amountError.value,
+                                    inputFormatters: [
+                                      ThousandsSeparatorInputFormatter(),
+                                    ],
+                                    prefixIcon: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: 16.w,
+                                        right: 8.w,
+                                      ),
+                                      child: Center(
+                                        widthFactor: 1,
+                                        child: Text(
+                                          AppStrings.defaultCurrencyTzs.tr,
+                                          style: AppTextStyles.homeTitle
+                                              .copyWith(
+                                            fontSize: 15.h,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textHeading,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    fontSize: 15.h,
+                                    fontWeight: FontWeight.w500,
+                                    textFieldBackgroundColor:
+                                        AppColors.pageBackground,
+                                    textColor: AppColors.textHeading,
+                                  ),
                                 ),
                               ],
                             ),

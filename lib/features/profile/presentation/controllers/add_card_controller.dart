@@ -23,11 +23,14 @@ class AddCardController extends GetxController {
   AddCardController({WalletRepository? walletRepository})
     : _walletRepository = walletRepository ?? sl<WalletRepository>();
 
+  static const int minAddCardAmount = 1000;
+
   final cardHolderController = TextEditingController();
   final lastNameController = TextEditingController();
   final cardNumberController = TextEditingController();
   final expiryController = TextEditingController();
   final cvvController = TextEditingController();
+  final amountController = TextEditingController();
 
   // Billing address text controllers
   final phoneController = TextEditingController();
@@ -41,6 +44,7 @@ class AddCardController extends GetxController {
   final cardNumberFocus = FocusNode();
   final expiryFocus = FocusNode();
   final cvvFocus = FocusNode();
+  final amountFocus = FocusNode();
 
   // Billing address focus nodes
   final phoneFocus = FocusNode();
@@ -58,6 +62,7 @@ class AddCardController extends GetxController {
   final cardNumberError = RxnString();
   final expiryError = RxnString();
   final cvvError = RxnString();
+  final amountError = RxnString();
 
   // Country and State selection observers
   final selectedCountry = Rxn<CountriesResponse>();
@@ -149,6 +154,7 @@ class AddCardController extends GetxController {
     cardNumberController.dispose();
     expiryController.dispose();
     cvvController.dispose();
+    amountController.dispose();
 
     phoneController.dispose();
     emailController.dispose();
@@ -161,6 +167,7 @@ class AddCardController extends GetxController {
     cardNumberFocus.dispose();
     expiryFocus.dispose();
     cvvFocus.dispose();
+    amountFocus.dispose();
 
     phoneFocus.dispose();
     emailFocus.dispose();
@@ -231,6 +238,10 @@ class AddCardController extends GetxController {
     countryError.value = null;
     stateError.value = null;
 
+    // Amount is required for submit visibility — show inline errors while typing
+    // so users know why the Add Card button stays hidden (e.g. amount < 1000).
+    _refreshAmountError();
+
     canSubmitForm.value = _isFormInputValidForVisibility();
   }
 
@@ -239,6 +250,43 @@ class AddCardController extends GetxController {
   void focusExpiry() => expiryFocus.requestFocus();
 
   void focusCvv() => cvvFocus.requestFocus();
+
+  void focusAmount() => amountFocus.requestFocus();
+
+  int? get parsedAmount {
+    final amountText = amountController.text.replaceAll(RegExp(r'\D'), '');
+    if (amountText.isEmpty) return null;
+    return int.tryParse(amountText);
+  }
+
+  bool get isAmountValid {
+    final amount = parsedAmount;
+    return amount != null && amount >= minAddCardAmount;
+  }
+
+  /// Live amount validation so min/required errors show without needing submit.
+  void _refreshAmountError() {
+    final amountText = amountController.text.replaceAll(RegExp(r'\D'), '');
+    if (amountText.isEmpty) {
+      amountError.value = null;
+      return;
+    }
+
+    final amount = int.tryParse(amountText);
+    if (amount == null) {
+      amountError.value = AppStrings.enterValidAmount.tr;
+      return;
+    }
+
+    if (amount < minAddCardAmount) {
+      amountError.value = AppStrings.addCardMinimumAmount.trParams({
+        'amount': minAddCardAmount.toString(),
+      });
+      return;
+    }
+
+    amountError.value = null;
+  }
 
   Future<void> submitCard() async {
     if (isSubmitting.value) {
@@ -250,8 +298,7 @@ class AddCardController extends GetxController {
       return;
     }
 
-    final args = Get.arguments as Map<String, dynamic>?;
-    final int amount = args?['amount'] as int? ?? 100;
+    final amount = parsedAmount!;
 
     final fname = cardHolderController.text.trim();
     final lname = lastNameController.text.trim();
@@ -490,6 +537,8 @@ class AddCardController extends GetxController {
     final cardNumber = cardNumberController.text.replaceAll(' ', '');
     final expiry = expiryController.text.trim();
     final cvv = cvvController.text.trim();
+    final amountText = amountController.text.replaceAll(RegExp(r'\D'), '');
+    final amount = int.tryParse(amountText);
 
     final phone = phoneController.text.trim();
     final email = emailController.text.trim();
@@ -502,6 +551,7 @@ class AddCardController extends GetxController {
     cardNumberError.value = null;
     expiryError.value = null;
     cvvError.value = null;
+    amountError.value = null;
 
     phoneError.value = null;
     emailError.value = null;
@@ -544,6 +594,19 @@ class AddCardController extends GetxController {
       isValid = false;
     } else if (cvv.length != 3) {
       cvvError.value = AppStrings.cvvMustBe3Digits.tr;
+      isValid = false;
+    }
+
+    if (amountText.isEmpty) {
+      amountError.value = AppStrings.amountIsRequired.tr;
+      isValid = false;
+    } else if (amount == null) {
+      amountError.value = AppStrings.enterValidAmount.tr;
+      isValid = false;
+    } else if (amount < minAddCardAmount) {
+      amountError.value = AppStrings.addCardMinimumAmount.trParams({
+        'amount': minAddCardAmount.toString(),
+      });
       isValid = false;
     }
 
@@ -618,6 +681,7 @@ class AddCardController extends GetxController {
     if (!validateCardNum(cardNumber)) return false;
     if (!validateExpiryDate(expiry)) return false;
     if (!RegExp(r'^\d{3}$').hasMatch(cvv)) return false;
+    if (!isAmountValid) return false;
 
     if (selectedCountry.value == null) return false;
     if (statesList.isNotEmpty && selectedStateResponse.value == null) {

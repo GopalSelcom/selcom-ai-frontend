@@ -740,6 +740,7 @@ abstract class Languages {
   String get addNewCardText;
   String get amountIsRequired;
   String get enterValidAmount;
+  String get addCardMinimumAmount;
   String get cardInformation;
   String get firstName;
   String get lastName;

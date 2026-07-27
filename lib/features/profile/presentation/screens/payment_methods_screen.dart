@@ -254,7 +254,6 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       onTap: () async {
         final success = await Get.to<bool>(
           () => const AddCardScreen(),
-          arguments: {'amount': 0},
         );
         if (success == true) {
           await controller.loadCards();

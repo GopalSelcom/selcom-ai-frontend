@@ -98,7 +98,6 @@ class SavedCardsController extends GetxController {
   Future<void> onAddCardPressed() async {
     final result = await Get.to<dynamic>(
       () => const AddCardScreen(),
-      arguments: {'amount': 100},
     );
     if (result == true) {
       await loadCards();

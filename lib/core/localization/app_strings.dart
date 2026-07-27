@@ -920,6 +920,7 @@ class AppStrings {
   static const String addNewCardText = 'add_new_card_text';
   static const String amountIsRequired = 'amount_is_required';
   static const String enterValidAmount = 'enter_valid_amount';
+  static const String addCardMinimumAmount = 'add_card_minimum_amount';
   static const String setAsDefault = 'set_as_default';
   static const String setAsDefaultConfirm = 'set_as_default_confirm';
   static const String defaultAccountSetSuccessfully =
