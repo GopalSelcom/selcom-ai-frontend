@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -190,6 +189,9 @@ class FindingDriverController extends GetxController {
     String normalized,
     EventRiderStatusUpdateResponse payload,
   ) {
+    // Push Live Activity ContentState before navigation so Lock Screen flips
+    // off "Finding driver" as soon as the socket status does.
+    unawaited(_syncLiveActivityFromStatusPayload(normalized, payload));
     _searchCountdown.stop();
     _loadDriverMarkerIcon(vehicleType: payload.driverSnapshot?.vehicleType);
     if (!_didNavigateToAccepted) {
@@ -651,8 +653,9 @@ class FindingDriverController extends GetxController {
 
   Future<void> _syncLiveActivity() async {
     try {
-      if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
-
+      // Hybrid: always create-or-update (do not skip when already tracking on
+      // iOS). Local ActivityKit keeps Lock Screen in sync; APNs still works
+      // when the app is suspended.
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: 'SEARCHING',
@@ -661,11 +664,61 @@ class FindingDriverController extends GetxController {
         plateNumber: '',
         isCompleted: false,
         etaSeconds: currentEtaSeconds.value,
+        updateIfExists: true,
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppLogger.d(
         "❌ Error in FindingDriverController._syncLiveActivity: $e",
+        tag: 'ORDER_TRACKING',
+      );
+    }
+  }
+
+  /// Local Live Activity update when assignment (or later pickup) status arrives
+  /// so the widget leaves "Finding driver" immediately — not after APNs lag.
+  Future<void> _syncLiveActivityFromStatusPayload(
+    String normalized,
+    EventRiderStatusUpdateResponse payload,
+  ) async {
+    try {
+      if (rideId.isEmpty) return;
+      final status = normalized.toUpperCase();
+      if (status.contains('CANCELLED') || status.contains('NO_DRIVER')) {
+        await LiveActivityManager().endActivity(rideId);
+        return;
+      }
+
+      final driver = payload.driverSnapshot;
+      final vehicle = payload.vehicleSnapshot;
+      final rawPlate = (driver?.vehicleRegistrationNumber ?? '').trim();
+      final driverName = (driver?.name ?? '').trim();
+      final vehicleName =
+          '${vehicle?.displayName ?? vehicle?.vehicleName ?? vehicle?.vehicleType ?? driver?.vehicleType ?? requestedVehicleType ?? ''} ${driver?.vehicleModel ?? ''}'
+              .trim();
+      final etaFromPayload = (payload.etaSeconds ?? 0).toDouble();
+
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: status,
+        driverName: driverName.isNotEmpty
+            ? driverName
+            : AppStrings.findingYourDriver.tr,
+        vehicleName: vehicleName,
+        driverAvatarUrl: driver?.avatarUrl ?? '',
+        plateNumber: rawPlate,
+        isCompleted: status.contains('COMPLETED'),
+        etaSeconds: etaFromPayload > 0
+            ? etaFromPayload
+            : currentEtaSeconds.value,
+        driverLatitude: driver?.lat ?? assignedDriverLocation.value?.latitude,
+        driverLongitude: driver?.lng ?? assignedDriverLocation.value?.longitude,
+        updateIfExists: true,
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      AppLogger.d(
+        "❌ Error in FindingDriverController._syncLiveActivityFromStatusPayload: $e",
         tag: 'ORDER_TRACKING',
       );
     }
@@ -793,7 +846,7 @@ class FindingDriverController extends GetxController {
     }
   }
 
-  // Removed _syncLiveActivityFromPayload to respect 'APNs-only' update model
+  // Live Activity: hybrid local ActivityKit + APNs (see _syncLiveActivity*).
 
   Future<void> _initNearbyDriversSocket() async {
     _nearbyDriversSub?.cancel();
@@ -972,7 +1025,16 @@ class FindingDriverController extends GetxController {
         );
     if ((payload.eta ?? 0) > 0) {
       currentEtaSeconds.value = (payload.eta ?? 0).toDouble();
-      // Removed redundant _syncLiveActivity() call to respect 'APNs-only' update model
+      // Hybrid: refresh Live Activity ETA locally (throttled); APNs still OK.
+      unawaited(
+        LiveActivityManager().updateActivity(
+          orderId: rideId,
+          status: (payload.status ?? 'SEARCHING').toString().toUpperCase(),
+          etaSeconds: currentEtaSeconds.value,
+          driverLatitude: assignedDriverLocation.value?.latitude,
+          driverLongitude: assignedDriverLocation.value?.longitude,
+        ),
+      );
     }
     if (routeChanged) {
       _fitRouteBounds();

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -2396,6 +2395,10 @@ class DriverAcceptedController extends GetxController
       coordinates: coords,
       fitCameraOnChange: true,
     );
+
+    // Hybrid: refresh Live Activity ETA/location from tracking (1.5s throttle
+    // in LiveActivityManager). APNs can still deliver the same updates later.
+    unawaited(_syncLiveActivityFromTrackingPayload(payload));
   }
 
   /// Applies `route_geometry` from tracking/status payloads without re-fitting on duplicates.
@@ -2734,36 +2737,54 @@ class DriverAcceptedController extends GetxController
   ) async {
     try {
       final status = (payload.status ?? '').toString().trim().toUpperCase();
+      if (status.isEmpty) return;
 
-      // Handle Terminal States
+      // Terminal: tear down Lock Screen / Dynamic Island immediately.
       if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
         await LiveActivityManager().endActivity(rideId);
         return;
       }
 
-      // 📝 Only CREATE if not already tracking (iOS only).
-      // For iOS, subsequent updates are handled by the backend via APNs push.
-      // For Android, we must continue to push updates from Dart.
-      if (Platform.isIOS && LiveActivityManager().isTracking(rideId)) return;
+      // Hybrid Live Activity updates (iOS):
+      // - Local ActivityKit update here so the widget tracks app status without
+      //   waiting for backend → APNs latency.
+      // - APNs push-token updates remain for when the app is backgrounded/killed.
+      // startActivity(..., updateIfExists: true) creates or updates ContentState.
+      final r = ride.value;
+      final driver = payload.driverSnapshot;
+      final vehicle = payload.vehicleSnapshot;
+      final plateFromPayload =
+          (driver?.vehicleRegistrationNumber ?? '').trim();
+      final rawPlate = plateFromPayload.isNotEmpty
+          ? plateFromPayload
+          : (r != null ? _rawPlateStringFromRide(r) : '');
+      final driverName =
+          (driver?.name ?? r?.driverSnapshot?.name ?? '').trim();
+      final vehicleName =
+          '${vehicle?.displayName ?? vehicle?.vehicleName ?? vehicle?.vehicleType ?? r?.vehicleSnapshot?.vehicleType ?? ''} ${driver?.vehicleModel ?? r?.vehicleSnapshot?.vehicleModel ?? ''}'
+              .trim();
+      final avatarUrl =
+          (driver?.avatarUrl ?? r?.driverSnapshot?.avatarUrl ?? '').trim();
+      final etaFromPayload = (payload.etaSeconds ?? 0).toDouble();
+      final etaSeconds = etaFromPayload > 0
+          ? etaFromPayload
+          : currentEtaSeconds.value;
 
-      // If completed, sync one last time as isCompleted: true (handled by the handoff model update logic if needed,
-      // but here we just ensure we don't 'END' it).
-      if (status.contains('COMPLETED')) {
-        // We can call update if we want to ensure the final UI shows,
-        // or just return and let APNs handle the final 'true' state.
-        // To be safe and responsive, we sync the final state.
-        await LiveActivityManager().startActivity(
-          orderId: rideId,
-          status: status,
-          isCompleted: status.contains('COMPLETED'),
-          etaSeconds: currentEtaSeconds.value,
-          driverLatitude: assignedDriverLocation.value?.latitude,
-          driverLongitude: assignedDriverLocation.value?.longitude,
-        );
-        return;
-      }
-
-      // startActivity call removed to respect 'APNs-only' update model
+      await LiveActivityManager().startActivity(
+        orderId: rideId,
+        status: status,
+        driverName: driverName.isNotEmpty ? driverName : 'Driver Assigned',
+        vehicleName: vehicleName,
+        driverAvatarUrl: avatarUrl,
+        plateNumber: TanzaniaLicensePlateFormatter.formatDisplay(rawPlate),
+        isCompleted: status.contains('COMPLETED'),
+        etaSeconds: etaSeconds,
+        driverLatitude:
+            driver?.lat ?? assignedDriverLocation.value?.latitude,
+        driverLongitude:
+            driver?.lng ?? assignedDriverLocation.value?.longitude,
+        updateIfExists: true,
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       AppLogger.d(
@@ -2773,7 +2794,38 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  // _syncLiveActivityFromTrackingPayload removed to respect 'APNs-only' update model
+  /// Pushes ETA/location into Live Activity from tracking sockets (throttled).
+  /// Keeps the widget ETA closer to the in-app chip without relying only on APNs.
+  Future<void> _syncLiveActivityFromTrackingPayload(
+    TrackingUpdateSocketResponse payload,
+  ) async {
+    try {
+      if (!LiveActivityManager().isTracking(rideId)) return;
+
+      final statusRaw =
+          (payload.status ?? currentRideStatus.value).toString().trim();
+      if (statusRaw.isEmpty) return;
+      final status = statusRaw
+          .replaceAllMapped(
+            RegExp(r'([a-z0-9])([A-Z])'),
+            (m) => '${m.group(1)}_${m.group(2)}',
+          )
+          .toUpperCase()
+          .replaceAll(' ', '_');
+
+      final eta = (payload.eta ?? 0).toDouble();
+      await LiveActivityManager().updateActivity(
+        orderId: rideId,
+        status: status,
+        etaSeconds: eta > 0 ? eta : currentEtaSeconds.value,
+        driverLatitude: assignedDriverLocation.value?.latitude,
+        driverLongitude: assignedDriverLocation.value?.longitude,
+        isCompleted: status.contains('COMPLETED'),
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+    }
+  }
 
   /// Prefer vehicle snapshot plate; else driver snapshot registration (same sources as UI).
   String _rawPlateStringFromRide(RideModel r) {
@@ -2793,7 +2845,8 @@ class DriverAcceptedController extends GetxController
     try {
       if (rideId.isEmpty) return;
 
-      // Convert enum status (e.g. driverAssigned) to backend-style (e.g. DRIVER_ASSIGNED)
+      // Create or refresh Live Activity from ride details (HTTP / bootstrap).
+      // Uses updateIfExists so iOS ContentState stays aligned with the app.
       final statusStr = r.status.name
           .replaceAllMapped(
             RegExp(r'([a-z0-9])([A-Z])'),
@@ -2816,6 +2869,7 @@ class DriverAcceptedController extends GetxController
         etaSeconds: currentEtaSeconds.value,
         driverLatitude: assignedDriverLocation.value?.latitude,
         driverLongitude: assignedDriverLocation.value?.longitude,
+        updateIfExists: true,
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);

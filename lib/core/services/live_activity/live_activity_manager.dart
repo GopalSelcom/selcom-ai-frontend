@@ -13,6 +13,14 @@ import '../error_reporting/error_reporter.dart';
 import '../storage_service.dart';
 import 'android_order_tracking_manager.dart';
 
+/// Manages Lock Screen / Dynamic Island (iOS) and ongoing notification (Android).
+///
+/// **Update model (hybrid):**
+/// - Controllers call [startActivity] / [updateActivity] on socket status (and
+///   light ETA) so ContentState matches the in-app UI without waiting for push.
+/// - iOS still registers an Activity push token with the backend so APNs can
+///   update the widget when the app is backgrounded or killed.
+/// - [updateActivity] throttles non–status-change updates (~1.5s) to avoid spam.
 class LiveActivityManager {
   static final LiveActivityManager _instance = LiveActivityManager._internal();
 
@@ -412,7 +420,7 @@ class LiveActivityManager {
       final lastUpdate = _lastUpdateTime[orderId];
       final previousStatus = _lastStatus[orderId];
 
-      // Bypass throttle if status has changed (critical transition)
+      // Always allow status transitions through; throttle same-status ETA/gps noise.
       final isStatusChange =
           previousStatus != null && status.toLowerCase() != previousStatus;
 
