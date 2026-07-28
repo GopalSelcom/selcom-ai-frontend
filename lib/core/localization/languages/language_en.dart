@@ -256,6 +256,7 @@ class LanguageEn extends Languages {
     'how_was_your_ride': 'How was your ride?',
     'includes_stops': 'Includes stops',
     'includes_stop_fee': 'Includes Stop fee',
+    'for_added_stop': 'For added stop',
     'initiating_call_to_driverphone': 'Initiating call to \$driverPhone...',
     'keep_ride': 'Keep Ride',
     'link_account': 'Link Account',
@@ -393,6 +394,8 @@ class LanguageEn extends Languages {
     'base_fare': 'Base Fare',
     'distance_charge': 'Distance Charge',
     'time_charge': 'Time Charge',
+    'minimum_fare_top_up': 'Minimum fare top-up',
+    'stop_number_label': 'Stop @number',
     'discount': 'Discount',
     'tax': 'Tax',
     'total': 'Total',
@@ -1611,6 +1614,9 @@ class LanguageEn extends Languages {
   String get includesStopFee => values['includes_stop_fee'] ?? '';
 
   @override
+  String get forAddedStop => values['for_added_stop'] ?? '';
+
+  @override
   String get initiatingCallToDriverphone =>
       values['initiating_call_to_driverphone'] ?? '';
 
@@ -2016,6 +2022,12 @@ class LanguageEn extends Languages {
 
   @override
   String get timeCharge => values['time_charge'] ?? '';
+
+  @override
+  String get minimumFareTopUp => values['minimum_fare_top_up'] ?? '';
+
+  @override
+  String get stopNumberLabel => values['stop_number_label'] ?? '';
 
   @override
   String get discount => values['discount'] ?? '';

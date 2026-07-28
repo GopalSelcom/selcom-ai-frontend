@@ -15,6 +15,7 @@ import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../ride_rating/data/models/pending_review_response.dart';
 import '../../../ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
@@ -144,6 +145,32 @@ class RideDetailsController extends GetxController {
   String get bookingFeeLabel => CurrencyFormatter.format(bookingFee);
 
   String get totalAmountLabel => CurrencyFormatter.format(totalAmount);
+
+  /// Itemized fare lines: Base → Distance → Time → Stops → min-fare top-up.
+  /// Prefer over legacy Ride Charge + Booking Fee when [useItemizedFareBreakdown].
+  List<FareBreakdownDisplayRow> get itemizedFareRows {
+    final breakdown = ride.fareBreakdown;
+    return FareBreakdownDisplay.itemizedComponentRows(
+      baseFare: breakdown?.baseFare ?? 0,
+      distanceCharge: breakdown?.distanceCharge ?? 0,
+      timeCharge: breakdown?.timeCharge ?? 0,
+      stopCharges: breakdown?.stopCharges ?? const [],
+      minimumFareAdjustment: breakdown?.minimumFareAdjustment ?? 0,
+    );
+  }
+
+  /// True when API sent component fields (not just seed ride_charge/total).
+  bool get useItemizedFareBreakdown {
+    final breakdown = ride.fareBreakdown;
+    if (breakdown == null) return false;
+    return FareBreakdownDisplay.hasItemizedComponents(
+      baseFare: breakdown.baseFare ?? 0,
+      distanceCharge: breakdown.distanceCharge ?? 0,
+      timeCharge: breakdown.timeCharge ?? 0,
+      stopCharges: breakdown.stopCharges ?? const [],
+      minimumFareAdjustment: breakdown.minimumFareAdjustment ?? 0,
+    );
+  }
 
   /// Promo / cashback row on fare card.
   bool get showPromoFareLine => ride.hasPromoBenefit;

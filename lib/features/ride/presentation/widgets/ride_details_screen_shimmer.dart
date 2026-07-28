@@ -18,6 +18,8 @@ abstract final class RideDetailsScreenShimmer {
     bool showBookedForOther = false,
     bool showPassengerPhone = false,
     bool showPromoLine = false,
+    bool useItemizedFareBreakdown = false,
+    int itemizedComponentRowCount = 0,
     bool showDownloadSlip = false,
     int locationRowCount = 2,
   }) {
@@ -37,7 +39,11 @@ abstract final class RideDetailsScreenShimmer {
           _bookedForOtherCard(showPassengerPhone: showPassengerPhone),
         ],
         SizedBox(height: RideDetailsScreenLayout.sectionGap),
-        _fareCard(showPromoLine: showPromoLine),
+        _fareCard(
+          showPromoLine: showPromoLine,
+          useItemized: useItemizedFareBreakdown,
+          itemizedComponentRowCount: itemizedComponentRowCount,
+        ),
         if (showReviewAtBottom) ...[
           SizedBox(height: RideDetailsScreenLayout.sectionGap),
           _reviewCard(),
@@ -132,7 +138,11 @@ abstract final class RideDetailsScreenShimmer {
     );
   }
 
-  static Widget _fareCard({required bool showPromoLine}) {
+  static Widget _fareCard({
+    required bool showPromoLine,
+    bool useItemized = false,
+    int itemizedComponentRowCount = 0,
+  }) {
     return _sectionCardShell(
       padding: EdgeInsets.fromLTRB(
         RideDetailsScreenLayout.fareCardPaddingLeft,
@@ -143,8 +153,16 @@ abstract final class RideDetailsScreenShimmer {
       child: SizedBox(
         height: RideDetailsScreenLayout.fareCardContentHeight(
           showPromoLine: showPromoLine,
+          useItemized: useItemized,
+          itemizedComponentRowCount: itemizedComponentRowCount,
         ),
-        child: AppShimmer(child: _fareContent(showPromoLine: showPromoLine)),
+        child: AppShimmer(
+          child: _fareContent(
+            showPromoLine: showPromoLine,
+            useItemized: useItemized,
+            itemizedComponentRowCount: itemizedComponentRowCount,
+          ),
+        ),
       ),
     );
   }
@@ -317,9 +335,17 @@ abstract final class RideDetailsScreenShimmer {
     );
   }
 
-  static Widget _fareContent({required bool showPromoLine}) {
-    final rowCount =
-        RideDetailsScreenLayout.defaultFareRowCount + (showPromoLine ? 1 : 0);
+  static Widget _fareContent({
+    required bool showPromoLine,
+    bool useItemized = false,
+    int itemizedComponentRowCount = 0,
+  }) {
+    final rowCount = useItemized
+        ? itemizedComponentRowCount.clamp(0, 50) +
+              1 +
+              (showPromoLine ? 1 : 0)
+        : RideDetailsScreenLayout.defaultFareRowCount +
+              (showPromoLine ? 1 : 0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

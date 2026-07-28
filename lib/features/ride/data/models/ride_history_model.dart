@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../../core/data/models/fare_stop_charge.dart';
+
 class RideHistoryModelResponse {
   int? statusCode;
   Data? data;
@@ -407,6 +409,14 @@ class FareBreakdown {
   int? durationMinutes;
   int? timeCharge;
   int? waypointCharge;
+  /// Mid-ride only: fee for the most recently added stop. 0/absent otherwise.
+  /// Prefer [stopCharges] for the full itemized UI; do not replace with this.
+  int? stopAddedCharge;
+  /// Per-stop fees for every stop on the ride (initial booking + later adds).
+  /// Prefer over [waypointCharge] (legacy aggregate, kept for backward compat).
+  List<FareStopCharge>? stopCharges;
+  /// Extra amount when the minimum-fare floor applies. Render only when > 0.
+  int? minimumFareAdjustment;
   int? minimumFare;
   bool? minimumFareApplied;
   int? originalFare;
@@ -429,6 +439,9 @@ class FareBreakdown {
     this.durationMinutes,
     this.timeCharge,
     this.waypointCharge,
+    this.stopAddedCharge,
+    this.stopCharges,
+    this.minimumFareAdjustment,
     this.minimumFare,
     this.minimumFareApplied,
     this.originalFare,
@@ -457,6 +470,9 @@ class FareBreakdown {
     durationMinutes: json["duration_minutes"] ?? 0,
     timeCharge: json["time_charge"] ?? 0,
     waypointCharge: json["waypoint_charge"] ?? 0,
+    stopAddedCharge: json["stop_added_charge"] ?? 0,
+    stopCharges: FareStopCharge.listFromJson(json["stop_charges"]),
+    minimumFareAdjustment: json["minimum_fare_adjustment"] ?? 0,
     minimumFare: json["minimum_fare"] ?? 0,
     minimumFareApplied: json["minimum_fare_applied"] ?? false,
     originalFare: json["original_fare"] ?? 0,
@@ -480,6 +496,9 @@ class FareBreakdown {
     "duration_minutes": durationMinutes,
     "time_charge": timeCharge,
     "waypoint_charge": waypointCharge,
+    "stop_added_charge": stopAddedCharge,
+    "stop_charges": stopCharges?.map((e) => e.toMap()).toList() ?? [],
+    "minimum_fare_adjustment": minimumFareAdjustment,
     "minimum_fare": minimumFare,
     "minimum_fare_applied": minimumFareApplied,
     "original_fare": originalFare,

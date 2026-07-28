@@ -11,6 +11,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 import '../../data/models/receipt_response.dart';
 import 'receipt_format_utils.dart';
@@ -382,6 +383,24 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildFareSection(ReceiptModel receipt) {
+    // Same itemized lines as mid-ride / ride details (PDF embeds this PNG).
+    final useItemized = FareBreakdownDisplay.hasItemizedComponents(
+      baseFare: receipt.baseFare,
+      distanceCharge: receipt.distanceCharge,
+      timeCharge: receipt.timeCharge,
+      stopCharges: receipt.stopCharges,
+      minimumFareAdjustment: receipt.minimumFareAdjustment,
+    );
+    final itemizedLines = useItemized
+        ? FareBreakdownDisplay.itemizedComponentLines(
+            baseFare: receipt.baseFare,
+            distanceCharge: receipt.distanceCharge,
+            timeCharge: receipt.timeCharge,
+            stopCharges: receipt.stopCharges,
+            minimumFareAdjustment: receipt.minimumFareAdjustment,
+          )
+        : const <FareBreakdownComponentLine>[];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -395,16 +414,23 @@ class ReceiptImageGenerator {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _fareRow(
-                AppStrings.rideCharge.tr,
-                receipt.totalFare,
-                receipt.currency,
-              ),
-              _fareRow(
-                AppStrings.bookingFeesAndConvenienceCharges.tr,
-                receipt.bookingFee,
-                receipt.currency,
-              ),
+              // Itemized: Base / Distance / Time / Stop N / min-fare top-up.
+              // Legacy fallback: Ride Charge + Booking Fee when components absent.
+              if (useItemized)
+                for (final line in itemizedLines)
+                  _fareRow(line.title, line.amount, receipt.currency)
+              else ...[
+                _fareRow(
+                  AppStrings.rideCharge.tr,
+                  receipt.totalFare,
+                  receipt.currency,
+                ),
+                _fareRow(
+                  AppStrings.bookingFeesAndConvenienceCharges.tr,
+                  receipt.bookingFee,
+                  receipt.currency,
+                ),
+              ],
               if ((receipt.promoCode?.trim().isNotEmpty ?? false) &&
                   (receipt.promoDiscountAmount > 0 ||
                       receipt.cashbackAmount > 0 ||

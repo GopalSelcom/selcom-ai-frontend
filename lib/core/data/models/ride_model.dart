@@ -1,5 +1,6 @@
 import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
+import 'fare_stop_charge.dart';
 import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
 
@@ -464,6 +465,14 @@ class FareBreakdownModel {
   final int? durationMinutes;
   final int? timeCharge;
   final int? waypointCharge;
+  /// Mid-ride only: fee for the most recently added stop. 0/absent otherwise.
+  /// Prefer [stopCharges] for the full itemized UI; do not replace with this.
+  final int? stopAddedCharge;
+  /// Per-stop fees for every stop on the ride (initial booking + later adds).
+  /// Prefer over [waypointCharge] (legacy aggregate, kept for backward compat).
+  final List<FareStopCharge>? stopCharges;
+  /// Extra amount when the minimum-fare floor applies. Render only when > 0.
+  final int? minimumFareAdjustment;
   final int? minimumFare;
   final bool? minimumFareApplied;
   final int? originalFare;
@@ -486,6 +495,9 @@ class FareBreakdownModel {
     this.durationMinutes,
     this.timeCharge,
     this.waypointCharge,
+    this.stopAddedCharge,
+    this.stopCharges,
+    this.minimumFareAdjustment,
     this.minimumFare,
     this.minimumFareApplied,
     this.originalFare,
@@ -510,6 +522,9 @@ class FareBreakdownModel {
       durationMinutes: json['duration_minutes'] ?? 0,
       timeCharge: json['time_charge'] ?? 0,
       waypointCharge: json['waypoint_charge'] ?? 0,
+      stopAddedCharge: json['stop_added_charge'] ?? 0,
+      stopCharges: FareStopCharge.listFromJson(json['stop_charges']),
+      minimumFareAdjustment: json['minimum_fare_adjustment'] ?? 0,
       minimumFare: json['minimum_fare'] ?? 0,
       minimumFareApplied: json['minimum_fare_applied'] ?? false,
       originalFare: json['original_fare'] ?? 0,
@@ -534,6 +549,9 @@ class FareBreakdownModel {
     'duration_minutes': durationMinutes,
     'time_charge': timeCharge,
     'waypoint_charge': waypointCharge,
+    'stop_added_charge': stopAddedCharge,
+    'stop_charges': stopCharges?.map((e) => e.toMap()).toList() ?? [],
+    'minimum_fare_adjustment': minimumFareAdjustment,
     'minimum_fare': minimumFare,
     'minimum_fare_applied': minimumFareApplied,
     'original_fare': originalFare,

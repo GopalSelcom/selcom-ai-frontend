@@ -271,6 +271,7 @@ class AppStrings {
   static const String howWasYourRide = 'how_was_your_ride';
   static const String includesStops = 'includes_stops';
   static const String includesStopFee = 'includes_stop_fee';
+  static const String forAddedStop = 'for_added_stop';
   static const String initiatingCallToDriverphone =
       'initiating_call_to_driverphone';
   static const String keepRide = 'keep_ride';
@@ -457,6 +458,8 @@ class AppStrings {
   static const String baseFare = 'base_fare';
   static const String distanceCharge = 'distance_charge';
   static const String timeCharge = 'time_charge';
+  static const String minimumFareTopUp = 'minimum_fare_top_up';
+  static const String stopNumberLabel = 'stop_number_label';
   static const String discount = 'discount';
   static const String tax = 'tax';
   static const String total = 'total';

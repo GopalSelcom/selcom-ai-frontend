@@ -87,8 +87,16 @@ abstract final class RideDetailsScreenLayout {
 
   static int get defaultFareRowCount => 3;
 
-  static double fareCardContentHeight({required bool showPromoLine}) {
-    final rowCount = defaultFareRowCount + (showPromoLine ? 1 : 0);
+  static double fareCardContentHeight({
+    required bool showPromoLine,
+    int itemizedComponentRowCount = 0,
+    bool useItemized = false,
+  }) {
+    final rowCount = useItemized
+        ? itemizedComponentRowCount.clamp(0, 50) +
+              1 + // total
+              (showPromoLine ? 1 : 0)
+        : defaultFareRowCount + (showPromoLine ? 1 : 0);
     return fareTitleLineHeight +
         fareTitleRowsGap +
         rowCount * fareRowLineHeight +

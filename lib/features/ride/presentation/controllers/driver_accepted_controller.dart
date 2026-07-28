@@ -39,6 +39,7 @@ import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/book_any_fare_settled_ui.dart';
 import '../../../../shared/utils/currency_formatter.dart';
+import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
@@ -2594,6 +2595,32 @@ class DriverAcceptedController extends GetxController
     final amount =
         ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
     return CurrencyFormatter.format(amount);
+  }
+
+  /// Itemized fare lines: Base → Distance → Time → Stops → min-fare top-up.
+  /// Prefer over legacy Ride Charge + Booking Fee when [useItemizedFareBreakdown].
+  List<FareBreakdownDisplayRow> get itemizedFareRows {
+    final breakdown = ride.value?.fareBreakdown;
+    return FareBreakdownDisplay.itemizedComponentRows(
+      baseFare: breakdown?.baseFare ?? 0,
+      distanceCharge: breakdown?.distanceCharge ?? 0,
+      timeCharge: breakdown?.timeCharge ?? 0,
+      stopCharges: breakdown?.stopCharges ?? const [],
+      minimumFareAdjustment: breakdown?.minimumFareAdjustment ?? 0,
+    );
+  }
+
+  /// True when API sent component fields (not just seed ride_charge/total).
+  bool get useItemizedFareBreakdown {
+    final breakdown = ride.value?.fareBreakdown;
+    if (breakdown == null) return false;
+    return FareBreakdownDisplay.hasItemizedComponents(
+      baseFare: breakdown.baseFare ?? 0,
+      distanceCharge: breakdown.distanceCharge ?? 0,
+      timeCharge: breakdown.timeCharge ?? 0,
+      stopCharges: breakdown.stopCharges ?? const [],
+      minimumFareAdjustment: breakdown.minimumFareAdjustment ?? 0,
+    );
   }
 
   String get totalAmountLabel {

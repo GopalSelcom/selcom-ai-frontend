@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../../core/data/models/fare_stop_charge.dart';
+
 /// Envelope for `PUT .../stops` with `confirm: false`.
 class UpdateStopsPreviewResponse {
   int? statusCode;
@@ -305,11 +307,24 @@ class StopUpdateFareBreakdown {
   int? rideCharge;
   int? bookingFee;
   int? totalAmount;
+  int? waypointCharge;
+  /// Mid-ride only: fee for the most recently added stop. 0/absent otherwise.
+  /// Prefer [stopCharges] for the full itemized UI; do not replace with this.
+  int? stopAddedCharge;
+  /// Per-stop fees for every stop on the ride (initial booking + later adds).
+  /// Prefer over [waypointCharge] (legacy aggregate, kept for backward compat).
+  List<FareStopCharge>? stopCharges;
+  /// Extra amount when the minimum-fare floor applies. Render only when > 0.
+  int? minimumFareAdjustment;
 
   StopUpdateFareBreakdown({
     this.rideCharge,
     this.bookingFee,
     this.totalAmount,
+    this.waypointCharge,
+    this.stopAddedCharge,
+    this.stopCharges,
+    this.minimumFareAdjustment,
   });
 
   factory StopUpdateFareBreakdown.fromJson(String str) =>
@@ -322,12 +337,20 @@ class StopUpdateFareBreakdown {
         rideCharge: json["ride_charge"],
         bookingFee: json["booking_fee"],
         totalAmount: json["total_amount"],
+        waypointCharge: json["waypoint_charge"],
+        stopAddedCharge: json["stop_added_charge"] ?? 0,
+        stopCharges: FareStopCharge.listFromJson(json["stop_charges"]),
+        minimumFareAdjustment: json["minimum_fare_adjustment"] ?? 0,
       );
 
   Map<String, dynamic> toMap() => {
     "ride_charge": rideCharge,
     "booking_fee": bookingFee,
     "total_amount": totalAmount,
+    "waypoint_charge": waypointCharge,
+    "stop_added_charge": stopAddedCharge,
+    "stop_charges": stopCharges?.map((e) => e.toMap()).toList() ?? [],
+    "minimum_fare_adjustment": minimumFareAdjustment,
   };
 }
 

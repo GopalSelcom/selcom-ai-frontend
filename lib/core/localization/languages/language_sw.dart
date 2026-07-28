@@ -236,6 +236,7 @@ class LanguageSw extends Languages {
     'how_was_your_ride': 'Safari yako ilikuwaje?',
     'includes_stops': 'Ina vituo',
     'includes_stop_fee': 'Inajumuisha ada ya kituo',
+    'for_added_stop': 'Kwa kituo kilichoongezwa',
     'initiating_call_to_driverphone':
         'Inapiga simu kwenda kwa \$driverPhone...',
     'keep_ride': 'Weka Safari',
@@ -359,6 +360,8 @@ class LanguageSw extends Languages {
     'base_fare': 'Nauli ya Msingi',
     'distance_charge': 'Gharama ya Umbali',
     'time_charge': 'Gharama ya Muda',
+    'minimum_fare_top_up': 'Ongezeko la nauli ya chini',
+    'stop_number_label': 'Kituo @number',
     'discount': 'Punguzo',
     'tax': 'Kodi',
     'total': 'Jumla',
@@ -1532,6 +1535,9 @@ class LanguageSw extends Languages {
   String get includesStopFee => values['includes_stop_fee'] ?? '';
 
   @override
+  String get forAddedStop => values['for_added_stop'] ?? '';
+
+  @override
   String get initiatingCallToDriverphone =>
       values['initiating_call_to_driverphone'] ?? '';
 
@@ -1937,6 +1943,12 @@ class LanguageSw extends Languages {
 
   @override
   String get timeCharge => values['time_charge'] ?? '';
+
+  @override
+  String get minimumFareTopUp => values['minimum_fare_top_up'] ?? '';
+
+  @override
+  String get stopNumberLabel => values['stop_number_label'] ?? '';
 
   @override
   String get discount => values['discount'] ?? '';

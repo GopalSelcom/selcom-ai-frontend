@@ -216,6 +216,7 @@ abstract class Languages {
   String get howWasYourRide;
   String get includesStops;
   String get includesStopFee;
+  String get forAddedStop;
   String get initiatingCallToDriverphone;
   String get keepRide;
   String get linkAccount;
@@ -341,6 +342,8 @@ abstract class Languages {
   String get baseFare;
   String get distanceCharge;
   String get timeCharge;
+  String get minimumFareTopUp;
+  String get stopNumberLabel;
   String get discount;
   String get tax;
   String get total;

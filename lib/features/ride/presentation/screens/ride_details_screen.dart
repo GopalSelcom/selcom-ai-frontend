@@ -155,6 +155,10 @@ class RideDetailsScreen extends StatelessWidget {
                       showBookedForOther: ride.isBookedForOther ?? false,
                       showPassengerPhone: ride.passengerPhone != null,
                       showPromoLine: controller.showPromoFareLine,
+                      useItemizedFareBreakdown:
+                          controller.useItemizedFareBreakdown,
+                      itemizedComponentRowCount:
+                          controller.itemizedFareRows.length,
                       showDownloadSlip: controller.isCompleted,
                       locationRowCount:
                           RideDetailsScreenShimmer.locationRowCountFor(ride),
@@ -321,17 +325,25 @@ class RideDetailsScreen extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 6.h),
-                            FareBreakdownRow(
-                              title: AppStrings.rideCharge.tr,
-                              amount: controller.rideChargeLabel,
-                            ),
-                            SizedBox(height: 4.h),
-                            FareBreakdownRow(
-                              title: AppStrings
-                                  .bookingFeesAndConvenienceCharges
-                                  .tr,
-                              amount: controller.bookingFeeLabel,
-                            ),
+                            // Prefer API itemized components (incl. stop_charges)
+                            // over legacy Ride Charge + Booking Fee summary.
+                            if (controller.useItemizedFareBreakdown) ...[
+                              FareBreakdownRowsList(
+                                rows: controller.itemizedFareRows,
+                              ),
+                            ] else ...[
+                              FareBreakdownRow(
+                                title: AppStrings.rideCharge.tr,
+                                amount: controller.rideChargeLabel,
+                              ),
+                              SizedBox(height: 4.h),
+                              FareBreakdownRow(
+                                title: AppStrings
+                                    .bookingFeesAndConvenienceCharges
+                                    .tr,
+                                amount: controller.bookingFeeLabel,
+                              ),
+                            ],
                             if (controller.showPromoFareLine) ...[
                               SizedBox(height: 4.h),
                               FareBreakdownRow(

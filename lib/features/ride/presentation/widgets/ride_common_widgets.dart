@@ -10,6 +10,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
+import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/widgets/app_cupertino_text_button.dart';
 import '../../../../shared/widgets/app_route_location_pin_icon.dart';
 
@@ -396,6 +397,30 @@ class FareBreakdownRow extends StatelessWidget {
             height: 20 / 12,
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Renders itemized fare rows with the standard 4.h gap between lines.
+/// Used by mid-ride and ride-details fare cards.
+class FareBreakdownRowsList extends StatelessWidget {
+  final List<FareBreakdownDisplayRow> rows;
+
+  const FareBreakdownRowsList({super.key, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) SizedBox(height: 4.h),
+          FareBreakdownRow(
+            title: rows[i].title,
+            amount: rows[i].amountLabel,
+          ),
+        ],
       ],
     );
   }

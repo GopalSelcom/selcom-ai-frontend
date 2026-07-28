@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../../core/constants/currency_code.dart';
+import '../../../../core/data/models/fare_stop_charge.dart';
 import '../../../../core/data/models/ride_model.dart';
 
 /// Envelope for `GET go/rides/{id}/receipt` (from `model/model.dart`).
@@ -337,6 +338,14 @@ class ReceiptFareBreakdown {
   int? durationMinutes;
   int? timeCharge;
   int? waypointCharge;
+  /// Mid-ride only: fee for the most recently added stop. 0/absent otherwise.
+  /// Prefer [stopCharges] for the full itemized UI; do not replace with this.
+  int? stopAddedCharge;
+  /// Per-stop fees for every stop on the ride (initial booking + later adds).
+  /// Prefer over [waypointCharge] (legacy aggregate, kept for backward compat).
+  List<FareStopCharge>? stopCharges;
+  /// Extra amount when the minimum-fare floor applies. Render only when > 0.
+  int? minimumFareAdjustment;
   int? minimumFare;
   bool? minimumFareApplied;
   int? originalFare;
@@ -360,6 +369,9 @@ class ReceiptFareBreakdown {
     this.durationMinutes,
     this.timeCharge,
     this.waypointCharge,
+    this.stopAddedCharge,
+    this.stopCharges,
+    this.minimumFareAdjustment,
     this.minimumFare,
     this.minimumFareApplied,
     this.originalFare,
@@ -390,6 +402,9 @@ class ReceiptFareBreakdown {
         durationMinutes: json["duration_minutes"] ?? 0,
         timeCharge: json["time_charge"] ?? 0,
         waypointCharge: json["waypoint_charge"] ?? 0,
+        stopAddedCharge: json["stop_added_charge"] ?? 0,
+        stopCharges: FareStopCharge.listFromJson(json["stop_charges"]),
+        minimumFareAdjustment: json["minimum_fare_adjustment"] ?? 0,
         minimumFare: json["minimum_fare"] ?? 0,
         minimumFareApplied: json["minimum_fare_applied"] ?? false,
         originalFare: json["original_fare"] ?? 0,
@@ -414,6 +429,9 @@ class ReceiptFareBreakdown {
     "duration_minutes": durationMinutes,
     "time_charge": timeCharge,
     "waypoint_charge": waypointCharge,
+    "stop_added_charge": stopAddedCharge,
+    "stop_charges": stopCharges?.map((e) => e.toMap()).toList() ?? [],
+    "minimum_fare_adjustment": minimumFareAdjustment,
     "minimum_fare": minimumFare,
     "minimum_fare_applied": minimumFareApplied,
     "original_fare": originalFare,
@@ -494,6 +512,10 @@ class ReceiptModel {
   final int totalFare;
   final int bookingFee;
   final int totalAmount;
+  /// From `fare_breakdown.stop_charges` — one receipt line per stop.
+  final List<FareStopCharge> stopCharges;
+  /// From `fare_breakdown.minimum_fare_adjustment` — show only when > 0.
+  final int minimumFareAdjustment;
 
   ReceiptModel({
     required this.rideId,
@@ -527,6 +549,8 @@ class ReceiptModel {
     this.totalFare = 0,
     this.bookingFee = 0,
     this.totalAmount = 0,
+    this.stopCharges = const [],
+    this.minimumFareAdjustment = 0,
   });
 
   ReceiptModel copyWith({String? transactionId}) {
@@ -562,6 +586,8 @@ class ReceiptModel {
       totalFare: totalFare,
       bookingFee: bookingFee,
       totalAmount: totalAmount,
+      stopCharges: stopCharges,
+      minimumFareAdjustment: minimumFareAdjustment,
     );
   }
 
@@ -572,6 +598,8 @@ class ReceiptModel {
     final baseFare = fare?.baseFare ?? 0;
     final distanceCharge = fare?.distanceCharge ?? 0;
     final timeCharge = fare?.timeCharge ?? 0;
+    final stopCharges = fare?.stopCharges ?? const <FareStopCharge>[];
+    final minimumFareAdjustment = fare?.minimumFareAdjustment ?? 0;
     final totalFare =
         (fare?.totalFare != null && fare!.totalFare! > 0)
             ? fare.totalFare!
@@ -630,6 +658,8 @@ class ReceiptModel {
       totalFare: totalFare,
       bookingFee: bookingFee,
       totalAmount: displayTotal,
+      stopCharges: stopCharges,
+      minimumFareAdjustment: minimumFareAdjustment,
     );
   }
 
