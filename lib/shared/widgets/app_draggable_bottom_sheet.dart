@@ -46,6 +46,7 @@ class AppDraggableBottomSheet extends StatelessWidget {
       expand: expand,
       builder: (context, scrollController) {
         return Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(40.r)),

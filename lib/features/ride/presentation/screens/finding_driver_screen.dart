@@ -421,14 +421,20 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             }
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
-              child: AppPrimaryButton(
-                label: AppStrings.cancelRide.tr,
-                onPressed: c.confirmCancelRide,
-                outlined: true,
-                outlinedBorderColor: AppColors.iconHeartFilled,
-                outlinedTextColor: AppColors.iconHeartFilled,
-                height: 56.h,
-              ),
+              child: Obx(() {
+                final info = c.cancelInfo.value;
+                if (info != null && !info.canCancel) {
+                  return const SizedBox.shrink();
+                }
+                return AppPrimaryButton(
+                  label: AppStrings.cancelRide.tr,
+                  onPressed: c.confirmCancelRide,
+                  outlined: true,
+                  outlinedBorderColor: AppColors.iconHeartFilled,
+                  outlinedTextColor: AppColors.iconHeartFilled,
+                  height: 56.h,
+                );
+              }),
             );
           }),
         ],

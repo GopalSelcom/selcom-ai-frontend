@@ -73,3 +73,14 @@ class RidePaymentValidationFailure extends Failure {
     this.activeRideStatus,
   });
 }
+
+/// `PUT go/rides/:id/cancel` returned 409 `RIDE_ALREADY_FINALIZED`
+/// (e.g. no-show timer fired at the same moment). Not a user-facing error.
+class RideAlreadyFinalizedFailure extends Failure {
+  final String errorCode;
+
+  const RideAlreadyFinalizedFailure(
+    super.message, {
+    this.errorCode = 'RIDE_ALREADY_FINALIZED',
+  });
+}

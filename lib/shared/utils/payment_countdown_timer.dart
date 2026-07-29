@@ -33,7 +33,28 @@ class PaymentCountdownTimer with WidgetsBindingObserver {
     }
 
     _expired = false;
-    _deadline = DateTime.now().add(Duration(seconds: durationSeconds));
+    _deadline = DateTime.now().toUtc().add(Duration(seconds: durationSeconds));
+    _ensureLifecycleObserver();
+    _syncRemaining();
+    _startPeriodicTimer();
+  }
+
+  /// Counts down to an absolute UTC [deadline] (e.g. no-show `fire_at`).
+  ///
+  /// Prefer this over [start] when the server already started the window —
+  /// cold start / late push must subtract from the same absolute end time.
+  void startUntil(DateTime deadline) {
+    stop();
+    final deadlineUtc = deadline.toUtc();
+    final remaining = deadlineUtc.difference(DateTime.now().toUtc()).inSeconds;
+    if (remaining <= 0) {
+      onTick(0);
+      onExpired();
+      return;
+    }
+
+    _expired = false;
+    _deadline = deadlineUtc;
     _ensureLifecycleObserver();
     _syncRemaining();
     _startPeriodicTimer();
@@ -64,7 +85,10 @@ class PaymentCountdownTimer with WidgetsBindingObserver {
     final deadline = _deadline;
     if (deadline == null || _expired) return;
 
-    final remaining = deadline.difference(DateTime.now()).inSeconds;
+    final remaining = deadline
+        .toUtc()
+        .difference(DateTime.now().toUtc())
+        .inSeconds;
     if (remaining <= 0) {
       _expired = true;
       onTick(0);

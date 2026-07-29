@@ -318,18 +318,178 @@ class RideDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              AppStrings.totalFare.tr,
+                              controller.fareCardTitle,
                               style: AppTextStyles.homeSubtitle.copyWith(
                                 color: AppColors.black,
                                 height: 20 / 15,
                               ),
                             ),
                             SizedBox(height: 6.h),
-                            // Prefer API itemized components (incl. stop_charges)
-                            // over legacy Ride Charge + Booking Fee summary.
-                            if (controller.useItemizedFareBreakdown) ...[
+                            if (controller.showMidRideCancelFareSummary) ...[
+                              if (controller.hasMidRideCancelReason) ...[
+                                Text(
+                                  AppStrings.cancellationReason.tr,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    height: 20 / 12,
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+                                Text(
+                                  controller.midRideReasonDisplayLabel,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    height: 20 / 12,
+                                    color: AppColors.textHeading,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                              ],
+                              if (controller.midRideDistanceCoveredLabel !=
+                                  null) ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.distanceCovered.tr,
+                                  amount:
+                                      controller.midRideDistanceCoveredLabel!,
+                                ),
+                                SizedBox(height: 4.h),
+                              ],
+                              // Ride charges first (same as rider/system cancel),
+                              // then amount charged / refund / total.
+                              if (controller.hasRideChargeBreakdownRows) ...[
+                                FareBreakdownRowsList(
+                                  rows: controller.itemizedFareRows,
+                                ),
+                                SizedBox(height: 4.h),
+                              ] else ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.rideCharge.tr,
+                                  amount: controller.cancelledRideChargeLabel,
+                                ),
+                                SizedBox(height: 4.h),
+                                if (controller.cancelledBookingFeeAmount >
+                                    0) ...[
+                                  FareBreakdownRow(
+                                    title: AppStrings
+                                        .bookingFeesAndConvenienceCharges
+                                        .tr,
+                                    amount: controller.cancelledBookingFeeLabel,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                ],
+                              ],
+                              if (controller.midRideChargeAmount > 0) ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.amountCharged.tr,
+                                  amount: controller.midRideChargeLabel,
+                                  amountColor: AppColors.error,
+                                ),
+                                SizedBox(height: 4.h),
+                              ],
+                              if (controller.netRefundAmount > 0) ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.netAmountRefundedLabel.tr,
+                                  amount: controller.netRefundLabel,
+                                  amountColor: AppColors.success,
+                                ),
+                                SizedBox(height: 4.h),
+                              ],
+                              if (controller.midRideCancelMessage != null) ...[
+                                SizedBox(height: 4.h),
+                                Text(
+                                  controller.midRideCancelMessage!,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    height: 20 / 12,
+                                    color: AppColors.textSlate,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                              ],
+                              FareBreakdownRow(
+                                title: AppStrings.totalAmount.tr,
+                                amount: controller.totalAmountLabel,
+                                isTotal: true,
+                              ),
+                            ] else if (controller.showCancelledFareSummary) ...[
+                              if (controller.hasCancellationReason) ...[
+                                Text(
+                                  AppStrings.cancellationReason.tr,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    height: 20 / 12,
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+                                Text(
+                                  controller.cancellationReasonText,
+                                  style: AppTextStyles.homeCaption.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    height: 20 / 12,
+                                    color: AppColors.textHeading,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                              ],
+                              // Ride charges first, then cancel fee / refund / total.
+                              if (controller.hasRideChargeBreakdownRows) ...[
+                                FareBreakdownRowsList(
+                                  rows: controller.itemizedFareRows,
+                                ),
+                                SizedBox(height: 4.h),
+                              ] else ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.rideCharge.tr,
+                                  amount: controller.cancelledRideChargeLabel,
+                                ),
+                                SizedBox(height: 4.h),
+                                if (controller.cancelledBookingFeeAmount >
+                                    0) ...[
+                                  FareBreakdownRow(
+                                    title: AppStrings
+                                        .bookingFeesAndConvenienceCharges
+                                        .tr,
+                                    amount: controller.cancelledBookingFeeLabel,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                ],
+                              ],
+                              if (controller.cancellationFeeAmount > 0) ...[
+                                FareBreakdownRow(
+                                  title: controller.cancellationFeeRowTitle,
+                                  amount: controller.cancellationFeeLabel,
+                                  amountColor: AppColors.error,
+                                ),
+                                SizedBox(height: 4.h),
+                              ],
+                              if (controller.netRefundAmount > 0) ...[
+                                FareBreakdownRow(
+                                  title: AppStrings.netAmountRefundedLabel.tr,
+                                  amount: controller.netRefundLabel,
+                                  amountColor: AppColors.success,
+                                ),
+                                SizedBox(height: 4.h),
+                              ],
+                              FareBreakdownRow(
+                                title: AppStrings.totalAmount.tr,
+                                amount: controller.totalAmountLabel,
+                                isTotal: true,
+                              ),
+                            ] else if (controller.useItemizedFareBreakdown) ...[
                               FareBreakdownRowsList(
                                 rows: controller.itemizedFareRows,
+                              ),
+                              if (controller.showPromoFareLine) ...[
+                                SizedBox(height: 4.h),
+                                FareBreakdownRow(
+                                  title: controller.promoFareLineTitle,
+                                  amount: controller.promoFareLineAmountLabel,
+                                ),
+                              ],
+                              SizedBox(height: 4.h),
+                              FareBreakdownRow(
+                                title: AppStrings.totalAmount.tr,
+                                amount: controller.totalAmountLabel,
                               ),
                             ] else ...[
                               FareBreakdownRow(
@@ -343,19 +503,19 @@ class RideDetailsScreen extends StatelessWidget {
                                     .tr,
                                 amount: controller.bookingFeeLabel,
                               ),
-                            ],
-                            if (controller.showPromoFareLine) ...[
+                              if (controller.showPromoFareLine) ...[
+                                SizedBox(height: 4.h),
+                                FareBreakdownRow(
+                                  title: controller.promoFareLineTitle,
+                                  amount: controller.promoFareLineAmountLabel,
+                                ),
+                              ],
                               SizedBox(height: 4.h),
                               FareBreakdownRow(
-                                title: controller.promoFareLineTitle,
-                                amount: controller.promoFareLineAmountLabel,
+                                title: AppStrings.totalAmount.tr,
+                                amount: controller.totalAmountLabel,
                               ),
                             ],
-                            SizedBox(height: 4.h),
-                            FareBreakdownRow(
-                              title: AppStrings.totalAmount.tr,
-                              amount: controller.totalAmountLabel,
-                            ),
                           ],
                         ),
                       ),

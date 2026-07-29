@@ -19,7 +19,10 @@ import '../../../../core/data/models/responses/nearbyRiders/response/ride_stops_
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
+import '../../../../core/data/models/mid_ride_cancel_model.dart';
+import '../../../../core/data/models/ride_cancel_info_model.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/data/models/ride_no_show_info_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -44,6 +47,7 @@ import '../../../../shared/utils/route_map_marker_icons.dart';
 import '../../../../shared/utils/route_pin_letter_style.dart';
 import '../../../../shared/utils/map_vehicle_marker_utils.dart';
 import '../../../../shared/utils/mid_ride_cancel_navigation.dart';
+import '../../../../shared/utils/payment_countdown_timer.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
 import '../../../../shared/utils/ride_pickup_status_labels.dart';
 import '../../../../shared/utils/ride_status_normalizer.dart';
@@ -57,7 +61,6 @@ import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.d
 import '../../data/models/destination_update_models.dart';
 import '../../data/models/emergency_contacts_response.dart';
 import '../../data/models/stop_update_models.dart';
-import '../../../../core/data/models/mid_ride_cancel_model.dart';
 import '../../data/models/mid_ride_cancel_models.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
@@ -119,6 +122,21 @@ class DriverAcceptedController extends GetxController
   final rideLoadError = RxnString();
   final Rxn<RideModel> ride = Rxn<RideModel>();
 
+  /// Cached `cancel_info` from socket / active rides — drives cancel dialog copy.
+  final cancelInfo = Rxn<RideCancelInfoModel>();
+
+  /// Cached waiting `no_show` object — null hides the pickup wait banner.
+  final noShowInfo = Rxn<RideNoShowInfoModel>();
+
+  /// `mm:ss` remaining until [RideNoShowInfoModel.fireAt].
+  final noShowCountdownLabel = '00:00'.obs;
+
+  /// Clock hit zero; waiting for server-authoritative cancel (do not call cancel API).
+  final isNoShowExpiring = false.obs;
+
+  PaymentCountdownTimer? _noShowCountdown;
+  String? _armedNoShowFireAtIso;
+
   final driverName = ''.obs;
   final driverPhone = ''.obs;
   final driverAvatarUrl = ''.obs;
@@ -147,6 +165,19 @@ class DriverAcceptedController extends GetxController
 
   bool get shouldShowMapSafetyAction =>
       rideBottomSheetState.value == RideBottomSheetState.rideStarted;
+
+  /// Hide cancel when backend says `can_cancel: false` (rider already in vehicle).
+  bool get shouldShowRiderCancelButton {
+    final info = cancelInfo.value;
+    if (info == null) return true;
+    return info.canCancel;
+  }
+
+  bool get shouldShowNoShowBanner => noShowInfo.value != null;
+
+  String get noShowBannerTitle => noShowInfo.value?.title ?? '';
+
+  String get noShowBannerSubtitle => noShowInfo.value?.subtitle ?? '';
 
   // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
@@ -665,6 +696,7 @@ class DriverAcceptedController extends GetxController
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
+    _stopNoShowCountdown();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _rideStopSub?.cancel();
@@ -957,6 +989,7 @@ class DriverAcceptedController extends GetxController
     rideLoadError.value = null;
     ride.value = r;
     _applyRide(r);
+    _syncCancelAndNoShowFromRideModel(r);
     _syncDestinationFromRide(r);
     // HTTP details can show completion before/without a matching socket tick;
     // keep bottom-sheet state and completion navigation in sync with the model.
@@ -1156,6 +1189,18 @@ class DriverAcceptedController extends GetxController
       if (normalized == 'cancelled') {
         if (_isUserInitiatedCancellation || _navigatedAway) return;
         await _syncLiveActivityFromStatusPayload(payload);
+        _stopNoShowCountdown(clearInfo: true);
+        if (payload.isNoShowCancellation) {
+          _navigatedAway = true;
+          await LiveActivityManager().endActivity(rideId);
+          final message = (payload.message ?? '').trim();
+          _showCancelDialogThenGoHome(
+            message.isNotEmpty
+                ? message
+                : AppStrings.rideCancelled.tr,
+          );
+          return;
+        }
         await _maybeNavigateMidRideDriverCancelled();
         if (_navigatedAway) return;
         _navigatedAway = true;
@@ -1839,6 +1884,111 @@ class DriverAcceptedController extends GetxController
     _setDriverFinishingNearby(payload.driverFinishingNearby);
     if (rootEta != null && rootEta.toDouble() > 0) {
       _applySocketEtaSecondsToLabels(rootEta.toDouble(), skipIfArrived: true);
+    }
+
+    _syncCancelAndNoShowFromStatusPayload(payload);
+  }
+
+  void _syncCancelAndNoShowFromStatusPayload(
+    EventRiderStatusUpdateResponse payload,
+  ) {
+    if (payload.cancelInfoFieldPresent) {
+      cancelInfo.value = payload.cancelInfo;
+      final current = ride.value;
+      if (current != null) {
+        ride.value = current.copyWith(
+          cancelInfo: payload.cancelInfo,
+          clearCancelInfo: payload.cancelInfo == null,
+        );
+      }
+    }
+
+    if (payload.noShowFieldPresent) {
+      if (payload.isNoShowCancellation || payload.noShow == null) {
+        _clearNoShowInfo();
+      } else {
+        _armNoShowInfo(payload.noShow!);
+      }
+    }
+  }
+
+  void _syncCancelAndNoShowFromRideModel(RideModel r) {
+    if (r.cancelInfo != null) {
+      cancelInfo.value = r.cancelInfo;
+    }
+    if (r.noShow != null) {
+      // Prefer banner copy already armed from active/status payload.
+      _armNoShowInfo(
+        r.noShow!.mergingDisplayFrom(noShowInfo.value),
+      );
+      return;
+    }
+    final normalized = normalizeRideStatusString(rideStatusToApiValue(r.status));
+    if (normalized == 'ride_started' ||
+        normalized == 'ride_in_progress' ||
+        normalized == 'near_destination' ||
+        normalized == 'completed' ||
+        normalized == 'ride_completed' ||
+        normalized == 'cancelled') {
+      _clearNoShowInfo();
+    }
+  }
+
+  void _armNoShowInfo(RideNoShowInfoModel info) {
+    // Keep title/subtitle from active/socket when a later details refresh
+    // only sends fire_at / fee without banner copy.
+    final merged = info.mergingDisplayFrom(noShowInfo.value);
+    noShowInfo.value = merged;
+    isNoShowExpiring.value = false;
+    final fireIso = merged.fireAt.toIso8601String();
+    if (_armedNoShowFireAtIso == fireIso && _noShowCountdown != null) {
+      noShowCountdownLabel.value = merged.formatRemainingMmSs();
+      final current = ride.value;
+      if (current != null) {
+        ride.value = current.copyWith(noShow: merged);
+      }
+      return;
+    }
+    _armedNoShowFireAtIso = fireIso;
+    noShowCountdownLabel.value = merged.formatRemainingMmSs();
+    _noShowCountdown?.stop();
+    _noShowCountdown = PaymentCountdownTimer(
+      onTick: (remainingSeconds) {
+        final mins = remainingSeconds ~/ 60;
+        final secs = remainingSeconds % 60;
+        noShowCountdownLabel.value =
+            '${mins.toString().padLeft(2, '0')}:'
+            '${secs.toString().padLeft(2, '0')}';
+      },
+      onExpired: () {
+        // Display-only — server cancels; show brief waiting state.
+        noShowCountdownLabel.value = '00:00';
+        isNoShowExpiring.value = true;
+      },
+    )..startUntil(merged.fireAt);
+
+    final current = ride.value;
+    if (current != null) {
+      ride.value = current.copyWith(noShow: merged);
+    }
+  }
+
+  void _clearNoShowInfo() {
+    _stopNoShowCountdown(clearInfo: true);
+  }
+
+  void _stopNoShowCountdown({bool clearInfo = false}) {
+    _noShowCountdown?.stop();
+    _noShowCountdown = null;
+    _armedNoShowFireAtIso = null;
+    isNoShowExpiring.value = false;
+    if (clearInfo) {
+      noShowInfo.value = null;
+      noShowCountdownLabel.value = '00:00';
+      final current = ride.value;
+      if (current != null && current.noShow != null) {
+        ride.value = current.copyWith(clearNoShow: true);
+      }
     }
   }
 
@@ -2721,6 +2871,7 @@ class DriverAcceptedController extends GetxController
     return CancelRideFlow(
       rideRepository: rideRepository,
       rideId: rideId,
+      cancelInfo: cancelInfo.value,
       onCancelApiStarted: () {
         _isUserInitiatedCancellation = true;
         _navigatedAway = true;
@@ -2728,6 +2879,13 @@ class DriverAcceptedController extends GetxController
       onCancelApiFailed: () {
         _isUserInitiatedCancellation = false;
         _navigatedAway = false;
+      },
+      onRideAlreadyFinalized: () {
+        // Race with server no-show finalize — stay on screen and await socket.
+        _isUserInitiatedCancellation = false;
+        _navigatedAway = false;
+        isNoShowExpiring.value = true;
+        unawaited(_fetchRideDetails());
       },
     ).run();
   }

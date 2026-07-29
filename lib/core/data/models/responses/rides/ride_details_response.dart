@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import '../../ride_model.dart';
 import '../../fare_stop_charge.dart';
+import '../../ride_model.dart';
+import '../../ride_no_show_info_model.dart';
 
 /// Models for `GET go/rides/{id}` — `{"status_code":200,"data":{"ride":{...}}}`.
 ///
@@ -131,6 +132,10 @@ class RideDetailsRide {
   int? cancellationFee;
   String? cancelledBy;
   RideDetailsMidRideCancel? midRideCancel;
+  /// Waiting banner while driver is at pickup (`no_show` object, e.g. scheduled).
+  RideNoShowInfoModel? noShow;
+  /// Terminal no-show cancel — `no_show: true` or fired `no_show` object.
+  bool isNoShowCancellation;
   List<dynamic>? rejectedDrivers;
   List<dynamic>? blockedDrivers;
   String? driverAssignedAt;
@@ -215,6 +220,8 @@ class RideDetailsRide {
     this.cancellationFee,
     this.cancelledBy,
     this.midRideCancel,
+    this.noShow,
+    this.isNoShowCancellation = false,
     this.rejectedDrivers,
     this.blockedDrivers,
     this.driverAssignedAt,
@@ -326,6 +333,8 @@ class RideDetailsRide {
       midRideCancel: json["mid_ride_cancel"] == null
           ? null
           : RideDetailsMidRideCancel.fromMap(json["mid_ride_cancel"]),
+      noShow: RideDetailsRide._parseWaitingNoShow(json),
+      isNoShowCancellation: RideDetailsRide._parseIsNoShowCancellation(json),
       rejectedDrivers: json["rejected_drivers"] ?? <dynamic>[],
       blockedDrivers: json["blocked_drivers"] ?? <dynamic>[],
       driverAssignedAt: json["driver_assigned_at"] ?? '',
@@ -426,6 +435,9 @@ class RideDetailsRide {
     "cancellation_fee": cancellationFee,
     "cancelled_by": cancelledBy,
     "mid_ride_cancel": midRideCancel?.toMap(),
+    // Terminal cancel uses boolean `true`; ongoing wait keeps the object
+    // so [toRideModel] can arm the SCR-11 no-show countdown.
+    "no_show": isNoShowCancellation ? true : noShow?.toJson(),
     "rejected_drivers": rejectedDrivers,
     "blocked_drivers": blockedDrivers,
     "driver_assigned_at": driverAssignedAt,
@@ -551,6 +563,83 @@ class RideDetailsRide {
     final fare = finalFare;
     if (fare is num) return fare.toInt();
     return fareEstimate ?? 0;
+  }
+
+  /// Hold/preauth amount used to derive net refund on cancelled rides.
+  int get displayBlockedHoldAmount {
+    final blocked = blockedAmount ?? 0;
+    if (blocked > 0) return blocked;
+    return preauthTotal ?? 0;
+  }
+
+  /// Amount captured as cancel/no-show fee.
+  int get displayCancellationFeeAmount {
+    final fee = cancellationFee ?? 0;
+    if (fee > 0) return fee;
+    final captured = cancellationFeeCaptured ?? 0;
+    if (captured > 0) return captured;
+    return captureTotal ?? 0;
+  }
+
+  /// Released hold after fee capture (`hold - fee`), never negative.
+  int get displayNetRefundAmount {
+    if (isMidRideDriverCancel) {
+      final fromApi = midRideCancel?.netRefund;
+      if (fromApi != null && fromApi > 0) return fromApi;
+      final released = midRideCancel?.releasedAmount;
+      if (released != null && released > 0) return released;
+      final charged = midRideCancel?.displayChargeAmount ?? 0;
+      final refund = displayBlockedHoldAmount - charged;
+      return refund > 0 ? refund : 0;
+    }
+    if (!isCancelled) return 0;
+    final refund = displayBlockedHoldAmount - displayCancellationFeeAmount;
+    return refund > 0 ? refund : 0;
+  }
+
+  String get displayCancellationReason {
+    final raw = cancellationReason?.toString().trim() ?? '';
+    return raw;
+  }
+
+  /// System / no-show cancels have machine codes (e.g. `rider_no_show`) — hide in UI.
+  bool get shouldShowCancellationReason {
+    if (!isCancelled || isMidRideDriverCancel) return false;
+    if (isNoShowCancellation) return false;
+    final by = (cancelledBy ?? '').trim().toLowerCase();
+    if (by == 'system') return false;
+    final reason = displayCancellationReason.toLowerCase();
+    if (reason.isEmpty) return false;
+    if (reason == 'rider_no_show' || reason == 'no_show') return false;
+    return true;
+  }
+
+  /// Waiting `no_show` object for ongoing rides; null when terminal / absent.
+  static RideNoShowInfoModel? _parseWaitingNoShow(Map<String, dynamic> json) {
+    if (_parseIsNoShowCancellation(json)) return null;
+    return rideNoShowInfoFromJson(json['no_show']);
+  }
+
+  /// Detects terminal no-show from boolean or fired object payloads.
+  static bool _parseIsNoShowCancellation(Map<String, dynamic> json) {
+    final raw = json['no_show'];
+    if (raw == true) return true;
+    if (raw is Map) {
+      final map = Map<String, dynamic>.from(raw);
+      final status = map['status']?.toString().trim().toLowerCase() ?? '';
+      if (status == 'fired' ||
+          status == 'completed' ||
+          status == 'captured' ||
+          map['fired_at'] != null) {
+        return true;
+      }
+      // Cancelled ride with a no_show object is treated as no-show terminal.
+      if ((json['status']?.toString() ?? '') == 'cancelled') return true;
+    }
+    final reason =
+        json['cancellation_reason']?.toString().trim().toLowerCase() ?? '';
+    if (reason == 'rider_no_show' || reason == 'no_show') return true;
+    return false;
   }
 }
 

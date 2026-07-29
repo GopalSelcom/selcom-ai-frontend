@@ -3,6 +3,8 @@ import '../../domain/entities/location_entity.dart';
 import 'fare_stop_charge.dart';
 import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
+import 'ride_cancel_info_model.dart';
+import 'ride_no_show_info_model.dart';
 
 enum RideStatus {
   searching,
@@ -72,6 +74,12 @@ class RideModel {
   /// Present when the driver ended the trip mid-ride (partial charge flow).
   final MidRideCancelModel? midRideCancel;
 
+  /// Live cancel confirmation copy from `cancel_info` (socket / active rides).
+  final RideCancelInfoModel? cancelInfo;
+
+  /// Driver-waiting no-show banner from `no_show` object (null when not waiting).
+  final RideNoShowInfoModel? noShow;
+
   /// Driver-search window length from API `cancel_time` (milliseconds).
   final int? cancelTime;
 
@@ -118,6 +126,8 @@ class RideModel {
     this.cashbackAmount,
     this.transactionId = '',
     this.midRideCancel,
+    this.cancelInfo,
+    this.noShow,
     this.cancelTime,
     this.searchStartedAt,
   });
@@ -185,6 +195,8 @@ class RideModel {
     final midRideCancel = midRideCancelJson is Map
         ? MidRideCancelModel.fromJson(Map<String, dynamic>.from(midRideCancelJson))
         : null;
+    final cancelInfo = rideCancelInfoFromJson(json['cancel_info']);
+    final noShow = rideNoShowInfoFromJson(json['no_show']);
 
     return RideModel(
       id: json['_id'] ?? '',
@@ -243,6 +255,8 @@ class RideModel {
           .toString()
           .trim(),
       midRideCancel: midRideCancel,
+      cancelInfo: cancelInfo,
+      noShow: noShow,
       cancelTime: (json['cancel_time'] as num?)?.toInt(),
       searchStartedAt: parseDriverSearchStartedAt(json['search_started_at']),
     );
@@ -288,6 +302,10 @@ class RideModel {
     int? cashbackAmount,
     String? transactionId,
     MidRideCancelModel? midRideCancel,
+    RideCancelInfoModel? cancelInfo,
+    bool clearCancelInfo = false,
+    RideNoShowInfoModel? noShow,
+    bool clearNoShow = false,
     int? cancelTime,
     DateTime? searchStartedAt,
   }) {
@@ -331,6 +349,8 @@ class RideModel {
       cashbackAmount: cashbackAmount ?? this.cashbackAmount,
       transactionId: transactionId ?? this.transactionId,
       midRideCancel: midRideCancel ?? this.midRideCancel,
+      cancelInfo: clearCancelInfo ? null : (cancelInfo ?? this.cancelInfo),
+      noShow: clearNoShow ? null : (noShow ?? this.noShow),
       cancelTime: cancelTime ?? this.cancelTime,
       searchStartedAt: searchStartedAt ?? this.searchStartedAt,
     );

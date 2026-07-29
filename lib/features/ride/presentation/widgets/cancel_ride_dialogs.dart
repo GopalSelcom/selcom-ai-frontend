@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/data/models/ride_cancel_info_model.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -12,15 +13,39 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/cancel_reason_selection_controller.dart';
 
 class CancelConfirmationDialog extends StatelessWidget {
-  const CancelConfirmationDialog({super.key});
+  const CancelConfirmationDialog({super.key, this.cancelInfo});
+
+  /// Backend `cancel_info` — title/subtitle rendered verbatim when present.
+  final RideCancelInfoModel? cancelInfo;
 
   @override
   Widget build(BuildContext context) {
+    final info = cancelInfo;
+    final title = (info?.title.trim().isNotEmpty ?? false)
+        ? info!.title
+        : AppStrings.areYouSureYouWantToCancel.tr;
+    final subtitle = info?.subtitle.trim() ?? '';
+    final hasFee = info?.hasFee ?? false;
+
     return AppCancelFlowDialog(
-      title: AppStrings.areYouSureYouWantToCancel.tr,
+      title: title,
+      // Neutral subtitle when free; fee copy uses warning color in [content].
+      subtitle: (!hasFee && subtitle.isNotEmpty) ? subtitle : null,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (hasFee && subtitle.isNotEmpty) ...[
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.homeSubtitle.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 24.h),
+          ],
           _ActionButton(
             title: AppStrings.yesCancel.tr,
             color: AppColors.primaryButton,
@@ -334,6 +359,79 @@ class CancellationChargesDialog extends StatelessWidget {
                 Get.back(result: true);
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Post-cancel settlement summary from `PUT .../cancel` (`cancellation_fee` / `net_refund`).
+class CancelResultDialog extends StatelessWidget {
+  const CancelResultDialog({
+    super.key,
+    required this.cancellationFee,
+    required this.netRefund,
+  });
+
+  final int cancellationFee;
+  final int netRefund;
+
+  @override
+  Widget build(BuildContext context) {
+    final feeLabel = CurrencyFormatter.format(cancellationFee);
+    final refundLabel = CurrencyFormatter.format(netRefund);
+    final bodyStyle = AppTextStyles.homeSubtitle.copyWith(
+      color: AppColors.textSlate,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+    );
+
+    return AppCancelFlowDialog(
+      canPop: false,
+      title: AppStrings.rideCancelled.tr,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: bodyStyle,
+              children: [
+                if (cancellationFee > 0) ...[
+                  TextSpan(text: AppStrings.cancellationFeeOf.tr),
+                  TextSpan(
+                    text: feeLabel,
+                    style: bodyStyle.copyWith(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextSpan(text: AppStrings.hasBeenChargedPeriod.tr),
+                ],
+                if (cancellationFee > 0 && netRefund > 0)
+                  const TextSpan(text: '\n\n'),
+                if (netRefund > 0) ...[
+                  TextSpan(text: AppStrings.netRefundOf.tr),
+                  TextSpan(
+                    text: refundLabel,
+                    style: bodyStyle.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextSpan(text: AppStrings.hasBeenRefundedPeriod.tr),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          _ActionButton(
+            title: AppStrings.ok.tr,
+            color: AppColors.primaryButton,
+            textColor: AppColors.white,
+            onTap: () => Get.back(),
           ),
         ],
       ),

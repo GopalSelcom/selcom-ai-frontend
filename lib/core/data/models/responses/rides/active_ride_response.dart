@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import '../../fare_stop_charge.dart';
+import '../../ride_cancel_info_model.dart';
+import '../../ride_no_show_info_model.dart';
 
 /// Models for `GET go/rides/active` (from `model/model.dart` + legacy fields).
 class ActiveRideResponseModel {
@@ -112,8 +114,15 @@ class ActiveRideData {
 class ActiveRideEntry {
   ActiveRide? ride;
   ActiveRideSocketRooms? socketRooms;
+  RideCancelInfoModel? cancelInfo;
+  RideNoShowInfoModel? noShow;
 
-  ActiveRideEntry({this.ride, this.socketRooms});
+  ActiveRideEntry({
+    this.ride,
+    this.socketRooms,
+    this.cancelInfo,
+    this.noShow,
+  });
 
   factory ActiveRideEntry.fromJson(String str) =>
       ActiveRideEntry.fromMap(json.decode(str));
@@ -121,12 +130,16 @@ class ActiveRideEntry {
   String toJson() => json.encode(toMap());
 
   factory ActiveRideEntry.fromMap(Map<String, dynamic> json) {
+    final cancelInfo = rideCancelInfoFromJson(json["cancel_info"]);
+    final noShow = rideNoShowInfoFromJson(json["no_show"]);
     if (json["ride"] != null) {
       return ActiveRideEntry(
         ride: ActiveRide.fromMap(json["ride"]),
         socketRooms: json["socket_rooms"] == null
             ? null
             : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
+        cancelInfo: cancelInfo,
+        noShow: noShow,
       );
     }
     // Legacy: list item is a flat ride document (no nested `ride` key).
@@ -135,12 +148,16 @@ class ActiveRideEntry {
       socketRooms: json["socket_rooms"] == null
           ? null
           : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
+      cancelInfo: cancelInfo,
+      noShow: noShow,
     );
   }
 
   Map<String, dynamic> toMap() => {
     "ride": ride?.toMap(),
     "socket_rooms": socketRooms?.toMap(),
+    "cancel_info": cancelInfo?.toJson(),
+    "no_show": noShow?.toJson(),
   };
 }
 

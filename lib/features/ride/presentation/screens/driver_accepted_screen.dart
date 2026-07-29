@@ -211,7 +211,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             }),
             // Above the sheet in the stack so ride-start sheet growth cannot cover chips.
             Obx(() {
-              // Share/track chips require a loaded ride — hide during load-error state.
+              // Share/track chips require a loaded ride � hide during load-error state.
               if (c.hasRideLoadError) {
                 return const SizedBox.shrink();
               }
@@ -779,30 +779,7 @@ class DriverAcceptedScreen extends StatelessWidget {
 
           final state = c.rideBottomSheetState.value;
           if (state == RideBottomSheetState.driverAssigned) {
-            return ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(
-                overscroll: false,
-                physics: const ClampingScrollPhysics(),
-              ),
-              child: _sheetScroll(
-                context: context,
-                scrollController: scrollController,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 64.w,
-                      height: 5.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.skeletonBase,
-                        borderRadius: BorderRadius.circular(37.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  _driverAssignedSheet(c),
-                ],
-              ),
-            );
+            return _driverAssignedSheetWithFixedHandle(c, scrollController);
           }
 
           if (state == RideBottomSheetState.rideStarted) {
@@ -899,16 +876,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 64.w,
-                    height: 5.h,
-                    decoration: BoxDecoration(
-                      color: AppColors.skeletonBase,
-                      borderRadius: BorderRadius.circular(37.r),
-                    ),
-                  ),
-                ),
+                _sheetDragHandle(),
                 SizedBox(height: 13.h),
                 // Rebuild when [currentRideStatus] changes (in-trip phases).
                 Obx(
@@ -938,6 +906,60 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// Pickup-phase sheet: drag handle stays fixed; body (incl. no-show banner) scrolls.
+  Widget _driverAssignedSheetWithFixedHandle(
+    DriverAcceptedController c,
+    ScrollController scrollController,
+  ) {
+    return Builder(
+      builder: (context) {
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            overscroll: false,
+            physics: const ClampingScrollPhysics(),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _sheetDragHandle(),
+                SizedBox(height: 16.h),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    primary: false,
+                    clipBehavior: Clip.hardEdge,
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    padding: EdgeInsets.only(
+                      bottom: 16.h + _scrollBottomPad(context),
+                    ),
+                    child: _driverAssignedSheet(c),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sheetDragHandle() {
+    return Center(
+      child: Container(
+        width: 64.w,
+        height: 5.h,
+        decoration: BoxDecoration(
+          color: AppColors.skeletonBase,
+          borderRadius: BorderRadius.circular(37.r),
+        ),
+      ),
     );
   }
 
@@ -980,6 +1002,13 @@ class DriverAcceptedScreen extends StatelessWidget {
             style: AppTextStyles.homeTitle,
           ),
         ),
+        Obx(() {
+          if (!c.shouldShowNoShowBanner) return const SizedBox.shrink();
+          return Padding(
+            padding: EdgeInsets.only(top: 12.h),
+            child: _noShowWaitingBanner(c),
+          );
+        }),
         SizedBox(height: 17.h),
         if (c.isPinRequired.value && c.otpDigits.isNotEmpty) ...[
           Row(
@@ -1083,7 +1112,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                             ),
                             if (c.formattedSpeedLabel.isNotEmpty) ...[
                               Text(
-                                " • ",
+                                " � ",
                                 style: AppTextStyles.homeCaption.copyWith(
                                   fontSize: 15.sp,
                                   fontWeight: FontWeight.w800,
@@ -1226,18 +1255,107 @@ class DriverAcceptedScreen extends StatelessWidget {
           ],
         ),
         SizedBox(height: 16.h),
-        SizedBox(
-          width: double.infinity,
-          child: AppPrimaryButton(
-            label: AppStrings.cancelRide.tr,
-            onPressed: c.confirmCancelRide,
-            outlined: true,
-            outlinedBorderColor: AppColors.iconHeartFilled,
-            outlinedTextColor: AppColors.iconHeartFilled,
-            height: 56.h,
-          ),
-        ),
+        Obx(() {
+          if (!c.shouldShowRiderCancelButton) {
+            return const SizedBox.shrink();
+          }
+          return SizedBox(
+            width: double.infinity,
+            child: AppPrimaryButton(
+              label: AppStrings.cancelRide.tr,
+              onPressed: c.confirmCancelRide,
+              outlined: true,
+              outlinedBorderColor: AppColors.iconHeartFilled,
+              outlinedTextColor: AppColors.iconHeartFilled,
+              height: 56.h,
+            ),
+          );
+        }),
       ],
+    );
+  }
+
+  Widget _noShowWaitingBanner(DriverAcceptedController c) {
+    return Material(
+      color: AppColors.transparent,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.borderWalletCard, width: 0.787),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (c.noShowBannerTitle.isNotEmpty)
+              Text(
+                c.noShowBannerTitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHeading,
+                ),
+              ),
+            if (c.noShowBannerSubtitle.isNotEmpty) ...[
+              SizedBox(height: 6.h),
+              Text(
+                c.noShowBannerSubtitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.homeSubtitle.copyWith(
+                  color: AppColors.textSlate,
+                  height: 1.35,
+                ),
+              ),
+            ],
+            SizedBox(height: 10.h),
+            Obx(() {
+              if (c.isNoShowExpiring.value) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 16.w,
+                      height: 16.w,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 8.w),
+                    Flexible(
+                      child: Text(
+                        AppStrings.cancellingYourRide.tr,
+                        style: AppTextStyles.homeSubtitle.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 18.sp,
+                    color: AppColors.textHeading,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    c.noShowCountdownLabel.value,
+                    style: AppTextStyles.homeTitle.copyWith(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 

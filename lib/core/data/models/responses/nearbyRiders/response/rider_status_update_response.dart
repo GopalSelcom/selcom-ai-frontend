@@ -4,6 +4,9 @@
 
 import 'dart:convert';
 
+import '../../../ride_cancel_info_model.dart';
+import '../../../ride_no_show_info_model.dart';
+
 EventRiderStatusUpdateResponse? eventRiderStatusUpdateResponseFromJson(
   String str,
 ) => EventRiderStatusUpdateResponse.fromJson(json.decode(str));
@@ -39,6 +42,29 @@ class EventRiderStatusUpdateResponse {
   /// Active ride the driver is finishing while this ride is queued/assigned.
   String? activeRideId;
 
+  /// Live cancel confirmation copy — overwrite ride-state on every status push.
+  RideCancelInfoModel? cancelInfo;
+
+  /// True when the socket/HTTP payload included a `cancel_info` key (even if null).
+  bool cancelInfoFieldPresent;
+
+  /// Waiting banner when `no_show` is an object; cleared when field is absent/null.
+  RideNoShowInfoModel? noShow;
+
+  /// True when the payload included a `no_show` key (object, `true`, or null).
+  bool noShowFieldPresent;
+
+  /// True when a cancelled event carries terminal `no_show: true` (not the object).
+  bool isNoShowCancellation;
+
+  /// Optional server message on terminal cancel (e.g. no-show result sentence).
+  String? message;
+
+  /// Echoed on terminal no-show / cancel settlement events.
+  int? capturedAmount;
+  int? netRefund;
+  String? cancelledBy;
+
   EventRiderStatusUpdateResponse({
     this.rideId,
     this.status,
@@ -57,38 +83,66 @@ class EventRiderStatusUpdateResponse {
     this.etaSeconds,
     this.driverFinishingNearby = false,
     this.activeRideId,
+    this.cancelInfo,
+    this.cancelInfoFieldPresent = false,
+    this.noShow,
+    this.noShowFieldPresent = false,
+    this.isNoShowCancellation = false,
+    this.message,
+    this.capturedAmount,
+    this.netRefund,
+    this.cancelledBy,
   });
 
-  factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) =>
-      EventRiderStatusUpdateResponse(
-        rideId: json["ride_id"] ?? json["rideId"],
-        status: json["status"],
-        driverSnapshot: json["driver_snapshot"] == null
-            ? null
-            : DriverSnapshot.fromJson(json["driver_snapshot"]),
-        vehicleSnapshot: json["vehicle_snapshot"] == null
-            ? null
-            : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
-        finalFare: json["final_fare"],
-        cancellationFee: json["cancellation_fee"],
-        routeGeometry: (json["route_geometry"] ?? json["routeGeometry"]) == null
-            ? null
-            : EventRouteGeometry.fromJson(
-                json["route_geometry"] ?? json["routeGeometry"],
-              ),
-        routeTarget: json["route_target"] ?? json["routeTarget"],
-        pinCode: json["pin_code"],
-        pinRequired: json["pin_required"],
-        currentStopIndex: json["current_stop_index"],
-        rideStopStatus: json["ride_stop_status"] ?? json["status"],
-        driverAvgRating: json["driver_avg_rating"] as num?,
-        riderAvgRating: json["rider_avg_rating"] as num?,
-        etaSeconds: json["eta_seconds"] as num?,
-        driverFinishingNearby: json["driver_finishing_nearby"] == true,
-        activeRideId:
-            json["active_ride_id"]?.toString() ??
-            json["activeRideId"]?.toString(),
-      );
+  factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) {
+    final cancelInfoPresent = json.containsKey('cancel_info');
+    final noShowPresent = json.containsKey('no_show');
+    final noShowRaw = json['no_show'];
+    final noShowObject = rideNoShowInfoFromJson(noShowRaw);
+    final isNoShowCancellation = noShowRaw == true ||
+        (noShowRaw is Map && noShowObject == null && noShowRaw.isNotEmpty);
+
+    return EventRiderStatusUpdateResponse(
+      rideId: json["ride_id"] ?? json["rideId"],
+      status: json["status"],
+      driverSnapshot: json["driver_snapshot"] == null
+          ? null
+          : DriverSnapshot.fromJson(json["driver_snapshot"]),
+      vehicleSnapshot: json["vehicle_snapshot"] == null
+          ? null
+          : VehicleSnapshot.fromJson(json["vehicle_snapshot"]),
+      finalFare: json["final_fare"],
+      cancellationFee: json["cancellation_fee"],
+      routeGeometry: (json["route_geometry"] ?? json["routeGeometry"]) == null
+          ? null
+          : EventRouteGeometry.fromJson(
+              json["route_geometry"] ?? json["routeGeometry"],
+            ),
+      routeTarget: json["route_target"] ?? json["routeTarget"],
+      pinCode: json["pin_code"],
+      pinRequired: json["pin_required"],
+      currentStopIndex: json["current_stop_index"],
+      rideStopStatus: json["ride_stop_status"] ?? json["status"],
+      driverAvgRating: json["driver_avg_rating"] as num?,
+      riderAvgRating: json["rider_avg_rating"] as num?,
+      etaSeconds: json["eta_seconds"] as num?,
+      driverFinishingNearby: json["driver_finishing_nearby"] == true,
+      activeRideId:
+          json["active_ride_id"]?.toString() ??
+          json["activeRideId"]?.toString(),
+      cancelInfo: cancelInfoPresent
+          ? rideCancelInfoFromJson(json["cancel_info"])
+          : null,
+      cancelInfoFieldPresent: cancelInfoPresent,
+      noShow: noShowObject,
+      noShowFieldPresent: noShowPresent,
+      isNoShowCancellation: isNoShowCancellation,
+      message: json["message"]?.toString(),
+      capturedAmount: (json["captured_amount"] as num?)?.toInt(),
+      netRefund: (json["net_refund"] as num?)?.toInt(),
+      cancelledBy: json["cancelled_by"]?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "ride_id": rideId,
@@ -108,6 +162,13 @@ class EventRiderStatusUpdateResponse {
     "eta_seconds": etaSeconds,
     "driver_finishing_nearby": driverFinishingNearby,
     "active_ride_id": activeRideId,
+    if (cancelInfoFieldPresent) "cancel_info": cancelInfo?.toJson(),
+    if (noShowFieldPresent)
+      "no_show": isNoShowCancellation ? true : noShow?.toJson(),
+    "message": message,
+    "captured_amount": capturedAmount,
+    "net_refund": netRefund,
+    "cancelled_by": cancelledBy,
   };
 }
 

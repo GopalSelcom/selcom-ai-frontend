@@ -13,6 +13,7 @@ import '../../../../core/data/models/responses/rides/ride_details_response.dart'
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
+import '../../../../core/errors/ride_already_finalized_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -197,6 +198,10 @@ class RideRepositoryImpl implements RideRepository {
     try {
       final result = await remoteDataSource.cancelRide(rideId, reason);
       return Right(result);
+    } on RideAlreadyFinalizedException catch (e) {
+      return Left(
+        RideAlreadyFinalizedFailure(e.message, errorCode: e.errorCode),
+      );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

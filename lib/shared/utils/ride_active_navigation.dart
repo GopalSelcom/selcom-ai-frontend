@@ -294,6 +294,9 @@ void navigateToDriverAcceptedForRide(
                 'vehicle_name': vehicle.vehicleModel,
                 'display_name': vehicle.vehicleType,
               },
+        if (rideValue.cancelInfo != null)
+          'cancel_info': rideValue.cancelInfo!.toJson(),
+        if (rideValue.noShow != null) 'no_show': rideValue.noShow!.toJson(),
       },
       'fareBreakdown': rideValue.fareBreakdown == null
           ? null

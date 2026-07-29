@@ -367,12 +367,16 @@ class FareBreakdownRow extends StatelessWidget {
   final String title;
   final String amount;
   final bool isTotal;
+  final Color? amountColor;
+  final Color? titleColor;
 
   const FareBreakdownRow({
     super.key,
     required this.title,
     required this.amount,
     this.isTotal = false,
+    this.amountColor,
+    this.titleColor,
   });
 
   @override
@@ -387,14 +391,18 @@ class FareBreakdownRow extends StatelessWidget {
             style: AppTextStyles.homeCaption.copyWith(
               fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
               height: 20 / 12,
+              color: titleColor,
             ),
           ),
         ),
         Text(
           amount,
           style: AppTextStyles.homeCaption.copyWith(
-            fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
+            fontWeight: isTotal || amountColor != null
+                ? FontWeight.w600
+                : FontWeight.w400,
             height: 20 / 12,
+            color: amountColor,
           ),
         ),
       ],

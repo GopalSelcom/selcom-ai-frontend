@@ -10,6 +10,7 @@ import '../../../../core/data/models/responses/nearbyRiders/response/near_by_rid
 import '../../../../core/data/models/responses/nearbyRiders/response/ride_fare_settled_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
+import '../../../../core/data/models/ride_cancel_info_model.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -113,6 +114,10 @@ class FindingDriverController extends GetxController {
   final sheetSize = 0.42.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
+
+  /// Cached `cancel_info` for searching-phase cancel confirmation.
+  final cancelInfo = Rxn<RideCancelInfoModel>();
+
   final Rxn<DriverLocationSocketResponse> latestDriverLocationPayload =
       Rxn<DriverLocationSocketResponse>();
   bool _hasReceivedTrackingUpdate = false;
@@ -356,6 +361,9 @@ class FindingDriverController extends GetxController {
   }
 
   void _applyInitialRideStatusFromModel(RideModel ride) {
+    if (ride.cancelInfo != null) {
+      cancelInfo.value = ride.cancelInfo;
+    }
     final rawStatus = rideStatusToApiValue(ride.status);
     final normalized = normalizeRideStatusString(rawStatus);
     if (isRideSearchingStatus(normalized)) {
@@ -397,6 +405,10 @@ class FindingDriverController extends GetxController {
       pinCode: ride.pinCode,
       pinRequired: ride.pinRequired,
       driverSnapshot: driverSnapshot,
+      cancelInfo: ride.cancelInfo,
+      cancelInfoFieldPresent: ride.cancelInfo != null,
+      noShow: ride.noShow,
+      noShowFieldPresent: ride.noShow != null,
     );
     latestRideStatusPayload.value = payload;
     _handleRideStatus(rawStatus, payload);
@@ -945,6 +957,9 @@ class FindingDriverController extends GetxController {
   }
 
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
+    if (payload.cancelInfoFieldPresent) {
+      cancelInfo.value = payload.cancelInfo;
+    }
     final d = payload.driverSnapshot;
     if (d?.lat != null && d?.lng != null) {
       assignedDriverLocation.value = LatLng(d!.lat!, d.lng!);
@@ -1112,8 +1127,13 @@ class FindingDriverController extends GetxController {
     return CancelRideFlow(
       rideRepository: rideRepository,
       rideId: rideId,
+      cancelInfo: cancelInfo.value,
       onCancelApiStarted: () => _isUserInitiatedCancellation = true,
       onCancelApiFailed: () => _isUserInitiatedCancellation = false,
+      onRideAlreadyFinalized: () {
+        _isUserInitiatedCancellation = false;
+        unawaited(_syncInitialRideStatusFromApi());
+      },
     ).run();
   }
 

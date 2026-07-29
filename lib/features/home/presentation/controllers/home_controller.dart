@@ -764,7 +764,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           );
           return;
         }
-        final freshRide = freshRideDetails.toRideModel();
+        final detailsModel = freshRideDetails.toRideModel();
+        // Active / status `no_show` includes title/subtitle; ride details often
+        // only has fire_at/fee — merge so the pickup wait banner keeps its copy.
+        final mergedNoShow = detailsModel.noShow == null
+            ? null
+            : detailsModel.noShow!.mergingDisplayFrom(rideValue.noShow);
+        final freshRide = detailsModel.copyWith(
+          cancelInfo: detailsModel.cancelInfo ?? rideValue.cancelInfo,
+          noShow: mergedNoShow,
+          clearNoShow: mergedNoShow == null,
+        );
         await _socketService.connect();
         _socketService.switchRideRoom(rideId: freshId);
         // 🛰️ Sync Live Activity view when user taps "View Trip"

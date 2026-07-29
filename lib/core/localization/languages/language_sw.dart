@@ -109,6 +109,17 @@ class LanguageSw extends Languages {
     'cancel_ride': 'Ghairi Safari',
     'cancel': 'Futa',
     'cancelled': 'Imeghairiwa',
+    'cancellation_fee_charged':
+        'Ada ya kughairi ya @amount imetoizwa.',
+    'cancellation_charges': 'Ada za kughairi',
+    'cancellation_fee': 'Ada ya kughairi',
+    'cancellation_reason': 'Sababu ya kughairi',
+    'no_show_fee': 'Ada ya kutokuonekana',
+    'net_amount_refunded_label': 'Kiasi kilichorejeshwa',
+    'distance_covered': 'Umbali uliofikiwa',
+    'distance_km_value': '@km km',
+    'amount_charged': 'Kiasi kilichotozwa',
+    'cancelling_your_ride': 'Inaghairi safari yako…',
     'card_detail': 'Maelezo ya Kadi',
     'card_number': 'Namba ya Kadi',
     'card_ending_in_placeholder': 'Kadi inayoishia na XX1234',
@@ -284,6 +295,8 @@ class LanguageSw extends Languages {
     'no_past_rides_found': 'Hakuna safari zilizopita zilizopatikana',
     'no_recent_locations_found': 'Hakuna maeneo ya hivi karibuni yaliyopatikana',
     'no_recent_locations': 'Hakuna maeneo ya hivi karibuni',
+    'no_topup_methods_available':
+        'Chaguo za kuongeza pesa hazipatikani sasa. Tafadhali jaribu tena baadaye.',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
         'Kumbuka: Kwa kuendelea, unakubali kupokea simu, ujumbe wa WhatsApp au SMS, ikiwa ni pamoja na njia za kiotomatiki, kutoka Selcom Go na washirika wake kwenye namba iliyotolewa.',
     'notification': 'Arifa',
@@ -627,7 +640,11 @@ class LanguageSw extends Languages {
     'cancellation_fee_of': 'Ada ya kufuta ya ',
     'will_be_charged_since_driver_on_way':
         ' itatozwa kwa sababu dereva wako yuko njiani.',
+    'has_been_charged_period': ' imetoizwa.',
     'net_amount_refunded': 'Kiasi kilichorejeshwa: ',
+    'net_refund_of': 'Kiasi cha ',
+    'has_been_refunded_period': ' kimerudishwa.',
+    'net_refund_amount': 'Kiasi cha @amount kimerudishwa.',
     'yes': 'Ndiyo',
     'yes_cancel': 'NDIYO, GHAIRI',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':

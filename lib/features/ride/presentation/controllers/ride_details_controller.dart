@@ -27,6 +27,7 @@ import '../../domain/repositories/ride_repository.dart';
 import '../../data/models/receipt_response.dart';
 import '../../domain/utils/receipt_image_generator.dart';
 import '../../domain/utils/receipt_pdf_generator.dart';
+import '../utils/mid_ride_cancel_copy.dart';
 import '../widgets/receipt_options_bottom_sheet.dart';
 
 class RideDetailsController extends GetxController {
@@ -134,17 +135,74 @@ class RideDetailsController extends GetxController {
 
   bool get isCompleted => ride.isCompleted;
 
+  /// Rider/system cancel (not mid-ride partial charge) — show cancel fee/refund card.
+  bool get showCancelledFareSummary =>
+      isCancelled && !isMidRideDriverCancelled;
+
+  /// Driver ended the trip mid-ride — show partial-charge summary.
+  bool get showMidRideCancelFareSummary => isMidRideDriverCancelled;
+
+  bool get isNoShowCancellation => ride.isNoShowCancellation;
+
   int get rideCharge => ride.displayRideCharge;
 
   int get bookingFee => ride.displayBookingFee;
 
   int get totalAmount => ride.displayTotalAmount;
 
+  int get cancellationFeeAmount => ride.displayCancellationFeeAmount;
+
+  int get netRefundAmount => ride.displayNetRefundAmount;
+
+  String get cancellationReasonText => ride.displayCancellationReason;
+
+  bool get hasCancellationReason => ride.shouldShowCancellationReason;
+
+  String get midRideReasonDisplayLabel {
+    final block = ride.midRideCancel;
+    return midRideCancelReasonLabel(
+      reason: block?.reason,
+      reasonText: block?.reasonText,
+    );
+  }
+
+  bool get hasMidRideCancelReason {
+    final block = ride.midRideCancel;
+    if (block == null) return false;
+    return (block.reason ?? '').trim().isNotEmpty ||
+        (block.reasonText ?? '').trim().isNotEmpty;
+  }
+
+  String? get midRideCancelMessage {
+    final message = ride.midRideCancel?.message?.trim() ?? '';
+    return message.isEmpty ? null : message;
+  }
+
+  String? get midRideDistanceCoveredLabel {
+    final km = ride.midRideCancel?.distanceCoveredKm;
+    if (km == null || km <= 0) return null;
+    final formatted = km >= 10
+        ? km.toStringAsFixed(1)
+        : km.toStringAsFixed(2);
+    return AppStrings.distanceKmValue.trParams({'km': formatted});
+  }
+
+  int get midRideChargeAmount =>
+      ride.midRideCancel?.displayChargeAmount ?? totalAmount;
+
+  String get midRideChargeLabel =>
+      CurrencyFormatter.format(midRideChargeAmount);
+
   String get rideChargeLabel => CurrencyFormatter.format(rideCharge);
 
   String get bookingFeeLabel => CurrencyFormatter.format(bookingFee);
 
   String get totalAmountLabel => CurrencyFormatter.format(totalAmount);
+
+  String get cancellationFeeLabel =>
+      CurrencyFormatter.format(cancellationFeeAmount);
+
+  String get netRefundLabel => CurrencyFormatter.format(netRefundAmount);
 
   /// Itemized fare lines: Base → Distance → Time → Stops → min-fare top-up.
   /// Prefer over legacy Ride Charge + Booking Fee when [useItemizedFareBreakdown].
@@ -159,8 +217,8 @@ class RideDetailsController extends GetxController {
     );
   }
 
-  /// True when API sent component fields (not just seed ride_charge/total).
-  bool get useItemizedFareBreakdown {
+  /// Whether fare_breakdown has component lines to show above cancel/refund rows.
+  bool get hasRideChargeBreakdownRows {
     final breakdown = ride.fareBreakdown;
     if (breakdown == null) return false;
     return FareBreakdownDisplay.hasItemizedComponents(
@@ -172,8 +230,43 @@ class RideDetailsController extends GetxController {
     );
   }
 
-  /// Promo / cashback row on fare card.
-  bool get showPromoFareLine => ride.hasPromoBenefit;
+  /// Legacy summary when itemized components are missing (cancelled rides).
+  int get cancelledRideChargeAmount =>
+      ride.fareBreakdown?.rideCharge ?? ride.fareEstimate ?? 0;
+
+  int get cancelledBookingFeeAmount => ride.fareBreakdown?.bookingFee ?? 0;
+
+  String get cancelledRideChargeLabel =>
+      CurrencyFormatter.format(cancelledRideChargeAmount);
+
+  String get cancelledBookingFeeLabel =>
+      CurrencyFormatter.format(cancelledBookingFeeAmount);
+
+  /// True when API sent component fields (not just seed ride_charge/total).
+  /// Cancelled / mid-ride cancel rides use a dedicated summary instead.
+  bool get useItemizedFareBreakdown {
+    if (showCancelledFareSummary || showMidRideCancelFareSummary) {
+      return false;
+    }
+    return hasRideChargeBreakdownRows;
+  }
+
+  /// Promo / cashback row on fare card (not shown for cancelled rides).
+  bool get showPromoFareLine =>
+      !showCancelledFareSummary &&
+      !showMidRideCancelFareSummary &&
+      ride.hasPromoBenefit;
+
+  String get fareCardTitle {
+    if (showMidRideCancelFareSummary) {
+      return AppStrings.tripEndedByDriver.tr;
+    }
+    return AppStrings.totalFare.tr;
+  }
+
+  String get cancellationFeeRowTitle => isNoShowCancellation
+      ? AppStrings.noShowFee.tr
+      : AppStrings.cancellationFee.tr;
 
   String get promoFareLineTitle {
     final code = ride.promoCodeTrimmed;

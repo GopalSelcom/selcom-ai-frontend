@@ -23,7 +23,20 @@ List<RideModel> parseActiveRidesFromResponse(
     return sortActiveRides(
       fromList
           .where((entry) => entry.ride != null)
-          .map((entry) => RideModel.fromJson(entry.ride!.toMap()))
+          .map((entry) {
+            final rideMap = entry.ride!.toMap();
+            // Entry-level cancel_info / no_show (siblings of `ride`) win over
+            // any nested copies so cold-start hydration matches the socket shape.
+            if (entry.cancelInfo != null) {
+              rideMap['cancel_info'] = entry.cancelInfo!.toJson();
+            }
+            if (entry.noShow != null) {
+              rideMap['no_show'] = entry.noShow!.toJson();
+            } else if (!rideMap.containsKey('no_show')) {
+              rideMap['no_show'] = null;
+            }
+            return RideModel.fromJson(rideMap);
+          })
           .toList(growable: false),
     );
   }

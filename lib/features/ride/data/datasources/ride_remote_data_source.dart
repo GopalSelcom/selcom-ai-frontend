@@ -15,6 +15,7 @@ import '../../../../core/data/models/responses/rides/vehicle_types_response.dart
 import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
+import '../../../../core/errors/ride_already_finalized_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
@@ -449,6 +450,7 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
         endpoint: URLS.ride.cancelRide(rideId),
         method: ApiMethod.put,
         body: {Params.reason: reason},
+        errorPresentationType: ErrorPresentationType.none,
       ),
     );
     if ((response.statusCode == 200 || response.statusCode == 201) &&
@@ -460,6 +462,16 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       final parsed = CancelRideResponse.fromMap(map);
       if (parsed.data != null) return parsed.data!;
       return CancelRideData(rideId: rideId);
+    }
+
+    final body = _apiResponseMap(response.data);
+    final errorCode = body?['error_code']?.toString().trim() ?? '';
+    if (response.statusCode == 409 &&
+        (errorCode == 'RIDE_ALREADY_FINALIZED' || errorCode.isEmpty)) {
+      throw RideAlreadyFinalizedException(
+        body?['message']?.toString() ?? 'Ride already finalized',
+        errorCode: errorCode.isEmpty ? 'RIDE_ALREADY_FINALIZED' : errorCode,
+      );
     }
     throw Exception('Failed to cancel ride');
   }

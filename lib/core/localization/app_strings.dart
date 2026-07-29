@@ -117,6 +117,16 @@ class AppStrings {
   static const String cancelRide = 'cancel_ride';
   static const String cancel = 'cancel';
   static const String cancelled = 'cancelled';
+  static const String cancellationFeeCharged = 'cancellation_fee_charged';
+  static const String cancellationCharges = 'cancellation_charges';
+  static const String cancellationFee = 'cancellation_fee';
+  static const String cancellationReason = 'cancellation_reason';
+  static const String noShowFee = 'no_show_fee';
+  static const String netAmountRefundedLabel = 'net_amount_refunded_label';
+  static const String distanceCovered = 'distance_covered';
+  static const String distanceKmValue = 'distance_km_value';
+  static const String amountCharged = 'amount_charged';
+  static const String cancellingYourRide = 'cancelling_your_ride';
   static const String cardDetail = 'card_detail';
   static const String cardNumber = 'card_number';
   static const String cardEndingInPlaceholder = 'card_ending_in_placeholder';
@@ -330,6 +340,7 @@ class AppStrings {
   static const String noPastRidesFound = 'no_past_rides_found';
   static const String noRecentLocationsFound = 'no_recent_locations_found';
   static const String noRecentLocations = 'no_recent_locations';
+  static const String noTopupMethodsAvailable = 'no_topup_methods_available';
   static const String nameContainsInvalidCharacters =
       'name_contains_invalid_characters';
   static const String nameIsRequired = 'name_is_required';
@@ -768,7 +779,11 @@ class AppStrings {
   static const String cancellationFeeOf = 'cancellation_fee_of';
   static const String willBeChargedSinceDriverOnWay =
       'will_be_charged_since_driver_on_way';
+  static const String hasBeenChargedPeriod = 'has_been_charged_period';
   static const String netAmountRefunded = 'net_amount_refunded';
+  static const String netRefundOf = 'net_refund_of';
+  static const String hasBeenRefundedPeriod = 'has_been_refunded_period';
+  static const String netRefundAmount = 'net_refund_amount';
   static const String yes = 'yes';
   static const String yesCancel = 'yes_cancel';
   static const String

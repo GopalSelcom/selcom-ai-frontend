@@ -115,6 +115,17 @@ class LanguageEn extends Languages {
     'cancel_ride': 'Cancel Ride',
     'cancel': 'Cancel',
     'cancelled': 'Cancelled',
+    'cancellation_fee_charged':
+        'A cancellation fee of @amount has been charged.',
+    'cancellation_charges': 'Cancellation charges',
+    'cancellation_fee': 'Cancellation fee',
+    'cancellation_reason': 'Cancellation reason',
+    'no_show_fee': 'No-show fee',
+    'net_amount_refunded_label': 'Net amount refunded',
+    'distance_covered': 'Distance covered',
+    'distance_km_value': '@km km',
+    'amount_charged': 'Amount charged',
+    'cancelling_your_ride': 'Cancelling your ride…',
     'card_detail': 'Card Detail',
     'card_number': 'Card Number',
     'card_ending_in_placeholder': 'Card ending in XX1234',
@@ -309,6 +320,8 @@ class LanguageEn extends Languages {
     'no_past_rides_found': 'No past rides found',
     'no_recent_locations_found': 'No recent locations found',
     'no_recent_locations': 'No recent locations',
+    'no_topup_methods_available':
+        'Top-up options are unavailable right now. Please try again later.',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
         'Note: By proceeding, you consent to get calls, WhatsApp or SMS messages, including by automated means, from Selcom Go and its affiliates to the number provided.',
     'notification': 'Notification',
@@ -692,7 +705,11 @@ class LanguageEn extends Languages {
     'cancellation_fee_of': 'A cancellation fee of ',
     'will_be_charged_since_driver_on_way':
         ' will be charged since your driver is on the way.',
+    'has_been_charged_period': ' has been charged.',
     'net_amount_refunded': 'Net amount refunded: ',
+    'net_refund_of': 'A net amount of ',
+    'has_been_refunded_period': ' has been refunded.',
+    'net_refund_amount': 'A net amount of @amount has been refunded.',
     'yes': 'Yes',
     'yes_cancel': 'YES, CANCEL',
     'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
