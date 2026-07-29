@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 import '../../fare_stop_charge.dart';
+import '../../ride_cancel_info_model.dart';
 import '../../ride_model.dart';
 import '../../ride_no_show_info_model.dart';
 
-/// Models for `GET go/rides/{id}` — `{"status_code":200,"data":{"ride":{...}}}`.
+/// Models for `GET go/rides/{id}` —
+/// `{"status_code":200,"data":{"ride":{...},"cancel_info":{...},"no_show":{...}}}`.
 ///
-/// Field shapes mirror `active_ride_response.dart` (`ActiveRide`) since both
-/// endpoints return the same underlying ride document, but this response
-/// keeps a few fields more strongly typed (`vehicle_type_id`, `mid_ride_cancel`,
-/// `pending_stops_update`, `pdf_links`) for details-screen consumption.
+/// Envelope-level `cancel_info` / `no_show` (siblings of `ride`) are preferred
+/// over nested ride copies — same shape as active rides and status updates.
 class RideDetailsResponse {
   int? statusCode;
   String? message;
@@ -64,25 +64,54 @@ class RideDetailsResponse {
 class RideDetailsData {
   RideDetailsRide? ride;
 
-  RideDetailsData({this.ride});
+  /// Envelope-level cancel confirmation (sibling of `ride`).
+  RideCancelInfoModel? cancelInfo;
+
+  /// Envelope-level waiting banner with title/subtitle (sibling of `ride`).
+  RideNoShowInfoModel? noShow;
+
+  RideDetailsData({this.ride, this.cancelInfo, this.noShow});
 
   factory RideDetailsData.fromJson(String str) =>
       RideDetailsData.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory RideDetailsData.fromMap(Map<String, dynamic> json) =>
-      RideDetailsData(
-        ride: json["ride"] == null
-            ? null
-            : RideDetailsRide.fromMap(
-                json["ride"] is Map<String, dynamic>
-                    ? json["ride"]
-                    : Map<String, dynamic>.from(json["ride"] as Map),
-              ),
-      );
+  factory RideDetailsData.fromMap(Map<String, dynamic> json) {
+    final cancelInfo = rideCancelInfoFromJson(json['cancel_info']);
+    final outerNoShow = rideNoShowInfoFromJson(json['no_show']);
+    final ride = json['ride'] == null
+        ? null
+        : RideDetailsRide.fromMap(
+            json['ride'] is Map<String, dynamic>
+                ? json['ride'] as Map<String, dynamic>
+                : Map<String, dynamic>.from(json['ride'] as Map),
+          );
 
-  Map<String, dynamic> toMap() => {"ride": ride?.toMap()};
+    // Outer envelope wins over nested ride.no_show / cancel_info (active-rides
+    // shape) so title/subtitle from details are not lost.
+    if (ride != null) {
+      if (cancelInfo != null) {
+        ride.cancelInfo = cancelInfo;
+      }
+      if (outerNoShow != null) {
+        ride.noShow = outerNoShow;
+        ride.isNoShowCancellation = false;
+      }
+    }
+
+    return RideDetailsData(
+      ride: ride,
+      cancelInfo: cancelInfo,
+      noShow: outerNoShow,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'ride': ride?.toMap(),
+    'cancel_info': cancelInfo?.toJson(),
+    'no_show': noShow?.toJson(),
+  };
 }
 
 class RideDetailsRide {
@@ -132,8 +161,10 @@ class RideDetailsRide {
   int? cancellationFee;
   String? cancelledBy;
   RideDetailsMidRideCancel? midRideCancel;
-  /// Waiting banner while driver is at pickup (`no_show` object, e.g. scheduled).
+  /// Waiting banner — prefer envelope `data.no_show` over nested ride field.
   RideNoShowInfoModel? noShow;
+  /// Cancel confirmation — prefer envelope `data.cancel_info`.
+  RideCancelInfoModel? cancelInfo;
   /// Terminal no-show cancel — `no_show: true` or fired `no_show` object.
   bool isNoShowCancellation;
   List<dynamic>? rejectedDrivers;
@@ -221,6 +252,7 @@ class RideDetailsRide {
     this.cancelledBy,
     this.midRideCancel,
     this.noShow,
+    this.cancelInfo,
     this.isNoShowCancellation = false,
     this.rejectedDrivers,
     this.blockedDrivers,
@@ -334,6 +366,7 @@ class RideDetailsRide {
           ? null
           : RideDetailsMidRideCancel.fromMap(json["mid_ride_cancel"]),
       noShow: RideDetailsRide._parseWaitingNoShow(json),
+      cancelInfo: rideCancelInfoFromJson(json['cancel_info']),
       isNoShowCancellation: RideDetailsRide._parseIsNoShowCancellation(json),
       rejectedDrivers: json["rejected_drivers"] ?? <dynamic>[],
       blockedDrivers: json["blocked_drivers"] ?? <dynamic>[],
@@ -438,6 +471,7 @@ class RideDetailsRide {
     // Terminal cancel uses boolean `true`; ongoing wait keeps the object
     // so [toRideModel] can arm the SCR-11 no-show countdown.
     "no_show": isNoShowCancellation ? true : noShow?.toJson(),
+    "cancel_info": cancelInfo?.toJson(),
     "rejected_drivers": rejectedDrivers,
     "blocked_drivers": blockedDrivers,
     "driver_assigned_at": driverAssignedAt,
