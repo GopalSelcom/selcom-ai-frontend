@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import '../../../ride_cancel_info_model.dart';
+import '../../../ride_model.dart';
 import '../../../ride_no_show_info_model.dart';
 
 EventRiderStatusUpdateResponse? eventRiderStatusUpdateResponseFromJson(
@@ -65,6 +66,9 @@ class EventRiderStatusUpdateResponse {
   int? netRefund;
   String? cancelledBy;
 
+  /// Live fare card — present on `ride:status_update` (includes `line_items`).
+  FareBreakdownModel? fareBreakdown;
+
   EventRiderStatusUpdateResponse({
     this.rideId,
     this.status,
@@ -92,6 +96,7 @@ class EventRiderStatusUpdateResponse {
     this.capturedAmount,
     this.netRefund,
     this.cancelledBy,
+    this.fareBreakdown,
   });
 
   factory EventRiderStatusUpdateResponse.fromJson(Map<String, dynamic> json) {
@@ -101,6 +106,14 @@ class EventRiderStatusUpdateResponse {
     final noShowObject = rideNoShowInfoFromJson(noShowRaw);
     final isNoShowCancellation = noShowRaw == true ||
         (noShowRaw is Map && noShowObject == null && noShowRaw.isNotEmpty);
+
+    final rawFare = json['fare_breakdown'] ?? json['fareBreakdown'];
+    FareBreakdownModel? fareBreakdown;
+    if (rawFare is Map) {
+      fareBreakdown = FareBreakdownModel.fromJson(
+        Map<String, dynamic>.from(rawFare),
+      );
+    }
 
     return EventRiderStatusUpdateResponse(
       rideId: json["ride_id"] ?? json["rideId"],
@@ -141,6 +154,7 @@ class EventRiderStatusUpdateResponse {
       capturedAmount: (json["captured_amount"] as num?)?.toInt(),
       netRefund: (json["net_refund"] as num?)?.toInt(),
       cancelledBy: json["cancelled_by"]?.toString(),
+      fareBreakdown: fareBreakdown,
     );
   }
 
@@ -169,6 +183,7 @@ class EventRiderStatusUpdateResponse {
     "captured_amount": capturedAmount,
     "net_refund": netRefund,
     "cancelled_by": cancelledBy,
+    if (fareBreakdown != null) "fare_breakdown": fareBreakdown!.toJson(),
   };
 }
 

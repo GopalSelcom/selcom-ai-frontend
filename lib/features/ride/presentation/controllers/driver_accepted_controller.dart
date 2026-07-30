@@ -40,7 +40,6 @@ import '../../../../core/utils/map_marker_utils.dart';
 import '../../../../shared/utils/address_display_utils.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/book_any_fare_settled_ui.dart';
-import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/utils/route_map_marker_icons.dart';
@@ -107,9 +106,8 @@ class DriverAcceptedController extends GetxController
   late String destinationAddress;
   final summaryIntermediateStops = <String>[].obs;
   final routeDestinations = <LocationEntity>[].obs;
-  int? _seedRideCharge;
-  int? _seedBookingFee;
-  int? _seedTotalAmount;
+  /// Seeded from navigation args for rematch / finding-driver handoff.
+  Map<String, dynamic>? _seedFareBreakdown;
 
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
   final routePoints = <LatLng>[].obs;
@@ -801,10 +799,7 @@ class DriverAcceptedController extends GetxController
     }
     final rawFareBreakdown = args['fareBreakdown'];
     if (rawFareBreakdown is Map) {
-      final fareBreakdown = Map<String, dynamic>.from(rawFareBreakdown);
-      _seedRideCharge = (fareBreakdown['ride_charge'] as num?)?.toInt();
-      _seedBookingFee = (fareBreakdown['booking_fee'] as num?)?.toInt();
-      _seedTotalAmount = (fareBreakdown['total_amount'] as num?)?.toInt();
+      _seedFareBreakdown = Map<String, dynamic>.from(rawFareBreakdown);
     }
     routePoints.clear();
     routeTarget.value = 'pick_up';
@@ -1571,17 +1566,6 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
-    final fareBreakdown =
-        (_seedRideCharge != null ||
-            _seedBookingFee != null ||
-            _seedTotalAmount != null)
-        ? {
-            if (_seedRideCharge != null) 'ride_charge': _seedRideCharge,
-            if (_seedBookingFee != null) 'booking_fee': _seedBookingFee,
-            if (_seedTotalAmount != null) 'total_amount': _seedTotalAmount,
-          }
-        : null;
-
     final destinations = routeDestinations.isNotEmpty
         ? routeDestinations
               .map((e) => {'lat': e.lat, 'lng': e.lng, 'address': e.address})
@@ -1605,7 +1589,7 @@ class DriverAcceptedController extends GetxController
         'destinationLng': destinationLatLng.longitude,
         'destinationAddress': destinationAddress,
         'destinations': destinations,
-        if (fareBreakdown != null) 'fareBreakdown': fareBreakdown,
+        if (_seedFareBreakdown != null) 'fareBreakdown': _seedFareBreakdown,
         kFindingDriverChainBrokenArg: true,
       },
     );
@@ -1926,6 +1910,15 @@ class DriverAcceptedController extends GetxController
       if (currentRide != null) {
         ride.value = currentRide.copyWith(
           currentStopIndex: payload.currentStopIndex,
+        );
+      }
+    }
+
+    if (payload.fareBreakdown != null) {
+      final currentRide = ride.value;
+      if (currentRide != null) {
+        ride.value = currentRide.copyWith(
+          fareBreakdown: payload.fareBreakdown,
         );
       }
     }
@@ -2804,130 +2797,16 @@ class DriverAcceptedController extends GetxController
     return DateFormat('dd\'th\' MMM yyyy . hh:mma').format(value.createdAt);
   }
 
-  String get rideChargeLabel {
-    final amount =
-        ride.value?.fareBreakdown?.rideCharge ??
-        _seedRideCharge ??
-        ride.value?.fareEstimate ??
-        100;
-    return CurrencyFormatter.format(amount);
-  }
-
-  String get bookingFeeLabel {
-    final amount =
-        ride.value?.fareBreakdown?.bookingFee ?? _seedBookingFee ?? 0;
-    return CurrencyFormatter.format(amount);
-  }
-
-  /// Itemized fare lines: Base → Distance → Time → Stops → min-fare top-up.
-  /// Prefer over legacy Ride Charge + Booking Fee when [useItemizedFareBreakdown].
-  List<FareBreakdownDisplayRow> get itemizedFareRows {
-    final breakdown = ride.value?.fareBreakdown;
-    return FareBreakdownDisplay.itemizedComponentRows(
-      baseFare: breakdown?.baseFare ?? 0,
-      distanceCharge: breakdown?.distanceCharge ?? 0,
-      timeCharge: breakdown?.timeCharge ?? 0,
-      stopCharges: breakdown?.stopCharges ?? const [],
-      minimumFareAdjustment: breakdown?.minimumFareAdjustment ?? 0,
-    );
-  }
-
-  /// True when API sent component fields (not just seed ride_charge/total).
-  bool get useItemizedFareBreakdown {
-    final breakdown = ride.value?.fareBreakdown;
-    if (breakdown == null) return false;
-    return FareBreakdownDisplay.hasItemizedComponents(
-      baseFare: breakdown.baseFare ?? 0,
-      distanceCharge: breakdown.distanceCharge ?? 0,
-      timeCharge: breakdown.timeCharge ?? 0,
-      stopCharges: breakdown.stopCharges ?? const [],
-      minimumFareAdjustment: breakdown.minimumFareAdjustment ?? 0,
-    );
-  }
-
-  String get totalAmountLabel {
-    final breakdown = ride.value?.fareBreakdown;
-    final amountCharged = breakdown?.amountCharged;
-    final amount =
-        (amountCharged != null && amountCharged > 0)
-            ? amountCharged
-            : (breakdown?.totalAmount ??
-                _seedTotalAmount ??
-                ride.value?.finalFare ??
-                ride.value?.fareEstimate ??
-                100);
-    return CurrencyFormatter.format(amount);
-  }
-
-  String get _promoCodeForDisplay {
-    final r = ride.value;
-    if (r == null) return '';
-    final code =
-        (r.promoCode ?? r.fareBreakdown?.promoCode)?.toString().trim() ?? '';
-    if (code.isEmpty || code == 'null') return '';
-    return code;
-  }
-
-  int get _promoDiscountAmount {
-    final r = ride.value;
-    if (r == null) return 0;
-    return r.promoDiscount ?? r.fareBreakdown?.promoDiscount ?? 0;
-  }
-
-  int get _promoCashbackAmount {
-    final r = ride.value;
-    if (r == null) return 0;
-    return r.cashbackAmount ?? r.fareBreakdown?.cashbackAmount ?? 0;
-  }
-
-  bool get _promoIsCashback {
-    final breakdown = ride.value?.fareBreakdown;
-    if (breakdown?.isCashback == true && _promoCashbackAmount > 0) {
-      return true;
+  /// Total Fare rows from `fare_breakdown.line_items` (API order).
+  List<FareBreakdownDisplayRow> get fareLineRows {
+    final lineItems = ride.value?.fareBreakdown?.lineItems;
+    if (!FareBreakdownDisplay.hasLineItems(lineItems)) {
+      return const [];
     }
-    return _promoCashbackAmount > 0 && _promoDiscountAmount <= 0;
+    return FareBreakdownDisplay.rowsFromLineItems(lineItems!);
   }
 
-  bool get showPromoFareLine {
-    if (_promoCodeForDisplay.isEmpty) return false;
-    return _promoIsCashback || _promoDiscountAmount > 0;
-  }
-
-  String get promoFareLineTitle {
-    final code = _promoCodeForDisplay;
-    if (_promoIsCashback) {
-      return AppStrings.receiptCashbackPromoLine.trParams({'code': code});
-    }
-    final autoApplied =
-        ride.value?.promoAutoApplied == true ||
-        ride.value?.fareBreakdown?.promoAutoApplied == true;
-    if (autoApplied) {
-      return AppStrings.receiptAutoPromoLine.trParams({'code': code});
-    }
-    return AppStrings.receiptPromoLine.trParams({'code': code});
-  }
-
-  String get promoFareLineAmountLabel {
-    if (_promoIsCashback) {
-      final formatted = CurrencyFormatter.format(_promoCashbackAmount);
-      return AppStrings.promoCashbackAmount.trParams({'amount': formatted});
-    }
-    return '-${CurrencyFormatter.format(_promoDiscountAmount)}';
-  }
-
-  String get paymentModeLabel {
-    final method = ride.value?.paymentMethod.name ?? 'wallet';
-    switch (method) {
-      case 'mobileMoney':
-        return AppStrings.mobileMoney.tr;
-      case 'selcomPesa':
-        return AppStrings.selcomPesa.tr;
-      case 'card':
-        return AppStrings.card.tr;
-      default:
-        return AppStrings.wallet.tr;
-    }
-  }
+  bool get hasFareLineItems => fareLineRows.isNotEmpty;
 
   String _firstAddressLine(String address) {
     final trimmed = address.trim();

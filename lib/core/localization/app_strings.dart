@@ -83,8 +83,6 @@ class AppStrings {
   static const String selectAVehicle = 'select_a_vehicle';
   static const String bookRideWithFare = 'book_ride_with_fare';
   static const String comingSoon = 'coming_soon';
-  static const String bookingFeesAndConvenienceCharges =
-      'booking_fees_and_convenience_charges';
   static const String bookingForName = 'booking_for_name';
   static const String bookingForSomeoneElsePrompt =
       'booking_for_someone_else_prompt';
@@ -121,6 +119,7 @@ class AppStrings {
   static const String cancellationCharges = 'cancellation_charges';
   static const String cancellationFee = 'cancellation_fee';
   static const String cancellationReason = 'cancellation_reason';
+  static const String cancellationReasonByRider = 'cancellation_reason_by_rider';
   static const String noShowFee = 'no_show_fee';
   static const String netAmountRefundedLabel = 'net_amount_refunded_label';
   static const String distanceCovered = 'distance_covered';
@@ -377,7 +376,6 @@ class AppStrings {
   static const String driverReceivedNewStops = 'driver_received_new_stops';
   static const String pleaseWaitWhileWeProcessYourRequest =
       'please_wait_while_we_process_your_request';
-  static const String paymentMode = 'payment_mode';
   static const String paymentNotConfirmed = 'payment_not_confirmed';
   static const String bookRidePaymentNotAppliedTitle =
       'book_ride_payment_not_applied_title';
@@ -466,14 +464,6 @@ class AppStrings {
   static const String colour = 'colour';
   static const String plate = 'plate';
   static const String fareBreakdown = 'fare_breakdown';
-  static const String baseFare = 'base_fare';
-  static const String distanceCharge = 'distance_charge';
-  static const String timeCharge = 'time_charge';
-  static const String minimumFareTopUp = 'minimum_fare_top_up';
-  static const String stopNumberLabel = 'stop_number_label';
-  static const String discount = 'discount';
-  static const String tax = 'tax';
-  static const String total = 'total';
   static const String thankYouForRidingWithSelcomGo =
       'thank_you_for_riding_with_selcom_go';
   static const String mobileMoney = 'mobile_money';
@@ -496,9 +486,6 @@ class AppStrings {
   static const String promoAutoAppliedBadge = 'promo_auto_applied_badge';
   static const String promoCashbackAmount = 'promo_cashback_amount';
   static const String rideFreeLabel = 'ride_free_label';
-  static const String receiptPromoLine = 'receipt_promo_line';
-  static const String receiptAutoPromoLine = 'receipt_auto_promo_line';
-  static const String receiptCashbackPromoLine = 'receipt_cashback_promo_line';
   static const String promoMinRideAmount = 'promo_min_ride_amount';
   static const String promoExpiresToday = 'promo_expires_today';
   static const String noAvailablePromoCodes = 'no_available_promo_codes';
@@ -546,7 +533,6 @@ class AppStrings {
   static const String driverIsArriving = 'driver_is_arriving';
   static const String weCouldntFindADriverNearby =
       'we_couldnt_find_a_driver_nearby';
-  static const String rideCharge = 'ride_charge';
   static const String rideDataIsUnavailable = 'ride_data_is_unavailable';
   static const String rideIdIsMissing = 'ride_id_is_missing';
   static const String destination = 'destination';

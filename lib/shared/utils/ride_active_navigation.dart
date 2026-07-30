@@ -169,13 +169,7 @@ Map<String, dynamic> findingDriverArgumentsFromRide(
     'destinationLng': ride.destination.lng,
     'destinationAddress': ride.destination.address,
     'destinations': routeDestinationsPayloadFromRide(ride),
-    'fareBreakdown': ride.fareBreakdown == null
-        ? null
-        : {
-            'ride_charge': ride.fareBreakdown!.rideCharge,
-            'booking_fee': ride.fareBreakdown!.bookingFee,
-            'total_amount': ride.fareBreakdown!.totalAmount,
-          },
+    'fareBreakdown': ride.fareBreakdown?.toJson(),
     'isBookedForOther': ride.isBookedForOther,
     if (ride.passengerName != null) 'passengerName': ride.passengerName,
     if (ride.passengerPhone != null) 'passengerPhone': ride.passengerPhone,
@@ -298,13 +292,7 @@ void navigateToDriverAcceptedForRide(
           'cancel_info': rideValue.cancelInfo!.toJson(),
         if (rideValue.noShow != null) 'no_show': rideValue.noShow!.toJson(),
       },
-      'fareBreakdown': rideValue.fareBreakdown == null
-          ? null
-          : {
-              'ride_charge': rideValue.fareBreakdown!.rideCharge,
-              'booking_fee': rideValue.fareBreakdown!.bookingFee,
-              'total_amount': rideValue.fareBreakdown!.totalAmount,
-            },
+      'fareBreakdown': rideValue.fareBreakdown?.toJson(),
       if (pendingIncomingCallPayload != null)
         'pendingIncomingCallPayload': pendingIncomingCallPayload,
     };

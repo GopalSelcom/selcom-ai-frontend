@@ -410,7 +410,7 @@ class FareBreakdownRow extends StatelessWidget {
   }
 }
 
-/// Renders itemized fare rows with the standard 4.h gap between lines.
+/// Renders fare rows with the standard 4.h gap between lines.
 /// Used by mid-ride and ride-details fare cards.
 class FareBreakdownRowsList extends StatelessWidget {
   final List<FareBreakdownDisplayRow> rows;
@@ -427,6 +427,8 @@ class FareBreakdownRowsList extends StatelessWidget {
           FareBreakdownRow(
             title: rows[i].title,
             amount: rows[i].amountLabel,
+            isTotal: rows[i].isTotal,
+            amountColor: rows[i].isNegative ? AppColors.success : null,
           ),
         ],
       ],

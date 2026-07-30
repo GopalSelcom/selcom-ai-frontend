@@ -1495,38 +1495,8 @@ class DriverAcceptedScreen extends StatelessWidget {
                   style: AppTextStyles.homeSubtitle,
                 ),
                 SizedBox(height: 6.h),
-                // Prefer API itemized components (incl. stop_charges) over
-                // legacy Ride Charge + Booking Fee summary.
-                if (c.useItemizedFareBreakdown) ...[
-                  FareBreakdownRowsList(rows: c.itemizedFareRows),
-                ] else ...[
-                  FareBreakdownRow(
-                    title: AppStrings.rideCharge.tr,
-                    amount: c.rideChargeLabel,
-                  ),
-                  SizedBox(height: 4.h),
-                  FareBreakdownRow(
-                    title: AppStrings.bookingFeesAndConvenienceCharges.tr,
-                    amount: c.bookingFeeLabel,
-                  ),
-                ],
-                if (c.showPromoFareLine) ...[
-                  SizedBox(height: 4.h),
-                  FareBreakdownRow(
-                    title: c.promoFareLineTitle,
-                    amount: c.promoFareLineAmountLabel,
-                  ),
-                ],
-                SizedBox(height: 4.h),
-                FareBreakdownRow(
-                  title: AppStrings.paymentMode.tr,
-                  amount: c.paymentModeLabel,
-                ),
-                SizedBox(height: 4.h),
-                FareBreakdownRow(
-                  title: AppStrings.totalAmount.tr,
-                  amount: c.totalAmountLabel,
-                ),
+                if (c.hasFareLineItems)
+                  FareBreakdownRowsList(rows: c.fareLineRows),
               ],
             ),
           ),

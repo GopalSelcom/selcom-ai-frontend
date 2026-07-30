@@ -98,36 +98,9 @@ abstract final class DriverAcceptedRideStartedLayout {
 
   static int get fareRowCount => 4;
 
-  static int fareRowCountFor({
-    required bool showPromoLine,
-    int itemizedComponentRowCount = 0,
-    bool useItemized = false,
-  }) {
-    final baseRows = useItemized
-        ? itemizedComponentRowCount.clamp(0, 50) + 2 // payment + total
-        : fareRowCount;
-    return baseRows + (showPromoLine ? 1 : 0);
-  }
-
   static double get fareContentHeight =>
       fareTitleLineHeight +
       fareTitleRowsGap +
       (fareRowCount * fareRowLineHeight) +
       ((fareRowCount - 1) * fareRowGap);
-
-  static double fareContentHeightFor({
-    required bool showPromoLine,
-    int itemizedComponentRowCount = 0,
-    bool useItemized = false,
-  }) {
-    final rows = fareRowCountFor(
-      showPromoLine: showPromoLine,
-      itemizedComponentRowCount: itemizedComponentRowCount,
-      useItemized: useItemized,
-    );
-    return fareTitleLineHeight +
-        fareTitleRowsGap +
-        (rows * fareRowLineHeight) +
-        ((rows - 1) * fareRowGap);
-  }
 }

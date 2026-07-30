@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../fare_breakdown_line_item.dart';
 import '../../fare_stop_charge.dart';
 import '../../ride_cancel_info_model.dart';
 import '../../ride_no_show_info_model.dart';
@@ -721,6 +722,7 @@ class ActiveRideFareBreakdown {
   int? cashbackAmount;
   int? totalAmount;
   int? amountCharged;
+  List<FareBreakdownLineItem>? lineItems;
 
   ActiveRideFareBreakdown({
     this.currency,
@@ -746,6 +748,7 @@ class ActiveRideFareBreakdown {
     this.cashbackAmount,
     this.totalAmount,
     this.amountCharged,
+    this.lineItems,
   });
 
   factory ActiveRideFareBreakdown.fromJson(String str) =>
@@ -778,6 +781,7 @@ class ActiveRideFareBreakdown {
         cashbackAmount: json["cashback_amount"] ?? 0,
         totalAmount: json["total_amount"] ?? 0,
         amountCharged: json["amount_charged"] ?? 0,
+        lineItems: FareBreakdownLineItem.listFromJson(json["line_items"]),
       );
 
   Map<String, dynamic> toMap() => {
@@ -804,6 +808,7 @@ class ActiveRideFareBreakdown {
     "cashback_amount": cashbackAmount,
     "total_amount": totalAmount,
     "amount_charged": amountCharged,
+    "line_items": lineItems?.map((e) => e.toMap()).toList() ?? [],
   };
 }
 

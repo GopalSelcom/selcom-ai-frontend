@@ -383,23 +383,11 @@ class ReceiptImageGenerator {
   }
 
   static Widget _buildFareSection(ReceiptModel receipt) {
-    // Same itemized lines as mid-ride / ride details (PDF embeds this PNG).
-    final useItemized = FareBreakdownDisplay.hasItemizedComponents(
-      baseFare: receipt.baseFare,
-      distanceCharge: receipt.distanceCharge,
-      timeCharge: receipt.timeCharge,
-      stopCharges: receipt.stopCharges,
-      minimumFareAdjustment: receipt.minimumFareAdjustment,
-    );
-    final itemizedLines = useItemized
-        ? FareBreakdownDisplay.itemizedComponentLines(
-            baseFare: receipt.baseFare,
-            distanceCharge: receipt.distanceCharge,
-            timeCharge: receipt.timeCharge,
-            stopCharges: receipt.stopCharges,
-            minimumFareAdjustment: receipt.minimumFareAdjustment,
-          )
-        : const <FareBreakdownComponentLine>[];
+    final lineItems = receipt.lineItems;
+    if (!FareBreakdownDisplay.hasLineItems(lineItems)) {
+      return const SizedBox.shrink();
+    }
+    final lines = FareBreakdownDisplay.linesFromLineItems(lineItems);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,88 +402,58 @@ class ReceiptImageGenerator {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Itemized: Base / Distance / Time / Stop N / min-fare top-up.
-              // Legacy fallback: Ride Charge + Booking Fee when components absent.
-              if (useItemized)
-                for (final line in itemizedLines)
-                  _fareRow(line.title, line.amount, receipt.currency)
-              else ...[
-                _fareRow(
-                  AppStrings.rideCharge.tr,
-                  receipt.totalFare,
-                  receipt.currency,
-                ),
-                _fareRow(
-                  AppStrings.bookingFeesAndConvenienceCharges.tr,
-                  receipt.bookingFee,
-                  receipt.currency,
-                ),
-              ],
-              if ((receipt.promoCode?.trim().isNotEmpty ?? false) &&
-                  (receipt.promoDiscountAmount > 0 ||
-                      receipt.cashbackAmount > 0 ||
-                      receipt.isCashback))
-                _fareRow(
-                  receipt.isCashback ||
-                          (receipt.cashbackAmount > 0 &&
-                              receipt.promoDiscountAmount <= 0)
-                      ? AppStrings.receiptCashbackPromoLine.trParams({
-                          'code': receipt.promoCode!.trim(),
-                        })
-                      : receipt.promoAutoApplied
-                      ? AppStrings.receiptAutoPromoLine.trParams({
-                          'code': receipt.promoCode!.trim(),
-                        })
-                      : AppStrings.receiptPromoLine.trParams({
-                          'code': receipt.promoCode!.trim(),
-                        }),
-                  receipt.isCashback ||
-                          (receipt.cashbackAmount > 0 &&
-                              receipt.promoDiscountAmount <= 0)
-                      ? receipt.cashbackAmount
-                      : -receipt.promoDiscountAmount,
-                  receipt.currency,
-                  valueColor: AppColors.iconSuccess,
-                ),
-              if (receipt.discount > 0)
-                _fareRow(
-                  AppStrings.discount.tr,
-                  -receipt.discount,
-                  receipt.currency,
-                  valueColor: AppColors.iconSuccess,
-                ),
-              if (receipt.tax > 0)
-                _fareRow(AppStrings.tax.tr, receipt.tax, receipt.currency),
-              const SizedBox(height: 8),
-              const Divider(color: AppColors.receiptDivider, height: 1),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.totalAmount.tr,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.receiptTextDark,
+              for (final line in lines)
+                if (line.isTotal)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      children: [
+                        const Divider(
+                          color: AppColors.receiptDivider,
+                          height: 1,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              line.title,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.receiptTextDark,
+                              ),
+                            ),
+                            Text(
+                              CurrencyFormatter.formatPayableOrFree(
+                                line.amount,
+                                receipt.currency,
+                                freeLabel: AppStrings.rideFreeLabel.tr,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    CurrencyFormatter.formatPayableOrFree(
-                      receipt.totalAmount > 0
-                          ? receipt.totalAmount
-                          : receipt.total,
-                      receipt.currency,
-                      freeLabel: AppStrings.rideFreeLabel.tr,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
+                  )
+                else
+                  line.amount < 0
+                      ? _fareRow(
+                          line.title,
+                          line.amount,
+                          receipt.currency,
+                          valueColor: AppColors.iconSuccess,
+                        )
+                      : _fareRow(
+                          line.title,
+                          line.amount,
+                          receipt.currency,
+                        ),
             ],
           ),
         ),

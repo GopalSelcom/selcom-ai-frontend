@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../../core/constants/currency_code.dart';
+import '../../../../core/data/models/fare_breakdown_line_item.dart';
 import '../../../../core/data/models/fare_stop_charge.dart';
 import '../../../../core/data/models/ride_model.dart';
 
@@ -360,6 +361,7 @@ class ReceiptFareBreakdown {
   int? totalAmount;
   int? amountCharged;
   int? totalFare;
+  List<FareBreakdownLineItem>? lineItems;
 
   ReceiptFareBreakdown({
     this.currency,
@@ -386,6 +388,7 @@ class ReceiptFareBreakdown {
     this.totalAmount,
     this.amountCharged,
     this.totalFare,
+    this.lineItems,
   });
 
   factory ReceiptFareBreakdown.fromJson(String str) =>
@@ -419,6 +422,7 @@ class ReceiptFareBreakdown {
         totalAmount: json["total_amount"] ?? 0,
         amountCharged: json["amount_charged"] ?? 0,
         totalFare: json["total_fare"] ?? 0,
+        lineItems: FareBreakdownLineItem.listFromJson(json["line_items"]),
       );
 
   Map<String, dynamic> toMap() => {
@@ -446,6 +450,7 @@ class ReceiptFareBreakdown {
     "total_amount": totalAmount,
     "amount_charged": amountCharged,
     "total_fare": totalFare,
+    "line_items": lineItems?.map((e) => e.toMap()).toList() ?? [],
   };
 }
 
@@ -480,24 +485,13 @@ class ReceiptVehicleSnapshot {
 }
 
 /// Flattened receipt for PDF / image / UI (mapped from [RideReceipt]).
+/// Fare rows come from [lineItems] only.
 class ReceiptModel {
   final String rideId;
   final String transactionId;
-  final int baseFare;
-  final int distanceCharge;
-  final int timeCharge;
-  final int total;
-  final int discount;
-  final int tax;
   final String currency;
   final String paymentMethod;
   final String? completedAt;
-  final String? promoCode;
-  final int promoDiscountAmount;
-  final bool promoAutoApplied;
-  final bool isCashback;
-  final int cashbackAmount;
-  final int amountCharged;
   final String? driverName;
   final String? vehicleModel;
   final String? vehicleColor;
@@ -509,32 +503,14 @@ class ReceiptModel {
   final String destinationAddress;
   final bool isMultiStop;
   final List<RideStopModel> stops;
-  final int totalFare;
-  final int bookingFee;
-  final int totalAmount;
-  /// From `fare_breakdown.stop_charges` — one receipt line per stop.
-  final List<FareStopCharge> stopCharges;
-  /// From `fare_breakdown.minimum_fare_adjustment` — show only when > 0.
-  final int minimumFareAdjustment;
+  final List<FareBreakdownLineItem> lineItems;
 
   ReceiptModel({
     required this.rideId,
     this.transactionId = '',
-    required this.baseFare,
-    required this.distanceCharge,
-    required this.timeCharge,
-    required this.total,
-    this.discount = 0,
-    this.tax = 0,
     required this.currency,
     required this.paymentMethod,
     this.completedAt,
-    this.promoCode,
-    this.promoDiscountAmount = 0,
-    this.promoAutoApplied = false,
-    this.isCashback = false,
-    this.cashbackAmount = 0,
-    this.amountCharged = 0,
     this.driverName,
     this.vehicleModel,
     this.vehicleColor,
@@ -546,32 +522,16 @@ class ReceiptModel {
     this.destinationAddress = '',
     this.isMultiStop = false,
     this.stops = const [],
-    this.totalFare = 0,
-    this.bookingFee = 0,
-    this.totalAmount = 0,
-    this.stopCharges = const [],
-    this.minimumFareAdjustment = 0,
+    this.lineItems = const [],
   });
 
   ReceiptModel copyWith({String? transactionId}) {
     return ReceiptModel(
       rideId: rideId,
       transactionId: transactionId ?? this.transactionId,
-      baseFare: baseFare,
-      distanceCharge: distanceCharge,
-      timeCharge: timeCharge,
-      total: total,
-      discount: discount,
-      tax: tax,
       currency: currency,
       paymentMethod: paymentMethod,
       completedAt: completedAt,
-      promoCode: promoCode,
-      promoDiscountAmount: promoDiscountAmount,
-      promoAutoApplied: promoAutoApplied,
-      isCashback: isCashback,
-      cashbackAmount: cashbackAmount,
-      amountCharged: amountCharged,
       driverName: driverName,
       vehicleModel: vehicleModel,
       vehicleColor: vehicleColor,
@@ -583,11 +543,7 @@ class ReceiptModel {
       destinationAddress: destinationAddress,
       isMultiStop: isMultiStop,
       stops: stops,
-      totalFare: totalFare,
-      bookingFee: bookingFee,
-      totalAmount: totalAmount,
-      stopCharges: stopCharges,
-      minimumFareAdjustment: minimumFareAdjustment,
+      lineItems: lineItems,
     );
   }
 
@@ -595,24 +551,7 @@ class ReceiptModel {
     final fare = receipt.fareBreakdown;
     final driver = receipt.driverSnapshot;
     final vehicle = receipt.vehicleSnapshot;
-    final baseFare = fare?.baseFare ?? 0;
-    final distanceCharge = fare?.distanceCharge ?? 0;
-    final timeCharge = fare?.timeCharge ?? 0;
-    final stopCharges = fare?.stopCharges ?? const <FareStopCharge>[];
-    final minimumFareAdjustment = fare?.minimumFareAdjustment ?? 0;
-    final totalFare =
-        (fare?.totalFare != null && fare!.totalFare! > 0)
-            ? fare.totalFare!
-            : (fare?.rideCharge != null && fare!.rideCharge! > 0)
-            ? fare.rideCharge!
-            : (baseFare + distanceCharge + timeCharge);
-    final bookingFee = fare?.bookingFee ?? 0;
-    final rawTotalAmount = fare?.totalAmount ?? (totalFare + bookingFee);
-    final amountCharged = fare?.amountCharged ?? 0;
-    final displayTotal =
-        amountCharged > 0 ? amountCharged : rawTotalAmount;
-    final promoCode = fare?.promoCode?.trim();
-    final isCashback = fare?.isCashback == true;
+    final lineItems = fare?.lineItems ?? const <FareBreakdownLineItem>[];
 
     final stops = (receipt.stops ?? const <ReceiptPlace>[])
         .map(
@@ -628,19 +567,7 @@ class ReceiptModel {
 
     return ReceiptModel(
       rideId: receipt.rideId ?? '',
-      baseFare: baseFare,
-      distanceCharge: distanceCharge,
-      timeCharge: timeCharge,
-      total: displayTotal,
       currency: fare?.currency ?? CurrencyCode.tzs,
-      promoCode: (promoCode == null || promoCode.isEmpty || promoCode == 'null')
-          ? null
-          : promoCode,
-      promoDiscountAmount: fare?.promoDiscount ?? 0,
-      promoAutoApplied: fare?.promoAutoApplied == true,
-      isCashback: isCashback,
-      cashbackAmount: fare?.cashbackAmount ?? 0,
-      amountCharged: amountCharged,
       paymentMethod: receipt.paymentMethod ?? '',
       completedAt: receipt.completedAt,
       driverName: driver?.name,
@@ -655,20 +582,12 @@ class ReceiptModel {
       destinationAddress: receipt.destination?.address ?? '',
       isMultiStop: receipt.isMultiStop ?? false,
       stops: stops,
-      totalFare: totalFare,
-      bookingFee: bookingFee,
-      totalAmount: displayTotal,
-      stopCharges: stopCharges,
-      minimumFareAdjustment: minimumFareAdjustment,
+      lineItems: lineItems,
     );
   }
 
   factory ReceiptModel.empty({required String rideId}) => ReceiptModel(
     rideId: rideId,
-    baseFare: 0,
-    distanceCharge: 0,
-    timeCharge: 0,
-    total: 0,
     currency: CurrencyCode.tzs,
     paymentMethod: '',
   );

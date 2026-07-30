@@ -1,5 +1,6 @@
 import '../../../shared/utils/driver_search_timeout_from_cancel_time.dart';
 import '../../domain/entities/location_entity.dart';
+import 'fare_breakdown_line_item.dart';
 import 'fare_stop_charge.dart';
 import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
@@ -504,6 +505,9 @@ class FareBreakdownModel {
   final int? cashbackAmount;
   final int? amountCharged;
 
+  /// Preferred Total Fare card rows from API (`line_items`).
+  final List<FareBreakdownLineItem>? lineItems;
+
   const FareBreakdownModel({
     required this.rideCharge,
     required this.bookingFee,
@@ -528,6 +532,7 @@ class FareBreakdownModel {
     this.isCashback,
     this.cashbackAmount,
     this.amountCharged,
+    this.lineItems,
   });
 
   factory FareBreakdownModel.fromJson(Map<String, dynamic> json) {
@@ -555,6 +560,7 @@ class FareBreakdownModel {
       isCashback: json['is_cashback'] ?? false,
       cashbackAmount: json['cashback_amount'] ?? 0,
       amountCharged: json['amount_charged'] ?? 0,
+      lineItems: FareBreakdownLineItem.listFromJson(json['line_items']),
     );
   }
 
@@ -582,6 +588,7 @@ class FareBreakdownModel {
     'is_cashback': isCashback,
     'cashback_amount': cashbackAmount,
     'amount_charged': amountCharged,
+    'line_items': lineItems?.map((e) => e.toMap()).toList() ?? [],
   };
 }
 

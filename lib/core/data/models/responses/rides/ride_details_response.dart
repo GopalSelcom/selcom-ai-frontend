@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../fare_breakdown_line_item.dart';
 import '../../fare_stop_charge.dart';
 import '../../ride_cancel_info_model.dart';
 import '../../ride_model.dart';
@@ -518,39 +519,6 @@ class RideDetailsRide {
   /// (formatting helpers, JSON shape) from this raw response.
   RideModel toRideModel() => RideModel.fromJson(toMap());
 
-  String get promoCodeTrimmed {
-    final raw = (promoCode ?? fareBreakdown?.promoCode)?.toString().trim() ?? '';
-    if (raw.isEmpty || raw == 'null') return '';
-    return raw;
-  }
-
-  int get effectivePromoDiscount =>
-      promoDiscount ?? fareBreakdown?.promoDiscount ?? 0;
-
-  int get effectiveCashbackAmount =>
-      cashbackAmount ?? fareBreakdown?.cashbackAmount ?? 0;
-
-  bool get effectivePromoAutoApplied =>
-      promoAutoApplied ?? fareBreakdown?.promoAutoApplied ?? false;
-
-  /// Cashback promo: fare not reduced; cashback amount credited.
-  bool get hasCashbackPromo {
-    if (promoCodeTrimmed.isEmpty) return false;
-    if (fareBreakdown?.isCashback == true && effectiveCashbackAmount > 0) {
-      return true;
-    }
-    return effectiveCashbackAmount > 0 && effectivePromoDiscount <= 0;
-  }
-
-  /// Classic fare discount promo.
-  bool get hasFareDiscountPromo =>
-      promoCodeTrimmed.isNotEmpty && effectivePromoDiscount > 0;
-
-  bool get hasPromoBenefit => hasCashbackPromo || hasFareDiscountPromo;
-
-  int get promoBenefitAmount =>
-      hasCashbackPromo ? effectiveCashbackAmount : effectivePromoDiscount;
-
   bool get isCancelled => status == 'cancelled';
 
   bool get isCompleted => status == 'ride_completed';
@@ -569,19 +537,6 @@ class RideDetailsRide {
 
   String get vehicleKeyResolved =>
       (vehicleTypeId?.key ?? vehicleSnapshot?.vehicleType ?? '').trim();
-
-  int get displayRideCharge {
-    if (isMidRideDriverCancel) {
-      return midRideCancel?.displayChargeAmount ?? 0;
-    }
-    if (isCancelled) return cancellationFee ?? 0;
-    return fareBreakdown?.rideCharge ?? fareEstimate ?? 0;
-  }
-
-  int get displayBookingFee {
-    if (isCancelled || isMidRideDriverCancel) return 0;
-    return fareBreakdown?.bookingFee ?? 0;
-  }
 
   int get displayTotalAmount {
     if (isMidRideDriverCancel) {
@@ -636,16 +591,18 @@ class RideDetailsRide {
     return raw;
   }
 
-  /// System / no-show cancels have machine codes (e.g. `rider_no_show`) — hide in UI.
+  /// Whether cancelled-ride details should surface a cancellation reason row.
+  ///
+  /// Mid-ride driver cancel uses [midRideCancel] separately.
+  /// System / no-show cancels hide the reason row.
   bool get shouldShowCancellationReason {
     if (!isCancelled || isMidRideDriverCancel) return false;
     if (isNoShowCancellation) return false;
     final by = (cancelledBy ?? '').trim().toLowerCase();
     if (by == 'system') return false;
     final reason = displayCancellationReason.toLowerCase();
-    if (reason.isEmpty) return false;
     if (reason == 'rider_no_show' || reason == 'no_show') return false;
-    return true;
+    return displayCancellationReason.isNotEmpty || by == 'rider';
   }
 
   /// Waiting `no_show` object for ongoing rides; null when terminal / absent.
@@ -938,6 +895,7 @@ class RideDetailsFareBreakdown {
   int? cashbackAmount;
   int? totalAmount;
   int? amountCharged;
+  List<FareBreakdownLineItem>? lineItems;
 
   RideDetailsFareBreakdown({
     this.currency,
@@ -963,6 +921,7 @@ class RideDetailsFareBreakdown {
     this.cashbackAmount,
     this.totalAmount,
     this.amountCharged,
+    this.lineItems,
   });
 
   factory RideDetailsFareBreakdown.fromJson(String str) =>
@@ -995,6 +954,7 @@ class RideDetailsFareBreakdown {
         cashbackAmount: json["cashback_amount"] ?? 0,
         totalAmount: json["total_amount"] ?? 0,
         amountCharged: json["amount_charged"] ?? 0,
+        lineItems: FareBreakdownLineItem.listFromJson(json["line_items"]),
       );
 
   Map<String, dynamic> toMap() => {
@@ -1021,6 +981,7 @@ class RideDetailsFareBreakdown {
     "cashback_amount": cashbackAmount,
     "total_amount": totalAmount,
     "amount_charged": amountCharged,
+    "line_items": lineItems?.map((e) => e.toMap()).toList() ?? [],
   };
 }
 

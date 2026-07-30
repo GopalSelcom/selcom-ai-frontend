@@ -17,9 +17,7 @@ abstract final class RideDetailsScreenShimmer {
     bool showReviewAtBottom = false,
     bool showBookedForOther = false,
     bool showPassengerPhone = false,
-    bool showPromoLine = false,
-    bool useItemizedFareBreakdown = false,
-    int itemizedComponentRowCount = 0,
+    int fareLineRowCount = 0,
     bool showDownloadSlip = false,
     int locationRowCount = 2,
   }) {
@@ -39,11 +37,7 @@ abstract final class RideDetailsScreenShimmer {
           _bookedForOtherCard(showPassengerPhone: showPassengerPhone),
         ],
         SizedBox(height: RideDetailsScreenLayout.sectionGap),
-        _fareCard(
-          showPromoLine: showPromoLine,
-          useItemized: useItemizedFareBreakdown,
-          itemizedComponentRowCount: itemizedComponentRowCount,
-        ),
+        _fareCard(fareLineRowCount: fareLineRowCount),
         if (showReviewAtBottom) ...[
           SizedBox(height: RideDetailsScreenLayout.sectionGap),
           _reviewCard(),
@@ -139,9 +133,7 @@ abstract final class RideDetailsScreenShimmer {
   }
 
   static Widget _fareCard({
-    required bool showPromoLine,
-    bool useItemized = false,
-    int itemizedComponentRowCount = 0,
+    int fareLineRowCount = 0,
   }) {
     return _sectionCardShell(
       padding: EdgeInsets.fromLTRB(
@@ -152,16 +144,10 @@ abstract final class RideDetailsScreenShimmer {
       ),
       child: SizedBox(
         height: RideDetailsScreenLayout.fareCardContentHeight(
-          showPromoLine: showPromoLine,
-          useItemized: useItemized,
-          itemizedComponentRowCount: itemizedComponentRowCount,
+          fareLineRowCount: fareLineRowCount,
         ),
         child: AppShimmer(
-          child: _fareContent(
-            showPromoLine: showPromoLine,
-            useItemized: useItemized,
-            itemizedComponentRowCount: itemizedComponentRowCount,
-          ),
+          child: _fareContent(fareLineRowCount: fareLineRowCount),
         ),
       ),
     );
@@ -336,16 +322,11 @@ abstract final class RideDetailsScreenShimmer {
   }
 
   static Widget _fareContent({
-    required bool showPromoLine,
-    bool useItemized = false,
-    int itemizedComponentRowCount = 0,
+    int fareLineRowCount = 0,
   }) {
-    final rowCount = useItemized
-        ? itemizedComponentRowCount.clamp(0, 50) +
-              1 +
-              (showPromoLine ? 1 : 0)
-        : RideDetailsScreenLayout.defaultFareRowCount +
-              (showPromoLine ? 1 : 0);
+    final rowCount = fareLineRowCount > 0
+        ? fareLineRowCount.clamp(1, 50)
+        : RideDetailsScreenLayout.defaultFareRowCount;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

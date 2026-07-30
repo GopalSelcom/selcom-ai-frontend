@@ -73,8 +73,6 @@ class LanguageSw extends Languages {
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Tafadhali chagua chombo.',
     'book_ride_with_fare': 'Weka safari @currency @amount',
-    'booking_fees_and_convenience_charges':
-        'Ada za Uhifadhi na Malipo ya Urahisi',
     'booking_for_name': 'Kumwekea @name',
     'booking_for_someone_else_prompt': 'Je, unamwekea mtu mwingine safari?',
     'booking_for_someone_else_subtitle': 'Unaweza kuingiza maelezo yao ili tuweze kuwatumia taarifa za safari moja kwa moja.',
@@ -114,6 +112,7 @@ class LanguageSw extends Languages {
     'cancellation_charges': 'Ada za kughairi',
     'cancellation_fee': 'Ada ya kughairi',
     'cancellation_reason': 'Sababu ya kughairi',
+    'cancellation_reason_by_rider': 'Umeghairi wewe',
     'no_show_fee': 'Ada ya kutokuonekana',
     'net_amount_refunded_label': 'Kiasi kilichorejeshwa',
     'distance_covered': 'Umbali uliofikiwa',
@@ -325,7 +324,6 @@ class LanguageSw extends Languages {
     'driver_received_new_drop_off_location': 'Dereva wako amepokea eneo jipya la kushukia.',
     'driver_received_new_stops': 'Dereva wako amepokea vituo vipya.',
     'please_wait_while_we_process_your_request': 'Tafadhali subiri wakati tunachakata ombi lako.',
-    'payment_mode': 'Njia ya malipo',
     'payment_not_confirmed': 'Malipo hayajathibitishwa',
     'book_ride_payment_not_applied_title': 'Malipo hayajakatwa',
     'book_ride_payment_not_applied_message':
@@ -370,14 +368,6 @@ class LanguageSw extends Languages {
     'colour': 'Rangi',
     'plate': 'Namba ya Gari',
     'fare_breakdown': 'Mchanganuo wa Nauli',
-    'base_fare': 'Nauli ya Msingi',
-    'distance_charge': 'Gharama ya Umbali',
-    'time_charge': 'Gharama ya Muda',
-    'minimum_fare_top_up': 'Ongezeko la nauli ya chini',
-    'stop_number_label': 'Kituo @number',
-    'discount': 'Punguzo',
-    'tax': 'Kodi',
-    'total': 'Jumla',
     'thank_you_for_riding_with_selcom_go': 'Asante kwa kusafiri na Selcom Go!',
     'mobile_money': 'Pesa ya Mtandao',
     'card': 'Kadi',
@@ -397,9 +387,6 @@ class LanguageSw extends Languages {
     'promo_auto_applied_badge': 'Imetumiwa kiotomatiki',
     'promo_cashback_amount': 'Rudisho @amount',
     'ride_free_label': 'BURE',
-    'receipt_promo_line': 'Promosi (@code)',
-    'receipt_auto_promo_line': 'Promosi iliyotumiwa kiotomatiki (@code)',
-    'receipt_cashback_promo_line': 'Rudisho (@code)',
     'promo_min_ride_amount': 'Kiasi cha chini @amount',
     'promo_expires_today': 'Inaisha leo',
     'no_available_promo_codes': 'Hakuna misimbo ya promosheni kwa sasa',
@@ -442,7 +429,6 @@ class LanguageSw extends Languages {
     'arriving': 'Inawasili',
     'driver_is_arriving': 'Dereva anawasili...',
     'we_couldnt_find_a_driver_nearby': 'Hatukuweza kupata dereva karibu.',
-    'ride_charge': 'Gharama ya Safari',
     'ride_data_is_unavailable': 'Maelezo ya safari hayapatikani.',
     'ride_id_is_missing': 'Kitambulisho cha safari kinakosekana.',
     'destination': 'Unakokwenda',
@@ -1063,10 +1049,6 @@ class LanguageSw extends Languages {
 
   @override
   String get bookRideWithFare => values['book_ride_with_fare'] ?? '';
-
-  @override
-  String get bookingFeesAndConvenienceCharges =>
-      values['booking_fees_and_convenience_charges'] ?? '';
 
   @override
   String get bookingForName => values['booking_for_name'] ?? '';
@@ -1806,8 +1788,6 @@ class LanguageSw extends Languages {
   String get pleaseWaitWhileWeProcessYourRequest =>
       values['please_wait_while_we_process_your_request'] ?? '';
 
-  @override
-  String get paymentMode => values['payment_mode'] ?? '';
 
   @override
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
@@ -1953,30 +1933,6 @@ class LanguageSw extends Languages {
   String get fareBreakdown => values['fare_breakdown'] ?? '';
 
   @override
-  String get baseFare => values['base_fare'] ?? '';
-
-  @override
-  String get distanceCharge => values['distance_charge'] ?? '';
-
-  @override
-  String get timeCharge => values['time_charge'] ?? '';
-
-  @override
-  String get minimumFareTopUp => values['minimum_fare_top_up'] ?? '';
-
-  @override
-  String get stopNumberLabel => values['stop_number_label'] ?? '';
-
-  @override
-  String get discount => values['discount'] ?? '';
-
-  @override
-  String get tax => values['tax'] ?? '';
-
-  @override
-  String get total => values['total'] ?? '';
-
-  @override
   String get thankYouForRidingWithSelcomGo =>
       values['thank_you_for_riding_with_selcom_go'] ?? '';
 
@@ -2037,16 +1993,6 @@ class LanguageSw extends Languages {
 
   @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
-
-  @override
-  String get receiptPromoLine => values['receipt_promo_line'] ?? '';
-
-  @override
-  String get receiptAutoPromoLine => values['receipt_auto_promo_line'] ?? '';
-
-  @override
-  String get receiptCashbackPromoLine =>
-      values['receipt_cashback_promo_line'] ?? '';
 
   @override
   String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
@@ -2180,9 +2126,6 @@ class LanguageSw extends Languages {
   @override
   String get weCouldntFindADriverNearby =>
       values['we_couldnt_find_a_driver_nearby'] ?? '';
-
-  @override
-  String get rideCharge => values['ride_charge'] ?? '';
 
   @override
   String get rideDataIsUnavailable => values['ride_data_is_unavailable'] ?? '';

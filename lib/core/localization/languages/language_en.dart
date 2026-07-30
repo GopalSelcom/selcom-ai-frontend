@@ -77,8 +77,6 @@ class LanguageEn extends Languages {
     'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Please select a vehicle.',
     'book_ride_with_fare': 'Book Ride @currency @amount',
-    'booking_fees_and_convenience_charges':
-        'Booking Fees & Convenience Charges',
     'booking_for_name': 'Booking for @name',
     'booking_for_someone_else_prompt': 'Are you booking for someone else?',
     'booking_for_someone_else_subtitle':
@@ -120,6 +118,7 @@ class LanguageEn extends Languages {
     'cancellation_charges': 'Cancellation charges',
     'cancellation_fee': 'Cancellation fee',
     'cancellation_reason': 'Cancellation reason',
+    'cancellation_reason_by_rider': 'Cancelled by you',
     'no_show_fee': 'No-show fee',
     'net_amount_refunded_label': 'Net amount refunded',
     'distance_covered': 'Distance covered',
@@ -352,7 +351,6 @@ class LanguageEn extends Languages {
     'driver_received_new_stops': 'Your driver has received the new stops.',
     'please_wait_while_we_process_your_request':
         'Please wait while we process your request.',
-    'payment_mode': 'Payment mode',
     'payment_not_confirmed': 'Payment not confirmed',
     'book_ride_payment_not_applied_title': 'Payment not deducted',
     'book_ride_payment_not_applied_message':
@@ -404,14 +402,6 @@ class LanguageEn extends Languages {
     'colour': 'Colour',
     'plate': 'Plate',
     'fare_breakdown': 'Fare Breakdown',
-    'base_fare': 'Base Fare',
-    'distance_charge': 'Distance Charge',
-    'time_charge': 'Time Charge',
-    'minimum_fare_top_up': 'Minimum fare top-up',
-    'stop_number_label': 'Stop @number',
-    'discount': 'Discount',
-    'tax': 'Tax',
-    'total': 'Total',
     'thank_you_for_riding_with_selcom_go':
         'Thank you for riding with Selcom Go!',
     'mobile_money': 'Mobile Money',
@@ -433,9 +423,6 @@ class LanguageEn extends Languages {
     'promo_auto_applied_badge': 'Auto-applied',
     'promo_cashback_amount': 'Cashback @amount',
     'ride_free_label': 'FREE',
-    'receipt_promo_line': 'Promo (@code)',
-    'receipt_auto_promo_line': 'Auto-applied promo (@code)',
-    'receipt_cashback_promo_line': 'Cashback (@code)',
     'promo_min_ride_amount': 'Min. ride @amount',
     'promo_expires_today': 'Expires today',
     'no_available_promo_codes': 'No promo codes available right now',
@@ -480,7 +467,6 @@ class LanguageEn extends Languages {
     'arriving': 'Arriving',
     'driver_is_arriving': 'Driver is arriving...',
     'we_couldnt_find_a_driver_nearby': 'We couldn\'t find a driver nearby.',
-    'ride_charge': 'Ride Charge',
     'ride_data_is_unavailable': 'Ride data is unavailable.',
     'ride_id_is_missing': 'Ride id is missing.',
     'destination': 'Destination',
@@ -1143,10 +1129,6 @@ class LanguageEn extends Languages {
 
   @override
   String get bookRideWithFare => values['book_ride_with_fare'] ?? '';
-
-  @override
-  String get bookingFeesAndConvenienceCharges =>
-      values['booking_fees_and_convenience_charges'] ?? '';
 
   @override
   String get bookingForName => values['booking_for_name'] ?? '';
@@ -1885,8 +1867,6 @@ class LanguageEn extends Languages {
   String get pleaseWaitWhileWeProcessYourRequest =>
       values['please_wait_while_we_process_your_request'] ?? '';
 
-  @override
-  String get paymentMode => values['payment_mode'] ?? '';
 
   @override
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
@@ -2032,30 +2012,6 @@ class LanguageEn extends Languages {
   String get fareBreakdown => values['fare_breakdown'] ?? '';
 
   @override
-  String get baseFare => values['base_fare'] ?? '';
-
-  @override
-  String get distanceCharge => values['distance_charge'] ?? '';
-
-  @override
-  String get timeCharge => values['time_charge'] ?? '';
-
-  @override
-  String get minimumFareTopUp => values['minimum_fare_top_up'] ?? '';
-
-  @override
-  String get stopNumberLabel => values['stop_number_label'] ?? '';
-
-  @override
-  String get discount => values['discount'] ?? '';
-
-  @override
-  String get tax => values['tax'] ?? '';
-
-  @override
-  String get total => values['total'] ?? '';
-
-  @override
   String get thankYouForRidingWithSelcomGo =>
       values['thank_you_for_riding_with_selcom_go'] ?? '';
 
@@ -2116,16 +2072,6 @@ class LanguageEn extends Languages {
 
   @override
   String get rideFreeLabel => values['ride_free_label'] ?? '';
-
-  @override
-  String get receiptPromoLine => values['receipt_promo_line'] ?? '';
-
-  @override
-  String get receiptAutoPromoLine => values['receipt_auto_promo_line'] ?? '';
-
-  @override
-  String get receiptCashbackPromoLine =>
-      values['receipt_cashback_promo_line'] ?? '';
 
   @override
   String get promoMinRideAmount => values['promo_min_ride_amount'] ?? '';
@@ -2260,8 +2206,6 @@ class LanguageEn extends Languages {
   String get weCouldntFindADriverNearby =>
       values['we_couldnt_find_a_driver_nearby'] ?? '';
 
-  @override
-  String get rideCharge => values['ride_charge'] ?? '';
 
   @override
   String get rideDataIsUnavailable => values['ride_data_is_unavailable'] ?? '';

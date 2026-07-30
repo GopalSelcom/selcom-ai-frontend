@@ -70,7 +70,6 @@ abstract class Languages {
   String get mobileMoneyAmountValue;
   String get selectAVehicle;
   String get bookRideWithFare;
-  String get bookingFeesAndConvenienceCharges;
   String get bookingForName;
   String get bookingForSomeoneElsePrompt;
   String get bookingForSomeoneElseSubtitle;
@@ -296,7 +295,6 @@ abstract class Languages {
   String get driverReceivedNewDropOffLocation;
   String get driverReceivedNewStops;
   String get pleaseWaitWhileWeProcessYourRequest;
-  String get paymentMode;
   String get paymentNotConfirmed;
   String get bookRidePaymentNotAppliedTitle;
   String get bookRidePaymentNotAppliedMessage;
@@ -339,14 +337,6 @@ abstract class Languages {
   String get colour;
   String get plate;
   String get fareBreakdown;
-  String get baseFare;
-  String get distanceCharge;
-  String get timeCharge;
-  String get minimumFareTopUp;
-  String get stopNumberLabel;
-  String get discount;
-  String get tax;
-  String get total;
   String get thankYouForRidingWithSelcomGo;
   String get mobileMoney;
   String get card;
@@ -366,9 +356,6 @@ abstract class Languages {
   String get promoAutoAppliedBadge;
   String get promoCashbackAmount;
   String get rideFreeLabel;
-  String get receiptPromoLine;
-  String get receiptAutoPromoLine;
-  String get receiptCashbackPromoLine;
   String get promoMinRideAmount;
   String get promoExpiresToday;
   String get noAvailablePromoCodes;
@@ -410,7 +397,6 @@ abstract class Languages {
   String get arriving;
   String get driverIsArriving;
   String get weCouldntFindADriverNearby;
-  String get rideCharge;
   String get rideDataIsUnavailable;
   String get rideIdIsMissing;
   String get destination;
