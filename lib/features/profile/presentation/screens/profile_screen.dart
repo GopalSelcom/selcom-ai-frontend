@@ -379,15 +379,13 @@ class ProfileScreen extends GetView<ProfileController> {
               icon: Iconsax.document_text,
               title: AppStrings.termsAndConditions.tr,
               onTap: controller.openTermsAndConditions,
-              showDivider: controller.showSettingsOption.value,
             ),
-            if (controller.showSettingsOption.value)
-              MenuItemWidget(
-                icon: Iconsax.setting_2,
-                title: AppStrings.settings.tr,
-                onTap: controller.openSettings,
-                showDivider: false,
-              ),
+            MenuItemWidget(
+              icon: Iconsax.setting_2,
+              title: AppStrings.settings.tr,
+              onTap: controller.openSettings,
+              showDivider: false,
+            ),
           ],
         );
       }),

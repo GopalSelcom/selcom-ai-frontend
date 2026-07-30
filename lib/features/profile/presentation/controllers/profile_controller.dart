@@ -124,7 +124,6 @@ class ProfileController extends GetxController {
   final RxBool isEditing = false.obs;
   final RxBool isLoading = false.obs;
   final RxBool isLoadingProfile = true.obs;
-  final RxBool showSettingsOption = false.obs;
   final RxBool showSafetyOption = false.obs;
 
   // User Data
@@ -170,15 +169,14 @@ class ProfileController extends GetxController {
     }
     unawaited(_loadInitialContent());
     ever<Map<String, bool>>(appSettingsService.features, (_) {
-      syncSettingsVisibility();
+      syncSafetyVisibility();
     });
   }
 
   /// Menu rows shown when not loading (must match [_buildSettingsList]).
   int get visibleMenuItemCount {
-    var count = 5;
+    var count = 7; // My Rides, Saved, Cards, Help, Privacy, Terms, Settings
     if (showSafetyOption.value) count++;
-    if (showSettingsOption.value) count++;
     return count;
   }
 
@@ -204,11 +202,10 @@ class ProfileController extends GetxController {
 
   Future<void> _syncProfileMenuVisibility() async {
     await appSettingsService.preload();
-    syncSettingsVisibility();
+    syncSafetyVisibility();
   }
 
-  void syncSettingsVisibility() {
-    showSettingsOption.value = appSettingsService.hasAnyFeatureEnabled;
+  void syncSafetyVisibility() {
     showSafetyOption.value = !appSettingsService.featureEnabled(
       'ride_pin_admin_required',
     );

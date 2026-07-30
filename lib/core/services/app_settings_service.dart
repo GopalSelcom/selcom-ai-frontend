@@ -43,10 +43,6 @@ class AppSettingsService {
   int get maxActiveBookForOtherRides =>
       bookForOtherSettings.value?.maxActive ?? 1;
 
-  bool get hasAnyFeatureEnabled => features.values.any((v) => v == true);
-
-  bool hasFeature(String key) => features.containsKey(key);
-
   bool featureEnabled(String key, {bool fallback = false}) {
     return features[key] ?? fallback;
   }

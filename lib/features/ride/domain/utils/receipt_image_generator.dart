@@ -136,9 +136,9 @@ class ReceiptImageGenerator {
               if (receipt.transactionId.trim().isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
-                  AppStrings.transactionIdWithValue
-                      .trParams({'id': receipt.transactionId.trim()})
-                      .tr,
+                  AppStrings.transactionIdWithValue.trParams({
+                    'id': receipt.transactionId.trim(),
+                  }).tr,
                   style: const TextStyle(
                     fontSize: 9,
                     color: AppColors.receiptTextMuted,
@@ -449,11 +449,7 @@ class ReceiptImageGenerator {
                           receipt.currency,
                           valueColor: AppColors.iconSuccess,
                         )
-                      : _fareRow(
-                          line.title,
-                          line.amount,
-                          receipt.currency,
-                        ),
+                      : _fareRow(line.title, line.amount, receipt.currency),
             ],
           ),
         ),
