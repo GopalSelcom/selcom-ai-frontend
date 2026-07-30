@@ -6,7 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../data/models/state_model.dart';
+import '../../data/models/state_response.dart';
 import '../controllers/add_card_controller.dart';
 
 class StateSelectScreen extends StatefulWidget {

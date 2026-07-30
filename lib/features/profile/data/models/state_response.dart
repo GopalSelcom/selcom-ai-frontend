@@ -11,16 +11,16 @@ class SelectStateModel {
     if (json['response'] != null) {
       response = <StateResponse>[];
       json['response'].forEach((v) {
-        response!.add(new StateResponse.fromJson(v));
+        response!.add(StateResponse.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['status_code'] = this.statusCode;
-    data['message'] = this.message;
-    data['response'] = this.response!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status_code'] = statusCode;
+    data['message'] = message;
+    data['response'] = response!.map((v) => v.toJson()).toList();
     return data;
   }
 }
@@ -57,14 +57,14 @@ class StateResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_active'] = this.isActive;
-    data['is_top_positioned'] = this.isTopPositioned;
-    data['country_id'] = this.countryId;
-    data['_id'] = this.sId;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['timezone_id'] = this.timezoneId;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_active'] = isActive;
+    data['is_top_positioned'] = isTopPositioned;
+    data['country_id'] = countryId;
+    data['_id'] = sId;
+    data['id'] = id;
+    data['name'] = name;
+    data['timezone_id'] = timezoneId;
     return data;
   }
 }

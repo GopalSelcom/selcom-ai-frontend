@@ -8,7 +8,9 @@ import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../data/models/contact_us_models.dart';
+import '../../data/models/country_response.dart';
 import '../../data/models/request/update_profile_request.dart';
+import '../../data/models/state_response.dart';
 import '../../data/models/update_profile_response.dart';
 
 abstract class ProfileRepository {
@@ -36,5 +38,11 @@ abstract class ProfileRepository {
 
   Future<Either<Failure, SendEmailResponse>> sendEmail(
     SendEmailRequest request,
+  );
+
+  Future<Either<Failure, List<CountriesResponse>>> getCountries();
+
+  Future<Either<Failure, List<StateResponse>>> getStatesByCountry(
+    String countryId,
   );
 }

@@ -7,18 +7,18 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/phone_national_rules.dart';
+import '../../../../shared/utils/thousands_separator_input_formatter.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../../../../shared/utils/thousands_separator_input_formatter.dart';
+import '../../../../shared/widgets/phone_country_picker_chip.dart';
+import '../../data/models/country_response.dart';
+import '../../data/models/state_response.dart';
 import '../controllers/add_card_controller.dart';
 import 'country_select_screen.dart';
 import 'state_select_screen.dart';
-import '../../../../shared/widgets/phone_country_picker_chip.dart';
-import '../../../../shared/utils/phone_national_rules.dart';
-import '../../data/models/country_response.dart';
-import '../../data/models/state_model.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key});

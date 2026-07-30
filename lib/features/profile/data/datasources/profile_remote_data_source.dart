@@ -5,6 +5,7 @@ import '../../../../core/data/models/responses/create_saved_place_response.dart'
 import '../../../../core/data/models/responses/get_saved_places_response.dart';
 import '../../../../core/data/models/responses/send_email_response.dart';
 import '../../../../core/data/models/user_model.dart';
+import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
@@ -12,8 +13,10 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../models/contact_us_models.dart';
+import '../models/country_response.dart';
 import '../models/profile_response_model.dart';
 import '../models/request/update_profile_request.dart';
+import '../models/state_response.dart';
 import '../models/update_profile_response.dart';
 
 abstract class ProfileRemoteDataSource {
@@ -34,6 +37,10 @@ abstract class ProfileRemoteDataSource {
   Future<EmailSubjectResponseModel> getEmailSubjects();
 
   Future<SendEmailResponse> sendEmail(SendEmailRequest request);
+
+  Future<List<CountriesResponse>> getCountries();
+
+  Future<List<StateResponse>> getStatesByCountry(String countryId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -242,5 +249,57 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
     }
     throw Exception('Failed to send email');
+  }
+
+  @override
+  Future<List<CountriesResponse>> getCountries() async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.common.countries,
+        method: ApiMethod.post,
+        body: {},
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return CountriesModel.fromJson(data).response ?? const [];
+      }
+      if (data is Map) {
+        return CountriesModel.fromJson(
+              Map<String, dynamic>.from(data),
+            ).response ??
+            const [];
+      }
+    }
+    throw Exception('Failed to get countries');
+  }
+
+  @override
+  Future<List<StateResponse>> getStatesByCountry(String countryId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.common.stateByCountry,
+        method: ApiMethod.post,
+        body: {
+          Params.countryId: countryId,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return SelectStateModel.fromJson(data).response ?? const [];
+      }
+      if (data is Map) {
+        return SelectStateModel.fromJson(
+              Map<String, dynamic>.from(data),
+            ).response ??
+            const [];
+      }
+    }
+    throw Exception('Failed to get states');
   }
 }

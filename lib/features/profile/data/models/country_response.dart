@@ -11,16 +11,16 @@ class CountriesModel {
     if (json['response'] != null) {
       response = <CountriesResponse>[];
       json['response'].forEach((v) {
-        response!.add(new CountriesResponse.fromJson(v));
+        response!.add(CountriesResponse.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['status_code'] = this.statusCode;
-    data['message'] = this.message;
-    data['response'] = this.response!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status_code'] = statusCode;
+    data['message'] = message;
+    data['response'] = response!.map((v) => v.toJson()).toList();
     return data;
   }
 }
@@ -90,25 +90,25 @@ class CountriesResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['is_active'] = this.isActive;
-    data['is_top_positioned'] = this.isTopPositioned;
-    data['capital'] = this.capital;
-    data['citizenship'] = this.citizenship;
-    data['currency_name'] = this.currencyName;
-    data['currency_code'] = this.currencyCode;
-    data['currency_sub_unit'] = this.currencySubUnit;
-    data['currency_symbol'] = this.currencySymbol;
-    data['iso3_code'] = this.iso3Code;
-    data['iso2_code'] = this.iso2Code;
-    data['phone_code'] = this.phoneCode;
-    data['region_code'] = this.regionCode;
-    data['sub_region_code'] = this.subRegionCode;
-    data['flag'] = this.flag;
-    data['_id'] = this.sId;
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['full_name'] = this.fullName;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['is_active'] = isActive;
+    data['is_top_positioned'] = isTopPositioned;
+    data['capital'] = capital;
+    data['citizenship'] = citizenship;
+    data['currency_name'] = currencyName;
+    data['currency_code'] = currencyCode;
+    data['currency_sub_unit'] = currencySubUnit;
+    data['currency_symbol'] = currencySymbol;
+    data['iso3_code'] = iso3Code;
+    data['iso2_code'] = iso2Code;
+    data['phone_code'] = phoneCode;
+    data['region_code'] = regionCode;
+    data['sub_region_code'] = subRegionCode;
+    data['flag'] = flag;
+    data['_id'] = sId;
+    data['id'] = id;
+    data['name'] = name;
+    data['full_name'] = fullName;
     return data;
   }
 }

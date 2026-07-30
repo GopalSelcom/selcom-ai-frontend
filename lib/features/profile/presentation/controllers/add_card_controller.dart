@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/network/api_constants.dart';
-import '../../../../core/network/api_service.dart';
 import '../../../../core/network/urls.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/data/countries_phone_data.dart';
@@ -15,13 +14,18 @@ import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/models/country_response.dart';
-import '../../data/models/state_model.dart';
+import '../../data/models/state_response.dart';
+import '../../domain/repositories/profile_repository.dart';
 
 class AddCardController extends GetxController {
   final WalletRepository _walletRepository;
+  final ProfileRepository _profileRepository;
 
-  AddCardController({WalletRepository? walletRepository})
-    : _walletRepository = walletRepository ?? sl<WalletRepository>();
+  AddCardController({
+    WalletRepository? walletRepository,
+    ProfileRepository? profileRepository,
+  })  : _walletRepository = walletRepository ?? sl<WalletRepository>(),
+        _profileRepository = profileRepository ?? sl<ProfileRepository>();
 
   static const int minAddCardAmount = 1000;
 
@@ -92,22 +96,15 @@ class AddCardController extends GetxController {
     if (countriesList.isNotEmpty) return;
     isLoadingCountries.value = true;
     try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.common.countries,
-          method: ApiMethod.post,
-          body: {},
-        ),
+      final result = await _profileRepository.getCountries();
+      result.fold(
+        (failure) {
+          debugPrint('Error fetching countries: ${failure.message}');
+        },
+        countriesList.assignAll,
       );
-      if (response.statusCode == 200 && response.data != null) {
-        final data = response.data;
-        if (data is Map<String, dynamic>) {
-          final countriesModel = CountriesModel.fromJson(data);
-          countriesList.assignAll(countriesModel.response ?? []);
-        }
-      }
     } catch (e) {
-      debugPrint("Error fetching countries: $e");
+      debugPrint('Error fetching countries: $e');
     } finally {
       isLoadingCountries.value = false;
     }
@@ -122,26 +119,18 @@ class AddCardController extends GetxController {
     isLoadingStates.value = true;
     statesList.clear();
     try {
-      final response = await ApiService().call(
-        request: ApiRequest(
-          endpoint: URLS.common.stateByCountry,
-          method: ApiMethod.post,
-          body: {
-            Params.countryId: countryId,
-          },
-        ),
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        final data = response.data;
-        if (data is Map<String, dynamic>) {
-          final stateModel = SelectStateModel.fromJson(data);
-          final fetchedList = stateModel.response ?? [];
+      final result = await _profileRepository.getStatesByCountry(countryId);
+      result.fold(
+        (failure) {
+          debugPrint('Error fetching states: ${failure.message}');
+        },
+        (fetchedList) {
           cachedStates[countryId] = fetchedList;
           statesList.assignAll(fetchedList);
-        }
-      }
+        },
+      );
     } catch (e) {
-      debugPrint("Error fetching states: $e");
+      debugPrint('Error fetching states: $e');
     } finally {
       isLoadingStates.value = false;
     }
