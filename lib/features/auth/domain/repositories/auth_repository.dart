@@ -3,14 +3,12 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
-import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/set_name_response.dart';
 import '../../../../core/data/models/responses/firebase_login_response.dart';
 import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/social_auth_user.dart';
 
@@ -39,10 +37,6 @@ abstract class AuthRepository {
 
   Future<Either<Failure, SetNameResponseModel?>> setName({
     required SetNameRequest request,
-  });
-
-  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
-    required SaveUserAdditionalDetailsRequest request,
   });
 
   Future<Either<Failure, String>> refreshToken();

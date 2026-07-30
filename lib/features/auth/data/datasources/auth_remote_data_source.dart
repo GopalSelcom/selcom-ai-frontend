@@ -3,16 +3,13 @@ import 'package:dio/dio.dart';
 import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
-import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
 import '../../../../core/data/models/responses/set_name_response.dart';
 import '../../../../core/data/models/responses/firebase_login_response.dart';
 import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/user_model.dart';
 import '../../../../core/network/api_service.dart';
-import '../../../../core/network/expected_client_http_status.dart';
 import '../../../../core/network/urls.dart';
 
 abstract class AuthRemoteDataSource {
@@ -34,10 +31,6 @@ abstract class AuthRemoteDataSource {
 
   Future<SetNameResponseModel?> setName({
     required SetNameRequest request,
-  });
-
-  Future<UserModel> saveUserAdditionalDetails({
-    required SaveUserAdditionalDetailsRequest request,
   });
 
   Future<String> refreshToken();
@@ -158,29 +151,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
 
     _throwIfErrorResponse(response, URLS.auth.setName);
-  }
-
-  @override
-  Future<UserModel> saveUserAdditionalDetails({
-    required SaveUserAdditionalDetailsRequest request,
-  }) async {
-    final response = await ApiService().call(
-      request: ApiRequest(
-        endpoint: URLS.auth.saveUserDetails,
-        method: ApiMethod.post,
-        body: request.toJson(),
-      ),
-    );
-
-    if (response.statusCode == 200 && response.data != null) {
-      return UserModel.fromJson(response.data['response'] ?? {});
-    }
-    if (isExpectedClientBusinessHttpStatus(response.statusCode)) {
-      return UserModel.fromJson({});
-    }
-    throw Exception(
-      response.data?['message'] ?? 'Failed to save additional details',
-    );
   }
 
   @override

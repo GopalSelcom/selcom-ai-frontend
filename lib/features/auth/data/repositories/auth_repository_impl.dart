@@ -7,7 +7,6 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/data/models/requests/firebase_login_request.dart';
 import '../../../../core/data/models/requests/go_phone_otp_request.dart';
 import '../../../../core/data/models/requests/go_phone_verify_otp_request.dart';
-import '../../../../core/data/models/requests/save_user_additional_details_request.dart';
 import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/data/models/requests/set_name_request.dart';
 import '../../../../core/data/models/responses/onboarding_banners_response.dart';
@@ -15,7 +14,6 @@ import '../../../../core/data/models/responses/set_name_response.dart';
 import '../../../../core/data/models/responses/firebase_login_response.dart';
 import '../../../../core/data/models/responses/phone_verify_otp_response.dart';
 import '../../../../core/data/models/responses/send_otp_response.dart';
-import '../../../../core/data/models/user_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/apple_sign_in_service.dart';
 import '../../../../core/services/google_sign_in_service.dart';
@@ -157,21 +155,6 @@ class AuthRepositoryImpl implements AuthRepository {
     } on DioException catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ErrorMapper.mapDioExceptionToFailure(e));
-    } catch (e, stackTrace) {
-      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, UserModel>> saveUserAdditionalDetails({
-    required SaveUserAdditionalDetailsRequest request,
-  }) async {
-    try {
-      final result = await remoteDataSource.saveUserAdditionalDetails(
-        request: request,
-      );
-      return Right(result);
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));

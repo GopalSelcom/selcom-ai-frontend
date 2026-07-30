@@ -25,7 +25,6 @@ import 'core/services/storage_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
-import 'core/bindings/initial_binding.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
 import 'core/services/live_activity/live_activity_manager.dart';
@@ -305,7 +304,6 @@ class _MyAppState extends State<MyApp> {
               );
             },
             translations: GetxLanguagesTranslations(),
-            initialBinding: InitialBinding(),
             initialRoute: AppRoutes.splash,
             getPages: AppRoutes.pages,
           ),

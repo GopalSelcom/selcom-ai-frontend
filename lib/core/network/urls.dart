@@ -42,7 +42,6 @@ class _SupportEndpoints {
 class _AuthEndpoints {
   const _AuthEndpoints();
 
-  final saveUserDetails = "save_user_additional_details";
   final refreshToken = "refresh_token";
   final logout = "logout";
 
