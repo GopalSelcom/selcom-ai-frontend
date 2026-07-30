@@ -81,6 +81,8 @@ class AppSettingsService {
         cancellationReasons.clear();
         maxStops.value = AppSettingsDefaults.maxStops;
         topupMethods.clear();
+        // Keep isLoaded false so a later screen can retry after a failed parse/load.
+        isLoaded.value = false;
       },
       (settings) {
         features.assignAll(_featureFlagsFrom(settings));
@@ -95,9 +97,9 @@ class AppSettingsService {
           AppSettingsDefaults.maxStops,
         );
         topupMethods.assignAll(settings.topupMethods ?? const []);
+        isLoaded.value = true;
       },
     );
-    isLoaded.value = true;
   }
 
   Map<String, bool> _featureFlagsFrom(Settings settings) {

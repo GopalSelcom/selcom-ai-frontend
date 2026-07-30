@@ -308,7 +308,8 @@ class Features {
 
 class BookForOther {
   bool? enabled;
-  int? distanceThresholdKm;
+  /// API may send km as int or double (e.g. `1` or `0.1`).
+  num? distanceThresholdKm;
   int? maxActive;
 
   BookForOther({this.enabled, this.distanceThresholdKm, this.maxActive});
