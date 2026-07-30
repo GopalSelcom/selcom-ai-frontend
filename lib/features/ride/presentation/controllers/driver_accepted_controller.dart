@@ -1240,7 +1240,8 @@ class DriverAcceptedController extends GetxController
     _rideStopSub = _socketService.rideStopUpdateStream.listen((payload) {
       if (_navigatedAway) return;
       if (!_isSocketEventForThisRide(payload.rideId)) return;
-      _applyStatusPayload(payload);
+      // Intermediate-stop progress only — never treat stop "completed" as ride end.
+      _applyStopProgressPayload(payload);
     });
 
     _driverLocSub = _socketService.rideDriverLocationStream.listen((payload) {
@@ -1773,6 +1774,56 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// `ride:stop_update` — stop-level progress (index / next-leg route).
+  ///
+  /// Backend may send `status: completed` for a finished **intermediate stop**.
+  /// That must not open the ride-completed details screen while the trip
+  /// continues (`ride:status_update` still reports `ride_in_progress`).
+  void _applyStopProgressPayload(EventRiderStatusUpdateResponse payload) {
+    final normalized = normalizeRideStatusString(payload.status);
+    final isStopCompletedSignal = normalized == 'completed' ||
+        normalized == 'ride_completed' ||
+        normalized == 'stop_completed' ||
+        normalized.contains('stop_complete');
+
+    if (isStopCompletedSignal) {
+      if (payload.currentStopIndex != null) {
+        final currentRide = ride.value;
+        if (currentRide != null) {
+          ride.value = currentRide.copyWith(
+            currentStopIndex: payload.currentStopIndex,
+          );
+        }
+      }
+
+      final target = _normalizeRouteTarget(payload.routeTarget);
+      if (target.isNotEmpty || payload.routeGeometry?.coordinates != null) {
+        _applyRouteGeometryFromPayload(
+          routeTarget: target.isNotEmpty ? target : 'drop_off',
+          coordinates: payload.routeGeometry?.coordinates,
+          fitCameraOnChange: true,
+        );
+      }
+
+      // Keep in-trip sheet; do not call completion navigation.
+      if (rideBottomSheetState.value != RideBottomSheetState.rideStarted) {
+        _applyBottomSheetStateForStatus('ride_in_progress');
+      } else {
+        final current = normalizeRideStatusString(currentRideStatus.value);
+        if (current != 'ride_in_progress' &&
+            current != 'ride_started' &&
+            current != 'near_destination') {
+          currentRideStatus.value = 'ride_in_progress';
+        }
+      }
+
+      unawaited(_fetchRideDetails());
+      return;
+    }
+
+    _applyStatusPayload(payload);
+  }
+
   /// Applies driver/vehicle/PIN/route data from a status payload (socket or navigation seed).
   void _applyStatusPayload(EventRiderStatusUpdateResponse payload) {
     final status = (payload.status ?? '').toString().trim();
@@ -2155,6 +2206,18 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
+    // Guard: intermediate-stop "completed" (or stale socket) can race with
+    // `ride_in_progress`. Never open completion UI unless HTTP confirms end.
+    final detailsStatus = normalizeRideStatusString(details.status);
+    if (detailsStatus != 'completed' && detailsStatus != 'ride_completed') {
+      AppLogger.w(
+        'Skip completion handoff; ride details status is $detailsStatus',
+        tag: 'DriverAcceptedController',
+      );
+      await _applyRideDetailsFromModel(details.toRideModel());
+      return;
+    }
+
     // Normalize for details screen: force completed status and review UI.
     details.status = 'ride_completed';
     details.showReviewUi = true;
@@ -2473,14 +2536,20 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
-    if (trackingStatus.isNotEmpty) {
-      // Only trigger state updates from tracking payloads if it's a major transition.
-      // High-frequency tracking often contains stale 'assigned' statuses.
-      if (trackingStatus.contains('started') ||
-          trackingStatus.contains('progress') ||
-          trackingStatus.contains('complete') ||
-          trackingStatus.contains('arrived')) {
-        _applyBottomSheetStateForStatus(trackingStatus);
+    if (normalizedTracking.isNotEmpty) {
+      // Only major transitions — exact statuses (avoid substring "complete"
+      // matching stop_completed and opening the ride-completed screen).
+      const majorTrackingStatuses = {
+        'ride_started',
+        'ride_in_progress',
+        'near_destination',
+        'completed',
+        'ride_completed',
+        'driver_arrived',
+        'driver_arriving',
+      };
+      if (majorTrackingStatuses.contains(normalizedTracking)) {
+        _applyBottomSheetStateForStatus(normalizedTracking);
       }
     }
 
@@ -2928,6 +2997,8 @@ class DriverAcceptedController extends GetxController
           ? etaFromPayload
           : currentEtaSeconds.value;
 
+      final normalizedForLive =
+          normalizeRideStatusString(payload.status);
       await LiveActivityManager().startActivity(
         orderId: rideId,
         status: status,
@@ -2935,7 +3006,8 @@ class DriverAcceptedController extends GetxController
         vehicleName: vehicleName,
         driverAvatarUrl: avatarUrl,
         plateNumber: TanzaniaLicensePlateFormatter.formatDisplay(rawPlate),
-        isCompleted: status.contains('COMPLETED'),
+        isCompleted: normalizedForLive == 'ride_completed' ||
+            normalizedForLive == 'completed',
         etaSeconds: etaSeconds,
         driverLatitude:
             driver?.lat ?? assignedDriverLocation.value?.latitude,
@@ -2972,13 +3044,15 @@ class DriverAcceptedController extends GetxController
           .replaceAll(' ', '_');
 
       final eta = (payload.eta ?? 0).toDouble();
+      final normalizedForLive = normalizeRideStatusString(statusRaw);
       await LiveActivityManager().updateActivity(
         orderId: rideId,
         status: status,
         etaSeconds: eta > 0 ? eta : currentEtaSeconds.value,
         driverLatitude: assignedDriverLocation.value?.latitude,
         driverLongitude: assignedDriverLocation.value?.longitude,
-        isCompleted: status.contains('COMPLETED'),
+        isCompleted: normalizedForLive == 'ride_completed' ||
+            normalizedForLive == 'completed',
       );
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
