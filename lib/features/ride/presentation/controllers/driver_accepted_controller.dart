@@ -207,9 +207,6 @@ class DriverAcceptedController extends GetxController
       routeDeviationInfo.value?.isOnRoute == true &&
       !(routeDeviationInfo.value?.cancellationRequest?.isPending ?? false);
 
-  bool get canContactSupportFromDeviation =>
-      routeDeviationInfo.value?.canContactSupport == true;
-
   bool get canRequestCancellationFromDeviation =>
       routeDeviationInfo.value?.canRequestCancellation == true;
 
@@ -2139,20 +2136,15 @@ class DriverAcceptedController extends GetxController
     routeDeviationBannerDismissed.value = true;
   }
 
-  void openContactSupportFromDeviation() {
-    final transId = (ride.value?.transactionId ?? '').trim();
-    Get.toNamed(
-      AppRoutes.contactUs,
-      arguments: {
-        'rideId': rideId,
-        'transactionId': transId.isNotEmpty ? transId : rideId,
-      },
-    );
-  }
-
-  /// Ride-started "Having trouble?" — same cancellation-request sheet.
+  /// Ride-started / safety sheet "Having trouble?" — same cancellation-request sheet.
   Future<void> openHavingTroubleCancellationSheet() {
     return openRequestCancellationSheet(force: true);
+  }
+
+  /// Safety options sheet entry — close the sheet, then open the request flow.
+  Future<void> openHavingTroubleFromSafetySheet() async {
+    AppDialogs.closeActiveDialog();
+    await openHavingTroubleCancellationSheet();
   }
 
   Future<void> openRequestCancellationSheet({bool force = false}) async {

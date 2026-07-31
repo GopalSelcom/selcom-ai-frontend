@@ -316,43 +316,21 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showSupport = controller.canContactSupportFromDeviation;
-    final showRequest = controller.canRequestCancellationFromDeviation;
-    if (!showSupport && !showRequest) return const SizedBox.shrink();
+    if (!controller.canRequestCancellationFromDeviation) {
+      return const SizedBox.shrink();
+    }
 
-    final labelStyle = AppTextStyles.homeSubtitle.copyWith(
-      fontWeight: FontWeight.w700,
-      fontSize: 12.5.sp,
-      height: 1.2,
-    );
-
-    return Row(
-      children: [
-        if (showSupport)
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.contactSupport.tr,
-              onPressed: controller.openContactSupportFromDeviation,
-              outlined: true,
-              outlinedBorderColor: AppColors.borderWalletCard,
-              outlinedTextColor: AppColors.textHeading,
-              height: 44.h,
-              borderRadius: 12.r,
-              labelStyle: labelStyle.copyWith(color: AppColors.textHeading),
-            ),
-          ),
-        if (showSupport && showRequest) SizedBox(width: 8.w),
-        if (showRequest)
-          Expanded(
-            child: AppPrimaryButton(
-              label: AppStrings.requestToCancel.tr,
-              onPressed: controller.openRequestCancellationSheet,
-              height: 44.h,
-              borderRadius: 12.r,
-              labelStyle: labelStyle.copyWith(color: AppColors.white),
-            ),
-          ),
-      ],
+    return AppPrimaryButton(
+      label: AppStrings.requestToCancel.tr,
+      onPressed: controller.openRequestCancellationSheet,
+      height: 44.h,
+      borderRadius: 12.r,
+      labelStyle: AppTextStyles.homeSubtitle.copyWith(
+        fontWeight: FontWeight.w700,
+        fontSize: 12.5.sp,
+        height: 1.2,
+        color: AppColors.white,
+      ),
     );
   }
 }

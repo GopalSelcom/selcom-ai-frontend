@@ -362,6 +362,14 @@ class DriverAcceptedScreen extends StatelessWidget {
               shareController.shareRide(c.rideId);
             },
           ),
+          SizedBox(height: 10.h),
+          _safetyOptionTile(
+            title: AppStrings.havingTrouble.tr,
+            icon: Icons.report_problem_outlined,
+            onTap: () {
+              unawaited(c.openHavingTroubleFromSafetySheet());
+            },
+          ),
           Obx(() {
             final contacts = c.emergencyContacts;
             if (contacts.isEmpty) {
