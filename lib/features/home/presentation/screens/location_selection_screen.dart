@@ -8,13 +8,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/spin_kit_fading_circle.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
-import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_back_button.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/favorite_location_chips_row.dart';
 import '../../../../shared/widgets/app_route_location_pin_icon.dart';
-import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 import '../controllers/location_selection_controller.dart';
 import '../widgets/favorite_icon_button.dart';
@@ -59,10 +57,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   RxnDouble get _routePickupLat => locationController.routePickupLat;
 
   RxnDouble get _routePickupLng => locationController.routePickupLng;
-
-  RxnDouble get _routeDestinationLat => locationController.routeDestinationLat;
-
-  RxnDouble get _routeDestinationLng => locationController.routeDestinationLng;
 
   int get _maxExtraStops => locationController.maxIntermediateStops;
 
@@ -580,7 +574,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           subtitle: description,
           isFavorite: isFavorite,
           showFavorite: showFavorite,
-          onTap: () => _onSuggestionSelected(item),
+          onTap: () => locationController.onSuggestionSelected(item),
           onFavoriteTap: () => controller.toggleAddAddressBottomSheet(item),
         );
       },
@@ -643,52 +637,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           subtitle: recentText,
           isFavorite: isFavorite,
           showFavorite: showFavorite,
-          onTap: () async {
-            if (Get.arguments is Map &&
-                Get.arguments['isSelectingStop'] == true) {
-              AppDialogs.showLoadingDialog();
-              final result = await controller.homeRepository.getGeocode(
-                address: recentText,
-              );
-              AppDialogs.dismissLoadingDialog();
-
-              result.fold(
-                (failure) =>
-                    AppDialogs.showErrorDialog(message: failure.message),
-                (data) {
-                  final loc = data.results?.firstOrNull?.geometry?.location;
-                  if (loc != null && loc.lat != null && loc.lng != null) {
-                    _handleStopSelection(
-                      address: recentText,
-                      lat: loc.lat!,
-                      lng: loc.lng!,
-                    );
-                  } else {
-                    AppDialogs.showErrorDialog(
-                      message: AppStrings.unableToGetLocationCoordinates.tr,
-                    );
-                  }
-                },
-              );
-              return;
-            }
-            controller.applyRecentSearchToLocationSelection(
-              recentText: recentText,
-              activeSegmentIndex: _activeSegmentIndex.value,
-              pickupController: pickupController,
-              destinationController: destinationController,
-              extraDestinationControllers: _extraDestinationControllers,
-              pickupEditedByUser: pickupEditedByUser,
-              routePickupLat: _routePickupLat,
-              routePickupLng: _routePickupLng,
-              routeDestinationLat: _routeDestinationLat,
-              routeDestinationLng: _routeDestinationLng,
-              destinationPlaceId: _destinationPlaceId,
-            );
-            locationController.confirmSelectionForSegment(
-              _activeSegmentIndex.value,
-            );
-          },
+          onTap: () => locationController.onRecentSearchSelected(recentText),
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
             address: recentText,
           ),
@@ -713,35 +662,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           subtitle: place.address ?? '',
           isFavorite: place.isFavourite ?? false,
           showFavorite: true,
-          onTap: () {
-            if (Get.arguments is Map &&
-                Get.arguments['isSelectingStop'] == true) {
-              _handleStopSelection(
-                address: place.address ?? '',
-                lat: place.lat ?? 0.0,
-                lng: place.lng ?? 0.0,
-              );
-              return;
-            }
-            final applied = controller.applySavedPlaceToLocationSelection(
-              savedPlace: place,
-              activeSegmentIndex: _activeSegmentIndex.value,
-              pickupController: pickupController,
-              destinationController: destinationController,
-              extraDestinationControllers: _extraDestinationControllers,
-              pickupEditedByUser: pickupEditedByUser,
-              routePickupLat: _routePickupLat,
-              routePickupLng: _routePickupLng,
-              routeDestinationLat: _routeDestinationLat,
-              routeDestinationLng: _routeDestinationLng,
-              destinationPlaceId: _destinationPlaceId,
-            );
-            if (applied) {
-              locationController.confirmSelectionForSegment(
-                _activeSegmentIndex.value,
-              );
-            }
-          },
+          onTap: () => locationController.onSavedPlaceSelected(place),
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
             address: place.address ?? '',
             lat: place.lat,
@@ -777,33 +698,8 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
           subtitle: address,
           isFavorite: isFavorite,
           showFavorite: showFavorite,
-          onTap: () {
-            if (Get.arguments is Map &&
-                Get.arguments['isSelectingStop'] == true) {
-              _handleStopSelection(
-                address: address,
-                lat: destination.lat ?? 0,
-                lng: destination.lng ?? 0,
-              );
-              return;
-            }
-            controller.applyRecentDestinationToLocationSelection(
-              destination: destination,
-              activeSegmentIndex: _activeSegmentIndex.value,
-              pickupController: pickupController,
-              destinationController: destinationController,
-              extraDestinationControllers: _extraDestinationControllers,
-              pickupEditedByUser: pickupEditedByUser,
-              routePickupLat: _routePickupLat,
-              routePickupLng: _routePickupLng,
-              routeDestinationLat: _routeDestinationLat,
-              routeDestinationLng: _routeDestinationLng,
-              destinationPlaceId: _destinationPlaceId,
-            );
-            locationController.confirmSelectionForSegment(
-              _activeSegmentIndex.value,
-            );
-          },
+          onTap: () =>
+              locationController.onRecentDestinationSelected(destination),
           onFavoriteTap: () => controller.toggleAddAddressBottomSheetForAddress(
             address: address,
             lat: destination.lat ?? 0,
@@ -929,63 +825,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
         onPressed: locationController.proceedWithBooking,
       );
     });
-  }
-
-  Future<void> _handleStopSelection({
-    required String address,
-    required double lat,
-    required double lng,
-  }) =>
-      locationController.handleStopSelection(
-        address: address,
-        lat: lat,
-        lng: lng,
-      );
-
-  void _onSuggestionSelected(Prediction prediction) async {
-    if (Get.arguments is Map && Get.arguments['isSelectingStop'] == true) {
-      final description = prediction.description ?? '';
-      AppDialogs.showLoadingDialog();
-      final result = await controller.homeRepository.getGeocode(
-        address: description,
-      );
-      AppDialogs.dismissLoadingDialog();
-
-      result.fold(
-        (failure) => AppDialogs.showErrorDialog(message: failure.message),
-        (data) {
-          final loc = data.results?.firstOrNull?.geometry?.location;
-          if (loc != null && loc.lat != null && loc.lng != null) {
-            _handleStopSelection(
-              address: description,
-              lat: loc.lat!,
-              lng: loc.lng!,
-            );
-          } else {
-            AppDialogs.showErrorDialog(
-              message: AppStrings.unableToGetLocationCoordinates.tr,
-            );
-          }
-        },
-      );
-      return;
-    }
-    controller.applySuggestionToLocationSelection(
-      prediction: prediction,
-      activeSegmentIndex: _activeSegmentIndex.value,
-      pickupController: pickupController,
-      destinationController: destinationController,
-      extraDestinationControllers: _extraDestinationControllers,
-      pickupEditedByUser: pickupEditedByUser,
-      routePickupLat: _routePickupLat,
-      routePickupLng: _routePickupLng,
-      routeDestinationLat: _routeDestinationLat,
-      routeDestinationLng: _routeDestinationLng,
-      destinationPlaceId: _destinationPlaceId,
-    );
-    locationController.confirmSelectionForSegment(_activeSegmentIndex.value);
-
-    // controller.suggestions.clear();
   }
 
   Widget _buildSearchContent() {

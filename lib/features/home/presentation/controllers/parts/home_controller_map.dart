@@ -410,16 +410,43 @@ extension HomeMapMethods on HomeController {
     return DistanceDisplay.formatKm(km);
   }
 
-  Future<LatLng?> getLatLngFromAddress(String address) async {
-    final result = await homeRepository.getGeocode(address: address);
-    return result.fold((failure) => null, (response) {
-      if (response.results != null && response.results!.isNotEmpty) {
-        final loc = response.results!.first.geometry?.location;
-        if (loc != null && loc.lat != null && loc.lng != null) {
-          return LatLng(loc.lat!, loc.lng!);
-        }
-      }
+  Future<LatLng?> getLatLngFromAddress(String address) {
+    return resolveAddressCoordinates(address);
+  }
+
+  /// Geocodes [address] for booking / stop flows.
+  ///
+  /// When [onFailure] is provided, surfaces API / empty-result errors there.
+  /// Without it, failures resolve to `null` (same as legacy [getLatLngFromAddress]).
+  Future<LatLng?> resolveAddressCoordinates(
+    String address, {
+    void Function(String message)? onFailure,
+  }) async {
+    final trimmed = address.trim();
+    if (trimmed.isEmpty) {
+      onFailure?.call(AppStrings.unableToGetLocationCoordinates.tr);
       return null;
-    });
+    }
+
+    final result = await homeRepository.getGeocode(address: trimmed);
+    return result.fold(
+      (failure) {
+        onFailure?.call(failure.message);
+        return null;
+      },
+      (response) {
+        final results = response.results;
+        if (results == null || results.isEmpty) {
+          onFailure?.call(AppStrings.unableToGetLocationCoordinates.tr);
+          return null;
+        }
+        final loc = results.first.geometry?.location;
+        if (loc?.lat == null || loc?.lng == null) {
+          onFailure?.call(AppStrings.unableToGetLocationCoordinates.tr);
+          return null;
+        }
+        return LatLng(loc!.lat!, loc.lng!);
+      },
+    );
   }
 }

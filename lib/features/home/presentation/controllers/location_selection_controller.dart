@@ -11,6 +11,8 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../shared/utils/app_dialogs.dart';
+import '../../../ride/data/models/recent_destinations_response.dart';
+import '../../data/models/places_models.dart';
 import '../controllers/home_controller.dart';
 
 class LocationSelectionController extends GetxController {
@@ -805,6 +807,131 @@ class LocationSelectionController extends GetxController {
     if (result != null) {
       Get.back(result: result);
     }
+  }
+
+  /// True when this screen was opened to pick an intermediate stop (not route booking).
+  bool get isSelectingStop {
+    final raw = Get.arguments;
+    return raw is Map && raw['isSelectingStop'] == true;
+  }
+
+  /// Geocode [address] then open confirm-stop. Keeps repository calls off the screen.
+  Future<void> selectStopFromAddress(String address) async {
+    final trimmed = address.trim();
+    if (trimmed.isEmpty || _isDisposed) return;
+
+    AppDialogs.showLoadingDialog();
+    try {
+      final coords = await homeController.resolveAddressCoordinates(
+        trimmed,
+        onFailure: (message) {
+          if (_isDisposed) return;
+          AppDialogs.showErrorDialog(message: message);
+        },
+      );
+      if (coords == null || _isDisposed) return;
+      await handleStopSelection(
+        address: trimmed,
+        lat: coords.latitude,
+        lng: coords.longitude,
+      );
+    } finally {
+      AppDialogs.dismissLoadingDialog();
+    }
+  }
+
+  Future<void> onSuggestionSelected(Prediction prediction) async {
+    if (isSelectingStop) {
+      await selectStopFromAddress(prediction.description ?? '');
+      return;
+    }
+    homeController.applySuggestionToLocationSelection(
+      prediction: prediction,
+      activeSegmentIndex: activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    confirmSelectionForSegment(activeSegmentIndex.value);
+  }
+
+  Future<void> onRecentSearchSelected(String recentText) async {
+    if (isSelectingStop) {
+      await selectStopFromAddress(recentText);
+      return;
+    }
+    homeController.applyRecentSearchToLocationSelection(
+      recentText: recentText,
+      activeSegmentIndex: activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    confirmSelectionForSegment(activeSegmentIndex.value);
+  }
+
+  Future<void> onSavedPlaceSelected(SavedPlace place) async {
+    if (isSelectingStop) {
+      await handleStopSelection(
+        address: place.address ?? '',
+        lat: place.lat ?? 0.0,
+        lng: place.lng ?? 0.0,
+      );
+      return;
+    }
+    final applied = homeController.applySavedPlaceToLocationSelection(
+      savedPlace: place,
+      activeSegmentIndex: activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    if (applied) {
+      confirmSelectionForSegment(activeSegmentIndex.value);
+    }
+  }
+
+  Future<void> onRecentDestinationSelected(RecentDestination destination) async {
+    if (isSelectingStop) {
+      await handleStopSelection(
+        address: destination.address ?? '',
+        lat: destination.lat ?? 0,
+        lng: destination.lng ?? 0,
+      );
+      return;
+    }
+    homeController.applyRecentDestinationToLocationSelection(
+      destination: destination,
+      activeSegmentIndex: activeSegmentIndex.value,
+      pickupController: pickupController,
+      destinationController: destinationController,
+      extraDestinationControllers: extraDestinationControllers,
+      pickupEditedByUser: pickupEditedByUser,
+      routePickupLat: routePickupLat,
+      routePickupLng: routePickupLng,
+      routeDestinationLat: routeDestinationLat,
+      routeDestinationLng: routeDestinationLng,
+      destinationPlaceId: destinationPlaceId,
+    );
+    confirmSelectionForSegment(activeSegmentIndex.value);
   }
 
   @override
