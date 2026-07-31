@@ -401,6 +401,12 @@ class LocationSelectionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Create field controllers before any await so the first Obx frame never
+    // hits LateInitializationError while settings preload runs.
+    pickupController = TextEditingController();
+    destinationController = TextEditingController();
+    pickupFocusNode = FocusNode();
+    destinationFocusNode = FocusNode();
     unawaited(_init());
   }
 
@@ -408,6 +414,7 @@ class LocationSelectionController extends GetxController {
     if (!di.sl<AppSettingsService>().isLoaded.value) {
       await di.sl<AppSettingsService>().preload();
     }
+    if (_isDisposed) return;
     _initializeFromArguments();
     _loadInitialContent();
   }
@@ -532,10 +539,8 @@ class LocationSelectionController extends GetxController {
       initialPickup = '';
     }
 
-    pickupController = TextEditingController(text: initialPickup);
-    destinationController = TextEditingController(text: initialDestination);
-    pickupFocusNode = FocusNode();
-    destinationFocusNode = FocusNode();
+    pickupController.text = initialPickup;
+    destinationController.text = initialDestination;
     for (final stopAddress in initialExtraStops.take(maxIntermediateStops)) {
       extraDestinationControllers.add(TextEditingController(text: stopAddress));
       extraDestinationFocusNodes.add(FocusNode());
