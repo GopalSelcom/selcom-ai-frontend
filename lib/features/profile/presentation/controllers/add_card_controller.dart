@@ -16,6 +16,8 @@ import '../../../wallet/presentation/utils/wallet_refresh.dart';
 import '../../data/models/country_response.dart';
 import '../../data/models/state_response.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../screens/country_select_screen.dart';
+import '../screens/state_select_screen.dart';
 
 class AddCardController extends GetxController {
   final WalletRepository _walletRepository;
@@ -26,6 +28,39 @@ class AddCardController extends GetxController {
     ProfileRepository? profileRepository,
   })  : _walletRepository = walletRepository ?? sl<WalletRepository>(),
         _profileRepository = profileRepository ?? sl<ProfileRepository>();
+
+  static AddCardController ensureBound() {
+    if (Get.isRegistered<AddCardController>()) {
+      return Get.find<AddCardController>();
+    }
+    return Get.put(AddCardController());
+  }
+
+  void goBack() => Get.back();
+
+  Future<void> openCountrySelection() async {
+    final result = await Get.to(
+      () => CountrySelectScreen(
+        countries: countriesList,
+        selectedCountry: selectedCountry.value,
+      ),
+    );
+    if (result is CountriesResponse) {
+      selectCountry(result);
+    }
+  }
+
+  Future<void> openStateSelection() async {
+    final result = await Get.to(
+      () => StateSelectScreen(
+        states: statesList,
+        selectedState: selectedStateResponse.value,
+      ),
+    );
+    if (result is StateResponse) {
+      selectState(result);
+    }
+  }
 
   static const int minAddCardAmount = 1000;
 

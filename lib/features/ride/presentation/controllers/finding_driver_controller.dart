@@ -296,12 +296,16 @@ class FindingDriverController extends GetxController {
     sheetSize.value = size;
   }
 
+  void goToHome() {
+    Get.offAllNamed(AppRoutes.home);
+  }
+
   void _showCancelDialogThenGoHome(String message) {
     Future.delayed(Duration.zero, () {
       AppDialogs.showErrorDialog(
         title: AppStrings.searchEnded.tr,
         message: message,
-        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+        onConfirm: goToHome,
       );
     });
   }
@@ -313,7 +317,7 @@ class FindingDriverController extends GetxController {
       AppDialogs.showErrorDialog(
         title: AppStrings.searchEnded.tr,
         message: message,
-        onConfirm: () => Get.offAllNamed(AppRoutes.home),
+        onConfirm: goToHome,
       );
     });
   }

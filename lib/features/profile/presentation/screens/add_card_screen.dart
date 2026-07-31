@@ -14,11 +14,7 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/phone_country_picker_chip.dart';
-import '../../data/models/country_response.dart';
-import '../../data/models/state_response.dart';
 import '../controllers/add_card_controller.dart';
-import 'country_select_screen.dart';
-import 'state_select_screen.dart';
 
 class AddCardScreen extends StatefulWidget {
   const AddCardScreen({super.key});
@@ -33,7 +29,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(AddCardController());
+    controller = AddCardController.ensureBound();
   }
 
   @override
@@ -47,7 +43,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          AppProfileHeader(title: AppStrings.addNewCard.tr, onBack: Get.back),
+          AppProfileHeader(
+            title: AppStrings.addNewCard.tr,
+            onBack: controller.goBack,
+          ),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
@@ -325,19 +324,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               children: [
                                 // Country Picker Dropdown field
                                 GestureDetector(
-                                  onTap: () async {
-                                    final result = await Get.to(
-                                      () => CountrySelectScreen(
-                                        countries: controller.countriesList,
-                                        selectedCountry:
-                                            controller.selectedCountry.value,
-                                      ),
-                                    );
-                                    if (result != null &&
-                                        result is CountriesResponse) {
-                                      controller.selectCountry(result);
-                                    }
-                                  },
+                                  onTap: controller.openCountrySelection,
                                   child: AbsorbPointer(
                                     child: Obx(
                                       () => AppTextField(
@@ -387,20 +374,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     children: [
                                       SizedBox(height: 12.h),
                                       GestureDetector(
-                                        onTap: () async {
-                                          final result = await Get.to(
-                                            () => StateSelectScreen(
-                                              states: controller.statesList,
-                                              selectedState: controller
-                                                  .selectedStateResponse
-                                                  .value,
-                                            ),
-                                          );
-                                          if (result != null &&
-                                              result is StateResponse) {
-                                            controller.selectState(result);
-                                          }
-                                        },
+                                        onTap: controller.openStateSelection,
                                         child: AbsorbPointer(
                                           child: Obx(
                                             () => AppTextField(

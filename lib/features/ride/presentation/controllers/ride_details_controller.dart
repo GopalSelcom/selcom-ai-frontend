@@ -11,6 +11,7 @@ import '../../../../core/data/models/responses/rides/ride_details_response.dart'
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
@@ -43,6 +44,58 @@ class RideDetailsController extends GetxController {
 
   late final RideRatingController ratingController;
   final isLoadingRideDetails = true.obs;
+
+  /// Ensures a controller matching [ride] / [openedFromCompletionFlow] is registered.
+  static RideDetailsController ensureBound({
+    required RideDetailsRide ride,
+    bool openedFromCompletionFlow = false,
+    bool refreshOnInit = true,
+  }) {
+    if (Get.isRegistered<RideDetailsController>()) {
+      final existing = Get.find<RideDetailsController>();
+      final hasDifferentFlowMode =
+          existing.openedFromCompletionFlow != openedFromCompletionFlow;
+      final hasDifferentRide = existing.ride.id != ride.id;
+      if (hasDifferentFlowMode || hasDifferentRide) {
+        Get.delete<RideDetailsController>();
+      }
+    }
+    if (Get.isRegistered<RideDetailsController>()) {
+      return Get.find<RideDetailsController>();
+    }
+    return Get.put(
+      RideDetailsController(
+        ride: ride,
+        openedFromCompletionFlow: openedFromCompletionFlow,
+        refreshOnInit: refreshOnInit,
+      ),
+    );
+  }
+
+  /// Post-completion flow should always exit to Home (clear stack).
+  void exitToHome() {
+    Get.offAllNamed(AppRoutes.home);
+  }
+
+  /// Completion flow → home; My Rides / history → pop.
+  void exitOrPop() {
+    if (openedFromCompletionFlow) {
+      exitToHome();
+    } else {
+      Get.back();
+    }
+  }
+
+  Future<void> onSkipRating() async {
+    await ratingController.onSkipTap();
+    exitOrPop();
+  }
+
+  void onPrimaryDonePressed() => exitOrPop();
+
+  void onSubmitRatingPressed() {
+    ratingController.onSubmitTap(onSuccessConfirmed: exitOrPop);
+  }
 
   int get _riderRatingValue {
     final raw = ride.riderRating;

@@ -5,7 +5,6 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
@@ -33,45 +32,11 @@ class RideDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Recreate controller when either ride id or entry source changes.
-    // This prevents stale state when navigating between "My Rides" and
-    // post-completion flow, where behavior differs.
-    final hasRegisteredController = Get.isRegistered<RideDetailsController>();
-    if (hasRegisteredController) {
-      final existingController = Get.find<RideDetailsController>();
-      final hasDifferentFlowMode =
-          existingController.openedFromCompletionFlow !=
-          openedFromCompletionFlow;
-      final hasDifferentRide = existingController.ride.id != ride.id;
-      if (hasDifferentFlowMode || hasDifferentRide) {
-        Get.delete<RideDetailsController>();
-      }
-    }
-    final controller = Get.isRegistered<RideDetailsController>()
-        ? Get.find<RideDetailsController>()
-        : Get.put(
-            RideDetailsController(
-              ride: ride,
-              openedFromCompletionFlow: openedFromCompletionFlow,
-              refreshOnInit: refreshOnInit,
-            ),
-          );
-
-    Future<void> handleCompletionExit() async {
-      // Post-completion flow should always exit to Home (clear stack).
-      Get.offAllNamed(AppRoutes.home);
-    }
-
-    Future<void> handleSkipFlow() async {
-      await controller.ratingController.onSkipTap();
-      if (controller.openedFromCompletionFlow) {
-        await handleCompletionExit();
-      } else {
-        if (context.mounted) {
-          Navigator.pop(context);
-        }
-      }
-    }
+    final controller = RideDetailsController.ensureBound(
+      ride: ride,
+      openedFromCompletionFlow: openedFromCompletionFlow,
+      refreshOnInit: refreshOnInit,
+    );
 
     final reviewSection = controller.hasExistingRating
         ? Container(
@@ -118,7 +83,7 @@ class RideDetailsScreen extends StatelessWidget {
       canPop: !controller.openedFromCompletionFlow,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop && controller.openedFromCompletionFlow) {
-          await handleCompletionExit();
+          controller.exitToHome();
         }
       },
       child: Scaffold(
@@ -130,7 +95,7 @@ class RideDetailsScreen extends StatelessWidget {
                   ? AppStrings.thanksForUsingGo.tr
                   : AppStrings.yourRides.tr,
               onBack: controller.openedFromCompletionFlow
-                  ? handleCompletionExit
+                  ? controller.exitToHome
                   : null,
             ),
             Expanded(
@@ -399,17 +364,10 @@ class RideDetailsScreen extends StatelessWidget {
                           : AppStrings.skip.tr);
 
                 final onPressed = isSimpleDoneFlow
-                    ? (controller.openedFromCompletionFlow
-                          ? handleCompletionExit
-                          : () => Navigator.pop(context))
+                    ? controller.onPrimaryDonePressed
                     : (rc.hasSelectedRating
-                          ? () => rc.onSubmitTap(
-                              onSuccessConfirmed:
-                                  controller.openedFromCompletionFlow
-                                  ? handleCompletionExit
-                                  : () => Navigator.pop(context),
-                            )
-                          : handleSkipFlow);
+                          ? controller.onSubmitRatingPressed
+                          : controller.onSkipRating);
 
                 return Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
