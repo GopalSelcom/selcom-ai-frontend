@@ -111,6 +111,20 @@ abstract class Languages {
   String get connectionError;
   String get contactUs;
   String get contactSupport;
+  String get requestToCancel;
+  String get requestCancellationSubtitle;
+  String get submitRequest;
+  String get optionalDetails;
+  String get describeWhatHappenedHint;
+  String get withdrawRequest;
+  String get cancellationRequestSentWithTicket;
+  String get supportDeclinedCancellation;
+  String get couldNotSubmitCancellationRequest;
+  String get couldNotWithdrawCancellationRequest;
+  String get couldNotLoadCancellationReasons;
+  String get rideNotActiveRefresh;
+  String get cancellationRequestAlreadyDecided;
+  String get backOnRoute;
   String get continueLabel;
   String get signInWithGoogle;
   String get didntReceiveTheCode;
@@ -209,6 +223,7 @@ abstract class Languages {
   String get facebookSignInFailed;
   String get help;
   String get havingTroubleLoggingIn;
+  String get havingTrouble;
   String get helpSelcomGoDoBetterByRatingThisTrip;
   String get howCanWeHelpYou;
   String get howDoYouRateTheDriver;

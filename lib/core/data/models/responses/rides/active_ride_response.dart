@@ -4,6 +4,7 @@ import '../../fare_breakdown_line_item.dart';
 import '../../fare_stop_charge.dart';
 import '../../ride_cancel_info_model.dart';
 import '../../ride_no_show_info_model.dart';
+import '../../ride_route_deviation_model.dart';
 
 /// Models for `GET go/rides/active` (from `model/model.dart` + legacy fields).
 class ActiveRideResponseModel {
@@ -117,12 +118,14 @@ class ActiveRideEntry {
   ActiveRideSocketRooms? socketRooms;
   RideCancelInfoModel? cancelInfo;
   RideNoShowInfoModel? noShow;
+  RideRouteDeviationModel? routeDeviation;
 
   ActiveRideEntry({
     this.ride,
     this.socketRooms,
     this.cancelInfo,
     this.noShow,
+    this.routeDeviation,
   });
 
   factory ActiveRideEntry.fromJson(String str) =>
@@ -133,6 +136,7 @@ class ActiveRideEntry {
   factory ActiveRideEntry.fromMap(Map<String, dynamic> json) {
     final cancelInfo = rideCancelInfoFromJson(json["cancel_info"]);
     final noShow = rideNoShowInfoFromJson(json["no_show"]);
+    final routeDeviation = rideRouteDeviationFromJson(json["route_deviation"]);
     if (json["ride"] != null) {
       return ActiveRideEntry(
         ride: ActiveRide.fromMap(json["ride"]),
@@ -141,6 +145,7 @@ class ActiveRideEntry {
             : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
         cancelInfo: cancelInfo,
         noShow: noShow,
+        routeDeviation: routeDeviation,
       );
     }
     // Legacy: list item is a flat ride document (no nested `ride` key).
@@ -151,6 +156,7 @@ class ActiveRideEntry {
           : ActiveRideSocketRooms.fromMap(json["socket_rooms"]),
       cancelInfo: cancelInfo,
       noShow: noShow,
+      routeDeviation: routeDeviation,
     );
   }
 
@@ -159,6 +165,7 @@ class ActiveRideEntry {
     "socket_rooms": socketRooms?.toMap(),
     "cancel_info": cancelInfo?.toJson(),
     "no_show": noShow?.toJson(),
+    "route_deviation": routeDeviation?.toJson(),
   };
 }
 

@@ -34,6 +34,9 @@ class _SupportEndpoints {
 
   final reasons = "go/support/reasons";
   final tickets = "go/support/tickets";
+
+  String withdrawCancellation(String ticketId) =>
+      "go/support/tickets/$ticketId/withdraw-cancellation";
 }
 
 /// ─────────────────────────────────
@@ -73,6 +76,9 @@ class _RideEndpoints {
   String rideDetails(String rideId) => "$base/$rideId";
 
   String cancelRide(String rideId) => "$base/$rideId/cancel";
+
+  String cancellationRequest(String rideId) =>
+      "$base/$rideId/cancellation-request";
 
   String rateRide(String rideId) => "$base/$rideId/rate";
 

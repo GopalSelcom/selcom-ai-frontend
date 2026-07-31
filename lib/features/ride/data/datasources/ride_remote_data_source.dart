@@ -12,10 +12,12 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/responses/rides/ride_cancellation_request_response.dart';
 import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_already_finalized_exception.dart';
+import '../../../../core/errors/ride_cancellation_request_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/network/api_constants.dart';
 import '../../../../core/network/api_service.dart';
@@ -65,6 +67,16 @@ abstract class RideRemoteDataSource {
   Future<RideCancellationChargesData> getCancellationCharges(String rideId);
 
   Future<CancelRideData> cancelRide(String rideId, String reason);
+
+  /// `POST go/rides/:id/cancellation-request` (support-reviewed cancel).
+  Future<RideCancellationRequestResponseData> requestCancellation({
+    required String rideId,
+    required String reason,
+    String? description,
+  });
+
+  /// `POST go/support/tickets/:id/withdraw-cancellation`.
+  Future<void> withdrawCancellationRequest(String ticketId);
 
   Future<DestinationUpdatePreviewModel> previewUpdateDestination(
     String rideId,
@@ -474,6 +486,80 @@ class RideRemoteDataSourceImpl implements RideRemoteDataSource {
       );
     }
     throw Exception('Failed to cancel ride');
+  }
+
+  @override
+  Future<RideCancellationRequestResponseData> requestCancellation({
+    required String rideId,
+    required String reason,
+    String? description,
+  }) async {
+    final body = <String, dynamic>{
+      Params.reason: reason,
+      if (description != null && description.trim().isNotEmpty)
+        Params.description: description.trim(),
+    };
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.ride.cancellationRequest(rideId),
+        method: ApiMethod.post,
+        body: body,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+    if ((response.statusCode == 200 || response.statusCode == 201) &&
+        response.data != null) {
+      final map = _apiResponseMap(response.data);
+      final data = map?['data'];
+      if (data is Map) {
+        return RideCancellationRequestResponseData.fromJson(
+          Map<String, dynamic>.from(data),
+        );
+      }
+      return RideCancellationRequestResponseData(
+        ticketId: '',
+        ticketNumber: '',
+        status: 'pending',
+        alreadyRequested: response.statusCode == 200,
+      );
+    }
+
+    final bodyMap = _apiResponseMap(response.data);
+    final errorCode = bodyMap?['error_code']?.toString().trim() ?? '';
+    final message = bodyMap?['message']?.toString() ?? 'Request failed';
+    if (response.statusCode == 409 &&
+        (errorCode == 'RIDE_NOT_ACTIVE' || errorCode.isEmpty)) {
+      throw RideNotActiveException(
+        message,
+        errorCode: errorCode.isEmpty ? 'RIDE_NOT_ACTIVE' : errorCode,
+      );
+    }
+    throw Exception(message);
+  }
+
+  @override
+  Future<void> withdrawCancellationRequest(String ticketId) async {
+    final response = await ApiService().call(
+      request: ApiRequest(
+        endpoint: URLS.support.withdrawCancellation(ticketId),
+        method: ApiMethod.post,
+        errorPresentationType: ErrorPresentationType.none,
+      ),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+    final bodyMap = _apiResponseMap(response.data);
+    final errorCode = bodyMap?['error_code']?.toString().trim() ?? '';
+    final message = bodyMap?['message']?.toString() ?? 'Withdraw failed';
+    if (response.statusCode == 409 &&
+        (errorCode == 'ALREADY_DECIDED' || errorCode.isEmpty)) {
+      throw CancellationRequestAlreadyDecidedException(
+        message,
+        errorCode: errorCode.isEmpty ? 'ALREADY_DECIDED' : errorCode,
+      );
+    }
+    throw Exception(message);
   }
 
   @override

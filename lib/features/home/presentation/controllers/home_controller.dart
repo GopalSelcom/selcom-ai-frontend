@@ -774,6 +774,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
           cancelInfo: detailsModel.cancelInfo ?? rideValue.cancelInfo,
           noShow: mergedNoShow,
           clearNoShow: mergedNoShow == null,
+          routeDeviation:
+              detailsModel.routeDeviation ?? rideValue.routeDeviation,
         );
         await _socketService.connect();
         _socketService.switchRideRoom(rideId: freshId);

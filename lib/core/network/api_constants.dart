@@ -69,6 +69,7 @@ class Params {
 
   // ── Additional Request Params ──
   static const String reason = "reason";
+  static const String description = "description";
   static const String destination = "destination";
   static const String confirm = "confirm";
   static const String stops = "stops";

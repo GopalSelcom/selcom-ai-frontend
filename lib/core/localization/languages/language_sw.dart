@@ -138,6 +138,28 @@ class LanguageSw extends Languages {
     'connection_error': 'Itilafu ya Muunganisho',
     'contact_us': 'Wasiliana Nasi',
     'contact_support': 'Wasiliana na Huduma kwa Wateja',
+    'request_to_cancel': 'Omba kughairi',
+    'request_cancellation_subtitle':
+        'Tuambie kwa nini unataka huduma ikague kughairi safari hii.',
+    'submit_request': 'Wasilisha ombi',
+    'optional_details': 'Maelezo ya ziada (si lazima)',
+    'describe_what_happened_hint': 'Eleza kilichotokea (si lazima)',
+    'withdraw_request': 'Futa ombi',
+    'cancellation_request_sent_with_ticket':
+        'Ombi limetumwa. Huduma itakagua na kukupigia simu. Tiketi @ticket',
+    'support_declined_cancellation':
+        'Huduma imekataa — safari yako inaendelea',
+    'could_not_submit_cancellation_request':
+        'Imeshindikana kuwasilisha ombi la kughairi. Jaribu tena.',
+    'could_not_withdraw_cancellation_request':
+        'Imeshindikana kufuta ombi. Jaribu tena.',
+    'could_not_load_cancellation_reasons':
+        'Imeshindikana kupakia sababu za kughairi. Jaribu tena.',
+    'ride_not_active_refresh':
+        'Safari hii haipo tena. Tafadhali onyesha upya.',
+    'cancellation_request_already_decided':
+        'Huduma tayari imeamua ombi hili.',
+    'back_on_route': 'Umerudi kwenye njia',
     'continue': 'Endelea',
     'sign_in_with_google': 'Ingia na Google',
     'didnt_receive_the_code': 'Hukupokea msimbo?',
@@ -240,6 +262,7 @@ class LanguageSw extends Languages {
     'facebook_sign_in_failed': 'Uingiaji wa Facebook umefeli. Tafadhali jaribu tena.',
     'help': 'Msaada',
     'having_trouble_logging_in': 'Unapata Shida Kuingia?',
+    'having_trouble': 'Unapata shida?',
     'help_selcom_go_do_better_by_rating_this_trip': 'Saidia Selcom Go kufanya vizuri zaidi kwa kukadiria safari hii',
     'how_can_we_help_you': 'Je, tunawezaje kukusaidia?',
     'how_do_you_rate_the_driver': 'Je, unamkadiria vipi dereva?',
@@ -1189,6 +1212,56 @@ class LanguageSw extends Languages {
   String get contactSupport => values['contact_support'] ?? '';
 
   @override
+  String get requestToCancel => values['request_to_cancel'] ?? '';
+
+  @override
+  String get requestCancellationSubtitle =>
+      values['request_cancellation_subtitle'] ?? '';
+
+  @override
+  String get submitRequest => values['submit_request'] ?? '';
+
+  @override
+  String get optionalDetails => values['optional_details'] ?? '';
+
+  @override
+  String get describeWhatHappenedHint =>
+      values['describe_what_happened_hint'] ?? '';
+
+  @override
+  String get withdrawRequest => values['withdraw_request'] ?? '';
+
+  @override
+  String get cancellationRequestSentWithTicket =>
+      values['cancellation_request_sent_with_ticket'] ?? '';
+
+  @override
+  String get supportDeclinedCancellation =>
+      values['support_declined_cancellation'] ?? '';
+
+  @override
+  String get couldNotSubmitCancellationRequest =>
+      values['could_not_submit_cancellation_request'] ?? '';
+
+  @override
+  String get couldNotWithdrawCancellationRequest =>
+      values['could_not_withdraw_cancellation_request'] ?? '';
+
+  @override
+  String get couldNotLoadCancellationReasons =>
+      values['could_not_load_cancellation_reasons'] ?? '';
+
+  @override
+  String get rideNotActiveRefresh => values['ride_not_active_refresh'] ?? '';
+
+  @override
+  String get cancellationRequestAlreadyDecided =>
+      values['cancellation_request_already_decided'] ?? '';
+
+  @override
+  String get backOnRoute => values['back_on_route'] ?? '';
+
+  @override
   String get continueLabel => values['continue'] ?? '';
 
   @override
@@ -1512,6 +1585,9 @@ class LanguageSw extends Languages {
   @override
   String get havingTroubleLoggingIn =>
       values['having_trouble_logging_in'] ?? '';
+
+  @override
+  String get havingTrouble => values['having_trouble'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>

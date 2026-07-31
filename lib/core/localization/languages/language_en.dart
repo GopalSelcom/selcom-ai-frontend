@@ -145,6 +145,28 @@ class LanguageEn extends Languages {
     'connection_error': 'Connection Error',
     'contact_us': 'Contact Us',
     'contact_support': 'Contact Support',
+    'request_to_cancel': 'Request to cancel',
+    'request_cancellation_subtitle':
+        'Tell us why you want support to review cancelling this ride.',
+    'submit_request': 'Submit request',
+    'optional_details': 'Optional details',
+    'describe_what_happened_hint': 'Describe what happened (optional)',
+    'withdraw_request': 'Withdraw request',
+    'cancellation_request_sent_with_ticket':
+        'Request sent. Support will review and call you shortly. Ticket @ticket',
+    'support_declined_cancellation':
+        'Support declined — your ride continues',
+    'could_not_submit_cancellation_request':
+        'Could not submit cancellation request. Please try again.',
+    'could_not_withdraw_cancellation_request':
+        'Could not withdraw the request. Please try again.',
+    'could_not_load_cancellation_reasons':
+        'Could not load cancellation reasons. Please try again.',
+    'ride_not_active_refresh':
+        'This ride is no longer active. Please refresh.',
+    'cancellation_request_already_decided':
+        'Support already decided this request.',
+    'back_on_route': 'Back on route',
     'continue': 'Continue',
     'sign_in_with_google': 'Sign in with Google',
     'didnt_receive_the_code': "Didn't receive the code?",
@@ -259,6 +281,7 @@ class LanguageEn extends Languages {
     'facebook_sign_in_failed': 'Facebook Sign-In failed. Please try again.',
     'help': 'Help',
     'having_trouble_logging_in': 'Having Trouble Logging In?',
+    'having_trouble': 'Having trouble?',
     'help_selcom_go_do_better_by_rating_this_trip':
         'Help Selcom Go do better by rating this trip',
     'how_can_we_help_you': 'How can we help you?',
@@ -1269,6 +1292,56 @@ class LanguageEn extends Languages {
   String get contactSupport => values['contact_support'] ?? '';
 
   @override
+  String get requestToCancel => values['request_to_cancel'] ?? '';
+
+  @override
+  String get requestCancellationSubtitle =>
+      values['request_cancellation_subtitle'] ?? '';
+
+  @override
+  String get submitRequest => values['submit_request'] ?? '';
+
+  @override
+  String get optionalDetails => values['optional_details'] ?? '';
+
+  @override
+  String get describeWhatHappenedHint =>
+      values['describe_what_happened_hint'] ?? '';
+
+  @override
+  String get withdrawRequest => values['withdraw_request'] ?? '';
+
+  @override
+  String get cancellationRequestSentWithTicket =>
+      values['cancellation_request_sent_with_ticket'] ?? '';
+
+  @override
+  String get supportDeclinedCancellation =>
+      values['support_declined_cancellation'] ?? '';
+
+  @override
+  String get couldNotSubmitCancellationRequest =>
+      values['could_not_submit_cancellation_request'] ?? '';
+
+  @override
+  String get couldNotWithdrawCancellationRequest =>
+      values['could_not_withdraw_cancellation_request'] ?? '';
+
+  @override
+  String get couldNotLoadCancellationReasons =>
+      values['could_not_load_cancellation_reasons'] ?? '';
+
+  @override
+  String get rideNotActiveRefresh => values['ride_not_active_refresh'] ?? '';
+
+  @override
+  String get cancellationRequestAlreadyDecided =>
+      values['cancellation_request_already_decided'] ?? '';
+
+  @override
+  String get backOnRoute => values['back_on_route'] ?? '';
+
+  @override
   String get continueLabel => values['continue'] ?? '';
 
   @override
@@ -1591,6 +1664,9 @@ class LanguageEn extends Languages {
   @override
   String get havingTroubleLoggingIn =>
       values['having_trouble_logging_in'] ?? '';
+
+  @override
+  String get havingTrouble => values['having_trouble'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>

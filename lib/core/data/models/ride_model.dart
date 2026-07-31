@@ -6,6 +6,7 @@ import 'location_model.dart';
 import 'mid_ride_cancel_model.dart';
 import 'ride_cancel_info_model.dart';
 import 'ride_no_show_info_model.dart';
+import 'ride_route_deviation_model.dart';
 
 enum RideStatus {
   searching,
@@ -81,6 +82,9 @@ class RideModel {
   /// Driver-waiting no-show banner from `no_show` object (null when not waiting).
   final RideNoShowInfoModel? noShow;
 
+  /// Route deviation banner from `route_deviation` (null when never flagged).
+  final RideRouteDeviationModel? routeDeviation;
+
   /// Driver-search window length from API `cancel_time` (milliseconds).
   final int? cancelTime;
 
@@ -129,6 +133,7 @@ class RideModel {
     this.midRideCancel,
     this.cancelInfo,
     this.noShow,
+    this.routeDeviation,
     this.cancelTime,
     this.searchStartedAt,
   });
@@ -198,6 +203,7 @@ class RideModel {
         : null;
     final cancelInfo = rideCancelInfoFromJson(json['cancel_info']);
     final noShow = rideNoShowInfoFromJson(json['no_show']);
+    final routeDeviation = rideRouteDeviationFromJson(json['route_deviation']);
 
     return RideModel(
       id: json['_id'] ?? '',
@@ -258,6 +264,7 @@ class RideModel {
       midRideCancel: midRideCancel,
       cancelInfo: cancelInfo,
       noShow: noShow,
+      routeDeviation: routeDeviation,
       cancelTime: (json['cancel_time'] as num?)?.toInt(),
       searchStartedAt: parseDriverSearchStartedAt(json['search_started_at']),
     );
@@ -307,6 +314,8 @@ class RideModel {
     bool clearCancelInfo = false,
     RideNoShowInfoModel? noShow,
     bool clearNoShow = false,
+    RideRouteDeviationModel? routeDeviation,
+    bool clearRouteDeviation = false,
     int? cancelTime,
     DateTime? searchStartedAt,
   }) {
@@ -352,6 +361,9 @@ class RideModel {
       midRideCancel: midRideCancel ?? this.midRideCancel,
       cancelInfo: clearCancelInfo ? null : (cancelInfo ?? this.cancelInfo),
       noShow: clearNoShow ? null : (noShow ?? this.noShow),
+      routeDeviation: clearRouteDeviation
+          ? null
+          : (routeDeviation ?? this.routeDeviation),
       cancelTime: cancelTime ?? this.cancelTime,
       searchStartedAt: searchStartedAt ?? this.searchStartedAt,
     );

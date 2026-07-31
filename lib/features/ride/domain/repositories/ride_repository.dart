@@ -9,6 +9,7 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/responses/rides/ride_cancellation_request_response.dart';
 import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
@@ -56,6 +57,15 @@ abstract class RideRepository {
     String rideId,
     String reason,
   );
+
+  Future<Either<Failure, RideCancellationRequestResponseData>>
+  requestCancellation({
+    required String rideId,
+    required String reason,
+    String? description,
+  });
+
+  Future<Either<Failure, void>> withdrawCancellationRequest(String ticketId);
 
   Future<Either<Failure, DestinationUpdatePreviewModel>>
   previewUpdateDestination(String rideId, Map<String, dynamic> destination);

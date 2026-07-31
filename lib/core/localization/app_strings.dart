@@ -154,6 +154,27 @@ class AppStrings {
   static const String continueLabel = 'continue';
   static const String signInWithGoogle = 'sign_in_with_google';
   static const String contactSupport = 'contact_support';
+  static const String requestToCancel = 'request_to_cancel';
+  static const String requestCancellationSubtitle =
+      'request_cancellation_subtitle';
+  static const String submitRequest = 'submit_request';
+  static const String optionalDetails = 'optional_details';
+  static const String describeWhatHappenedHint = 'describe_what_happened_hint';
+  static const String withdrawRequest = 'withdraw_request';
+  static const String cancellationRequestSentWithTicket =
+      'cancellation_request_sent_with_ticket';
+  static const String supportDeclinedCancellation =
+      'support_declined_cancellation';
+  static const String couldNotSubmitCancellationRequest =
+      'could_not_submit_cancellation_request';
+  static const String couldNotWithdrawCancellationRequest =
+      'could_not_withdraw_cancellation_request';
+  static const String couldNotLoadCancellationReasons =
+      'could_not_load_cancellation_reasons';
+  static const String rideNotActiveRefresh = 'ride_not_active_refresh';
+  static const String cancellationRequestAlreadyDecided =
+      'cancellation_request_already_decided';
+  static const String backOnRoute = 'back_on_route';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
   static const String couldNotCancelTryAgain = 'could_not_cancel_try_again';
   static const String couldNotResolveVehicleTypeIdPleaseTryAgain =
@@ -272,6 +293,7 @@ class AppStrings {
   static const String facebookSignInFailed = 'facebook_sign_in_failed';
   static const String help = 'help';
   static const String havingTroubleLoggingIn = 'having_trouble_logging_in';
+  static const String havingTrouble = 'having_trouble';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';
   static const String howCanWeHelpYou = 'how_can_we_help_you';

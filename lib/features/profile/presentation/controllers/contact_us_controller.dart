@@ -29,9 +29,19 @@ class ContactUsController extends GetxController {
   final messageController = TextEditingController();
   final canSubmit = false.obs;
 
+  /// When opened from an ongoing ride, prepended to the email body on send.
+  String? _rideTransactionId;
+
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args is Map) {
+      final transId = args['transactionId']?.toString().trim() ?? '';
+      if (transId.isNotEmpty) {
+        _rideTransactionId = transId;
+      }
+    }
     fetchInitialData();
   }
 
@@ -66,10 +76,12 @@ class ContactUsController extends GetxController {
     if (isSubmitting.value) return;
 
     await Loader.withFlag(isSubmitting, () async {
+      final userMessage = messageController.text.trim();
+      final message = _composeSupportMessage(userMessage);
       final result = await profileRepository.sendEmail(
         SendEmailRequest(
           subject: selectedReason.value,
-          message: messageController.text,
+          message: message,
         ),
       );
 
@@ -81,6 +93,13 @@ class ContactUsController extends GetxController {
         },
       );
     });
+  }
+
+  /// Ongoing-ride Contact Us: prefix Trans ID. Profile entry: message only.
+  String _composeSupportMessage(String userMessage) {
+    final transId = _rideTransactionId?.trim() ?? '';
+    if (transId.isEmpty) return userMessage;
+    return 'Trans ID: $transId,\n\n$userMessage';
   }
 
   void onMessageChanged(String value) {

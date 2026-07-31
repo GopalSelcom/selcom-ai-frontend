@@ -291,6 +291,8 @@ void navigateToDriverAcceptedForRide(
         if (rideValue.cancelInfo != null)
           'cancel_info': rideValue.cancelInfo!.toJson(),
         if (rideValue.noShow != null) 'no_show': rideValue.noShow!.toJson(),
+        if (rideValue.routeDeviation != null)
+          'route_deviation': rideValue.routeDeviation!.toJson(),
       },
       'fareBreakdown': rideValue.fareBreakdown?.toJson(),
       if (pendingIncomingCallPayload != null)

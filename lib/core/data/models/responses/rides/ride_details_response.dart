@@ -5,12 +5,14 @@ import '../../fare_stop_charge.dart';
 import '../../ride_cancel_info_model.dart';
 import '../../ride_model.dart';
 import '../../ride_no_show_info_model.dart';
+import '../../ride_route_deviation_model.dart';
 
 /// Models for `GET go/rides/{id}` —
-/// `{"status_code":200,"data":{"ride":{...},"cancel_info":{...},"no_show":{...}}}`.
+/// `{"status_code":200,"data":{"ride":{...},"cancel_info":{...},"no_show":{...},"route_deviation":{...}}}`.
 ///
-/// Envelope-level `cancel_info` / `no_show` (siblings of `ride`) are preferred
-/// over nested ride copies — same shape as active rides and status updates.
+/// Envelope-level `cancel_info` / `no_show` / `route_deviation` (siblings of
+/// `ride`) are preferred over nested ride copies — same shape as active rides
+/// and status updates.
 class RideDetailsResponse {
   int? statusCode;
   String? message;
@@ -71,7 +73,10 @@ class RideDetailsData {
   /// Envelope-level waiting banner with title/subtitle (sibling of `ride`).
   RideNoShowInfoModel? noShow;
 
-  RideDetailsData({this.ride, this.cancelInfo, this.noShow});
+  /// Envelope-level route deviation banner (sibling of `ride`).
+  RideRouteDeviationModel? routeDeviation;
+
+  RideDetailsData({this.ride, this.cancelInfo, this.noShow, this.routeDeviation});
 
   factory RideDetailsData.fromJson(String str) =>
       RideDetailsData.fromMap(json.decode(str));
@@ -81,6 +86,9 @@ class RideDetailsData {
   factory RideDetailsData.fromMap(Map<String, dynamic> json) {
     final cancelInfo = rideCancelInfoFromJson(json['cancel_info']);
     final outerNoShow = rideNoShowInfoFromJson(json['no_show']);
+    final outerRouteDeviation = rideRouteDeviationFromJson(
+      json['route_deviation'],
+    );
     final ride = json['ride'] == null
         ? null
         : RideDetailsRide.fromMap(
@@ -99,12 +107,16 @@ class RideDetailsData {
         ride.noShow = outerNoShow;
         ride.isNoShowCancellation = false;
       }
+      if (outerRouteDeviation != null) {
+        ride.routeDeviation = outerRouteDeviation;
+      }
     }
 
     return RideDetailsData(
       ride: ride,
       cancelInfo: cancelInfo,
       noShow: outerNoShow,
+      routeDeviation: outerRouteDeviation,
     );
   }
 
@@ -112,6 +124,7 @@ class RideDetailsData {
     'ride': ride?.toMap(),
     'cancel_info': cancelInfo?.toJson(),
     'no_show': noShow?.toJson(),
+    'route_deviation': routeDeviation?.toJson(),
   };
 }
 
@@ -166,6 +179,8 @@ class RideDetailsRide {
   RideNoShowInfoModel? noShow;
   /// Cancel confirmation — prefer envelope `data.cancel_info`.
   RideCancelInfoModel? cancelInfo;
+  /// Route deviation — prefer envelope `data.route_deviation`.
+  RideRouteDeviationModel? routeDeviation;
   /// Terminal no-show cancel — `no_show: true` or fired `no_show` object.
   bool isNoShowCancellation;
   List<dynamic>? rejectedDrivers;
@@ -254,6 +269,7 @@ class RideDetailsRide {
     this.midRideCancel,
     this.noShow,
     this.cancelInfo,
+    this.routeDeviation,
     this.isNoShowCancellation = false,
     this.rejectedDrivers,
     this.blockedDrivers,
@@ -368,6 +384,7 @@ class RideDetailsRide {
           : RideDetailsMidRideCancel.fromMap(json["mid_ride_cancel"]),
       noShow: RideDetailsRide._parseWaitingNoShow(json),
       cancelInfo: rideCancelInfoFromJson(json['cancel_info']),
+      routeDeviation: rideRouteDeviationFromJson(json['route_deviation']),
       isNoShowCancellation: RideDetailsRide._parseIsNoShowCancellation(json),
       rejectedDrivers: json["rejected_drivers"] ?? <dynamic>[],
       blockedDrivers: json["blocked_drivers"] ?? <dynamic>[],
@@ -473,6 +490,7 @@ class RideDetailsRide {
     // so [toRideModel] can arm the SCR-11 no-show countdown.
     "no_show": isNoShowCancellation ? true : noShow?.toJson(),
     "cancel_info": cancelInfo?.toJson(),
+    "route_deviation": routeDeviation?.toJson(),
     "rejected_drivers": rejectedDrivers,
     "blocked_drivers": blockedDrivers,
     "driver_assigned_at": driverAssignedAt,

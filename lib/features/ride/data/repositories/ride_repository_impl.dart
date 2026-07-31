@@ -9,11 +9,13 @@ import '../../../../core/data/models/responses/rides/fare_estimate_response.dart
 import '../../../../core/data/models/responses/rides/promo_validate_response.dart';
 import '../../../../core/data/models/responses/rides/validate_ride_payment_response.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
+import '../../../../core/data/models/responses/rides/ride_cancellation_request_response.dart';
 import '../../../../core/data/models/responses/rides/ride_details_response.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/insufficient_wallet_balance_exception.dart';
 import '../../../../core/errors/ride_already_finalized_exception.dart';
+import '../../../../core/errors/ride_cancellation_request_exception.dart';
 import '../../../../core/errors/ride_payment_validation_exception.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -205,6 +207,48 @@ class RideRepositoryImpl implements RideRepository {
     } catch (e, stackTrace) {
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RideCancellationRequestResponseData>>
+  requestCancellation({
+    required String rideId,
+    required String reason,
+    String? description,
+  }) async {
+    try {
+      final result = await remoteDataSource.requestCancellation(
+        rideId: rideId,
+        reason: reason,
+        description: description,
+      );
+      return Right(result);
+    } on RideNotActiveException catch (e) {
+      return Left(RideNotActiveFailure(e.message, errorCode: e.errorCode));
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(_exceptionMessage(e)));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> withdrawCancellationRequest(
+    String ticketId,
+  ) async {
+    try {
+      await remoteDataSource.withdrawCancellationRequest(ticketId);
+      return const Right(null);
+    } on CancellationRequestAlreadyDecidedException catch (e) {
+      return Left(
+        CancellationRequestAlreadyDecidedFailure(
+          e.message,
+          errorCode: e.errorCode,
+        ),
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      return Left(ServerFailure(_exceptionMessage(e)));
     }
   }
 

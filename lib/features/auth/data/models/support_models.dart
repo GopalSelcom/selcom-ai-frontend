@@ -13,19 +13,29 @@ class SupportReasonModel {
 }
 
 class SupportReasonsResponseModel {
-  const SupportReasonsResponseModel({required this.reasons});
+  const SupportReasonsResponseModel({
+    required this.reasons,
+    this.cancellationReasons = const [],
+  });
 
   final List<SupportReasonModel> reasons;
+  final List<SupportReasonModel> cancellationReasons;
 
   factory SupportReasonsResponseModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
-    final reasonsJson = data is Map ? data['reasons'] as List? : null;
-    final reasons = (reasonsJson ?? [])
-        .whereType<Map>()
-        .map((e) => SupportReasonModel.fromJson(Map<String, dynamic>.from(e)))
-        .where((r) => r.value.isNotEmpty && r.label.isNotEmpty)
-        .toList(growable: false);
-    return SupportReasonsResponseModel(reasons: reasons);
+    List<SupportReasonModel> parseList(String key) {
+      final raw = data is Map ? data[key] as List? : null;
+      return (raw ?? [])
+          .whereType<Map>()
+          .map((e) => SupportReasonModel.fromJson(Map<String, dynamic>.from(e)))
+          .where((r) => r.value.isNotEmpty && r.label.isNotEmpty)
+          .toList(growable: false);
+    }
+
+    return SupportReasonsResponseModel(
+      reasons: parseList('reasons'),
+      cancellationReasons: parseList('cancellation_reasons'),
+    );
   }
 }
 

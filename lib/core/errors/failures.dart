@@ -84,3 +84,24 @@ class RideAlreadyFinalizedFailure extends Failure {
     this.errorCode = 'RIDE_ALREADY_FINALIZED',
   });
 }
+
+/// `POST go/rides/:id/cancellation-request` returned 409 `RIDE_NOT_ACTIVE`.
+class RideNotActiveFailure extends Failure {
+  final String errorCode;
+
+  const RideNotActiveFailure(
+    super.message, {
+    this.errorCode = 'RIDE_NOT_ACTIVE',
+  });
+}
+
+/// `POST go/support/tickets/:id/withdraw-cancellation` returned 409
+/// `ALREADY_DECIDED` (CC acted first).
+class CancellationRequestAlreadyDecidedFailure extends Failure {
+  final String errorCode;
+
+  const CancellationRequestAlreadyDecidedFailure(
+    super.message, {
+    this.errorCode = 'ALREADY_DECIDED',
+  });
+}

@@ -20,9 +20,11 @@ import '../../../../core/data/models/responses/nearbyRiders/response/rider_statu
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/responses/payment_status_response/payment_status_response.dart';
 import '../../../../core/data/models/mid_ride_cancel_model.dart';
+import '../../../../core/data/models/responses/rides/ride_cancellation_request_response.dart';
 import '../../../../core/data/models/ride_cancel_info_model.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/data/models/ride_no_show_info_model.dart';
+import '../../../../core/data/models/ride_route_deviation_model.dart';
 import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
@@ -34,6 +36,7 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/map_marker_utils.dart';
@@ -64,6 +67,7 @@ import '../../data/models/mid_ride_cancel_models.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
 import '../utils/cancel_ride_flow.dart';
+import '../utils/request_cancellation_flow.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import 'ride_details_controller.dart';
 
@@ -126,6 +130,15 @@ class DriverAcceptedController extends GetxController
   /// Cached waiting `no_show` object — null hides the pickup wait banner.
   final noShowInfo = Rxn<RideNoShowInfoModel>();
 
+  /// Cached `route_deviation` — null hides the deviation banner.
+  final routeDeviationInfo = Rxn<RideRouteDeviationModel>();
+
+  /// Rider dismissed the muted "back on route" banner for this incident.
+  final routeDeviationBannerDismissed = false.obs;
+
+  /// De-dupe key for socket `ride:route_deviation` (`ride_id` + `detected_at`).
+  String? _lastRouteDeviationDedupeKey;
+
   /// `mm:ss` remaining until [RideNoShowInfoModel.fireAt].
   final noShowCountdownLabel = '00:00'.obs;
 
@@ -177,6 +190,57 @@ class DriverAcceptedController extends GetxController
 
   String get noShowBannerSubtitle => noShowInfo.value?.subtitle ?? '';
 
+  bool get shouldShowRouteDeviationBanner {
+    final info = routeDeviationInfo.value;
+    if (info == null || !info.flagged) return false;
+    if (routeDeviationBannerDismissed.value && info.isOnRoute) return false;
+    // Need a real off/on-route state (or an open cancellation request).
+    return info.isOffRoute ||
+        info.isOnRoute ||
+        info.cancellationRequest != null;
+  }
+
+  bool get isRouteDeviationOffRoute =>
+      routeDeviationInfo.value?.isOffRoute ?? false;
+
+  bool get canDismissRouteDeviationBanner =>
+      routeDeviationInfo.value?.isOnRoute == true &&
+      !(routeDeviationInfo.value?.cancellationRequest?.isPending ?? false);
+
+  bool get canContactSupportFromDeviation =>
+      routeDeviationInfo.value?.canContactSupport == true;
+
+  bool get canRequestCancellationFromDeviation =>
+      routeDeviationInfo.value?.canRequestCancellation == true;
+
+  bool get isCancellationRequestPending =>
+      routeDeviationInfo.value?.cancellationRequest?.isPending == true;
+
+  bool get isCancellationRequestRejected =>
+      routeDeviationInfo.value?.cancellationRequest?.isRejected == true;
+
+  String get routeDeviationBannerTitle {
+    final info = routeDeviationInfo.value;
+    if (info == null) return '';
+    if (info.title.isNotEmpty) return info.title;
+    if (info.isOnRoute) return AppStrings.backOnRoute.tr;
+    return '';
+  }
+
+  String get routeDeviationBannerSubtitle =>
+      routeDeviationInfo.value?.subtitle ?? '';
+
+  String get routeDeviationDistanceText =>
+      routeDeviationInfo.value?.distanceText.trim() ?? '';
+
+  String get cancellationRequestTicketNumber =>
+      routeDeviationInfo.value?.cancellationRequest?.ticketNumber ?? '';
+
+  String get cancellationRequestNote {
+    final note = routeDeviationInfo.value?.cancellationRequest?.note?.trim();
+    return note ?? '';
+  }
+
   // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
 
@@ -222,6 +286,9 @@ class DriverAcceptedController extends GetxController
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
   StreamSubscription<RideDriverCancelledPayload>? _driverCancelledSub;
+  StreamSubscription<RideRouteDeviationSocketPayload>? _routeDeviationSub;
+  StreamSubscription<RideCancellationRequestUpdatePayload>?
+  _cancellationRequestUpdateSub;
   bool _skipRideRoomLeaveOnClose = false;
   /// Set from nav args when My Rides / Home already pre-fetched this ride.
   bool _skipInitialRideDetailsFetch = false;
@@ -703,6 +770,8 @@ class DriverAcceptedController extends GetxController
     _chatSub?.cancel();
     _fareSettledSub?.cancel();
     _driverCancelledSub?.cancel();
+    _routeDeviationSub?.cancel();
+    _cancellationRequestUpdateSub?.cancel();
     _rideStopsUpdatedSub?.cancel();
     _rideStopsUpdateFailedSub?.cancel();
     _paymentStatusSub?.cancel();
@@ -840,10 +909,15 @@ class DriverAcceptedController extends GetxController
     );
     final statusRaw = args['statusPayload'];
     if (statusRaw is Map) {
-      final payload = EventRiderStatusUpdateResponse.fromJson(
-        Map<String, dynamic>.from(statusRaw),
-      );
+      final statusMap = Map<String, dynamic>.from(statusRaw);
+      final payload = EventRiderStatusUpdateResponse.fromJson(statusMap);
       _applyStatusPayload(payload);
+      final seededDeviation = rideRouteDeviationFromJson(
+        statusMap['route_deviation'],
+      );
+      if (seededDeviation != null) {
+        _applyRouteDeviation(seededDeviation);
+      }
     }
     final driverRaw = args['driverLocationPayload'];
     if (driverRaw is Map) {
@@ -985,6 +1059,7 @@ class DriverAcceptedController extends GetxController
     ride.value = r;
     _applyRide(r);
     _syncCancelAndNoShowFromRideModel(r);
+    _syncRouteDeviationFromRideModel(r);
     _syncDestinationFromRide(r);
     // HTTP details can show completion before/without a matching socket tick;
     // keep bottom-sheet state and completion navigation in sync with the model.
@@ -1165,6 +1240,8 @@ class DriverAcceptedController extends GetxController
     _paymentStatusSub?.cancel();
     _fareSettledSub?.cancel();
     _driverCancelledSub?.cancel();
+    _routeDeviationSub?.cancel();
+    _cancellationRequestUpdateSub?.cancel();
 
     _connectionSub = _socketService.connectionStream.listen((connected) {
       if (!connected) return;
@@ -1185,14 +1262,14 @@ class DriverAcceptedController extends GetxController
         if (_isUserInitiatedCancellation || _navigatedAway) return;
         await _syncLiveActivityFromStatusPayload(payload);
         _stopNoShowCountdown(clearInfo: true);
-        if (payload.isNoShowCancellation) {
+        final cancelledBy =
+            (payload.cancelledBy ?? '').toString().trim().toLowerCase();
+        final message = (payload.message ?? '').trim();
+        if (payload.isNoShowCancellation || cancelledBy == 'support') {
           _navigatedAway = true;
           await LiveActivityManager().endActivity(rideId);
-          final message = (payload.message ?? '').trim();
           _showCancelDialogThenGoHome(
-            message.isNotEmpty
-                ? message
-                : AppStrings.rideCancelled.tr,
+            message.isNotEmpty ? message : AppStrings.rideCancelled.tr,
           );
           return;
         }
@@ -1200,7 +1277,9 @@ class DriverAcceptedController extends GetxController
         if (_navigatedAway) return;
         _navigatedAway = true;
         await LiveActivityManager().endActivity(rideId);
-        _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
+        _showCancelDialogThenGoHome(
+          message.isNotEmpty ? message : AppStrings.rideCancelled.tr,
+        );
         return;
       }
       if (normalized == 'no_driver_found' || normalized == 'no_drivers_found') {
@@ -1353,6 +1432,22 @@ class DriverAcceptedController extends GetxController
         payload.toMidRideCancelModel(),
       );
     });
+
+    _routeDeviationSub = _socketService.rideRouteDeviationStream.listen((
+      payload,
+    ) {
+      if (_navigatedAway) return;
+      if (!_isSocketEventForThisRide(payload.rideId)) return;
+      _applyRouteDeviationFromSocket(payload);
+    });
+
+    _cancellationRequestUpdateSub = _socketService
+        .rideCancellationRequestUpdateStream
+        .listen((payload) {
+          if (_navigatedAway) return;
+          if (!_isSocketEventForThisRide(payload.rideId)) return;
+          _applyCancellationRequestUpdate(payload);
+        });
 
     // Ensure socket is connected for the active-ride entry path too.
     await _socketService.connect();
@@ -1976,6 +2071,179 @@ class DriverAcceptedController extends GetxController
         normalized == 'cancelled') {
       _clearNoShowInfo();
     }
+  }
+
+  void _syncRouteDeviationFromRideModel(RideModel r) {
+    if (r.routeDeviation != null) {
+      _applyRouteDeviation(r.routeDeviation!);
+    }
+  }
+
+  void _applyRouteDeviationFromSocket(RideRouteDeviationSocketPayload payload) {
+    final detectedIso = payload.deviation.detectedAt?.toIso8601String() ?? '';
+    final dedupeKey = '${payload.rideId ?? rideId}|$detectedIso';
+    if (detectedIso.isNotEmpty && _lastRouteDeviationDedupeKey == dedupeKey) {
+      return;
+    }
+    if (detectedIso.isNotEmpty) {
+      _lastRouteDeviationDedupeKey = dedupeKey;
+    }
+    _applyRouteDeviation(
+      payload.deviation.mergingFrom(routeDeviationInfo.value),
+    );
+  }
+
+  void _applyRouteDeviation(RideRouteDeviationModel info) {
+    final previous = routeDeviationInfo.value;
+    final merged = info.mergingFrom(previous);
+    // New off-route event after a dismissed on-route banner should re-show.
+    if (merged.isOffRoute && previous?.isOnRoute == true) {
+      routeDeviationBannerDismissed.value = false;
+    }
+    if (merged.isOnRoute && previous?.isOffRoute == true) {
+      routeDeviationBannerDismissed.value = false;
+    }
+    routeDeviationInfo.value = merged;
+    final current = ride.value;
+    if (current != null) {
+      ride.value = current.copyWith(routeDeviation: merged);
+    }
+  }
+
+  void _applyCancellationRequestUpdate(
+    RideCancellationRequestUpdatePayload payload,
+  ) {
+    final current = routeDeviationInfo.value;
+    if (current == null) return;
+    final updatedRequest = RideCancellationRequestModel(
+      ticketId: payload.ticketId.isNotEmpty
+          ? payload.ticketId
+          : (current.cancellationRequest?.ticketId ?? ''),
+      ticketNumber: payload.ticketNumber.isNotEmpty
+          ? payload.ticketNumber
+          : (current.cancellationRequest?.ticketNumber ?? ''),
+      status: payload.status,
+      requestedAt: current.cancellationRequest?.requestedAt,
+      note: payload.note,
+    );
+    _applyRouteDeviation(
+      current.copyWith(
+        cancellationRequest: updatedRequest,
+        canRequestCancellation: updatedRequest.isRejected ||
+            updatedRequest.isWithdrawn,
+      ),
+    );
+  }
+
+  void dismissRouteDeviationBanner() {
+    routeDeviationBannerDismissed.value = true;
+  }
+
+  void openContactSupportFromDeviation() {
+    final transId = (ride.value?.transactionId ?? '').trim();
+    Get.toNamed(
+      AppRoutes.contactUs,
+      arguments: {
+        'rideId': rideId,
+        'transactionId': transId.isNotEmpty ? transId : rideId,
+      },
+    );
+  }
+
+  /// Ride-started "Having trouble?" — same cancellation-request sheet.
+  Future<void> openHavingTroubleCancellationSheet() {
+    return openRequestCancellationSheet(force: true);
+  }
+
+  Future<void> openRequestCancellationSheet({bool force = false}) async {
+    if (!force && !canRequestCancellationFromDeviation) return;
+    final data = await RequestCancellationFlow(
+      rideRepository: rideRepository,
+      rideId: rideId,
+    ).run();
+    if (data == null) return;
+
+    final current = routeDeviationInfo.value;
+    final request = RideCancellationRequestModel(
+      ticketId: data.ticketId,
+      ticketNumber: data.ticketNumber,
+      status: data.status.isNotEmpty ? data.status : 'pending',
+      requestedAt: DateTime.now().toUtc(),
+    );
+    if (current != null) {
+      _applyRouteDeviation(
+        current.copyWith(
+          cancellationRequest: request,
+          canRequestCancellation: false,
+        ),
+      );
+    } else {
+      _applyRouteDeviation(
+        RideRouteDeviationModel(
+          flagged: true,
+          state: 'off_route',
+          deviationMeters: 0,
+          distanceText: '',
+          alertCount: 0,
+          maxDeviationMeters: 0,
+          title: '',
+          subtitle: '',
+          canContactSupport: true,
+          canRequestCancellation: false,
+          cancellationRequest: request,
+        ),
+      );
+    }
+
+    AppDialogs.showSuccessDialog(
+      title: AppStrings.requestToCancel.tr,
+      message: AppStrings.cancellationRequestSentWithTicket.trParams({
+        'ticket': data.ticketNumber,
+      }),
+    );
+  }
+
+  Future<void> withdrawCancellationRequest() async {
+    final ticketId =
+        routeDeviationInfo.value?.cancellationRequest?.ticketId.trim() ?? '';
+    if (ticketId.isEmpty) return;
+
+    Failure? failure;
+    await Loader.run(() async {
+      final result = await rideRepository.withdrawCancellationRequest(ticketId);
+      result.fold((f) => failure = f, (_) {});
+    });
+
+    if (failure is CancellationRequestAlreadyDecidedFailure) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.submitFailed.tr,
+        message: failure!.message.isNotEmpty
+            ? failure!.message
+            : AppStrings.cancellationRequestAlreadyDecided.tr,
+      );
+      await _fetchRideDetails();
+      return;
+    }
+
+    if (failure != null) {
+      AppDialogs.showErrorDialog(
+        title: AppStrings.submitFailed.tr,
+        message: failure!.message.isNotEmpty
+            ? failure!.message
+            : AppStrings.couldNotWithdrawCancellationRequest.tr,
+      );
+      return;
+    }
+
+    final current = routeDeviationInfo.value;
+    if (current == null) return;
+    final prior = current.cancellationRequest;
+    _applyRouteDeviation(
+      current.copyWith(
+        cancellationRequest: prior?.copyWith(status: 'withdrawn'),
+        canRequestCancellation: true,
+      ),
+    );
   }
 
   void _armNoShowInfo(RideNoShowInfoModel info) {

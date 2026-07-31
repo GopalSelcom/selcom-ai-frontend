@@ -203,6 +203,9 @@ class FCMNotificationData {
   final String? vehicleName;
   final String? plateNumber;
   final double? etaSeconds;
+  final String? deviationMeters;
+  final String? cancelledBy;
+  final String? chargeAmount;
 
   FCMNotificationData({
     this.rideId,
@@ -215,6 +218,9 @@ class FCMNotificationData {
     this.vehicleName,
     this.plateNumber,
     this.etaSeconds,
+    this.deviationMeters,
+    this.cancelledBy,
+    this.chargeAmount,
   });
 
   factory FCMNotificationData.fromJson(Map<String, dynamic> json) {
@@ -236,6 +242,9 @@ class FCMNotificationData {
       vehicleName: json['vehicle_name']?.toString() ?? json['vehicleName']?.toString(),
       plateNumber: json['plate_number']?.toString() ?? json['plateNumber']?.toString(),
       etaSeconds: parseEta(json['eta_seconds'] ?? json['etaSeconds']),
+      deviationMeters: json['deviation_meters']?.toString(),
+      cancelledBy: json['cancelled_by']?.toString(),
+      chargeAmount: json['charge_amount']?.toString(),
     );
   }
 
@@ -250,6 +259,9 @@ class FCMNotificationData {
         if (vehicleName != null) 'vehicle_name': vehicleName,
         if (plateNumber != null) 'plate_number': plateNumber,
         if (etaSeconds != null) 'eta_seconds': etaSeconds,
+        if (deviationMeters != null) 'deviation_meters': deviationMeters,
+        if (cancelledBy != null) 'cancelled_by': cancelledBy,
+        if (chargeAmount != null) 'charge_amount': chargeAmount,
       };
 }
 

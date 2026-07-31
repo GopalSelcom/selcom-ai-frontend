@@ -35,6 +35,9 @@ List<RideModel> parseActiveRidesFromResponse(
             } else if (!rideMap.containsKey('no_show')) {
               rideMap['no_show'] = null;
             }
+            if (entry.routeDeviation != null) {
+              rideMap['route_deviation'] = entry.routeDeviation!.toJson();
+            }
             return RideModel.fromJson(rideMap);
           })
           .toList(growable: false),

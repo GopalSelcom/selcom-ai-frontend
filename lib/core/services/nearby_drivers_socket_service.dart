@@ -13,6 +13,7 @@ import '../data/models/responses/nearbyRiders/response/ride_stops_update_respons
 import '../data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../data/models/responses/payment_status_response/payment_status_response.dart';
+import '../data/models/responses/rides/ride_cancellation_request_response.dart';
 import 'error_reporting/error_reporter.dart';
 import 'storage_service.dart';
 
@@ -65,6 +66,9 @@ class AppSocketService {
   static const String evtRideDriverCancelled = 'ride:driver_cancelled';
   static const String evtRideChargeSettled = 'ride:charge_settled';
   static const String trackingDriverLocation = 'ride:tracking_update';
+  static const String evtRideRouteDeviation = 'ride:route_deviation';
+  static const String evtRideCancellationRequestUpdate =
+      'ride:cancellation_request_update';
 
   // Payment
   static const String evtJoinPaymentRoom = 'join_payment_room';
@@ -105,6 +109,10 @@ class AppSocketService {
       StreamController<RideDriverCancelledPayload>.broadcast();
   final _chargeSettledController =
       StreamController<RideChargeSettledPayload>.broadcast();
+  final _routeDeviationController =
+      StreamController<RideRouteDeviationSocketPayload>.broadcast();
+  final _cancellationRequestUpdateController =
+      StreamController<RideCancellationRequestUpdatePayload>.broadcast();
 
   // 💬 Chat controller
   final _chatController = StreamController<Map<String, dynamic>>.broadcast();
@@ -131,6 +139,13 @@ class AppSocketService {
 
   Stream<RideChargeSettledPayload> get rideChargeSettledStream =>
       _chargeSettledController.stream;
+
+  Stream<RideRouteDeviationSocketPayload> get rideRouteDeviationStream =>
+      _routeDeviationController.stream;
+
+  Stream<RideCancellationRequestUpdatePayload>
+  get rideCancellationRequestUpdateStream =>
+      _cancellationRequestUpdateController.stream;
 
   Stream<DriverLocationSocketResponse> get rideDriverLocationStream =>
       _rideDriverLocationController.stream;
@@ -319,6 +334,27 @@ class AppSocketService {
       if (payload is! Map) return;
       _chargeSettledController.add(
         RideChargeSettledPayload.fromJson(Map<String, dynamic>.from(payload)),
+      );
+    });
+    _socket!.on(evtRideRouteDeviation, (payload) {
+      if (payload is! Map) return;
+      AppLogger.d('evtRideRouteDeviation -> $payload', tag: 'Socket');
+      _routeDeviationController.add(
+        RideRouteDeviationSocketPayload.fromJson(
+          Map<String, dynamic>.from(payload),
+        ),
+      );
+    });
+    _socket!.on(evtRideCancellationRequestUpdate, (payload) {
+      if (payload is! Map) return;
+      AppLogger.d(
+        'evtRideCancellationRequestUpdate -> $payload',
+        tag: 'Socket',
+      );
+      _cancellationRequestUpdateController.add(
+        RideCancellationRequestUpdatePayload.fromJson(
+          Map<String, dynamic>.from(payload),
+        ),
       );
     });
     _socket!.on(evtPaymentStatusUpdate, (payload) {
