@@ -27,7 +27,7 @@ class CertificatePinning {
 
   /// Optional static pin for local testingMode cycles only — never production.
   static const String _testingFallbackPin =
-      'iy2yBocC3ymn6LjKnzQ1HhQT4DRJtV8iBmRIZntD3P4=';
+      'LoMHBotttiDko50Gi13uXW71eIy7LAttI+rYT8wXF4w=';
 
   static const String _aesKey = 'QdptEEvDW7UKhXjAq1nm2BNSft09Vdlw';
   static const String _aesIv = 'pp1VI0bmpjL0FQ6z';

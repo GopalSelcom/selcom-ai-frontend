@@ -41,10 +41,10 @@ import 'firebase_options.dart';
 /// const Environment kAppEnvironment = Environment.prod;
 const Environment kAppEnvironment = Environment.prod;
 
-/// Todo: VAPT builds skip SSL pinning so proxy tools (Charles/Burp) can inspect traffic.
+/// VAPT builds skip SSL pinning so proxy tools (Charles/Burp) can inspect traffic.
 ///
 /// Set to `false` for production / hardening builds that enforce dynamic pinning.
-bool isVAPTBuild = true;
+bool isVAPTBuild = false;
 
 void _registerKillCallLogSink() {
   // AgoraCallLogger matches AppLogger: debug-only by default.
