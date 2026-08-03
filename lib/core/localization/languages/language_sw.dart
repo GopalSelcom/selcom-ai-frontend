@@ -5,162 +5,112 @@ class LanguageSw extends Languages {
   final Map<String, String> values = {
     'code_not_exist': 'Msimbo uliotafuta haupo.',
     'account_unlinked_successfully': 'Akaunti imetenganishwa kwa mafanikio',
-    'account_verified': 'Akaunti Imethibitishwa',
     'add': 'Ongeza',
     'add_asaved_place': 'Ongeza mahali palipohifadhiwa',
     'add_debit_credit_card': 'Ongeza kadi ya deni/mikopo',
-    'add_new_card': 'Ongeza Kadi Mpya',
-    'add_card': 'Ongeza Kadi',
+    'add_new_card': 'Ongeza kadi mpya',
+    'add_card': 'Ongeza kadi',
     'address_missing': 'Anwani inakosekana',
     'an_unexpected_error_occurred': 'Itilafu isiyotarajiwa imetokea',
-    'app_title': 'Selcom Rides',
     'apply': 'TUMIA',
     'are_you_sure_want_to_add_ndelete_this_card': 'Je, una uhakika unataka kuongeza/kufuta kadi hii?',
     'are_you_sure_you_want_to_cancel': 'Je, una uhakika unataka kughairi?',
-    'blink_your_eyes': 'Kopesa Macho Yako',
-    'book_ride': 'Agiza Safari',
+    'book_ride': 'Agiza safari',
     'book_any': 'Yoyote',
     'book_ride_wallet_deduction_notice': 'Kiasi hiki kitakatwa kutoka kwenye mkoba wako.',
-    'insufficient_balance_title': 'Salio Halitoshi',
-    'insufficient_balance_message': 'Salio la mkoba wako ni dogo sana kuagiza safari hii. Tafadhali ongeza salio ili kuendelea.',
+    'insufficient_balance_title': 'Salio halitoshi',
+    'insufficient_balance_message':
+        'Salio la mkoba wako ni dogo sana kuagiza safari hii. Tafadhali ongeza salio ili kuendelea.',
     'current_balance_label': 'Salio la Sasa',
-    'required_amount_label': 'Kiasi Kinachohitajika',
-    'amount_needed_label': 'Kiasi Kinachohitajika',
+    'required_amount_label': 'Kiasi kinachohitajika',
+    'amount_needed_label': 'Kiasi kinachohitajika',
     'top_up_wallet': 'Ongeza Salio la Mkoba',
     'add_money_to_wallet': 'Ongeza Pesa kwenye mkoba',
-    'add_money': 'Ongeza Pesa',
+    'add_money': 'Ongeza pesa',
     'amount': 'Kiasi',
     'back': 'Nyuma',
     'wallet_funds_received_title': 'Mkoba wako umepokea fedha',
-    'wallet_funds_received_subtitle':
-        'Sasa unaweza kutumia mkoba wako kuweka nafasi ya safari.',
+    'wallet_funds_received_subtitle': 'Sasa unaweza kutumia mkoba wako kuweka nafasi ya safari.',
     'top_up_request_sent_title': 'Ombi la kuongeza salio limetumwa',
     'mobile_money_request_sent_title': 'Ombi limetumwa',
     'mobile_money_request_sent_message':
         'Ombi lako la malipo limetumwa kwa @number. Kiasi kitaonyeshwa kwenye mkoba wako wa Selcom Go.',
     'selcom_pesa_to_go_wallet': 'SelcomPesa kwenda kwenye mkoba wa Go',
-    'use_another_number': '+ Tumia namba nyingine',
-    'enter_selcom_pesa_customer_phone_hint':
-        'Ingiza namba ya simu ya mteja wa SelcomPesa, na tutatuma ombi',
+    'enter_selcom_pesa_customer_phone_hint': 'Ingiza namba ya simu ya mteja wa SelcomPesa, na tutatuma ombi',
     'request_sent_complete_selcom_topup':
         'Ombi limetumwa. Tafadhali kamilisha malipo kwenye SelcomPesa ili kuongeza salio la mkoba wako wa Go',
     'expires_in_with_time': 'Inaisha baada ya @time',
     'wallet_topup_amount_required': 'Tafadhali ingiza kiasi',
-    'wallet_topup_amount_must_be_greater_than_zero':
-        'Kiasi lazima kiwe zaidi ya 0',
+    'wallet_topup_amount_must_be_greater_than_zero': 'Kiasi lazima kiwe zaidi ya 0',
     'wallet_topup_amount_exceeds_max': 'Kiasi hakiwezi kuzidi TZS @max',
-    'wallet_topup_request_failed':
-        'Imeshindikana kuanzisha malipo. Tafadhali jaribu tena.',
+    'wallet_topup_request_failed': 'Imeshindikana kuanzisha malipo. Tafadhali jaribu tena.',
     'wallet_topup_timer_expired_title': 'Muda wa malipo umeisha',
-    'wallet_topup_timer_expired_message':
-        'Ombi la malipo limeisha muda wake. Je, ungependa kujaribu tena?',
+    'wallet_topup_timer_expired_message': 'Ombi la malipo limeisha muda wake. Je, ungependa kujaribu tena?',
     'wallet_topup_cancel_request': 'Futa ombi',
     'selcom_pesa_app_not_installed': 'Programu ya SelcomPesa haijasakinishwa',
-    'selcom_pesa_install_prompt':
-        'Sakinisha SelcomPesa ili kukamilisha malipo kwenye kifaa chako.',
-    'selcom_pesa_handoff_failed':
-        'Imeshindikana kufungua SelcomPesa. Hakikisha programu imesakinishwa na ujaribu tena.',
-    'selcom_pesa_status_not_found':
-        'Hatukuweza kupata malipo haya. Tafadhali jaribu tena.',
-    'selcom_pesa_payment_rejected':
-        'Malipo yamekataliwa au yamefeli. Tafadhali jaribu tena.',
+    'selcom_pesa_install_prompt': 'Sakinisha SelcomPesa ili kukamilisha malipo kwenye kifaa chako.',
+    'selcom_pesa_handoff_failed': 'Imeshindikana kufungua SelcomPesa. Hakikisha programu imesakinishwa na ujaribu tena.',
+    'selcom_pesa_status_not_found': 'Hatukuweza kupata malipo haya. Tafadhali jaribu tena.',
+    'selcom_pesa_payment_rejected': 'Malipo yamekataliwa au yamefeli. Tafadhali jaribu tena.',
     'selcom_pesa_payment_processing':
         'Malipo yamepokelewa, tunashughulikia kuongeza salio lako. Wasiliana na huduma kwa wateja ikiwa salio halitasasishwa.',
-    'wallet_account_unavailable':
-        'Mkoba wako wa Go haupatikani. Tafadhali jaribu tena baadaye.',
+    'wallet_account_unavailable': 'Mkoba wako wa Go haupatikani. Tafadhali jaribu tena baadaye.',
     'download_app': 'Pakua programu',
-    'mobile_money_phone_value': '+255 711 410 410',
-    'mobile_money_amount_value': 'TZS 43,000',
     'select_a_vehicle': 'Tafadhali chagua chombo.',
-    'book_ride_with_fare': 'Weka safari @currency @amount',
     'booking_for_name': 'Kumwekea @name',
     'booking_for_someone_else_prompt': 'Je, unamwekea mtu mwingine safari?',
     'booking_for_someone_else_subtitle': 'Unaweza kuingiza maelezo yao ili tuweze kuwatumia taarifa za safari moja kwa moja.',
     'booking_ride_option_for_me': 'Hapana, ni kwa ajili yangu',
     'booking_ride_option_for_someone_else': 'Ndiyo, kwa ajili ya mtu mwingine',
-    'notification_phone_required':
-        'Tafadhali ingiza namba ya simu kwa ajili ya arifa.',
-    'notification_phone_subtitle':
-        'Wasilisha taarifa za safari na arifa kwenye namba hii.',
-    'notification_phone_title': 'Namba ya simu ya arifa',
+    'notification_phone_required': 'Tafadhali ingiza namba ya simu kwa ajili ya arifa.',
+    'notification_phone_subtitle': 'Wasilisha taarifa za safari na arifa kwenye namba hii.',
     'enter_passenger_full_name': 'Ingiza majina kamili',
     'passenger_details_title': 'Maelezo ya Abiria',
     'passenger_name_label': 'Jina la Abiria',
     'passenger_phone_label': 'Simu ya Abiria',
-    'onboarding_footer_lead':
-        'Kwa kuendelea, unakubali kwamba umesoma na kukubaliana na ',
+    'onboarding_footer_lead': 'Kwa kuendelea, unakubali kwamba umesoma na kukubaliana na ',
     'onboarding_footer_terms_link': 'Vigezo na Masharti yetu',
     'onboarding_footer_joiner': ' na ',
     'call': 'Piga simu',
     'call_driver': 'Piga simu kwa dereva',
     'call_driver_sheet_subtitle': 'Chagua jinsi unavyotaka kuwasiliana na dereva wako wakati wa safari hii.',
-    'coming_soon': 'Inakuja hivi karibuni',
-    'calling_driver': 'Anapigiwa Dereva',
-    'camera_permission': 'Ruhusa ya Kamera',
     'contacts_permission': 'Ruhusa ya Anwani',
     'contacts_access_needed':
         'Selcom Go inahitaji ufikiaji wa anwani zako ili kukuruhusu kuchagua abiria kutoka kwenye kitabu chako cha simu. Tafadhali wezesha kwenye Mipangilio.',
-    'cancel_update': 'Ghairi Kusasisha',
     'cancel_and_pay': 'Ghairi & Lipa',
-    'cancel_dialogs_gallery': 'Matunzio ya Mazungumzo ya Kughairi',
     'cancel_failed': 'Kughairi kumeshindikana',
-    'cancel_ride': 'Ghairi Safari',
+    'cancel_ride': 'Ghairi safari',
     'cancel': 'Futa',
     'cancelled': 'Imeghairiwa',
-    'cancellation_fee_charged':
-        'Ada ya kughairi ya @amount imetoizwa.',
-    'cancellation_charges': 'Ada za kughairi',
-    'cancellation_fee': 'Ada ya kughairi',
     'cancellation_reason': 'Sababu ya kughairi',
     'cancellation_reason_by_rider': 'Umeghairi wewe',
-    'no_show_fee': 'Ada ya kutokuonekana',
-    'net_amount_refunded_label': 'Kiasi kilichorejeshwa',
-    'distance_covered': 'Umbali uliofikiwa',
-    'distance_km_value': '@km km',
-    'amount_charged': 'Kiasi kilichotozwa',
     'cancelling_your_ride': 'Inaghairi safari yako…',
-    'card_detail': 'Maelezo ya Kadi',
     'card_number': 'Namba ya Kadi',
-    'card_ending_in_placeholder': 'Kadi inayoishia na XX1234',
     'change_drop_location': 'Badilisha eneo la kushukia',
     'add_stops': 'Ongeza vituo',
-    'change_location': 'Badilisha Eneo',
-    'change_phone_number': 'Badilisha namba ya simu',
+    'change_location': 'Badilisha eneo',
     'chat': 'Mazungumzo',
     'chat_is_only_available_during_an_active_ride': 'Mazungumzo yanapatikana tu wakati wa safari inayoendelea',
-    'ride_chat_quick_passenger_coming_to_road': 'Coming to the road',
-    'ride_chat_quick_passenger_there_in_5_mins': "I'll be there in 5 mins",
-    'ride_chat_quick_passenger_big_bag': 'I have a big bag with me',
     'check_your_pickup_point': 'Angalia eneo lako la kuchukuliwa',
     'choose_ride': 'Chagua safari',
-    'comment_required': 'Maoni yanahitajika',
     'confirm_pickup': 'Thibitisha kuchukuliwa',
     'connection_error': 'Itilafu ya Muunganisho',
-    'contact_us': 'Wasiliana Nasi',
+    'contact_us': 'Wasiliana nasi',
     'contact_support': 'Wasiliana na Huduma kwa Wateja',
     'request_to_cancel': 'Omba kughairi',
-    'request_cancellation_subtitle':
-        'Tuambie kwa nini unataka huduma ikague kughairi safari hii.',
+    'request_cancellation_subtitle': 'Tuambie kwa nini unataka huduma ikague kughairi safari hii.',
     'submit_request': 'Wasilisha ombi',
     'optional_details': 'Maelezo ya ziada (si lazima)',
     'describe_what_happened_hint': 'Eleza kilichotokea (si lazima)',
     'withdraw_request': 'Futa ombi',
-    'cancellation_request_sent_with_ticket':
-        'Ombi limetumwa. Huduma itakagua na kukupigia simu. Tiketi @ticket',
-    'support_declined_cancellation':
-        'Huduma imekataa — safari yako inaendelea',
-    'could_not_submit_cancellation_request':
-        'Imeshindikana kuwasilisha ombi la kughairi. Jaribu tena.',
-    'could_not_withdraw_cancellation_request':
-        'Imeshindikana kufuta ombi. Jaribu tena.',
-    'could_not_load_cancellation_reasons':
-        'Imeshindikana kupakia sababu za kughairi. Jaribu tena.',
-    'ride_not_active_refresh':
-        'Safari hii haipo tena. Tafadhali onyesha upya.',
-    'cancellation_request_already_decided':
-        'Huduma tayari imeamua ombi hili.',
-    'cancellation_request_already_pending':
-        'Ombi lako la kughairi tayari linakaguliwa. Tiketi @ticket',
+    'cancellation_request_sent_with_ticket': 'Ombi limetumwa. Huduma itakagua na kukupigia simu. Tiketi @ticket',
+    'support_declined_cancellation': 'Huduma imekataa — safari yako inaendelea',
+    'could_not_submit_cancellation_request': 'Imeshindikana kuwasilisha ombi la kughairi. Jaribu tena.',
+    'could_not_withdraw_cancellation_request': 'Imeshindikana kufuta ombi. Jaribu tena.',
+    'could_not_load_cancellation_reasons': 'Imeshindikana kupakia sababu za kughairi. Jaribu tena.',
+    'ride_not_active_refresh': 'Safari hii haipo tena. Tafadhali onyesha upya.',
+    'cancellation_request_already_decided': 'Huduma tayari imeamua ombi hili.',
+    'cancellation_request_already_pending': 'Ombi lako la kughairi tayari linakaguliwa. Tiketi @ticket',
     'back_on_route': 'Umerudi kwenye njia',
     'continue_to_trip': 'Endelea na safari',
     'continue': 'Endelea',
@@ -168,19 +118,17 @@ class LanguageSw extends Languages {
     'didnt_receive_the_code': 'Hukupokea msimbo?',
     'could_not_cancel_try_again': 'Imeshindikana kughairi. Jaribu tena.',
     'could_not_resolve_vehicle_type_id_please_try_again': 'Imeshindikana kupata kitambulisho cha chombo. Tafadhali jaribu tena.',
-    'could_not_validate_payment_please_try_again':
-        'Imeshindikana kuthibitisha malipo. Tafadhali jaribu tena.',
-    'default': 'Chaguomsingi',
+    'could_not_validate_payment_please_try_again': 'Imeshindikana kuthibitisha malipo. Tafadhali jaribu tena.',
     'default_currency_tzs': 'TZS',
     'delete_card': 'Futa kadi',
     'do_not_share_your_personal_details_with_rider_be_safe_and_always_check_your_luggage':
         'Usishiriki maelezo yako binafsi na msafiri. Kuwa salama na uangalie mizigo yako kila wakati.',
     'done': 'Tayari',
-    'download_slip': 'Pakua Stakabadhi',
+    'download_slip': 'Pakua stakabadhi',
     'download_slip_gallery_subtitle': 'Hifadhi nakala kwenye matunzio yako',
     'choose_how_to_receive_receipt': 'Chagua jinsi ungependa kupokea stakabadhi yako',
     'receipt_options': 'Chaguo za Stakabadhi',
-    'share_slip': 'Shiriki Stakabadhi',
+    'share_slip': 'Shiriki stakabadhi',
     'share_slip_subtitle': 'Tuma kiungo cha stakabadhi kwa wengine',
     'driver_arrived_map_badge': 'Dereva amewasili',
     'map_satellite_view': 'Mwonekano wa setilaiti',
@@ -193,25 +141,19 @@ class LanguageSw extends Languages {
     'driver_has_accepted_your_ride': 'Dereva amekubali safari yako',
     'driver_arrived_description': 'Dereva wako amewasili kwenye eneo la kuchukuliwa.',
     'ride_started_description': 'Uko njiani kuelekea unakokwenda.',
-    'finding_your_driver': 'Kumtafuta Dereva Wako',
+    'finding_your_driver': 'Kumtafuta dereva wako',
     'finding_driver_default_description': 'Dereva atakuchukua haraka iwezekanavyo baada ya kuthibitisha agizo lako',
     'finding_driver_minutes_remain': 'Zimebaki dakika @minutes na sekunde @seconds',
     'driver_will_arriving_in_minutes': 'Dereva atawasili baada ya dakika @minutes...',
-    'driver_finishing_nearby_trip':
-        'Dereva wako anakamilisha safari iliyo karibu na atakuchukua hivi karibuni.',
-    'driver_assigned': 'Dereva Amepangwa',
-    'driver_arriving': 'Dereva Anakuja',
+    'driver_finishing_nearby_trip': 'Dereva wako anakamilisha safari iliyo karibu na atakuchukua hivi karibuni.',
     'driver_en_route': 'Dereva yuko Njiani',
-    'driver_arrived': 'Dereva Amewasili',
+    'driver_arrived': 'Dereva amewasili',
     'e_g123': 'mfano. 123',
     'e_g7_xx_xxx_xxx': 'mfano. 7XX XXX XXX',
     'e_gjohn_doe': 'mfano. John Doe',
-    'e_gname_email_com_optional': 'mfano. jina@email.com (hiari)',
     'edit_your_phone_number': 'Hariri namba yako ya simu?',
-    'enter_otp': 'Ingiza OTP',
     'enter_phone_number': 'Ingiza namba ya simu',
-    'enter_phone_number_for_verification':
-        'Ingiza namba ya simu kwa uthibitisho',
+    'enter_phone_number_for_verification': 'Ingiza namba ya simu kwa uthibitisho',
     'enter_promo_code': 'Ingiza msimbo wa promosi',
     'enter_promocode': 'Ingiza Msimbo wa Promosi',
     'enter_your_selcom_pesa_number': 'Ingiza namba yako ya SelcomPesa',
@@ -222,15 +164,13 @@ class LanguageSw extends Languages {
     'eta_minutes_away_drop_time': 'Dakika @minutes zilizobaki • Kufika @time',
     'eta_minutes_away_only': 'Umbali wa dakika @minutes',
     'drop_at_time': 'Kufika @time',
-    'explore_vehicle': 'Chunguza Chombo',
+    'explore_vehicle': 'Chunguza chombo',
     'minutes_ago': 'Dakika @count zilizopita',
     'hours_ago': 'Saa @count zilizopita',
     'days_ago': 'Siku @count zilizopita',
     'days_left_count': 'Siku @count zimebaki',
-    'expires_in_timer': 'Inaisha baada ya @timer',
     'request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride':
         'Ombi limetumwa. Tafadhali kamilisha malipo kwenye SelcomPesa ili kuongeza salio la mkoba wako.',
-    'payment_completed_successfully': 'Malipo yamekamilika kwa mafanikio',
     'thank_you_for_riding_with_us_see_you_on_the_next_trip': 'Asante kwa kusafiri nasi, tutakuona kwenye safari ijayo.',
     'fare': 'Nauli',
     'failed_to_send_message': 'Imeshindikana kutuma ujumbe',
@@ -239,50 +179,36 @@ class LanguageSw extends Languages {
     'failed_to_update_ride_pin_preference': 'Imeshindikana kusasisha upendeleo wa PIN ya safari',
     'failed_to_resend_otp': 'Imeshindikana kutuma tena OTP',
     'failed_to_send_otp': 'Imeshindikana kutuma OTP',
-    'failed_to_update_favorite_status': 'Imeshindikana kusasisha hali ya unayopendelea',
     'fallback_ride_name': 'Safari',
-    'favourite_locations': 'Maeneo Yanayopendwa',
-    'saved_locations': 'Maeneo Yaliyohifadhiwa',
+    'saved_locations': 'Maeneo yaliyohifadhiwa',
     'get_started': 'Anza',
     'home_label': 'Nyumbani',
-    'get_verification_code': 'Pata Msimbo wa Uthibitishaji',
     'havent_got_the_confirmation_code_yet': 'Bado hujapata msimbo wa uthibitisho? ',
     'got_it': 'Nimeelewa',
     'google_sign_in_cancelled': 'Uingiaji umeghairiwa',
-    'google_sign_in_config_error': 'Uingiaji wa Google haujasanidiwa vizuri',
     'google_sign_in_failed': 'Uingiaji wa Google umefeli. Tafadhali jaribu tena.',
-    'google_sign_in_success': 'Umeingia kama @email',
-    'google_sign_in_unsupported': 'Uingiaji wa Google hautumiki kwenye kifaa hiki',
     'sign_in_with_apple': 'Ingia na Apple',
-    'apple_sign_in_success': 'Umeingia kama @email',
     'apple_sign_in_cancelled': 'Uingiaji umeghairiwa',
     'apple_sign_in_failed': 'Uingiaji wa Apple umefeli. Tafadhali jaribu tena.',
     'apple_sign_in_account_exists': 'Akaunti iliyo na barua pepe hii tayari ipo. Ingia kwa njia yako ya kwanza kwanza.',
-    'apple_sign_in_not_available': 'Uingiaji wa Apple unapatikana tu kwenye vifaa vya iOS',
     'sign_in_with_facebook': 'Ingia na Facebook',
-    'facebook_sign_in_success': 'Umeingia kama @email',
     'facebook_sign_in_cancelled': 'Uingiaji umeghairiwa',
     'facebook_sign_in_failed': 'Uingiaji wa Facebook umefeli. Tafadhali jaribu tena.',
     'help': 'Msaada',
-    'having_trouble_logging_in': 'Unapata Shida Kuingia?',
-    'help_selcom_go_do_better_by_rating_this_trip': 'Saidia Selcom Go kufanya vizuri zaidi kwa kukadiria safari hii',
+    'having_trouble_logging_in': 'Unapata shida kuingia?',
     'how_can_we_help_you': 'Je, tunawezaje kukusaidia?',
     'how_do_you_rate_the_driver': 'Je, unamkadiria vipi dereva?',
     'how_was_your_ride': 'Safari yako ilikuwaje?',
-    'includes_stops': 'Ina vituo',
     'includes_stop_fee': 'Inajumuisha ada ya kituo',
-    'for_added_stop': 'Kwa kituo kilichoongezwa',
-    'initiating_call_to_driverphone':
-        'Inapiga simu kwenda kwa \$driverPhone...',
-    'keep_ride': 'Weka Safari',
-    'link_account': 'Unganisha Akaunti',
+    'keep_ride': 'Weka safari',
+    'link_account': 'Unganisha akaunti',
     'location': 'Eneo',
     'locating': 'Kutafuta eneo...',
     'locating_driver': 'Kumtafuta dereva...',
     'current_location': 'Eneo la sasa',
     'saved': 'Imehifadhiwa',
-    'saved_place': 'Mahali Palipohifadhiwa',
-    'saved_places': 'Maeneo Yaliyohifadhiwa',
+    'saved_place': 'Mahali palipohifadhiwa',
+    'saved_places': 'Maeneo yaliyohifadhiwa',
     'recent_locations': 'Maeneo ya Hivi Karibuni',
     'search_tag': 'TAFUTA',
     'recent_tag': 'HIVI KARIBUNI',
@@ -294,61 +220,40 @@ class LanguageSw extends Languages {
     'logout': 'Ondoka',
     'lorem_ipsum_dolor_sit_amet_consectetur': 'Lorem ipsum dolor sit amet, consectetur',
     'making_your_drive_best_is_our_responsibility': 'Kufanya safari yako kuwa bora ni jukumu letu',
-    'maybe_later': 'Labda Baadaye',
+    'maybe_later': 'Labda baadaye',
     'mark_all_read_count': 'Weka zote zimesomwa (@count)',
     'message': 'Ujumbe',
     'missing_info': 'Maelezo yanayokosekana',
     'missing_ride_information': 'Maelezo ya safari yanakosekana.',
     'mm_yy': 'MM/YY',
-    'my_rides': 'Safari Zangu',
+    'my_rides': 'Safari zangu',
     'name_cannot_be_empty': 'Jina haliwezi kuwa tupu',
-    'name_contains_invalid_characters': 'Jina lina herufi zisizo sahihi',
     'name_is_required': 'Jina linahitajika',
-    'need_help': 'Unahitaji Msaada?',
-    'new_message': 'Ujumbe Mpya',
+    'need_help': 'Unahitaji msaada?',
+    'new_message': 'Ujumbe mpya',
     'no': 'Hapana',
-    'no_configurable_settings_are_available_right_now': 'Hakuna mipangilio inayoweza kusanidiwa kwa sasa.',
     'no_driver_found_for_your_request_please_try_again': 'Hakuna dereva aliyepatikana kwa ombi lako. Tafadhali jaribu tena.',
-    'no_drivers_found_within9_minutes_cancelling_ride': 'Hakuna madereva waliopatikana ndani ya dakika 9. Inaghairi safari...',
     'no_drivers_nearby_please_try_again_later': 'Hakuna madereva karibu. Tafadhali jaribu tena baadaye.',
-    'no_fare_estimate_returned_for_the_updated_pickup_location':
-        'Hakuna makadirio ya nauli yaliyopatikana kwa eneo jipya la kuchukuliwa.',
     'no_favorite_locations_yet': 'Hakuna maeneo yanayopendwa bado',
     'no_locations_found': 'Hakuna maeneo yaliyopatikana',
     'no_notifications_yet': 'Hakuna arifa bado',
     'no_past_rides_found': 'Hakuna safari zilizopita zilizopatikana',
     'no_recent_locations_found': 'Hakuna maeneo ya hivi karibuni yaliyopatikana',
     'no_recent_locations': 'Hakuna maeneo ya hivi karibuni',
-    'no_topup_methods_available':
-        'Chaguo za kuongeza pesa hazipatikani sasa. Tafadhali jaribu tena baadaye.',
     'note_by_proceeding_you_consent_to_get_calls_whatsapp_or_sms_messages_including_by_au':
         'Kumbuka: Kwa kuendelea, unakubali kupokea simu, ujumbe wa WhatsApp au SMS, ikiwa ni pamoja na njia za kiotomatiki, kutoka Selcom Go na washirika wake kwenye namba iliyotolewa.',
     'notification': 'Arifa',
     'notifications': 'Arifa',
     'ok': 'Sawa',
     'order_label_with_id': 'Agizo: @orderId',
-    'open_settings': 'Fungua Mipangilio',
+    'open_settings': 'Fungua mipangilio',
     'call_notification_permission_msg':
         'Ruhusa ya arifa inahitajika kupokea simu za dereva. Tafadhali iwashe katika mipangilio ya programu.',
     'call_full_screen_permission_msg':
         'Arifa za skrini kamili zinahitajika kujibu simu simu yako ikiwa imefungwa. Tafadhali iwashe katika mipangilio ya programu.',
     'please_enter_label': 'Tafadhali ingiza lebo',
-    'or_divider': 'au',
-    'otp_resent_successfully': 'OTP imetumiwa tena kwa mafanikio',
     'past': 'Zilizopita',
-    'pay_using': 'Lipa Ukitumia',
     'payment': 'Malipo',
-    'processing': 'Inchakata...',
-    'updating_payment': 'Inasasisha Malipo',
-    'recalculating_route': 'Inakokotoa upya Njia',
-    'drop_off_updated': 'Eneo la kushukia limesasishwa!',
-    'route_updated': 'Njia Imesasishwa!',
-    'adjusting_payment_hold_for_new_route':
-        'Tunarekebisha zuio la malipo yako kwa ajili ya njia mpya.',
-    'syncing_new_route_with_driver': 'Inalandanisha njia mpya na dereva wako.',
-    'driver_received_new_drop_off_location': 'Dereva wako amepokea eneo jipya la kushukia.',
-    'driver_received_new_stops': 'Dereva wako amepokea vituo vipya.',
-    'please_wait_while_we_process_your_request': 'Tafadhali subiri wakati tunachakata ombi lako.',
     'payment_not_confirmed': 'Malipo hayajathibitishwa',
     'book_ride_payment_not_applied_title': 'Malipo hayajakatwa',
     'book_ride_payment_not_applied_message':
@@ -362,32 +267,26 @@ class LanguageSw extends Languages {
     'pickup_confirmation_note_label': 'Maelezo ya ziada',
     'pickup_confirmation_note_hint': 'Hiari — jengo, geti, alama ya eneo…',
     'pin': 'PIN',
-    'pin_locked': 'PIN Imefungwa',
+    'pin_locked': 'PIN imefungwa',
     'please_confirm_pickup_point_to_continue': 'Tafadhali thibitisha eneo la kuchukuliwa ili kuendelea.',
     'please_enter_apromo_code': 'Tafadhali ingiza msimbo wa promosi',
     'please_enter_a_valid_email': 'Tafadhali ingiza barua pepe sahihi',
     'please_enter_a_valid_name': 'Tafadhali ingiza jina sahihi',
-    'please_enter_the4_digit_code_sent_to_phone_through_sms':
-        'Tafadhali ingiza tarakimu 4 zilizotumwa kwa \n@countryCode @phoneNumber kupitia SMS',
-    'please_enter_your_details_to_continue': 'Tafadhali ingiza maelezo yako ili kuendelea.',
     'please_enter_at_least_one_destination': 'Tafadhali ingiza angalau eneo moja unalokwenda.',
     'please_enter_your_comment_first': 'Tafadhali ingiza maoni yako kwanza.',
     'please_rate_your_ride_before_submitting': 'Tafadhali kadiria safari yako kabla ya kuwasilisha.',
     'please_select_at_least_one_destination': 'Tafadhali chagua angalau eneo moja unalokwenda.',
-    'please_select_at_least_one_tag_before_submitting': 'Tafadhali chagua angalau lebo moja kabla ya kuwasilisha.',
     'please_tell_us_what_went_wrong_or_how_we_can_improve': 'Tafadhali tuambie nini kimeenda vibaya au jinsi tunavyoweza kuboresha.',
-    'please_try_again': 'Tafadhali jaribu tena.',
     'privacy_policy': 'Sera ya Faragha',
     'terms_and_conditions': 'Vigezo na Masharti',
     'payment_method_with_name': 'Njia ya malipo @name',
     'calculating_best_route': 'Inatafuta njia bora zaidi...',
     'ride_receipt': 'Stakabadhi ya Safari',
-    'ref_with_id': 'Rejea: @id',
     'transaction_id_with_value': 'Kitambulisho cha Muamala: @id',
     'route': 'Njia',
     'dropoff': 'Kushukia',
     'em_dash': '—',
-    'driver_and_vehicle': 'Dereva & Chombo',
+    'driver_and_vehicle': 'Dereva & chombo',
     'driver': 'Dereva',
     'model': 'Mfano',
     'colour': 'Rangi',
@@ -408,7 +307,6 @@ class LanguageSw extends Languages {
     'promo_error_network': 'Imeshindikana kuthibitisha. Jaribu tena.',
     'promo_not_applied_title': 'Promosi haijatumiwa',
     'promo_code_not_valid_for_vehicle': 'Si sahihi kwa chombo hiki',
-    'promo_auto_applied': 'Imetumiwa kiotomatiki (@code)',
     'promo_auto_applied_badge': 'Imetumiwa kiotomatiki',
     'promo_cashback_amount': 'Rudisho @amount',
     'ride_free_label': 'BURE',
@@ -418,29 +316,25 @@ class LanguageSw extends Languages {
     'failed_to_load_promo_codes': 'Imeshindwa kupakia misimbo ya promosheni',
     'promo_auto_apply_list_badge': 'Kiotomatiki',
     'rating': 'Ukadiriaji',
-    'rating_given': 'ukadiriaji uliotolewa',
     'rating_required': 'Ukadiriaji unahitajika',
     'reason_to_contact': 'Sababu ya Kuwasiliana',
     'recent_location': 'Eneo la Hivi Karibuni',
-    'remove_account': 'Futa Akaunti',
     'remove': 'Ondoa',
     'remove_saved_address': 'Ondoa anwani iliyohifadhiwa',
     'are_you_sure_you_want_to_remove_this_saved_address': 'Je, una uhakika unataka kuondoa anwani hii iliyohifadhiwa?',
-    'resend_code': 'Tuma Msimbo Tena',
-    'resend_otp': 'Tuma tena OTP',
+    'resend_code': 'Tuma msimbo tena',
     'retry': 'Jaribu tena',
-    'ride_cancelled': 'Safari Imeghairiwa',
+    'ride_cancelled': 'Safari imeghairiwa',
     'trip_ended_by_driver': 'Safari imeishia na dereva',
     'mid_ride_sorry_subtitle': 'Samahani, safari yako haikuweza kukamilika.',
     'mid_ride_reason_lead': 'Sababu: ',
-    'mid_ride_cancelled_by_driver_partial_charge':
-        'Imeghairiwa na dereva',
+    'mid_ride_cancelled_by_driver_partial_charge': 'Imeghairiwa na dereva',
     'mid_ride_reason_vehicle_breakdown': 'Gari limevunjika',
     'mid_ride_reason_accident': 'Ajali',
     'mid_ride_reason_unsafe': 'Hali si salama',
     'mid_ride_reason_other': 'Nyingine',
     'driver_started_your_ride': '@driverName ameanzisha safari yako',
-    'ride_completed': 'Safari Imekamilika',
+    'ride_completed': 'Safari imekamilika',
     'the_ride_has_been_cancelled': 'Safari imeghairiwa.',
     'you_have_reached_your_destination': 'Umeshafika unakokwenda.',
     'you_have_arrived': 'Umeshawasili!',
@@ -463,78 +357,57 @@ class LanguageSw extends Languages {
     'could_not_fetch_receipt_details': 'Imeshindikana kupata maelezo ya stakabadhi.',
     'ride_details_are_missing': 'Maelezo ya safari yanakosekana.',
     'failed_to_load_ride_details': 'Imeshindikana kupakia maelezo ya safari. Tafadhali jaribu tena.',
-    'could_not_open_pdf_with_message': 'Imeshindikana kufungua PDF: @message',
     'could_not_download_slip_please_try_again_later': 'Imeshindikana kupakua stakabadhi. Tafadhali jaribu tena baadaye.',
     'check_out_my_ride_receipt_share_url': 'Angalia stakabadhi ya safari my: @url',
     'selcom_go_ride_receipt_subject': 'Stakabadhi ya Safari ya Selcom Go',
     'could_not_share_slip_please_try_again_later': 'Imeshindikana kushiriki stakabadhi. Tafadhali jaribu tena baadaye.',
     'ride_pin_protection': 'Ulinzi wa PIN ya Safari',
-    'safety_and_privacy': 'Safety & Faragha',
     'save_this_address_first_then_you_can_book_from_here': 'Hifadhi anwani hii kwanza, kisha unaweza kuagiza kutoka hapa.',
-    'saving_changes': 'Inahifadhi mabadiliko...',
     'search_destination': 'Tafuta unakokwenda',
     'search_location': 'Tafuta eneo...',
     'search_pickup': 'Tafuta eneo la kuchukulia',
-    'search_stop': 'Tafuta eneo la kituo',
     'search_stop_location': 'Tafuta eneo la kituo',
     'in_app_calling': 'Piga simu kupitia App',
     'in_app_calling_subtitle': 'Piga simu ya sauti kupitia programu kwa kutumia muunganisho wa safari yako.',
     'normal_call': 'Simu ya Kawaida',
     'normal_call_subtitle': 'Tumia kipiga simu cha kifaa chako kumpigia dereva moja kwa moja.',
-    'in_app_calling_will_be_available_soon': 'Simu kupitia programu itapatikana hivi karibuni',
-    'update_failed': 'Kusasisha Kumefeli',
+    'update_failed': 'Kusasisha kumefeli',
     'update_in_progress': 'Kusasisha kunaendelea',
     'a_previous_update_is_still_being_processed': 'Mabadiliko ya awali bado yanashughulikiwa.',
     'taking_longer_than_expected': 'Inachukua muda mrefu kuliko ilivyotarajiwa',
     'the_update_is_taking_some_time_please_check_back_shortly': 'Mabadiliko yanachukua muda kidogo. Tafadhali angalia tena hivi karibuni.',
-    'payment_hold_update_failed_no_charges_applied':
-        'Uboreshaji wa zuio la malipo umefeli. Hakuna gharama zilizotozwa.',
+    'payment_hold_update_failed_no_charges_applied': 'Uboreshaji wa zuio la malipo umefeli. Hakuna gharama zilizotozwa.',
     'drivers_app_couldnt_be_updated_billing_adjusted_back': 'Programu ya dereva haikuweza kusasishwa. Gharama zimerudishwa.',
-    'search_timeout': 'Muda wa kutafuta umeisha',
-    'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable':
-        'Udhibiti wa usalama na upendeleo. Mipangilio zaidi itaonekana hapa itakapowezeshwa.',
+    'security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable': 'Udhibiti wa usalama na upendeleo. Mipangilio zaidi itaonekana hapa itakapowezeshwa.',
     'selcom_pesa': 'SelcomPesa',
     'select_anearby_point_for_easier_pickup': 'Chagua eneo la karibu kwa ajili ya kuchukuliwa kwa urahisi',
-    'select_apayment_method': 'Chagua njia ya malipo',
     'select_country': 'Chagua nchi',
-    'select_country_subtitle':
-        'Tafuta na uchague msimbo wa nchi kwa ajili ya namba yako ya simu.',
+    'select_country_subtitle': 'Tafuta na uchague msimbo wa nchi kwa ajili ya namba yako ya simu.',
     'search_country': 'Tafuta nchi',
     'no_countries_found': 'Hakuna nchi zilizopatikana',
     'select_areason': 'Chagua sababu',
     'select_a_reason_subtitle': 'Chagua mada inayoelezea vizuri zaidi kile unachohitaji msaada nacho.',
-    'select_avehicle_and_payment_method': 'Chagua chombo na njia ya malipo.',
-    'select_payment': 'Chagua malipo',
-    'selfie_capture_failed': 'Upigaji picha wa selfie umefeli',
     'session_expired': 'Muda wa Kipindi Umeisha',
     'settings': 'Mipangilio',
     'skip': 'Ruka',
     'skip_failed': 'Kuruka kumefeli',
-    'smile': 'Tabasamu',
     'stop': 'Kituo',
-    'socket_off': 'Inaangalia upatikanaji wa madereva...',
-    'socket_off_error': 'Imeshindikana kuonyesha madereva wa karibu',
-    'socket_on_drivers': 'Madereva @count wako karibu',
     'start_typing_pickup': 'Anza kuandika eneo la kuchukulia',
     'start_typing_destination': 'Anza kuandika eneo unalokwenda',
-    'stay_notified': 'Pata Taarifa!',
-    'enable_notifications_for_ride_updates': 'Wezesha arifa ili kupokea taarifa za wakati halisi kuhusu kuwasili kwa dereva na hali ya safari.',
-    'steps_to_connect_selcom_pesa': 'Hatua za kuunganisha SelcomPesa',
     'submit_failed': 'Uwasilishaji umefeli',
     'submit': 'Wasilisha',
     'success': 'Mafanikio',
     'selected_address': 'Anwani iliyochaguliwa',
     'searching_for_driver': 'Inamtafuta dereva...',
     'enable_location_service': 'Wezesha huduma ya eneo',
-    'enable_location_service_message':
-        'Tafadhali wezesha huduma ya eneo ili kupata eneo lako la sasa.',
+    'enable_location_service_message': 'Tafadhali wezesha huduma ya eneo ili kupata eneo lako la sasa.',
     'enable_location_service_message_ios':
-        'Huduma za Eneo zimezimwa kwenye kifaa chako.\n\nNenda Mipangilio → Faragha na Usalama → Huduma za Eneo na uzivute. Kisha rudi kwenye programu na uguse kitufe cha GPS ili kuruhusu eneo kwa Selcom Go.',
+        'Huduma za Eneo zimezimwa kwenye kifaa chako.\\\\n\\\\nNenda Mipangilio → Faragha na Usalama → Huduma za Eneo na uzivute. Kisha rudi kwenye programu na uguse kitufe cha GPS ili kuruhusu eneo kwa Selcom Go.',
     'location_permission_denied': 'Ruhusa ya eneo imekataliwa',
     'location_access_required': 'Ufikiaji wa eneo unahitajika',
-    'location_permission_denied_open_settings': 'Ruhusa ya eneo imekataliwa kabisa. Fungua Mipangilio ili kuruhusu eneo kwa ajili ya kuchukuliwa na kuona madereva wa karibu.',
-    'unable_to_estimate_fare_for_this_route':
-        'Imeshindikana kukadiria nauli ya njia hii.',
+    'location_permission_denied_open_settings':
+        'Ruhusa ya eneo imekataliwa kabisa. Fungua Mipangilio ili kuruhusu eneo kwa ajili ya kuchukuliwa na kuona madereva wa karibu.',
+    'unable_to_estimate_fare_for_this_route': 'Imeshindikana kukadiria nauli ya njia hii.',
     'distance_min_km': 'KM 0.1',
     'distance_max_km': '>KM 999',
     'distance_km_format': '@value KM',
@@ -542,33 +415,23 @@ class LanguageSw extends Languages {
     'duration': 'Muda',
     'could_not_remove_address': 'Imeshindikana kuondoa anwani',
     'view_more': 'Angalia zaidi',
-    'ride_in_progress': 'Safari Inaendelea',
     'ongoing': 'Inaendelea',
     'completed': 'Imekamilika',
-    'no_driver_found': 'Hakuna Dereva Aliyepatikana',
+    'no_driver_found': 'Hakuna dereva aliyepatikana',
     'boda': 'Boda boda',
     'unknown_location': 'Eneo lisilojulikana',
-    'near_destination': 'Karibu na unakokwenda',
-    'active_ride': 'Safari Inayoendelea',
-    'your_ride': 'Safari yako',
-    'booked_for_passenger': 'Imewekewa abiria @name',
-    'booked_for_someone_else': 'Imewekewa mtu mwingine',
+    'active_ride': 'Safari inayoendelea',
     'booked_for_other_limit_reached': 'Umefikia kikomo cha safari unazoweza kuwawekea wengine.',
     'booked_for_other_no_multi_stop': 'Safari za vituo vingi haziruhusiwi unapoagiza safari kwa ajili ya mtu mwingine.',
     'book_any_fare_settled_title': 'Malipo yamesasishwa',
     'book_any_fare_settled_blocked_lead': 'Tulizuia kwa muda ',
-    'book_any_fare_settled_middle_with_vehicle':
-        ' kwa ajili ya safari yako ya Yoyote. @vehicle ilipangwa kwa nauli ya chini, kwa hivyo ',
-    'book_any_fare_settled_middle_no_vehicle':
-        ' kwa ajili ya safari yako ya Yoyote. Chombo cha nauli ya chini kilipangwa, kwa hivyo ',
+    'book_any_fare_settled_middle_with_vehicle': ' kwa ajili ya safari yako ya Yoyote. @vehicle ilipangwa kwa nauli ya chini, kwa hivyo ',
+    'book_any_fare_settled_middle_no_vehicle': ' kwa ajili ya safari yako ya Yoyote. Chombo cha nauli ya chini kilipangwa, kwa hivyo ',
     'book_any_fare_settled_released_trail': ' imerejeshwa kwenye mkoba wako.',
     'book_any_fare_settled_final_charge_label': 'Gharama ya mwisho: ',
     'unable_to_get_location_coordinates': 'Imeshindikana kupata viwianishi vya eneo',
     'please_select_valid_pickup_and_destination_locations': 'Tafadhali chagua maeneo sahihi ya kuchukuliwa na unakokwenda.',
-    'are_you_sure_you_want_to_add_this_address_as':
-        'Are you sure you want to add this address as @phrase?',
-    'tag_required': 'Lebo inahitajika',
-    'tap_each_button_to_preview_the_popup_ui': 'Gusa kila kitufe ili kuona muonekano wa UI',
+    'are_you_sure_you_want_to_add_this_address_as': 'Are you sure you want to add this address as @phrase?',
     'tell_us_more_about_your_experience': 'Tuambie zaidi kuhusu uzoefu wako...',
     'thank_you': 'Asante',
     'this_is_second_slide': 'Hii ni Slaidi ya Pili',
@@ -577,10 +440,8 @@ class LanguageSw extends Languages {
     'this_saved_place_is_missing_coordinates': 'Mahali hapa palipohifadhiwa hapana viwianishi.',
     'this_saved_place_is_missing_coordinates_try_saving_it_again': 'Mahali hapa palipohifadhiwa hapana viwianishi. Jaribu kukihifadhi tena.',
     'timeout': 'Muda umeisha',
-    'total_amount': 'Jumla ya Kiasi',
     'total_fare': 'Jumla ya Nauli',
     'unable_to_initiate_booking_right_now': 'Imeshindikana kuanzisha uagizaji kwa sasa.',
-    'unable_to_open_phone_dialer': 'Imeshindikana kufungua kipiga simu',
     'unable_to_open_ride_details': 'Imeshindikana kufungua maelezo ya safari',
     'unable_to_skip_rating_now': 'Imeshindikana kuruka ukadiriaji kwa sasa.',
     'unable_to_submit_rating_now': 'Imeshindikana kuwasilisha ukadiriaji kwa sasa.',
@@ -590,33 +451,20 @@ class LanguageSw extends Languages {
     'validation': 'Uthibitishaji',
     'validation_id_missing_from_server_response': 'Kitambulisho cha uthibitisho hakipo kwenye jibu la seva.',
     'value0000000000000000': '0000 0000 0000 0000',
-    'value1_standard_confirmation': '1. Uthibitisho wa Kawaida',
-    'value20_percent_off_on_your_first_ride_booking': 'Punguzo la 20% kwenye uagizaji wa safari yako ya kwanza',
     'value255': '+255',
-    'value2_assignment_warning_fee': '2. Onyo la upangaji (Ada)',
-    'value3_reason_selection': '3. Uteuzi wa Sababu',
     'share': 'Shiriki',
     'safety': 'Usalama',
     'safety_options': 'Chaguo za Usalama',
-    'safety_options_subtitle': 'Shiriki eneo lako la moja kwa moja au wasiliana na namba za dharura ikiwa unahitaji msaada.',
+    'safety_options_subtitle':
+        'Shiriki eneo lako la moja kwa moja au wasiliana na namba za dharura ikiwa unahitaji msaada.',
     'share_live_location': 'Shiriki eneo la moja kwa moja',
-    'selcom_go_sos_helpline': 'Namba ya dharura ya Selcom Go',
-    'call_police': 'Piga polisi',
     'share_ride_status': 'Shiriki taarifa ya safari',
-    'choose_app_to_share': 'Chagua app ya kushiriki',
-    'whatsapp': 'WhatsApp',
-    'text_message': 'Ujumbe wa maandishi',
-    'copy_link': 'Nakili kiungo',
-    'share_feature_coming_soon':
-        'Huduma ya kushiriki itaunganishwa hivi karibuni.',
     'vehicle_type': 'Aina ya chombo',
     'verification_successful': 'Uthibitishaji Umekamilika kwa Mafanikio!',
     'otp_label': 'OTP',
     'otp_verification_failed': 'Uthibitishaji wa OTP umefeli',
     'verify_phone_number': 'Thibitisha Namba ya Simu',
-    'verify_your_selfie': 'Thibitisha Selfie Yako',
-    'view_trip': 'Angalia safari',
-    'view_ride': 'Angalia Safari',
+    'view_ride': 'Angalia safari',
     'active_ride_min_remains': 'Dakika @minutes zimebaki',
     'active_ride_more_count': 'na wengine +@count',
     'visa': 'VISA',
@@ -627,58 +475,45 @@ class LanguageSw extends Languages {
     'wallet_reserved_balance': 'Imehifadhiwa: @amount',
     'recent_transactions': 'Miamala ya Hivi Karibuni',
     'recent_transaction_title': 'Muamala wa Hivi Karibuni',
-    'view_all': 'Angalia Zote',
+    'view_all': 'Angalia zote',
     'e_statement': 'Taarifa ya Kielektroniki',
-    'wallet_statement_emailed_success':
-        'Taarifa yako ya mkoba imetumwa kwa barua pepe yako.',
-    'wallet_statement_email_failed':
-        'Imeshindikana kutuma taarifa yako ya mkoba kwa barua pepe. Tafadhali jaribu tena.',
+    'wallet_statement_emailed_success': 'Taarifa yako ya mkoba imetumwa kwa barua pepe yako.',
+    'wallet_statement_email_failed': 'Imeshindikana kutuma taarifa yako ya mkoba kwa barua pepe. Tafadhali jaribu tena.',
     'wallet_statement_range_capped_hint':
         'Taarifa inajumuisha siku 30 zilizopita zinazoishia kwenye tarehe ya mwisho iliyochaguliwa.',
-    'show_vcn': 'Onyesha VCN',
     'no_transactions_yet': 'Hakuna miamala bado',
     'filter_all': 'Zote',
     'filter_received': 'Zilizopokelewa',
     'filter_sent': 'Zilizotumwa',
-    'we_could_not_confirm_your_payment_block_please_try_again':
-        'Hatukuweza kuthibitisha zuio la malipo yako. Tafadhali jaribu tena.',
-    'we_ll_text_acode_to_verify_your_phone_number':
-        'Tutatuma msimbo kwa ujumbe ili kuthibitisha namba yako ya simu',
+    'we_could_not_confirm_your_payment_block_please_try_again': 'Hatukuweza kuthibitisha zuio la malipo yako. Tafadhali jaribu tena.',
+    'we_ll_text_acode_to_verify_your_phone_number': 'Tutatuma msimbo kwa ujumbe ili kuthibitisha namba yako ya simu',
     'we_will_notify_you_when_something_important_happens': 'Tutaarifu wakati kitu muhimu kinapotokea.',
     'what_stood_out': 'Nini kilionekana kuwa bora?',
     'where_are_you_going': 'Unakwenda wapi?',
     'why_do_you_want_to_cancel': 'Kwa nini unataka kughairi?',
     'cancellation_fee_of': 'Ada ya kufuta ya ',
-    'will_be_charged_since_driver_on_way':
-        ' itatozwa kwa sababu dereva wako yuko njiani.',
+    'will_be_charged_since_driver_on_way': ' itatozwa kwa sababu dereva wako yuko njiani.',
     'has_been_charged_period': ' imetoizwa.',
     'net_amount_refunded': 'Kiasi kilichorejeshwa: ',
     'net_refund_of': 'Kiasi cha ',
     'has_been_refunded_period': ' kimerudishwa.',
-    'net_refund_amount': 'Kiasi cha @amount kimerudishwa.',
     'yes': 'Ndiyo',
     'yes_cancel': 'NDIYO, GHAIRI',
-    'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number':
-        'Bado unaweza kuomba fedha kwenye SelcomPesa kwa kutumia namba nyingine.',
-    'your_card_has_been_nadded_successfully':
-        'Kadi yako imeongezwa kwa mafanikio.',
+    'you_can_still_able_to_request_money_on_selcom_pesa_using_another_number': 'Bado unaweza kuomba fedha kwenye SelcomPesa kwa kutumia namba nyingine.',
+    'your_card_has_been_nadded_successfully': 'Kadi yako imeongezwa kwa mafanikio.',
     'your_driver_is_already_on_the_way': 'Dereva wako tayari yuko njiani.',
     'your_identity_has_been_successfully_verified_you_can_now_use_selcom_pesa':
         'Uthibitisho wa utambulisho wako umekamilika kwa mafanikio. Sasa unaweza kutumia SelcomPesa.',
-    'your_linked_account': 'Akaunti Yako Iliyounganishwa',
     'your_rating_has_been_submitted': 'Ukadiriaji wako umewasilishwa.',
     'your_ride_was_cancelled': 'Safari yako imeghairiwa.',
     'thanks_for_using_go': 'Asante kwa kutumia Go!',
-    'your_rides': 'Safari Zangu',
+    'your_rides': 'Safari zangu',
     'welcome_to_selcom_go': 'Karibu Selcom Go',
     'full_name': 'Majina kamili',
     'enter_your_full_name': 'Ingiza majina yako kamili',
     'email': 'Barua pepe',
-    'enter_your_email_optional': 'Ingiza barua pepe yako (hiari)',
     'enter_your_email': 'Ingiza barua pepe yako',
     'email_is_required': 'Barua pepe inahitajika',
-    'i_agree_to_the_terms_and_conditions': 'Ninakubaliana na Vigezo na Masharti',
-    'please_accept_terms_and_conditions': 'Tafadhali kubali Vigezo na Masharti',
     'your_selfie_will_be_captured_to_help_us_validate_you_against_your_id_please_hold_your':
         'Picha yako ya selfie itapigwa ili kutusaidia kukuthibiti dhidi ya kitambulisho chako. Tafadhali shika simu yako vizuri, hakikisha uso wako uko ndani ya fremu ya duara, na ufuate maelekezo.',
     'your_session_has_expired_please_login_again_to_continue': 'Muda wa kipindi chako umeisha. Tafadhali ingia tena ili kuendelea.',
@@ -688,48 +523,24 @@ class LanguageSw extends Languages {
     'switched_to_english': 'Imebadilishwa kwenda Kiingereza',
     'switched_to_swahili': 'Imebadilishwa kwenda Kiswahili',
     'exit_app': 'Ondoka kwenye App',
-    'exit_app_title': 'Ondoka kwenye App',
     'exit_app_message': 'Je, una uhakika unataka kuondoka kwenye app?',
     'card_delete_warning_description':
         'Kitendo hiki kitaondoa kadi kwenye akaunti yako, na utahitaji kuiongeza tena ikiwa unataka kuitumia baadaye.',
-    'no_cancel': 'Hapana, Ghairi',
+    'no_cancel': 'Hapana, ghairi',
     'expiry': 'Muda wa Mwisho',
     'cvv': 'CVV',
-    'set_a_nick_name': 'Weka Jina la Utani',
     'please_enter_your_phone_number': 'Tafadhali ingiza namba yako ya simu',
-    'please_provide_email_or_phone':
-        'Tafadhali weka barua pepe au namba ya simu ili tuweze kuwasiliana nawe',
-    'enter_phone_number_optional': 'Ingiza namba ya simu (hiari)',
-    'please_enter_a_valid_phone_number':
-        'Tafadhali ingiza namba ya simu iliyo sahihi',
-    'invalid_otp_please_try_again': 'OTP si sahihi. Tafadhali jaribu tena.',
-    'camera_access_needed_for_selfie_verification': 'Tunahitaji ufikiaji wa kamera ili kupiga selfie kwa ajili ya uthibitisho wa utambulisho. Tafadhali wezesha kwenye mipangilio ya kifaa chako.',
-    'card_ready_to_use_you_can_manage_or_remove_anytime':
-        'Sasa iko tayari kwa malipo. Unaweza kudhibiti au kuondoa kadi hii wakati wowote kutoka kwenye mipangilio ya malipo.',
-    'selcom_pesa_connect_step_1':
-        'Ingiza namba yako ya simu iliyosajiliwa ya SelcomPesa',
-    'selcom_pesa_connect_step_2':
-        'Thibitisha picha ya selfie inayohusiana na akaunti yako ya SelcomPesa.',
-    'selcom_pesa_connect_step_3':
-        'Angalia programu yako ya SelcomPesa na uidhinishe ombi la uthibitisho.',
+    'please_provide_email_or_phone': 'Tafadhali weka barua pepe au namba ya simu ili tuweze kuwasiliana nawe',
+    'please_enter_a_valid_phone_number': 'Tafadhali ingiza namba ya simu iliyo sahihi',
     'selcom_pesa_link_request_sent_message':
         'Ombi la kuunganisha limetumwa kwa @phoneNumber. Tafadhali fungua SelcomPesa na uidhinishe ili kuunganisha akaunti yako.',
-    'selcom_pesa_already_linked_message':
-        '@phoneNumber tayari imeunganishwa na akaunti yako ya Selcom Go.',
-    'link_another_account': 'Unganisha akaunti nyingine',
-    'selcom_pesa_pending_approval': 'Inasubiri idhini',
-    'selcom_pesa_max_linked_accounts':
-        'Unaweza kuunganisha akaunti @max za SelcomPesa.',
+    'selcom_pesa_already_linked_message': '@phoneNumber tayari imeunganishwa na akaunti yako ya Selcom Go.',
+    'selcom_pesa_max_linked_accounts': 'Unaweza kuunganisha akaunti @max za SelcomPesa.',
     'selcom_pesa_multiple_linked': 'Akaunti @count za SelcomPesa zimeunganishwa',
-    'selcom_pesa_connect_step_4':
-        'Umekamilisha kila kitu! Akaunti yako ya SelcomPesa imeunganishwa.',
-    'otp_sent_to_your_phone_number':
-        'OTP imetumwa kwa namba yako ya simu ya @phoneNumber',
     'require_verification_pin_before_starting_ride': 'Inahitaji PIN ya uthibitisho kabla ya kuanza safari.',
     'ride_pin_required_by_admin_cannot_be_turned_off': 'PIN ya safari inahitajika na msimamizi na haiwezi kuzimwa.',
     'current_status_required': 'Hali ya sasa: inahitajika',
     'current_status_optional': 'Hali ya sasa: hiari',
-    'take_selfie': 'Piga Selfie',
     'error_picking_image': 'Itilafu wakati wa kuchagua picha: @error',
     'are_you_sure_you_want_to_logout_from_the_app': 'Je, una uhakika unataka kuondoka kwenye programu?',
     'please_select_a_reason': 'Tafadhali chagua sababu',
@@ -737,17 +548,16 @@ class LanguageSw extends Languages {
     'user': 'Mtumiaji',
     'user_name': 'Jina la mtumiaji',
     'phone_number': 'Namba ya simu',
-    'add_new': 'Ongeza Mpya',
+    'add_new': 'Ongeza mpya',
     'add_to_favourites': 'Ongeza kwenye Maeneo unayopenda',
     'add_to_favourites_subtitle': 'Chagua lebo ya anwani hii au ongeza yako binafsi.',
     'confirm': 'Thibitisha',
     'confirmation': 'Uthibitisho',
     'home': 'Nyumbani',
-    'loading': 'Inapakia...',
     'minutes_count': 'dakika @count',
     'pin_locked_message_retry_in_time': '@message. Tafadhali jaribu tena baada ya @time.',
-    'save_address': 'Hifadhi Anuani',
-    'save_location_as': 'Hifadhi Eneo Kama',
+    'save_address': 'Hifadhi anuani',
+    'save_location_as': 'Hifadhi eneo kama',
     'work': 'Kazi',
     'office': 'Ofisi',
     'other': 'Nyingine',
@@ -759,9 +569,8 @@ class LanguageSw extends Languages {
     'session_expired_refreshing': 'Kipindi kimeisha. Inafanya upya...',
     'social_login_subtitle': 'Fungua akaunti au ingia ili kuchunguza programu yetu',
     'request_queue_full_please_try_again_later': 'Foleni ya maombi imejaa. Tafadhali jaribu tena baadaye.',
-    'duplicate_request_already_queued': 'Ombi linalofanana tayari liko kwenye foleni',
     'request_queue_cleared': 'Foleni ya maombi imefutwa',
-    'search_ended': 'Utafutaji Umeisha',
+    'search_ended': 'Utafutaji umeisha',
     'search_timeout_no_driver_found': 'Utafutaji umeisha: hakuna dereva aliyepatikana',
     'send_timeout': 'Muda wa kutuma umeisha',
     'receive_timeout': 'Muda wa kupokea umeisha',
@@ -781,30 +590,22 @@ class LanguageSw extends Languages {
     'something_went_wrong_please_try_again': 'Kuna kitu kimeenda vibaya. Tafadhali jaribu tena.',
     'unexpected_error_occurred_with_error': 'Itilafu isiyotarajiwa imetokea: @error',
     'invalid_otp': 'OTP si sahihi.',
-    'add_stop': 'Ongeza Kituo',
-    'back_to_home': 'Rudi Nyumbani',
+    'add_stop': 'Ongeza kituo',
+    'back_to_home': 'Rudi nyumbani',
     'booking': 'Inaagiza',
     'booking_failed': 'Uagizaji umefeli',
     'card_expired': 'Imeisha muda',
     'cards': 'Kadi',
     'chat_unavailable': 'Mazungumzo hayapatikani',
-    'confirm_and_update': 'Thibitisha & Sasisha',
-    'confirm_stop': 'Thibitisha Kituo',
-    'connect_selcom_pesa_ride_charges_subtitle':
-        'Unganisha akaunti yako ya SelcomPesa kuwezesha ukataji wa nauli otomatiki na rahisi.',
-    'connecting_drivers': 'Inatafuta madereva wa karibu...',
-    'connecting_socket': 'Inatafuta madereva wa karibu...',
-    'could_not_refresh_fare_after_pickup':
-        'Imeshindikana kusasisha nauli baada ya uthibitisho wa kuchukuliwa.',
+    'confirm_and_update': 'Thibitisha & sasisha',
+    'confirm_stop': 'Thibitisha kituo',
+    'connect_selcom_pesa_ride_charges_subtitle': 'Unganisha akaunti yako ya SelcomPesa kuwezesha ukataji wa nauli otomatiki na rahisi.',
+    'could_not_refresh_fare_after_pickup': 'Imeshindikana kusasisha nauli baada ya uthibitisho wa kuchukuliwa.',
     'current_destination': 'Eneo la sasa la kwenda',
     'display_name_ride': 'Safari',
-    'drivers_online_count': 'madereva @count wako karibu',
-    'no_drivers_nearby_badge': 'Hakuna madereva karibu',
     'eta_badge': 'ETA',
     'fare_difference': 'Tofauti ya Nauli:',
-    'fare_increase_payment_authorization':
-        'Kuongezeka kwa nauli kutahitaji idhini ya malipo.',
-    'mastercard_visa': 'Mastercard / Visa',
+    'fare_increase_payment_authorization': 'Kuongezeka kwa nauli kutahitaji idhini ya malipo.',
     'max_stops_only': 'Unaweza kuongeza hadi vituo @count tu.',
     'microphone_permission_denied_open_settings': 'Ruhusa ya maikrofoni imekataliwa kabisa. Fungua Mipangilio ili kuiruhusu.',
     'microphone_permission_required': 'Ruhusa ya maikrofoni inahitajika ili kupiga simu.',
@@ -813,28 +614,26 @@ class LanguageSw extends Languages {
     'payment_methods_title': 'Njia za malipo',
     'receipt_saved_to_gallery': 'Stakabadhi imehifadhiwa kwenye matunzio yako ya picha.',
     'ride_created_missing_id': 'Safari imeundwa lakini kitambulisho cha safari hakipo kwenye jibu.',
-    'search_again': 'Tafuta Tena',
+    'search_again': 'Tafuta tena',
     'selected_location': 'Eneo lililochaguliwa',
     'selected_pickup_point': 'Eneo lililochaguliwa la kuchukulia',
     'selcom_pesa_linked_number': 'Namba iliyounganishwa: @number',
-    'socket_disconnected': 'Muunganisho wa soketi umekatika',
     'stop_number': 'Kituo @number',
     'update_destination': 'Sasisha Eneo la Kwenda',
-    'update_ride': 'Sasisha Safari',
+    'update_ride': 'Sasisha safari',
     'write_a_message': 'Andika ujumbe...',
-    'your_driver': 'Dereva Wako',
+    'your_driver': 'Dereva wako',
     'incorrect_pin': 'PIN si sahihi.',
     'selcom_pesa_link_number': '+ Unganisha namba',
     'selcom_pesa_self_title': 'Binafsi',
     'selcom_pesa_self_subtitle': 'Ingiza kiasi na uelekezwe kwenye SelcomPesa',
     'selcom_pesa_other_title': 'Nyingine',
     'selcom_pesa_other_subtitle': 'Ingiza namba ya simu na kiasi',
-    'remove_account_title': 'Ondoa Akaunti',
+    'remove_account_title': 'Ondoa akaunti',
     'remove_account_message': 'Je, una uhakika unataka kuondoa akaunti hii ya SelcomPesa?',
     'remove_label': 'Ondoa',
     'saved_card_label': 'Kadi iliyohifadhiwa',
     'no_saved_cards_found': 'Hakuna kadi zilizohifadhiwa',
-    'add_new_card_text': '+ Ongeza kadi mpya',
     'amount_is_required': 'Kiasi kinahitajika',
     'enter_valid_amount': 'Tafadhali ingiza kiasi sahihi',
     'add_card_minimum_amount': 'Kiasi cha chini ni TZS @amount',
@@ -845,11 +644,10 @@ class LanguageSw extends Languages {
     'first_name': 'Jina la Kwanza',
     'last_name': 'Jina la Mwisho',
     'billing_details': 'Maelezo ya Malipo',
-    'billing_details_subtitle':
-        'Tafadhali toa anwani yako ya malipo kulingana na rekodi za benki yako',
+    'billing_details_subtitle': 'Tafadhali toa anwani yako ya malipo kulingana na rekodi za benki yako',
     'country': 'Nchi',
     'state': 'Jimbo',
-    'select_state': 'Chagua Jimbo',
+    'select_state': 'Chagua jimbo',
     'address': 'Anwani',
     'city': 'Jiji',
     'postal_code': 'Msimbo wa Posta',
@@ -872,8 +670,12 @@ class LanguageSw extends Languages {
     'address_is_required': 'Anwani inahitajika',
     'city_is_required': 'Jiji linahitajika',
     'postal_code_is_required': 'Msimbo wa posta unahitajika',
-    'invalid_session_response_from_server':
-        'Jibu batili la kikao kutoka kwa seva.',
+    'invalid_session_response_from_server': 'Jibu batili la kikao kutoka kwa seva.',
+    'help_selcom_go_do_better_by_rating_this_trip': 'Saidia Selcom Go kufanya vizuri zaidi kwa kukadiria safari hii',
+    'no_fare_estimate_returned_for_the_updated_pickup_location':
+        'Hakuna makadirio ya nauli yaliyopatikana kwa eneo jipya la kuchukuliwa.',
+    'please_enter_the4_digit_code_sent_to_phone_through_sms':
+        'Tafadhali ingiza tarakimu 4 zilizotumwa kwa \n@countryCode @phoneNumber kupitia SMS',
   };
 
   @override
@@ -882,9 +684,6 @@ class LanguageSw extends Languages {
   @override
   String get accountUnlinkedSuccessfully =>
       values['account_unlinked_successfully'] ?? '';
-
-  @override
-  String get accountVerified => values['account_verified'] ?? '';
 
   @override
   String get add => values['add'] ?? '';
@@ -909,9 +708,6 @@ class LanguageSw extends Languages {
       values['an_unexpected_error_occurred'] ?? '';
 
   @override
-  String get appTitle => values['app_title'] ?? '';
-
-  @override
   String get apply => values['apply'] ?? '';
 
   @override
@@ -921,9 +717,6 @@ class LanguageSw extends Languages {
   @override
   String get areYouSureYouWantToCancel =>
       values['are_you_sure_you_want_to_cancel'] ?? '';
-
-  @override
-  String get blinkYourEyes => values['blink_your_eyes'] ?? '';
 
   @override
   String get bookRide => values['book_ride'] ?? '';
@@ -988,9 +781,6 @@ class LanguageSw extends Languages {
 
   @override
   String get selcomPesaToGoWallet => values['selcom_pesa_to_go_wallet'] ?? '';
-
-  @override
-  String get useAnotherNumber => values['use_another_number'] ?? '';
 
   @override
   String get enterSelcomPesaCustomerPhoneHint =>
@@ -1063,17 +853,7 @@ class LanguageSw extends Languages {
   String get downloadApp => values['download_app'] ?? '';
 
   @override
-  String get mobileMoneyPhoneValue => values['mobile_money_phone_value'] ?? '';
-
-  @override
-  String get mobileMoneyAmountValue =>
-      values['mobile_money_amount_value'] ?? '';
-
-  @override
   String get selectAVehicle => values['select_a_vehicle'] ?? '';
-
-  @override
-  String get bookRideWithFare => values['book_ride_with_fare'] ?? '';
 
   @override
   String get bookingForName => values['booking_for_name'] ?? '';
@@ -1116,28 +896,13 @@ class LanguageSw extends Languages {
       values['call_driver_sheet_subtitle'] ?? '';
 
   @override
-  String get comingSoon => values['coming_soon'] ?? '';
-
-  @override
-  String get callingDriver => values['calling_driver'] ?? '';
-
-  @override
-  String get cameraPermission => values['camera_permission'] ?? '';
-
-  @override
   String get contactsPermission => values['contacts_permission'] ?? '';
 
   @override
   String get contactsAccessNeeded => values['contacts_access_needed'] ?? '';
 
   @override
-  String get cancelUpdate => values['cancel_update'] ?? '';
-
-  @override
   String get cancelAndPay => values['cancel_and_pay'] ?? '';
-
-  @override
-  String get cancelDialogsGallery => values['cancel_dialogs_gallery'] ?? '';
 
   @override
   String get cancelFailed => values['cancel_failed'] ?? '';
@@ -1152,14 +917,7 @@ class LanguageSw extends Languages {
   String get cancelled => values['cancelled'] ?? '';
 
   @override
-  String get cardDetail => values['card_detail'] ?? '';
-
-  @override
   String get cardNumber => values['card_number'] ?? '';
-
-  @override
-  String get cardEndingInPlaceholder =>
-      values['card_ending_in_placeholder'] ?? '';
 
   @override
   String get changeDropLocation => values['change_drop_location'] ?? '';
@@ -1171,9 +929,6 @@ class LanguageSw extends Languages {
   String get changeLocation => values['change_location'] ?? '';
 
   @override
-  String get changePhoneNumber => values['change_phone_number'] ?? '';
-
-  @override
   String get chat => values['chat'] ?? '';
 
   @override
@@ -1181,25 +936,10 @@ class LanguageSw extends Languages {
       values['chat_is_only_available_during_an_active_ride'] ?? '';
 
   @override
-  String get rideChatQuickPassengerComingToRoad =>
-      values['ride_chat_quick_passenger_coming_to_road'] ?? '';
-
-  @override
-  String get rideChatQuickPassengerThereIn5Mins =>
-      values['ride_chat_quick_passenger_there_in_5_mins'] ?? '';
-
-  @override
-  String get rideChatQuickPassengerBigBag =>
-      values['ride_chat_quick_passenger_big_bag'] ?? '';
-
-  @override
   String get checkYourPickupPoint => values['check_your_pickup_point'] ?? '';
 
   @override
   String get chooseRide => values['choose_ride'] ?? '';
-
-  @override
-  String get commentRequired => values['comment_required'] ?? '';
 
   @override
   String get confirmPickup => values['confirm_pickup'] ?? '';
@@ -1290,9 +1030,6 @@ class LanguageSw extends Languages {
   @override
   String get couldNotValidatePaymentPleaseTryAgain =>
       values['could_not_validate_payment_please_try_again'] ?? '';
-
-  @override
-  String get defaultLabel => values['default'] ?? '';
 
   @override
   String get defaultCurrencyTzs => values['default_currency_tzs'] ?? '';
@@ -1388,12 +1125,6 @@ class LanguageSw extends Languages {
       values['driver_finishing_nearby_trip'] ?? '';
 
   @override
-  String get driverAssigned => values['driver_assigned'] ?? '';
-
-  @override
-  String get driverArriving => values['driver_arriving'] ?? '';
-
-  @override
   String get driverEnRoute => values['driver_en_route'] ?? '';
 
   @override
@@ -1409,14 +1140,7 @@ class LanguageSw extends Languages {
   String get eGJohnDoe => values['e_gjohn_doe'] ?? '';
 
   @override
-  String get eGNameEmailComOptional =>
-      values['e_gname_email_com_optional'] ?? '';
-
-  @override
   String get editYourPhoneNumber => values['edit_your_phone_number'] ?? '';
-
-  @override
-  String get enterOtp => values['enter_otp'] ?? '';
 
   @override
   String get enterPhoneNumber => values['enter_phone_number'] ?? '';
@@ -1474,16 +1198,9 @@ class LanguageSw extends Languages {
   String get daysLeftCount => values['days_left_count'] ?? '';
 
   @override
-  String get expiresInTimer => values['expires_in_timer'] ?? '';
-
-  @override
   String get requestSentPleaseCompletePaymentOnSelcomPesaToBookYourRide =>
       values['request_sent_please_complete_payment_on_selcom_pesa_to_book_your_ride'] ??
       '';
-
-  @override
-  String get paymentCompletedSuccessfully =>
-      values['payment_completed_successfully'] ?? '';
 
   @override
   String get thankYouForRidingWithUsSeeYouOnTheNextTrip =>
@@ -1513,23 +1230,13 @@ class LanguageSw extends Languages {
   String get failedToSendOtp => values['failed_to_send_otp'] ?? '';
 
   @override
-  String get failedToUpdateFavoriteStatus =>
-      values['failed_to_update_favorite_status'] ?? '';
-
-  @override
   String get fallbackRideName => values['fallback_ride_name'] ?? '';
-
-  @override
-  String get favouriteLocations => values['favourite_locations'] ?? '';
 
   @override
   String get getStarted => values['get_started'] ?? '';
 
   @override
   String get homeLabel => values['home_label'] ?? '';
-
-  @override
-  String get getVerificationCode => values['get_verification_code'] ?? '';
 
   @override
   String get haventGotTheConfirmationCodeYet =>
@@ -1542,24 +1249,10 @@ class LanguageSw extends Languages {
   String get googleSignInCancelled => values['google_sign_in_cancelled'] ?? '';
 
   @override
-  String get googleSignInConfigError =>
-      values['google_sign_in_config_error'] ?? '';
-
-  @override
   String get googleSignInFailed => values['google_sign_in_failed'] ?? '';
 
   @override
-  String get googleSignInSuccess => values['google_sign_in_success'] ?? '';
-
-  @override
-  String get googleSignInUnsupported =>
-      values['google_sign_in_unsupported'] ?? '';
-
-  @override
   String get signInWithApple => values['sign_in_with_apple'] ?? '';
-
-  @override
-  String get appleSignInSuccess => values['apple_sign_in_success'] ?? '';
 
   @override
   String get appleSignInCancelled => values['apple_sign_in_cancelled'] ?? '';
@@ -1572,14 +1265,7 @@ class LanguageSw extends Languages {
       values['apple_sign_in_account_exists'] ?? '';
 
   @override
-  String get appleSignInNotAvailable =>
-      values['apple_sign_in_not_available'] ?? '';
-
-  @override
   String get signInWithFacebook => values['sign_in_with_facebook'] ?? '';
-
-  @override
-  String get facebookSignInSuccess => values['facebook_sign_in_success'] ?? '';
 
   @override
   String get facebookSignInCancelled =>
@@ -1596,10 +1282,6 @@ class LanguageSw extends Languages {
       values['having_trouble_logging_in'] ?? '';
 
   @override
-  String get helpSelcomGoDoBetterByRatingThisTrip =>
-      values['help_selcom_go_do_better_by_rating_this_trip'] ?? '';
-
-  @override
   String get howCanWeHelpYou => values['how_can_we_help_you'] ?? '';
 
   @override
@@ -1610,17 +1292,7 @@ class LanguageSw extends Languages {
   String get howWasYourRide => values['how_was_your_ride'] ?? '';
 
   @override
-  String get includesStops => values['includes_stops'] ?? '';
-
-  @override
   String get includesStopFee => values['includes_stop_fee'] ?? '';
-
-  @override
-  String get forAddedStop => values['for_added_stop'] ?? '';
-
-  @override
-  String get initiatingCallToDriverphone =>
-      values['initiating_call_to_driverphone'] ?? '';
 
   @override
   String get keepRide => values['keep_ride'] ?? '';
@@ -1709,10 +1381,6 @@ class LanguageSw extends Languages {
   String get nameCannotBeEmpty => values['name_cannot_be_empty'] ?? '';
 
   @override
-  String get nameContainsInvalidCharacters =>
-      values['name_contains_invalid_characters'] ?? '';
-
-  @override
   String get nameIsRequired => values['name_is_required'] ?? '';
 
   @override
@@ -1725,24 +1393,12 @@ class LanguageSw extends Languages {
   String get no => values['no'] ?? '';
 
   @override
-  String get noConfigurableSettingsAreAvailableRightNow =>
-      values['no_configurable_settings_are_available_right_now'] ?? '';
-
-  @override
   String get noDriverFoundForYourRequestPleaseTryAgain =>
       values['no_driver_found_for_your_request_please_try_again'] ?? '';
 
   @override
-  String get noDriversFoundWithin9MinutesCancellingRide =>
-      values['no_drivers_found_within9_minutes_cancelling_ride'] ?? '';
-
-  @override
   String get noDriversNearbyPleaseTryAgainLater =>
       values['no_drivers_nearby_please_try_again_later'] ?? '';
-
-  @override
-  String get noFareEstimateReturnedForTheUpdatedPickupLocation =>
-      values['no_fare_estimate_returned_for_the_updated_pickup_location'] ?? '';
 
   @override
   String get noFavoriteLocationsYet =>
@@ -1777,9 +1433,6 @@ class LanguageSw extends Languages {
   @override
   String get notificationPhoneSubtitle =>
       values['notification_phone_subtitle'] ?? '';
-
-  @override
-  String get notificationPhoneTitle => values['notification_phone_title'] ?? '';
 
   @override
   String get enterPassengerFullName =>
@@ -1821,55 +1474,10 @@ class LanguageSw extends Languages {
   String get pleaseEnterLabel => values['please_enter_label'] ?? '';
 
   @override
-  String get orDivider => values['or_divider'] ?? '';
-
-  @override
-  String get otpResentSuccessfully => values['otp_resent_successfully'] ?? '';
-
-  @override
   String get past => values['past'] ?? '';
 
   @override
-  String get payUsing => values['pay_using'] ?? '';
-
-  @override
   String get payment => values['payment'] ?? '';
-
-  @override
-  String get processing => values['processing'] ?? '';
-
-  @override
-  String get updatingPayment => values['updating_payment'] ?? '';
-
-  @override
-  String get recalculatingRoute => values['recalculating_route'] ?? '';
-
-  @override
-  String get dropOffUpdated => values['drop_off_updated'] ?? '';
-
-  @override
-  String get routeUpdated => values['route_updated'] ?? '';
-
-  @override
-  String get adjustingPaymentHoldForNewRoute =>
-      values['adjusting_payment_hold_for_new_route'] ?? '';
-
-  @override
-  String get syncingNewRouteWithDriver =>
-      values['syncing_new_route_with_driver'] ?? '';
-
-  @override
-  String get driverReceivedNewDropOffLocation =>
-      values['driver_received_new_drop_off_location'] ?? '';
-
-  @override
-  String get driverReceivedNewStops =>
-      values['driver_received_new_stops'] ?? '';
-
-  @override
-  String get pleaseWaitWhileWeProcessYourRequest =>
-      values['please_wait_while_we_process_your_request'] ?? '';
-
 
   @override
   String get paymentNotConfirmed => values['payment_not_confirmed'] ?? '';
@@ -1931,14 +1539,6 @@ class LanguageSw extends Languages {
   String get pleaseEnterAValidName => values['please_enter_a_valid_name'] ?? '';
 
   @override
-  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms =>
-      values['please_enter_the4_digit_code_sent_to_phone_through_sms'] ?? '';
-
-  @override
-  String get pleaseEnterYourDetailsToContinue =>
-      values['please_enter_your_details_to_continue'] ?? '';
-
-  @override
   String get pleaseEnterAtLeastOneDestination =>
       values['please_enter_at_least_one_destination'] ?? '';
 
@@ -1955,15 +1555,8 @@ class LanguageSw extends Languages {
       values['please_select_at_least_one_destination'] ?? '';
 
   @override
-  String get pleaseSelectAtLeastOneTagBeforeSubmitting =>
-      values['please_select_at_least_one_tag_before_submitting'] ?? '';
-
-  @override
   String get pleaseTellUsWhatWentWrongOrHowWeCanImprove =>
       values['please_tell_us_what_went_wrong_or_how_we_can_improve'] ?? '';
-
-  @override
-  String get pleaseTryAgain => values['please_try_again'] ?? '';
 
   @override
   String get privacyPolicy => values['privacy_policy'] ?? '';
@@ -1979,9 +1572,6 @@ class LanguageSw extends Languages {
 
   @override
   String get rideReceipt => values['ride_receipt'] ?? '';
-
-  @override
-  String get refWithId => values['ref_with_id'] ?? '';
 
   @override
   String get transactionIdWithValue =>
@@ -2065,9 +1655,6 @@ class LanguageSw extends Languages {
       values['promo_code_not_valid_for_vehicle'] ?? '';
 
   @override
-  String get promoAutoApplied => values['promo_auto_applied'] ?? '';
-
-  @override
   String get promoAutoAppliedBadge => values['promo_auto_applied_badge'] ?? '';
 
   @override
@@ -2097,9 +1684,6 @@ class LanguageSw extends Languages {
   String get rating => values['rating'] ?? '';
 
   @override
-  String get ratingGiven => values['rating_given'] ?? '';
-
-  @override
   String get ratingRequired => values['rating_required'] ?? '';
 
   @override
@@ -2107,9 +1691,6 @@ class LanguageSw extends Languages {
 
   @override
   String get recentLocation => values['recent_location'] ?? '';
-
-  @override
-  String get removeAccount => values['remove_account'] ?? '';
 
   @override
   String get remove => values['remove'] ?? '';
@@ -2123,9 +1704,6 @@ class LanguageSw extends Languages {
 
   @override
   String get resendCode => values['resend_code'] ?? '';
-
-  @override
-  String get resendOtp => values['resend_otp'] ?? '';
 
   @override
   String get retry => values['retry'] ?? '';
@@ -2239,10 +1817,6 @@ class LanguageSw extends Languages {
       values['failed_to_load_ride_details'] ?? '';
 
   @override
-  String get couldNotOpenPdfWithMessage =>
-      values['could_not_open_pdf_with_message'] ?? '';
-
-  @override
   String get couldNotDownloadSlipPleaseTryAgainLater =>
       values['could_not_download_slip_please_try_again_later'] ?? '';
 
@@ -2262,9 +1836,6 @@ class LanguageSw extends Languages {
   String get ridePinProtection => values['ride_pin_protection'] ?? '';
 
   @override
-  String get safetyAndPrivacy => values['safety_and_privacy'] ?? '';
-
-  @override
   String get safetyOptions => values['safety_options'] ?? '';
 
   @override
@@ -2273,9 +1844,6 @@ class LanguageSw extends Languages {
   @override
   String get saveThisAddressFirstThenYouCanBookFromHere =>
       values['save_this_address_first_then_you_can_book_from_here'] ?? '';
-
-  @override
-  String get savingChanges => values['saving_changes'] ?? '';
 
   @override
   String get searchDestination => values['search_destination'] ?? '';
@@ -2300,10 +1868,6 @@ class LanguageSw extends Languages {
 
   @override
   String get normalCallSubtitle => values['normal_call_subtitle'] ?? '';
-
-  @override
-  String get inAppCallingWillBeAvailableSoon =>
-      values['in_app_calling_will_be_available_soon'] ?? '';
 
   @override
   String get updateFailed => values['update_failed'] ?? '';
@@ -2332,9 +1896,6 @@ class LanguageSw extends Languages {
       values['drivers_app_couldnt_be_updated_billing_adjusted_back'] ?? '';
 
   @override
-  String get searchTimeout => values['search_timeout'] ?? '';
-
-  @override
   String
   get securityAndPreferenceControlsMoreSettingsWillAppearHereAsTheyAreEnable =>
       values['security_and_preference_controls_more_settings_will_appear_here_as_they_are_enable'] ??
@@ -2346,9 +1907,6 @@ class LanguageSw extends Languages {
   @override
   String get selectANearbyPointForEasierPickup =>
       values['select_anearby_point_for_easier_pickup'] ?? '';
-
-  @override
-  String get selectAPaymentMethod => values['select_apayment_method'] ?? '';
 
   @override
   String get selectCountry => values['select_country'] ?? '';
@@ -2369,16 +1927,6 @@ class LanguageSw extends Languages {
   String get selectAReasonSubtitle => values['select_a_reason_subtitle'] ?? '';
 
   @override
-  String get selectAVehicleAndPaymentMethod =>
-      values['select_avehicle_and_payment_method'] ?? '';
-
-  @override
-  String get selectPayment => values['select_payment'] ?? '';
-
-  @override
-  String get selfieCaptureFailed => values['selfie_capture_failed'] ?? '';
-
-  @override
   String get sessionExpired => values['session_expired'] ?? '';
 
   @override
@@ -2391,36 +1939,13 @@ class LanguageSw extends Languages {
   String get skipFailed => values['skip_failed'] ?? '';
 
   @override
-  String get smile => values['smile'] ?? '';
-
-  @override
   String get stop => values['stop'] ?? '';
-
-  @override
-  String get socketOff => values['socket_off'] ?? '';
-
-  @override
-  String get socketOffError => values['socket_off_error'] ?? '';
-
-  @override
-  String get socketOnDrivers => values['socket_on_drivers'] ?? '';
 
   @override
   String get startTypingPickup => values['start_typing_pickup'] ?? '';
 
   @override
   String get startTypingDestination => values['start_typing_destination'] ?? '';
-
-  @override
-  String get stayNotified => values['stay_notified'] ?? '';
-
-  @override
-  String get enableNotificationsForRideUpdates =>
-      values['enable_notifications_for_ride_updates'] ?? '';
-
-  @override
-  String get stepsToConnectSelcomPesa =>
-      values['steps_to_connect_selcom_pesa'] ?? '';
 
   @override
   String get submitFailed => values['submit_failed'] ?? '';
@@ -2485,9 +2010,6 @@ class LanguageSw extends Languages {
   String get viewMore => values['view_more'] ?? '';
 
   @override
-  String get rideInProgress => values['ride_in_progress'] ?? '';
-
-  @override
   String get ongoing => values['ongoing'] ?? '';
 
   @override
@@ -2503,19 +2025,7 @@ class LanguageSw extends Languages {
   String get unknownLocation => values['unknown_location'] ?? '';
 
   @override
-  String get nearDestination => values['near_destination'] ?? '';
-
-  @override
   String get activeRide => values['active_ride'] ?? '';
-
-  @override
-  String get yourRide => values['your_ride'] ?? '';
-
-  @override
-  String get bookedForPassenger => values['booked_for_passenger'] ?? '';
-
-  @override
-  String get bookedForSomeoneElse => values['booked_for_someone_else'] ?? '';
 
   @override
   String get bookedForOtherLimitReached =>
@@ -2562,13 +2072,6 @@ class LanguageSw extends Languages {
       values['are_you_sure_you_want_to_add_this_address_as'] ?? '';
 
   @override
-  String get tagRequired => values['tag_required'] ?? '';
-
-  @override
-  String get tapEachButtonToPreviewThePopupUi =>
-      values['tap_each_button_to_preview_the_popup_ui'] ?? '';
-
-  @override
   String get tellUsMoreAboutYourExperience =>
       values['tell_us_more_about_your_experience'] ?? '';
 
@@ -2598,18 +2101,11 @@ class LanguageSw extends Languages {
   String get timeout => values['timeout'] ?? '';
 
   @override
-  String get totalAmount => values['total_amount'] ?? '';
-
-  @override
   String get totalFare => values['total_fare'] ?? '';
 
   @override
   String get unableToInitiateBookingRightNow =>
       values['unable_to_initiate_booking_right_now'] ?? '';
-
-  @override
-  String get unableToOpenPhoneDialer =>
-      values['unable_to_open_phone_dialer'] ?? '';
 
   @override
   String get unableToOpenRideDetails =>
@@ -2640,22 +2136,7 @@ class LanguageSw extends Languages {
   String get value0000000000000000 => values['value0000000000000000'] ?? '';
 
   @override
-  String get value1StandardConfirmation =>
-      values['value1_standard_confirmation'] ?? '';
-
-  @override
-  String get value20PercentOffOnYourFirstRideBooking =>
-      values['value20_percent_off_on_your_first_ride_booking'] ?? '';
-
-  @override
   String get value255 => values['value255'] ?? '';
-
-  @override
-  String get value2AssignmentWarningFee =>
-      values['value2_assignment_warning_fee'] ?? '';
-
-  @override
-  String get value3ReasonSelection => values['value3_reason_selection'] ?? '';
 
   @override
   String get vehicleType => values['vehicle_type'] ?? '';
@@ -2671,12 +2152,6 @@ class LanguageSw extends Languages {
 
   @override
   String get verifyPhoneNumber => values['verify_phone_number'] ?? '';
-
-  @override
-  String get verifyYourSelfie => values['verify_your_selfie'] ?? '';
-
-  @override
-  String get viewTrip => values['view_trip'] ?? '';
 
   @override
   String get viewRide => values['view_ride'] ?? '';
@@ -2729,9 +2204,6 @@ class LanguageSw extends Languages {
   @override
   String get walletStatementRangeCappedHint =>
       values['wallet_statement_range_capped_hint'] ?? '';
-
-  @override
-  String get showVcn => values['show_vcn'] ?? '';
 
   @override
   String get noTransactionsYet => values['no_transactions_yet'] ?? '';
@@ -2801,9 +2273,6 @@ class LanguageSw extends Languages {
       '';
 
   @override
-  String get yourLinkedAccount => values['your_linked_account'] ?? '';
-
-  @override
   String get yourRatingHasBeenSubmitted =>
       values['your_rating_has_been_submitted'] ?? '';
 
@@ -2829,22 +2298,10 @@ class LanguageSw extends Languages {
   String get email => values['email'] ?? '';
 
   @override
-  String get enterYourEmailOptional =>
-      values['enter_your_email_optional'] ?? '';
-
-  @override
   String get enterYourEmail => values['enter_your_email'] ?? '';
 
   @override
   String get emailIsRequired => values['email_is_required'] ?? '';
-
-  @override
-  String get iAgreeToTheTermsAndConditions =>
-      values['i_agree_to_the_terms_and_conditions'] ?? '';
-
-  @override
-  String get pleaseAcceptTermsAndConditions =>
-      values['please_accept_terms_and_conditions'] ?? '';
 
   @override
   String
@@ -2875,9 +2332,6 @@ class LanguageSw extends Languages {
   String get exitApp => values['exit_app'] ?? '';
 
   @override
-  String get exitAppTitle => values['exit_app_title'] ?? '';
-
-  @override
   String get exitAppMessage => values['exit_app_message'] ?? '';
 
   @override
@@ -2894,9 +2348,6 @@ class LanguageSw extends Languages {
   String get cvv => values['cvv'] ?? '';
 
   @override
-  String get setANickName => values['set_a_nick_name'] ?? '';
-
-  @override
   String get pleaseEnterYourPhoneNumber =>
       values['please_enter_your_phone_number'] ?? '';
 
@@ -2905,36 +2356,8 @@ class LanguageSw extends Languages {
       values['please_provide_email_or_phone'] ?? '';
 
   @override
-  String get enterPhoneNumberOptional =>
-      values['enter_phone_number_optional'] ?? '';
-
-  @override
   String get pleaseEnterAValidPhoneNumber =>
       values['please_enter_a_valid_phone_number'] ?? '';
-
-  @override
-  String get invalidOtpPleaseTryAgain =>
-      values['invalid_otp_please_try_again'] ?? '';
-
-  @override
-  String get cameraAccessNeededForSelfieVerification =>
-      values['camera_access_needed_for_selfie_verification'] ?? '';
-
-  @override
-  String get cardReadyToUseYouCanManageOrRemoveAnytime =>
-      values['card_ready_to_use_you_can_manage_or_remove_anytime'] ?? '';
-
-  @override
-  String get selcomPesaConnectStep1 =>
-      values['selcom_pesa_connect_step_1'] ?? '';
-
-  @override
-  String get selcomPesaConnectStep2 =>
-      values['selcom_pesa_connect_step_2'] ?? '';
-
-  @override
-  String get selcomPesaConnectStep3 =>
-      values['selcom_pesa_connect_step_3'] ?? '';
 
   @override
   String get selcomPesaLinkRequestSentMessage =>
@@ -2945,27 +2368,12 @@ class LanguageSw extends Languages {
       values['selcom_pesa_already_linked_message'] ?? '';
 
   @override
-  String get linkAnotherAccount => values['link_another_account'] ?? '';
-
-  @override
-  String get selcomPesaPendingApproval =>
-      values['selcom_pesa_pending_approval'] ?? '';
-
-  @override
   String get selcomPesaMaxLinkedAccounts =>
       values['selcom_pesa_max_linked_accounts'] ?? '';
 
   @override
   String get selcomPesaMultipleLinked =>
       values['selcom_pesa_multiple_linked'] ?? '';
-
-  @override
-  String get selcomPesaConnectStep4 =>
-      values['selcom_pesa_connect_step_4'] ?? '';
-
-  @override
-  String get otpSentToYourPhoneNumber =>
-      values['otp_sent_to_your_phone_number'] ?? '';
 
   @override
   String get requireVerificationPinBeforeStartingRide =>
@@ -2980,9 +2388,6 @@ class LanguageSw extends Languages {
 
   @override
   String get currentStatusOptional => values['current_status_optional'] ?? '';
-
-  @override
-  String get takeSelfie => values['take_selfie'] ?? '';
 
   @override
   String get errorPickingImage => values['error_picking_image'] ?? '';
@@ -3024,9 +2429,6 @@ class LanguageSw extends Languages {
 
   @override
   String get home => values['home'] ?? '';
-
-  @override
-  String get loading => values['loading'] ?? '';
 
   @override
   String get minutesCount => values['minutes_count'] ?? '';
@@ -3077,10 +2479,6 @@ class LanguageSw extends Languages {
   @override
   String get requestQueueFullPleaseTryAgainLater =>
       values['request_queue_full_please_try_again_later'] ?? '';
-
-  @override
-  String get duplicateRequestAlreadyQueued =>
-      values['duplicate_request_already_queued'] ?? '';
 
   @override
   String get requestQueueCleared => values['request_queue_cleared'] ?? '';
@@ -3187,12 +2585,6 @@ class LanguageSw extends Languages {
       values['connect_selcom_pesa_ride_charges_subtitle'] ?? '';
 
   @override
-  String get connectingDrivers => values['connecting_drivers'] ?? '';
-
-  @override
-  String get connectingSocket => values['connecting_socket'] ?? '';
-
-  @override
   String get couldNotRefreshFareAfterPickup =>
       values['could_not_refresh_fare_after_pickup'] ?? '';
 
@@ -3203,12 +2595,6 @@ class LanguageSw extends Languages {
   String get displayNameRide => values['display_name_ride'] ?? '';
 
   @override
-  String get driversOnlineCount => values['drivers_online_count'] ?? '';
-
-  @override
-  String get noDriversNearbyBadge => values['no_drivers_nearby_badge'] ?? '';
-
-  @override
   String get etaBadge => values['eta_badge'] ?? '';
 
   @override
@@ -3217,9 +2603,6 @@ class LanguageSw extends Languages {
   @override
   String get fareIncreasePaymentAuthorization =>
       values['fare_increase_payment_authorization'] ?? '';
-
-  @override
-  String get mastercardVisa => values['mastercard_visa'] ?? '';
 
   @override
   String get maxStopsOnly => values['max_stops_only'] ?? '';
@@ -3259,9 +2642,6 @@ class LanguageSw extends Languages {
   @override
   String get selcomPesaLinkedNumber =>
       values['selcom_pesa_linked_number'] ?? '';
-
-  @override
-  String get socketDisconnected => values['socket_disconnected'] ?? '';
 
   @override
   String get stopNumber => values['stop_number'] ?? '';
@@ -3311,9 +2691,6 @@ class LanguageSw extends Languages {
 
   @override
   String get noSavedCardsFound => values['no_saved_cards_found'] ?? '';
-
-  @override
-  String get addNewCardText => values['add_new_card_text'] ?? '';
 
   @override
   String get amountIsRequired => values['amount_is_required'] ?? '';
@@ -3418,4 +2795,16 @@ class LanguageSw extends Languages {
   @override
   String get invalidSessionResponseFromServer =>
       values['invalid_session_response_from_server'] ?? '';
+
+  @override
+  String get helpSelcomGoDoBetterByRatingThisTrip =>
+      values['help_selcom_go_do_better_by_rating_this_trip'] ?? '';
+
+  @override
+  String get noFareEstimateReturnedForTheUpdatedPickupLocation =>
+      values['no_fare_estimate_returned_for_the_updated_pickup_location'] ?? '';
+
+  @override
+  String get pleaseEnterThe4DigitCodeSentToPhoneThroughSms =>
+      values['please_enter_the4_digit_code_sent_to_phone_through_sms'] ?? '';
 }
