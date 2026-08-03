@@ -8,10 +8,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 
-/// Route deviation / cancellation-request card for the in-progress ride sheet.
+/// Route-deviation card for the in-progress ride sheet (socket/REST only).
 ///
-/// Renders server title/subtitle as-is. Tone follows [state] (`off_route` vs
-/// `on_route`), not `flagged`.
+/// Having-trouble cancel requests use [HavingTroubleCancellationBanner].
 class RouteDeviationBanner extends StatelessWidget {
   const RouteDeviationBanner({super.key, required this.controller});
 
@@ -25,25 +24,22 @@ class RouteDeviationBanner extends StatelessWidget {
       }
 
       final offRoute = controller.isRouteDeviationOffRoute;
-      final pending = controller.isCancellationRequestPending;
-      final rejected = controller.isCancellationRequestRejected;
+      final pending = controller.isDeviationCancellationPending;
+      final rejected = controller.isDeviationCancellationRejected;
       final onRoute = !offRoute && !pending && !rejected;
+      final tone = rejected
+          ? _DeviationTone.neutral
+          : offRoute
+          ? _DeviationTone.warning
+          : _DeviationTone.success;
 
       return _DeviationCard(
-        tone: rejected
-            ? _DeviationTone.neutral
-            : offRoute
-            ? _DeviationTone.warning
-            : _DeviationTone.success,
+        tone: tone,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _HeaderRow(
-              tone: rejected
-                  ? _DeviationTone.neutral
-                  : offRoute
-                  ? _DeviationTone.warning
-                  : _DeviationTone.success,
+              tone: tone,
               title: controller.routeDeviationBannerTitle,
               subtitle: controller.routeDeviationBannerSubtitle,
               distanceText: offRoute
@@ -56,13 +52,13 @@ class RouteDeviationBanner extends StatelessWidget {
               SizedBox(height: 12.h),
               _StatusCallout(
                 text: AppStrings.cancellationRequestSentWithTicket.trParams({
-                  'ticket': controller.cancellationRequestTicketNumber,
+                  'ticket': controller.deviationCancellationTicketNumber,
                 }),
               ),
               SizedBox(height: 12.h),
               AppPrimaryButton(
                 label: AppStrings.withdrawRequest.tr,
-                onPressed: controller.withdrawCancellationRequest,
+                onPressed: controller.withdrawDeviationCancellationRequest,
                 outlined: true,
                 outlinedBorderColor: AppColors.borderWalletCard,
                 outlinedTextColor: AppColors.textHeading,
@@ -77,9 +73,9 @@ class RouteDeviationBanner extends StatelessWidget {
               SizedBox(height: 12.h),
               _StatusCallout(
                 text: AppStrings.supportDeclinedCancellation.tr,
-                note: controller.cancellationRequestNote.isEmpty
+                note: controller.deviationCancellationNote.isEmpty
                     ? null
-                    : controller.cancellationRequestNote,
+                    : controller.deviationCancellationNote,
               ),
               if (controller.canRequestCancellationFromDeviation) ...[
                 SizedBox(height: 12.h),
@@ -177,6 +173,9 @@ class _HeaderRow extends StatelessWidget {
         icon = Icons.info_outline_rounded;
     }
 
+    final hasText =
+        title.isNotEmpty || subtitle.isNotEmpty || distanceText.isNotEmpty;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,58 +193,61 @@ class _HeaderRow extends StatelessWidget {
           ),
           child: Icon(icon, size: 20.sp, color: accent),
         ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (title.isNotEmpty)
-                Text(
-                  title,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textHeading,
-                    height: 1.3,
-                  ),
-                ),
-              if (distanceText.isNotEmpty) ...[
-                SizedBox(height: 6.h),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8.w,
-                    vertical: 3.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(6.r),
-                    border: Border.all(
-                      color: accent.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    distanceText,
-                    style: AppTextStyles.homeCaption.copyWith(
-                      color: accent,
+        if (hasText) ...[
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title.isNotEmpty)
+                  Text(
+                    title,
+                    style: AppTextStyles.homeSubtitle.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: 11.sp,
+                      color: AppColors.textHeading,
+                      height: 1.3,
                     ),
                   ),
-                ),
-              ],
-              if (subtitle.isNotEmpty) ...[
-                SizedBox(height: 6.h),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.homeSubtitle.copyWith(
-                    color: AppColors.textSlate,
-                    height: 1.4,
-                    fontSize: 13.sp,
+                if (distanceText.isNotEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 3.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      distanceText,
+                      style: AppTextStyles.homeCaption.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11.sp,
+                      ),
+                    ),
                   ),
-                ),
+                ],
+                if (subtitle.isNotEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.homeSubtitle.copyWith(
+                      color: AppColors.textSlate,
+                      height: 1.4,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
+        ] else
+          const Spacer(),
         if (showDismiss)
           InkWell(
             onTap: onDismiss,
@@ -316,21 +318,40 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!controller.canRequestCancellationFromDeviation) {
-      return const SizedBox.shrink();
-    }
+    final showRequest = controller.canRequestCancellationFromDeviation;
+    final labelStyle = AppTextStyles.homeSubtitle.copyWith(
+      fontWeight: FontWeight.w700,
+      fontSize: 12.5.sp,
+      height: 1.2,
+    );
 
-    return AppPrimaryButton(
-      label: AppStrings.requestToCancel.tr,
-      onPressed: controller.openRequestCancellationSheet,
-      height: 44.h,
-      borderRadius: 12.r,
-      labelStyle: AppTextStyles.homeSubtitle.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 12.5.sp,
-        height: 1.2,
-        color: AppColors.white,
-      ),
+    return Row(
+      children: [
+        Expanded(
+          child: AppPrimaryButton(
+            label: AppStrings.continueToTrip.tr,
+            onPressed: controller.continueToTripFromDeviation,
+            outlined: true,
+            outlinedBorderColor: AppColors.borderWalletCard,
+            outlinedTextColor: AppColors.textHeading,
+            height: 44.h,
+            borderRadius: 12.r,
+            labelStyle: labelStyle.copyWith(color: AppColors.textHeading),
+          ),
+        ),
+        if (showRequest) ...[
+          SizedBox(width: 8.w),
+          Expanded(
+            child: AppPrimaryButton(
+              label: AppStrings.requestToCancel.tr,
+              onPressed: controller.openRequestCancellationSheet,
+              height: 44.h,
+              borderRadius: 12.r,
+              labelStyle: labelStyle.copyWith(color: AppColors.white),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

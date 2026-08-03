@@ -22,6 +22,7 @@ import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../widgets/having_trouble_cancellation_banner.dart';
 import '../widgets/route_deviation_banner.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
@@ -1405,6 +1406,15 @@ class DriverAcceptedScreen extends StatelessWidget {
           return Padding(
             padding: EdgeInsets.only(bottom: 14.h),
             child: RouteDeviationBanner(controller: c),
+          );
+        }),
+        Obx(() {
+          if (!c.shouldShowManualCancellationBanner) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: EdgeInsets.only(bottom: 14.h),
+            child: HavingTroubleCancellationBanner(controller: c),
           );
         }),
         Row(

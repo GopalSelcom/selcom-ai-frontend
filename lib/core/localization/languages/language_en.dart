@@ -166,7 +166,12 @@ class LanguageEn extends Languages {
         'This ride is no longer active. Please refresh.',
     'cancellation_request_already_decided':
         'Support already decided this request.',
+    'cancellation_request_already_pending':
+        'Your cancellation request is already under review. Ticket @ticket',
+    'cancellation_request_was_withdrawn':
+        'Your previous cancellation request was withdrawn. You can submit a new one.',
     'back_on_route': 'Back on route',
+    'continue_to_trip': 'Continue to trip',
     'continue': 'Continue',
     'sign_in_with_google': 'Sign in with Google',
     'didnt_receive_the_code': "Didn't receive the code?",
@@ -1339,7 +1344,18 @@ class LanguageEn extends Languages {
       values['cancellation_request_already_decided'] ?? '';
 
   @override
+  String get cancellationRequestAlreadyPending =>
+      values['cancellation_request_already_pending'] ?? '';
+
+  @override
+  String get cancellationRequestWasWithdrawn =>
+      values['cancellation_request_was_withdrawn'] ?? '';
+
+  @override
   String get backOnRoute => values['back_on_route'] ?? '';
+
+  @override
+  String get continueToTrip => values['continue_to_trip'] ?? '';
 
   @override
   String get continueLabel => values['continue'] ?? '';

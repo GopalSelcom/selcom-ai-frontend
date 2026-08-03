@@ -124,7 +124,10 @@ abstract class Languages {
   String get couldNotLoadCancellationReasons;
   String get rideNotActiveRefresh;
   String get cancellationRequestAlreadyDecided;
+  String get cancellationRequestAlreadyPending;
+  String get cancellationRequestWasWithdrawn;
   String get backOnRoute;
+  String get continueToTrip;
   String get continueLabel;
   String get signInWithGoogle;
   String get didntReceiveTheCode;

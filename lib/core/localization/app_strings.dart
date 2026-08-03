@@ -174,7 +174,12 @@ class AppStrings {
   static const String rideNotActiveRefresh = 'ride_not_active_refresh';
   static const String cancellationRequestAlreadyDecided =
       'cancellation_request_already_decided';
+  static const String cancellationRequestAlreadyPending =
+      'cancellation_request_already_pending';
+  static const String cancellationRequestWasWithdrawn =
+      'cancellation_request_was_withdrawn';
   static const String backOnRoute = 'back_on_route';
+  static const String continueToTrip = 'continue_to_trip';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
   static const String couldNotCancelTryAgain = 'could_not_cancel_try_again';
   static const String couldNotResolveVehicleTypeIdPleaseTryAgain =

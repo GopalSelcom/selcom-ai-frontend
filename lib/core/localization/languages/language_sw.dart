@@ -159,7 +159,12 @@ class LanguageSw extends Languages {
         'Safari hii haipo tena. Tafadhali onyesha upya.',
     'cancellation_request_already_decided':
         'Huduma tayari imeamua ombi hili.',
+    'cancellation_request_already_pending':
+        'Ombi lako la kughairi tayari linakaguliwa. Tiketi @ticket',
+    'cancellation_request_was_withdrawn':
+        'Ombi lako la awali la kughairi lilifutwa. Unaweza kuwasilisha jipya.',
     'back_on_route': 'Umerudi kwenye njia',
+    'continue_to_trip': 'Endelea na safari',
     'continue': 'Endelea',
     'sign_in_with_google': 'Ingia na Google',
     'didnt_receive_the_code': 'Hukupokea msimbo?',
@@ -1259,7 +1264,18 @@ class LanguageSw extends Languages {
       values['cancellation_request_already_decided'] ?? '';
 
   @override
+  String get cancellationRequestAlreadyPending =>
+      values['cancellation_request_already_pending'] ?? '';
+
+  @override
+  String get cancellationRequestWasWithdrawn =>
+      values['cancellation_request_was_withdrawn'] ?? '';
+
+  @override
   String get backOnRoute => values['back_on_route'] ?? '';
+
+  @override
+  String get continueToTrip => values['continue_to_trip'] ?? '';
 
   @override
   String get continueLabel => values['continue'] ?? '';
