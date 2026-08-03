@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:http_parser/http_parser.dart';
 
+import '../../main.dart';
 import '../../shared/utils/app_dialogs.dart';
 import '../constants/app_assets.dart';
 import '../localization/app_strings.dart';
@@ -23,6 +24,7 @@ import '../widgets/svg_picture_asset.dart';
 import '../config/app_config.dart';
 import '../utils/app_logger.dart';
 import 'api_constants.dart';
+import 'certificate_pinning.dart';
 import 'connectivity_probe.dart';
 import 'failed_request_queue.dart';
 import 'network_connectivity_service.dart';
@@ -101,6 +103,10 @@ class ApiRequest {
   /// Only endpoints that explicitly opt-in will retry.
   final ApiRetryPolicy? retryPolicy;
 
+  /// When true (default), use the pinned Dio client for this request.
+  /// Forced off for VAPT builds and custom base URLs (same as Duka).
+  final bool isCertificateRequired;
+
   ApiRequest({
     required this.endpoint,
     required this.method,
@@ -116,6 +122,7 @@ class ApiRequest {
     this.multipartFiles,
     this.shouldQueue = true,
     this.retryPolicy,
+    this.isCertificateRequired = true,
   });
 }
 
@@ -168,6 +175,29 @@ class ApiService {
     _defaultDio.interceptors.add(_authInterceptor);
   }
 
+  /// Applies the pinned [HttpClient] from [CertificatePinning] to [_defaultDio].
+  void applyCertificatePinning() {
+    if (isVAPTBuild) {
+      clearCertificatePinning();
+      return;
+    }
+    final pinned = CertificatePinning.instance.pinnedHttpClient;
+    if (pinned == null) {
+      AppLogger.w(
+        'No pinned HttpClient available — leaving default adapter',
+        tag: 'ApiService',
+      );
+      return;
+    }
+    attachPinnedHttpClientAdapter(_defaultDio, pinned);
+    AppLogger.d('Pinned HttpClient attached to default Dio', tag: 'ApiService');
+  }
+
+  /// Restores an unpinned Dio adapter (VAPT / bypass).
+  void clearCertificatePinning() {
+    attachDefaultHttpClientAdapter(_defaultDio);
+  }
+
   String get baseUrl => AppConfig.apiHost;
 
   // ── Cancel All Requests ──
@@ -211,6 +241,12 @@ class ApiService {
     // Recreate and re-add auth interceptor
     _authInterceptor = AuthInterceptor(apiService: this);
     _defaultDio.interceptors.add(_authInterceptor);
+
+    // Re-attach pinning if previously enabled
+    if (!isVAPTBuild && CertificatePinning.instance.hasPin) {
+      CertificatePinning.instance.createPinnedHttpClient();
+      applyCertificatePinning();
+    }
   }
 
   // ── Internet Check ──
@@ -224,10 +260,23 @@ class ApiService {
   // ── Dio Client Selection ──
 
   Dio _getClient(ApiRequest request) {
+    // Match Duka: VAPT or custom base URL → unpinned client.
+    var isCertificateRequired = request.isCertificateRequired;
+    if (isVAPTBuild || request.customBaseUrl.isNotEmpty) {
+      isCertificateRequired = false;
+    }
+
     if (request.customBaseUrl.isNotEmpty) {
       _customDio.options.baseUrl = request.customBaseUrl;
       return _customDio;
     }
+
+    if (!isVAPTBuild &&
+        isCertificateRequired &&
+        CertificatePinning.instance.hasPin) {
+      applyCertificatePinning();
+    }
+
     return _defaultDio;
   }
 
@@ -360,6 +409,35 @@ class ApiService {
         isError: true,
         errorMessage: e.message,
       );
+
+      // Certificate rotation / MitM: refresh pin and rebuild Dio adapter once.
+      if (_isCertificateHandshakeError(e) &&
+          !isVAPTBuild &&
+          request.isCertificateRequired &&
+          request.customBaseUrl.isEmpty) {
+        AppLogger.w(
+          'Certificate handshake failure — re-initializing pinning',
+          tag: 'ApiService',
+        );
+        try {
+          await CertificatePinning.instance.init();
+          applyCertificatePinning();
+          final retried = await client.request(
+            fullUrl,
+            data: finalBody.isNotEmpty ? finalBody : null,
+            queryParameters: request.queryParams,
+            options: Options(
+              method: _methodToString(request.method),
+              headers: finalHeaders,
+            ),
+          );
+          return retried;
+        } on DioException catch (retryError) {
+          return _handleDioError(retryError, request);
+        } catch (_) {
+          // Fall through to normal error handling.
+        }
+      }
 
       // Retry is request-driven (configured by the caller) to keep transport
       // generic and avoid endpoint-specific rules inside ApiService.
@@ -599,6 +677,13 @@ class ApiService {
     if (retryPolicy == null) return false;
     return error.type == retryPolicy.retryOnDioType &&
         retryPolicy.retryStatusCodes.contains(error.response?.statusCode);
+  }
+
+  bool _isCertificateHandshakeError(DioException error) {
+    final message = '${error.message ?? ''} ${error.error ?? ''}'.toLowerCase();
+    return message.contains('certificate_verify_failed') ||
+        message.contains('handshake') ||
+        message.contains('certificate');
   }
 
   Future<Response> _retryRequestWithBackoff({

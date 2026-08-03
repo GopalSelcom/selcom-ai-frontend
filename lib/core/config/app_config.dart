@@ -99,6 +99,9 @@ class AppConfig {
   static const String selcomPesaDeepLinkHostDefault = 'spd.selcommobile.com';
   static const String selcomPesaDownloadUrl = 'https://get.selcompesa.app/';
 
+  /// Remote endpoint that returns the current SPKI pin (encrypted).
+  static late String certificatePinningUrl;
+
   // ── Feature toggles (in-memory, not from `.env`) ──────────────────────────
 
   /// When true, ride payment endpoints skip the `_new` production suffix.
@@ -124,6 +127,8 @@ class AppConfig {
     if (selcomPesaDeepLinkHost.isEmpty) {
       selcomPesaDeepLinkHost = selcomPesaDeepLinkHostDefault;
     }
+
+    certificatePinningUrl = Env.certificatePinningUrl.trim();
 
     // Production builds must use real payment flows.
     if (env == Environment.prod) {
