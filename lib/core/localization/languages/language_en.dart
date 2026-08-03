@@ -168,8 +168,6 @@ class LanguageEn extends Languages {
         'Support already decided this request.',
     'cancellation_request_already_pending':
         'Your cancellation request is already under review. Ticket @ticket',
-    'cancellation_request_was_withdrawn':
-        'Your previous cancellation request was withdrawn. You can submit a new one.',
     'back_on_route': 'Back on route',
     'continue_to_trip': 'Continue to trip',
     'continue': 'Continue',
@@ -286,7 +284,6 @@ class LanguageEn extends Languages {
     'facebook_sign_in_failed': 'Facebook Sign-In failed. Please try again.',
     'help': 'Help',
     'having_trouble_logging_in': 'Having Trouble Logging In?',
-    'having_trouble': 'Having trouble?',
     'help_selcom_go_do_better_by_rating_this_trip':
         'Help Selcom Go do better by rating this trip',
     'how_can_we_help_you': 'How can we help you?',
@@ -1348,10 +1345,6 @@ class LanguageEn extends Languages {
       values['cancellation_request_already_pending'] ?? '';
 
   @override
-  String get cancellationRequestWasWithdrawn =>
-      values['cancellation_request_was_withdrawn'] ?? '';
-
-  @override
   String get backOnRoute => values['back_on_route'] ?? '';
 
   @override
@@ -1680,9 +1673,6 @@ class LanguageEn extends Languages {
   @override
   String get havingTroubleLoggingIn =>
       values['having_trouble_logging_in'] ?? '';
-
-  @override
-  String get havingTrouble => values['having_trouble'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>

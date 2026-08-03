@@ -10,7 +10,7 @@ import '../controllers/driver_accepted_controller.dart';
 
 /// Route-deviation card for the in-progress ride sheet (socket/REST only).
 ///
-/// Having-trouble cancel requests use [HavingTroubleCancellationBanner].
+/// Standalone Request to cancel uses [RequestToCancelBanner].
 class RouteDeviationBanner extends StatelessWidget {
   const RouteDeviationBanner({super.key, required this.controller});
 

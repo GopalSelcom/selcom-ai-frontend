@@ -8,23 +8,23 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/driver_accepted_controller.dart';
 
-/// Having-trouble cancel-request card (separate from route deviation).
+/// Standalone in-trip Request to cancel card (separate from route deviation).
 ///
 /// Uses the same warning / neutral tones as the deviation cancel states.
-class HavingTroubleCancellationBanner extends StatelessWidget {
-  const HavingTroubleCancellationBanner({super.key, required this.controller});
+class RequestToCancelBanner extends StatelessWidget {
+  const RequestToCancelBanner({super.key, required this.controller});
 
   final DriverAcceptedController controller;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (!controller.shouldShowManualCancellationBanner) {
+      if (!controller.shouldShowRequestToCancelBanner) {
         return const SizedBox.shrink();
       }
 
-      final pending = controller.isManualCancellationPending;
-      final rejected = controller.isManualCancellationRejected;
+      final pending = controller.isRequestToCancelPending;
+      final rejected = controller.isRequestToCancelRejected;
       // Match deviation cancel: pending = warning, rejected = neutral.
       final Color bg;
       final Color border;
@@ -87,13 +87,13 @@ class HavingTroubleCancellationBanner extends StatelessWidget {
               SizedBox(height: 12.h),
               _StatusCallout(
                 text: AppStrings.cancellationRequestSentWithTicket.trParams({
-                  'ticket': controller.manualCancellationTicketNumber,
+                  'ticket': controller.requestToCancelTicketNumber,
                 }),
               ),
               SizedBox(height: 12.h),
               AppPrimaryButton(
                 label: AppStrings.withdrawRequest.tr,
-                onPressed: controller.withdrawManualCancellationRequest,
+                onPressed: controller.withdrawRequestToCancel,
                 outlined: true,
                 outlinedBorderColor: AppColors.borderWalletCard,
                 outlinedTextColor: AppColors.textHeading,
@@ -108,15 +108,15 @@ class HavingTroubleCancellationBanner extends StatelessWidget {
               SizedBox(height: 12.h),
               _StatusCallout(
                 text: AppStrings.supportDeclinedCancellation.tr,
-                note: controller.manualCancellationNote.isEmpty
+                note: controller.requestToCancelNote.isEmpty
                     ? null
-                    : controller.manualCancellationNote,
+                    : controller.requestToCancelNote,
               ),
-              if (controller.canRequestCancellationAfterManualReject) ...[
+              if (controller.canRetryRequestToCancel) ...[
                 SizedBox(height: 12.h),
                 AppPrimaryButton(
                   label: AppStrings.requestToCancel.tr,
-                  onPressed: () => controller.openHavingTroubleCancellationSheet(
+                  onPressed: () => controller.openRequestToCancelSheet(
                     forceRetry: true,
                   ),
                   height: 44.h,

@@ -176,8 +176,6 @@ class AppStrings {
       'cancellation_request_already_decided';
   static const String cancellationRequestAlreadyPending =
       'cancellation_request_already_pending';
-  static const String cancellationRequestWasWithdrawn =
-      'cancellation_request_was_withdrawn';
   static const String backOnRoute = 'back_on_route';
   static const String continueToTrip = 'continue_to_trip';
   static const String didntReceiveTheCode = 'didnt_receive_the_code';
@@ -298,7 +296,6 @@ class AppStrings {
   static const String facebookSignInFailed = 'facebook_sign_in_failed';
   static const String help = 'help';
   static const String havingTroubleLoggingIn = 'having_trouble_logging_in';
-  static const String havingTrouble = 'having_trouble';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';
   static const String howCanWeHelpYou = 'how_can_we_help_you';

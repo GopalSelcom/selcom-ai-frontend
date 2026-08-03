@@ -125,7 +125,6 @@ abstract class Languages {
   String get rideNotActiveRefresh;
   String get cancellationRequestAlreadyDecided;
   String get cancellationRequestAlreadyPending;
-  String get cancellationRequestWasWithdrawn;
   String get backOnRoute;
   String get continueToTrip;
   String get continueLabel;
@@ -226,7 +225,6 @@ abstract class Languages {
   String get facebookSignInFailed;
   String get help;
   String get havingTroubleLoggingIn;
-  String get havingTrouble;
   String get helpSelcomGoDoBetterByRatingThisTrip;
   String get howCanWeHelpYou;
   String get howDoYouRateTheDriver;

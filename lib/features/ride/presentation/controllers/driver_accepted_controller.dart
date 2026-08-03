@@ -136,8 +136,8 @@ class DriverAcceptedController extends GetxController
   /// Rider dismissed the muted "back on route" / continue-to-trip banner.
   final routeDeviationBannerDismissed = false.obs;
 
-  /// Having-trouble cancel request (separate from route-deviation cancel).
-  final manualCancellationRequest = Rxn<RideCancellationRequestModel>();
+  /// Standalone in-trip Request to cancel (separate from route-deviation cancel).
+  final requestToCancelInfo = Rxn<RideCancellationRequestModel>();
 
   /// De-dupe key for socket `ride:route_deviation` (`ride_id` + `detected_at`).
   String? _lastRouteDeviationDedupeKey;
@@ -215,7 +215,7 @@ class DriverAcceptedController extends GetxController
 
   bool get canRequestCancellationFromDeviation =>
       routeDeviationInfo.value?.canRequestCancellation == true &&
-      !(manualCancellationRequest.value?.isPending ?? false);
+      !(requestToCancelInfo.value?.isPending ?? false);
 
   bool get isDeviationCancellationPending =>
       routeDeviationInfo.value?.cancellationRequest?.isPending == true;
@@ -245,27 +245,27 @@ class DriverAcceptedController extends GetxController
     return note ?? '';
   }
 
-  bool get shouldShowManualCancellationBanner {
-    final request = manualCancellationRequest.value;
+  bool get shouldShowRequestToCancelBanner {
+    final request = requestToCancelInfo.value;
     return request != null && (request.isPending || request.isRejected);
   }
 
-  bool get isManualCancellationPending =>
-      manualCancellationRequest.value?.isPending == true;
+  bool get isRequestToCancelPending =>
+      requestToCancelInfo.value?.isPending == true;
 
-  bool get isManualCancellationRejected =>
-      manualCancellationRequest.value?.isRejected == true;
+  bool get isRequestToCancelRejected =>
+      requestToCancelInfo.value?.isRejected == true;
 
-  String get manualCancellationTicketNumber =>
-      manualCancellationRequest.value?.ticketNumber ?? '';
+  String get requestToCancelTicketNumber =>
+      requestToCancelInfo.value?.ticketNumber ?? '';
 
-  String get manualCancellationNote {
-    final note = manualCancellationRequest.value?.note?.trim();
+  String get requestToCancelNote {
+    final note = requestToCancelInfo.value?.note?.trim();
     return note ?? '';
   }
 
-  bool get canRequestCancellationAfterManualReject =>
-      isManualCancellationRejected;
+  bool get canRetryRequestToCancel =>
+      isRequestToCancelRejected;
 
   // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
@@ -2106,10 +2106,10 @@ class DriverAcceptedController extends GetxController
       _applyRouteDeviation(deviation);
       return;
     }
-    // REST cancel-only shell (no off/on-route) belongs to Having-trouble lane.
+    // REST cancel-only shell (no off/on-route) belongs to Request-to-cancel lane.
     final request = deviation.cancellationRequest;
     if (request != null) {
-      _applyManualCancellationRequest(request);
+      _applyRequestToCancelInfo(request);
     }
   }
 
@@ -2138,15 +2138,15 @@ class DriverAcceptedController extends GetxController
       routeDeviationBannerDismissed.value = false;
     }
     routeDeviationInfo.value = merged;
-    _clearManualCancellationIfSameTicket(merged.cancellationRequest);
+    _clearRequestToCancelIfSameTicket(merged.cancellationRequest);
     final current = ride.value;
     if (current != null) {
       ride.value = current.copyWith(routeDeviation: merged);
     }
   }
 
-  void _applyManualCancellationRequest(RideCancellationRequestModel request) {
-    manualCancellationRequest.value = request;
+  void _applyRequestToCancelInfo(RideCancellationRequestModel request) {
+    requestToCancelInfo.value = request;
     _clearDeviationCancellationIfSameTicket(request);
     // One pending request per ride — block deviation "Request to cancel".
     final deviation = routeDeviationInfo.value;
@@ -2157,14 +2157,14 @@ class DriverAcceptedController extends GetxController
     }
   }
 
-  void _clearManualCancellationIfSameTicket(
+  void _clearRequestToCancelIfSameTicket(
     RideCancellationRequestModel? request,
   ) {
     if (request == null) return;
-    final manual = manualCancellationRequest.value;
-    if (manual == null) return;
-    if (_sameCancellationTicket(manual, request)) {
-      manualCancellationRequest.value = null;
+    final existing = requestToCancelInfo.value;
+    if (existing == null) return;
+    if (_sameCancellationTicket(existing, request)) {
+      requestToCancelInfo.value = null;
     }
   }
 
@@ -2203,19 +2203,19 @@ class DriverAcceptedController extends GetxController
       note: payload.note,
     );
 
-    final manual = manualCancellationRequest.value;
-    if (manual != null &&
+    final standalone = requestToCancelInfo.value;
+    if (standalone != null &&
         (payload.ticketId.isEmpty ||
-            _sameCancellationTicket(manual, updatedRequest))) {
-      manualCancellationRequest.value = RideCancellationRequestModel(
+            _sameCancellationTicket(standalone, updatedRequest))) {
+      requestToCancelInfo.value = RideCancellationRequestModel(
         ticketId: payload.ticketId.isNotEmpty
             ? payload.ticketId
-            : manual.ticketId,
+            : standalone.ticketId,
         ticketNumber: payload.ticketNumber.isNotEmpty
             ? payload.ticketNumber
-            : manual.ticketNumber,
+            : standalone.ticketNumber,
         status: payload.status,
-        requestedAt: manual.requestedAt,
+        requestedAt: standalone.requestedAt,
         note: payload.note,
       );
       final deviation = routeDeviationInfo.value;
@@ -2231,7 +2231,7 @@ class DriverAcceptedController extends GetxController
     final current = routeDeviationInfo.value;
     if (current == null) {
       if (updatedRequest.isPending || updatedRequest.isRejected) {
-        _applyManualCancellationRequest(
+        _applyRequestToCancelInfo(
           RideCancellationRequestModel(
             ticketId: payload.ticketId,
             ticketNumber: payload.ticketNumber,
@@ -2272,14 +2272,14 @@ class DriverAcceptedController extends GetxController
     dismissRouteDeviationBanner();
   }
 
-  /// Safety options / ride sheet "Having trouble?" — manual cancel-request lane.
+  /// Safety options / ride sheet "Request to cancel" — standalone cancel-request lane.
   ///
   /// [forceRetry] skips the rejected-status info gate (banner "Request to cancel"
   /// after support declined).
-  Future<void> openHavingTroubleCancellationSheet({
+  Future<void> openRequestToCancelSheet({
     bool forceRetry = false,
   }) async {
-    if (_showExistingCancellationStatusForHavingTrouble(
+    if (_showExistingRequestToCancelStatus(
       allowRejectedRetry: forceRetry,
     )) {
       return;
@@ -2288,9 +2288,9 @@ class DriverAcceptedController extends GetxController
   }
 
   /// Safety options sheet entry — close the sheet, then open the request flow.
-  Future<void> openHavingTroubleFromSafetySheet() async {
+  Future<void> openRequestToCancelFromSafetySheet() async {
     AppDialogs.closeActiveDialog();
-    await openHavingTroubleCancellationSheet();
+    await openRequestToCancelSheet();
   }
 
   /// Off-route banner "Request to cancel" — deviation-scoped cancel lane.
@@ -2298,11 +2298,11 @@ class DriverAcceptedController extends GetxController
     return _openCancellationRequestSheet(forDeviation: true);
   }
 
-  /// Returns true when Having trouble should not open a new request sheet.
-  bool _showExistingCancellationStatusForHavingTrouble({
+  /// Returns true when Request to cancel should not open a new request sheet.
+  bool _showExistingRequestToCancelStatus({
     bool allowRejectedRetry = false,
   }) {
-    final request = manualCancellationRequest.value ??
+    final request = requestToCancelInfo.value ??
         routeDeviationInfo.value?.cancellationRequest;
     if (request == null) return false;
 
@@ -2347,12 +2347,13 @@ class DriverAcceptedController extends GetxController
     required bool forDeviation,
   }) async {
     if (forDeviation && !canRequestCancellationFromDeviation) return;
-    final hasPendingManual =
-        manualCancellationRequest.value?.isPending ?? false;
+    final hasPendingRequestToCancel =
+        requestToCancelInfo.value?.isPending ?? false;
     final hasPendingDeviation =
         routeDeviationInfo.value?.cancellationRequest?.isPending ?? false;
-    if (!forDeviation && (hasPendingManual || hasPendingDeviation)) {
-      _showExistingCancellationStatusForHavingTrouble();
+    if (!forDeviation &&
+        (hasPendingRequestToCancel || hasPendingDeviation)) {
+      _showExistingRequestToCancelStatus();
       return;
     }
 
@@ -2381,14 +2382,14 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
-    _applyManualCancellationRequest(request);
+    _applyRequestToCancelInfo(request);
   }
 
   Future<void> withdrawDeviationCancellationRequest() {
     return _withdrawCancellationRequest(fromDeviation: true);
   }
 
-  Future<void> withdrawManualCancellationRequest() {
+  Future<void> withdrawRequestToCancel() {
     return _withdrawCancellationRequest(fromDeviation: false);
   }
 
@@ -2397,7 +2398,7 @@ class DriverAcceptedController extends GetxController
   }) async {
     final ticketId = fromDeviation
         ? (routeDeviationInfo.value?.cancellationRequest?.ticketId.trim() ?? '')
-        : (manualCancellationRequest.value?.ticketId.trim() ?? '');
+        : (requestToCancelInfo.value?.ticketId.trim() ?? '');
     if (ticketId.isEmpty) return;
 
     Failure? failure;
@@ -2440,8 +2441,8 @@ class DriverAcceptedController extends GetxController
       return;
     }
 
-    final prior = manualCancellationRequest.value;
-    manualCancellationRequest.value = prior?.copyWith(status: 'withdrawn');
+    final prior = requestToCancelInfo.value;
+    requestToCancelInfo.value = prior?.copyWith(status: 'withdrawn');
     final deviation = routeDeviationInfo.value;
     if (deviation != null) {
       routeDeviationInfo.value = deviation.copyWith(

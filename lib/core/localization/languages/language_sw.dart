@@ -161,8 +161,6 @@ class LanguageSw extends Languages {
         'Huduma tayari imeamua ombi hili.',
     'cancellation_request_already_pending':
         'Ombi lako la kughairi tayari linakaguliwa. Tiketi @ticket',
-    'cancellation_request_was_withdrawn':
-        'Ombi lako la awali la kughairi lilifutwa. Unaweza kuwasilisha jipya.',
     'back_on_route': 'Umerudi kwenye njia',
     'continue_to_trip': 'Endelea na safari',
     'continue': 'Endelea',
@@ -267,7 +265,6 @@ class LanguageSw extends Languages {
     'facebook_sign_in_failed': 'Uingiaji wa Facebook umefeli. Tafadhali jaribu tena.',
     'help': 'Msaada',
     'having_trouble_logging_in': 'Unapata Shida Kuingia?',
-    'having_trouble': 'Unapata shida?',
     'help_selcom_go_do_better_by_rating_this_trip': 'Saidia Selcom Go kufanya vizuri zaidi kwa kukadiria safari hii',
     'how_can_we_help_you': 'Je, tunawezaje kukusaidia?',
     'how_do_you_rate_the_driver': 'Je, unamkadiria vipi dereva?',
@@ -1268,10 +1265,6 @@ class LanguageSw extends Languages {
       values['cancellation_request_already_pending'] ?? '';
 
   @override
-  String get cancellationRequestWasWithdrawn =>
-      values['cancellation_request_was_withdrawn'] ?? '';
-
-  @override
   String get backOnRoute => values['back_on_route'] ?? '';
 
   @override
@@ -1601,9 +1594,6 @@ class LanguageSw extends Languages {
   @override
   String get havingTroubleLoggingIn =>
       values['having_trouble_logging_in'] ?? '';
-
-  @override
-  String get havingTrouble => values['having_trouble'] ?? '';
 
   @override
   String get helpSelcomGoDoBetterByRatingThisTrip =>
