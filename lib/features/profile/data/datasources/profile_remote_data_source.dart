@@ -12,7 +12,7 @@ import '../../../../core/network/urls.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
-import '../models/contact_us_models.dart';
+import '../models/contact_support_models.dart';
 import '../models/country_response.dart';
 import '../models/profile_response_model.dart';
 import '../models/request/update_profile_request.dart';

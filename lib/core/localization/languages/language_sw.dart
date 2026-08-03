@@ -95,8 +95,7 @@ class LanguageSw extends Languages {
     'choose_ride': 'Chagua safari',
     'confirm_pickup': 'Thibitisha kuchukuliwa',
     'connection_error': 'Itilafu ya Muunganisho',
-    'contact_us': 'Wasiliana nasi',
-    'contact_support': 'Wasiliana na Huduma kwa Wateja',
+    'contact_support': 'Wasiliana na huduma kwa wateja',
     'request_to_cancel': 'Omba kughairi',
     'request_cancellation_subtitle': 'Tuambie kwa nini unataka huduma ikague kughairi safari hii.',
     'submit_request': 'Wasilisha ombi',
@@ -181,6 +180,7 @@ class LanguageSw extends Languages {
     'failed_to_send_otp': 'Imeshindikana kutuma OTP',
     'fallback_ride_name': 'Safari',
     'saved_locations': 'Maeneo yaliyohifadhiwa',
+    'saved_cards': 'Kadi zilizohifadhiwa',
     'get_started': 'Anza',
     'home_label': 'Nyumbani',
     'havent_got_the_confirmation_code_yet': 'Bado hujapata msimbo wa uthibitisho? ',
@@ -194,7 +194,6 @@ class LanguageSw extends Languages {
     'sign_in_with_facebook': 'Ingia na Facebook',
     'facebook_sign_in_cancelled': 'Uingiaji umeghairiwa',
     'facebook_sign_in_failed': 'Uingiaji wa Facebook umefeli. Tafadhali jaribu tena.',
-    'help': 'Msaada',
     'having_trouble_logging_in': 'Unapata shida kuingia?',
     'how_can_we_help_you': 'Je, tunawezaje kukusaidia?',
     'how_do_you_rate_the_driver': 'Je, unamkadiria vipi dereva?',
@@ -948,9 +947,6 @@ class LanguageSw extends Languages {
   String get connectionError => values['connection_error'] ?? '';
 
   @override
-  String get contactUs => values['contact_us'] ?? '';
-
-  @override
   String get contactSupport => values['contact_support'] ?? '';
 
   @override
@@ -1273,9 +1269,6 @@ class LanguageSw extends Languages {
 
   @override
   String get facebookSignInFailed => values['facebook_sign_in_failed'] ?? '';
-
-  @override
-  String get help => values['help'] ?? '';
 
   @override
   String get havingTroubleLoggingIn =>
@@ -2661,6 +2654,9 @@ class LanguageSw extends Languages {
   @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get savedCards => values['saved_cards'] ?? '';
 
   @override
   String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';

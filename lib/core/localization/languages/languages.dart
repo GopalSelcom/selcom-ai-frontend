@@ -90,8 +90,9 @@ abstract class Languages {
   String get chooseRide;
   String get confirmPickup;
   String get connectionError;
-  String get contactUs;
   String get contactSupport;
+  String get continueLabel;
+  String get signInWithGoogle;
   String get requestToCancel;
   String get requestCancellationSubtitle;
   String get submitRequest;
@@ -108,8 +109,6 @@ abstract class Languages {
   String get cancellationRequestAlreadyPending;
   String get backOnRoute;
   String get continueToTrip;
-  String get continueLabel;
-  String get signInWithGoogle;
   String get didntReceiveTheCode;
   String get couldNotCancelTryAgain;
   String get couldNotResolveVehicleTypeIdPleaseTryAgain;
@@ -188,7 +187,6 @@ abstract class Languages {
   String get signInWithFacebook;
   String get facebookSignInCancelled;
   String get facebookSignInFailed;
-  String get help;
   String get havingTroubleLoggingIn;
   String get helpSelcomGoDoBetterByRatingThisTrip;
   String get noFareEstimateReturnedForTheUpdatedPickupLocation;
@@ -611,6 +609,7 @@ abstract class Languages {
   String get writeAMessage;
   String get yourDriver;
   String get savedLocations;
+  String get savedCards;
   String get selcomPesaLinkNumber;
   String get selcomPesaSelfTitle;
   String get selcomPesaSelfSubtitle;

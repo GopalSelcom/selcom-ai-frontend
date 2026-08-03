@@ -119,10 +119,9 @@ class AppStrings {
   static const String connectionError = 'connection_error';
   static const String connectionTimedOutPleaseCheckInternet =
       'connection_timed_out_please_check_internet';
-  static const String contactUs = 'contact_us';
+  static const String contactSupport = 'contact_support';
   static const String continueLabel = 'continue';
   static const String signInWithGoogle = 'sign_in_with_google';
-  static const String contactSupport = 'contact_support';
   static const String requestToCancel = 'request_to_cancel';
   static const String requestCancellationSubtitle =
       'request_cancellation_subtitle';
@@ -231,6 +230,7 @@ class AppStrings {
   static const String failedToSendOtp = 'failed_to_send_otp';
   static const String fallbackRideName = 'fallback_ride_name';
   static const String savedLocations = 'saved_locations';
+  static const String savedCards = 'saved_cards';
   static const String getStarted = 'get_started';
   static const String homeLabel = 'home_label';
   static const String haventGotTheConfirmationCodeYet =
@@ -245,7 +245,6 @@ class AppStrings {
   static const String signInWithFacebook = 'sign_in_with_facebook';
   static const String facebookSignInCancelled = 'facebook_sign_in_cancelled';
   static const String facebookSignInFailed = 'facebook_sign_in_failed';
-  static const String help = 'help';
   static const String havingTroubleLoggingIn = 'having_trouble_logging_in';
   static const String helpSelcomGoDoBetterByRatingThisTrip =
       'help_selcom_go_do_better_by_rating_this_trip';

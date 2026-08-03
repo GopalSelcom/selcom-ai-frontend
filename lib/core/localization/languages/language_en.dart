@@ -94,7 +94,6 @@ class LanguageEn extends Languages {
     'choose_ride': 'Choose a ride',
     'confirm_pickup': 'Confirm pickup',
     'connection_error': 'Connection error',
-    'contact_us': 'Contact us',
     'contact_support': 'Contact support',
     'request_to_cancel': 'Request to cancel',
     'request_cancellation_subtitle': 'Tell us why you want support to review cancelling this ride.',
@@ -177,6 +176,7 @@ class LanguageEn extends Languages {
     'failed_to_send_otp': 'Failed to send OTP',
     'fallback_ride_name': 'Ride',
     'saved_locations': 'Saved locations',
+    'saved_cards': 'Saved cards',
     'home_label': 'Home',
     'got_it': 'Got it',
     'google_sign_in_cancelled': 'Sign-in cancelled',
@@ -188,7 +188,6 @@ class LanguageEn extends Languages {
     'sign_in_with_facebook': 'Sign in with Facebook',
     'facebook_sign_in_cancelled': 'Sign-in cancelled',
     'facebook_sign_in_failed': 'Facebook Sign-In failed. Please try again.',
-    'help': 'Help',
     'having_trouble_logging_in': 'Having trouble logging in?',
     'how_can_we_help_you': 'How can we help you?',
     'how_do_you_rate_the_driver': 'How do you rate the driver?',
@@ -936,9 +935,6 @@ class LanguageEn extends Languages {
   String get connectionError => values['connection_error'] ?? '';
 
   @override
-  String get contactUs => values['contact_us'] ?? '';
-
-  @override
   String get contactSupport => values['contact_support'] ?? '';
 
   @override
@@ -1260,9 +1256,6 @@ class LanguageEn extends Languages {
 
   @override
   String get facebookSignInFailed => values['facebook_sign_in_failed'] ?? '';
-
-  @override
-  String get help => values['help'] ?? '';
 
   @override
   String get havingTroubleLoggingIn =>
@@ -2649,6 +2642,9 @@ class LanguageEn extends Languages {
   @override
   // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
+
+  @override
+  String get savedCards => values['saved_cards'] ?? '';
 
   @override
   String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';

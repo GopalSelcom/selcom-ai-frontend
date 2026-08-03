@@ -1,7 +1,7 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Shared metrics for [ContactUsScreen] loaded UI and shimmer.
-abstract final class ContactUsScreenLayout {
+/// Shared metrics for [ContactSupportScreen] loaded UI and shimmer.
+abstract final class ContactSupportScreenLayout {
   static double get horizontalPadding => 24.w;
 
   static double get headerBottomGap => 16.h;

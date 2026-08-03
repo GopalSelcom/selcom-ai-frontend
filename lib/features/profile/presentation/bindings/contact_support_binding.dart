@@ -3,13 +3,13 @@ import 'package:get/get.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../domain/repositories/profile_repository.dart';
-import '../controllers/contact_us_controller.dart';
+import '../controllers/contact_support_controller.dart';
 
-class ContactUsBinding extends Bindings {
+class ContactSupportBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut(
-      () => ContactUsController(
+      () => ContactSupportController(
         profileRepository: sl<ProfileRepository>(),
         rideRepository: sl<RideRepository>(),
       ),

@@ -175,7 +175,7 @@ class ProfileController extends GetxController {
 
   /// Menu rows shown when not loading (must match [_buildSettingsList]).
   int get visibleMenuItemCount {
-    var count = 7; // My Rides, Saved, Cards, Help, Privacy, Terms, Settings
+    var count = 7; // My Rides, Saved, Cards, Contact support, Privacy, Terms, Settings
     if (showSafetyOption.value) count++;
     return count;
   }
@@ -537,8 +537,8 @@ class ProfileController extends GetxController {
     _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.wallet));
   }
 
-  void openContactUs() {
-    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.contactUs));
+  void openContactSupport() {
+    _navigateAndResetWalletBalanceOnReturn(Get.toNamed(AppRoutes.contactSupport));
   }
 
   void openFavoriteLocations() {

@@ -11,7 +11,7 @@ import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../cache/user_profile_cache.dart';
 import '../datasources/profile_remote_data_source.dart';
-import '../models/contact_us_models.dart';
+import '../models/contact_support_models.dart';
 import '../models/country_response.dart';
 import '../models/request/update_profile_request.dart';
 import '../models/state_response.dart';
