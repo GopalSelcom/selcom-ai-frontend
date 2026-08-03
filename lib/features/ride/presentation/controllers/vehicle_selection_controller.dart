@@ -481,12 +481,24 @@ class VehicleSelectionController extends GetxController {
     if (item.isBookAnyOption) {
       final min = item.bookAnyMinFare ?? 0;
       final max = item.bookAnyMaxFare ?? item.fareEstimate ?? 0;
-      return '${CurrencyFormatter.formatWithApiCurrency(min, item.currency)} - ${CurrencyFormatter.formatWithApiCurrency(max, item.currency)}';
+      return CurrencyFormatter.formatRangeWithApiCurrency(
+        min,
+        max,
+        item.currency,
+      );
     }
     return CurrencyFormatter.formatWithApiCurrency(
       item.fareEstimate ?? 0,
       item.currency,
     );
+  }
+
+  int vehicleSeatCount(FareEstimateItem item) => item.maxPassengers ?? 1;
+
+  String vehicleSeatLabel(FareEstimateItem item) {
+    final count = vehicleSeatCount(item);
+    final unit = count == 1 ? AppStrings.seat.tr : AppStrings.seats.tr;
+    return '$count $unit';
   }
 
   List<FareEstimateItem> _estimatesWithBookAny(

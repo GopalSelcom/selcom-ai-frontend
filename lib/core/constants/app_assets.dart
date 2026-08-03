@@ -78,6 +78,7 @@ class AppAssets {
   // Payment
   static const String _paymentPath = '$_imagePath/payment';
   static const String icPaymentPerson = '$_paymentPath/ic_person.svg';
+  static const String icPaymentPeople = '$_paymentPath/ic_people.svg';
   static const String icCardReceive = '$_paymentPath/ic_card_receive.svg';
   static const String imgPaymentAddCardSuccess =
       '$_paymentPath/add_card_success.png';

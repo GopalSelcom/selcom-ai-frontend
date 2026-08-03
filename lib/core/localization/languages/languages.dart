@@ -610,6 +610,8 @@ abstract class Languages {
   String get yourDriver;
   String get savedLocations;
   String get savedCards;
+  String get seat;
+  String get seats;
   String get selcomPesaLinkNumber;
   String get selcomPesaSelfTitle;
   String get selcomPesaSelfSubtitle;

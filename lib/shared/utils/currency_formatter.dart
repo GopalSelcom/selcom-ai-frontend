@@ -116,6 +116,24 @@ class CurrencyFormatter {
     return formatWithApiCurrency(amount, apiCurrencyCode);
   }
 
+  /// Formats a min–max fare with a single currency prefix, e.g. `TZS 138 - 12,017`.
+  static String formatRangeWithApiCurrency(
+    num min,
+    num max,
+    String? apiCurrencyCode,
+  ) {
+    final config = _configForCode(apiCurrencyCode) ?? _displayConfig();
+    if (min == max) {
+      return formatWithConfig(min, config);
+    }
+    final formatter = NumberFormat.decimalPattern(config.locale)
+      ..minimumFractionDigits = config.decimalDigits
+      ..maximumFractionDigits = config.decimalDigits;
+    final minLabel = formatter.format(min);
+    final maxLabel = formatter.format(max);
+    return '${config.symbol} $minLabel - ${config.symbol} $maxLabel';
+  }
+
   static String formatWithConfig(num amount, CurrencyFormatConfig config) {
     final formatter = NumberFormat.decimalPattern(config.locale)
       ..minimumFractionDigits = config.decimalDigits

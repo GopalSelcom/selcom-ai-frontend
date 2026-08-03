@@ -177,6 +177,8 @@ class LanguageEn extends Languages {
     'fallback_ride_name': 'Ride',
     'saved_locations': 'Saved locations',
     'saved_cards': 'Saved cards',
+    'seat': 'Seat',
+    'seats': 'Seats',
     'home_label': 'Home',
     'got_it': 'Got it',
     'google_sign_in_cancelled': 'Sign-in cancelled',
@@ -2645,6 +2647,12 @@ class LanguageEn extends Languages {
 
   @override
   String get savedCards => values['saved_cards'] ?? '';
+
+  @override
+  String get seat => values['seat'] ?? '';
+
+  @override
+  String get seats => values['seats'] ?? '';
 
   @override
   String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';

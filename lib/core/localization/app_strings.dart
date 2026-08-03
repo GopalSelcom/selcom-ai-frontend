@@ -231,6 +231,8 @@ class AppStrings {
   static const String fallbackRideName = 'fallback_ride_name';
   static const String savedLocations = 'saved_locations';
   static const String savedCards = 'saved_cards';
+  static const String seat = 'seat';
+  static const String seats = 'seats';
   static const String getStarted = 'get_started';
   static const String homeLabel = 'home_label';
   static const String haventGotTheConfirmationCodeYet =

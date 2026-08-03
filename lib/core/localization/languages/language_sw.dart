@@ -181,6 +181,8 @@ class LanguageSw extends Languages {
     'fallback_ride_name': 'Safari',
     'saved_locations': 'Maeneo yaliyohifadhiwa',
     'saved_cards': 'Kadi zilizohifadhiwa',
+    'seat': 'Kiti',
+    'seats': 'Viti',
     'get_started': 'Anza',
     'home_label': 'Nyumbani',
     'havent_got_the_confirmation_code_yet': 'Bado hujapata msimbo wa uthibitisho? ',
@@ -2657,6 +2659,12 @@ class LanguageSw extends Languages {
 
   @override
   String get savedCards => values['saved_cards'] ?? '';
+
+  @override
+  String get seat => values['seat'] ?? '';
+
+  @override
+  String get seats => values['seats'] ?? '';
 
   @override
   String get selcomPesaLinkNumber => values['selcom_pesa_link_number'] ?? '';
