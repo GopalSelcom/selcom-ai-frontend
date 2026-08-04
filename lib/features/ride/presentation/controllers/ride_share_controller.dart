@@ -2,19 +2,15 @@ import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/localization/app_strings.dart';
-import '../../domain/usecases/generate_share_link_use_case.dart';
-import '../../domain/usecases/revoke_share_link_use_case.dart';
+import '../../domain/repositories/ride_share_repository.dart';
 
 class RideShareController extends GetxController {
   RideShareController({
-    required GenerateShareLinkUseCase generateShareLinkUseCase,
-    required RevokeShareLinkUseCase revokeShareLinkUseCase,
+    required RideShareRepository rideShareRepository,
     this.enableRevokeLink = true,
-  }) : _generateShareLinkUseCase = generateShareLinkUseCase,
-       _revokeShareLinkUseCase = revokeShareLinkUseCase;
+  }) : _rideShareRepository = rideShareRepository;
 
-  final GenerateShareLinkUseCase _generateShareLinkUseCase;
-  final RevokeShareLinkUseCase _revokeShareLinkUseCase;
+  final RideShareRepository _rideShareRepository;
 
   final bool enableRevokeLink;
 
@@ -26,7 +22,7 @@ class RideShareController extends GetxController {
     if (rideId.trim().isEmpty) return;
 
     isSharing.value = true;
-    final result = await _generateShareLinkUseCase(rideId);
+    final result = await _rideShareRepository.generateShareLink(rideId);
     await result.fold(
       (failure) async {
         Get.snackbar(AppStrings.share.tr, failure.message);
@@ -48,7 +44,7 @@ class RideShareController extends GetxController {
     if (!enableRevokeLink || rideId.trim().isEmpty || isRevoking.value) return;
 
     isRevoking.value = true;
-    final result = await _revokeShareLinkUseCase(rideId);
+    final result = await _rideShareRepository.revokeShareLink(rideId);
     result.fold(
       (failure) => Get.snackbar(AppStrings.share.tr, failure.message),
       (_) {

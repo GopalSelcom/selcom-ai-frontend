@@ -23,13 +23,13 @@ import '../../../../shared/utils/clipboard_utils.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../../../shared/widgets/web_view_screen.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
-import '../../../wallet/domain/usecases/get_wallet_summary_usecase.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
 import '../../../wallet/presentation/utils/wallet_format_utils.dart';
 import '../../../wallet/presentation/utils/wallet_session.dart';
 import '../../data/cache/user_profile_cache.dart';
 import '../../data/models/request/update_profile_request.dart';
-import '../../domain/usecases/profile_usecase.dart';
+import '../../domain/repositories/profile_repository.dart';
 
 /// In-memory wallet summary for the profile card across [ProfileController]
 /// instances (GetX factory recreates the controller each profile visit).
@@ -110,14 +110,14 @@ abstract final class ProfileWalletCache {
 }
 
 class ProfileController extends GetxController {
-  final ProfileUseCase profileUseCase;
+  final ProfileRepository profileRepository;
   final AppSettingsService appSettingsService;
-  final GetWalletSummaryUseCase getWalletSummaryUseCase;
+  final WalletRepository walletRepository;
 
   ProfileController({
-    required this.profileUseCase,
+    required this.profileRepository,
     required this.appSettingsService,
-    required this.getWalletSummaryUseCase,
+    required this.walletRepository,
   });
 
   // Observables for state
@@ -217,7 +217,7 @@ class ProfileController extends GetxController {
 
   Future<void> _fetchProfileData() async {
     // Repository returns [UserProfileCache] when already loaded this session.
-    final result = await profileUseCase.getProfile();
+    final result = await profileRepository.getProfile();
     result.fold(
       (failure) {
         AppDialogs.showErrorDialog(message: failure.message);
@@ -300,7 +300,7 @@ class ProfileController extends GetxController {
     }
 
     try {
-      final summary = await getWalletSummaryUseCase();
+      final summary = await walletRepository.getCardBalance();
       if (summary == null || !summary.isSuccess) {
         _setWalletUnlinked();
         return;
@@ -425,7 +425,7 @@ class ProfileController extends GetxController {
     var saved = false;
 
     await Loader.withFlag(isLoading, () async {
-      final result = await profileUseCase.updateProfile(
+      final result = await profileRepository.updateProfile(
         UserProfileUpdateRequest(
           name: nameTextController.text.trim(),
           image: pickedImage.value,

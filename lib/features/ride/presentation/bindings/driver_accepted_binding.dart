@@ -8,8 +8,6 @@ import '../../data/repositories/ride_repository_impl.dart';
 import '../../data/repositories/ride_share_repository_impl.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../domain/repositories/ride_share_repository.dart';
-import '../../domain/usecases/generate_share_link_use_case.dart';
-import '../../domain/usecases/revoke_share_link_use_case.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 
@@ -29,18 +27,11 @@ class DriverAcceptedBinding extends Bindings {
       Get.lazyPut<RideShareRepository>(
         () => RideShareRepositoryImpl(remoteDataSource: Get.find()),
       );
-      Get.lazyPut<GenerateShareLinkUseCase>(
-        () => GenerateShareLinkUseCase(Get.find<RideShareRepository>()),
-      );
-      Get.lazyPut<RevokeShareLinkUseCase>(
-        () => RevokeShareLinkUseCase(Get.find<RideShareRepository>()),
-      );
     }
     if (!Get.isRegistered<RideShareController>()) {
       Get.lazyPut<RideShareController>(
         () => RideShareController(
-          generateShareLinkUseCase: Get.find<GenerateShareLinkUseCase>(),
-          revokeShareLinkUseCase: Get.find<RevokeShareLinkUseCase>(),
+          rideShareRepository: Get.find<RideShareRepository>(),
           enableRevokeLink: false,
         ),
         fenix: true,

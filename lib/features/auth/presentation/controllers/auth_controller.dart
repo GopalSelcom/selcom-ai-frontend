@@ -15,7 +15,6 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_region_service.dart';
-import '../../../../core/usecases/usecase.dart';
 import '../../../../core/utils/apple_sign_in_debug_log.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
@@ -24,36 +23,15 @@ import '../../../../core/services/voip_callkit_bridge_service.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../domain/entities/social_auth_user.dart';
-import '../../domain/usecases/exchange_firebase_session_use_case.dart';
-import '../../domain/usecases/resend_phone_otp_use_case.dart';
-import '../../domain/usecases/send_phone_otp_use_case.dart';
-import '../../domain/usecases/set_name_use_case.dart';
-import '../../domain/usecases/sign_in_with_apple_use_case.dart';
-import '../../domain/usecases/sign_in_with_google_use_case.dart';
-import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
-import '../../domain/usecases/verify_phone_otp_use_case.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
   AuthController({
-    required this.sendPhoneOtpUseCase,
-    required this.resendPhoneOtpUseCase,
-    required this.verifyPhoneOtpUseCase,
-    required this.setNameUseCase,
-    required this.signInWithAppleUseCase,
-    required this.signInWithFacebookUseCase,
-    required this.signInWithGoogleUseCase,
-    required this.exchangeFirebaseSessionUseCase,
+    required this.authRepository,
     required this.appRegionService,
   });
 
-  final SendPhoneOtpUseCase sendPhoneOtpUseCase;
-  final ResendPhoneOtpUseCase resendPhoneOtpUseCase;
-  final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
-  final SetNameUseCase setNameUseCase;
-  final SignInWithAppleUseCase signInWithAppleUseCase;
-  final SignInWithFacebookUseCase signInWithFacebookUseCase;
-  final SignInWithGoogleUseCase signInWithGoogleUseCase;
-  final ExchangeFirebaseSessionUseCase exchangeFirebaseSessionUseCase;
+  final AuthRepository authRepository;
   final AppRegionService appRegionService;
 
   final mobileNumber = ''.obs;
@@ -120,7 +98,9 @@ class AuthController extends GetxController {
     errorMessage.value = '';
 
     return Loader.withFlag(isLoading, () async {
-      final result = await sendPhoneOtpUseCase(_goPhoneOtpRequest);
+      final result = await authRepository.sendPhoneOtp(
+        request: _goPhoneOtpRequest,
+      );
       return result.fold(
         (failure) {
           errorMessage.value = failure.message;
@@ -186,7 +166,9 @@ class AuthController extends GetxController {
     }
 
     return Loader.withFlag(isLoading, () async {
-      final result = await setNameUseCase(SetNameRequest(name: trimmedName));
+      final result = await authRepository.setName(
+        request: SetNameRequest(name: trimmedName),
+      );
       return await result.fold(
         (failure) async {
           errorMessage.value = failure.message;
@@ -255,7 +237,9 @@ class AuthController extends GetxController {
     startResendTimer();
 
     return Loader.withFlag(isLoading, () async {
-      final result = await resendPhoneOtpUseCase(_goPhoneOtpRequest);
+      final result = await authRepository.resendPhoneOtp(
+        request: _goPhoneOtpRequest,
+      );
       return result.fold(
         (failure) {
           errorMessage.value = failure.message;
@@ -284,8 +268,8 @@ class AuthController extends GetxController {
     String? postVerifyRoute;
 
     final verified = await Loader.withFlag(isLoading, () async {
-      final result = await verifyPhoneOtpUseCase(
-        GoPhoneVerifyOtpRequest(
+      final result = await authRepository.verifyPhoneOtp(
+        request: GoPhoneVerifyOtpRequest(
           mobileNumber: mobileNumber.value.replaceAll(RegExp(r'\D'), ''),
           countryCode: countryCode.value,
           otp: otp.value,
@@ -382,7 +366,7 @@ class AuthController extends GetxController {
     errorMessage.value = '';
 
     await Loader.withFlag(isLoading, () async {
-      final signInResult = await signInWithGoogleUseCase(NoParams());
+      final signInResult = await authRepository.signInWithGoogle();
       await signInResult.fold((failure) async {
         if (failure is AppleSignInFailure && failure.isCancelled) {
           errorMessage.value = AppStrings.googleSignInCancelled.tr;
@@ -401,7 +385,7 @@ class AuthController extends GetxController {
 
     await Loader.withFlag(isLoading, () async {
       appleSignInDebugLog('controller_sign_in_started');
-      final result = await signInWithAppleUseCase(NoParams());
+      final result = await authRepository.signInWithApple();
 
       await result.fold((failure) async {
         if (failure is AppleSignInFailure && failure.isCancelled) {
@@ -464,12 +448,10 @@ class AuthController extends GetxController {
       },
     );
 
-    final exchangeResult = await exchangeFirebaseSessionUseCase(
-      ExchangeFirebaseSessionParams(
-        name: user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!.trim()
-            : null,
-      ),
+    final exchangeResult = await authRepository.exchangeFirebaseSession(
+      name: user.displayName?.trim().isNotEmpty == true
+          ? user.displayName!.trim()
+          : null,
     );
 
     await exchangeResult.fold(
@@ -603,7 +585,7 @@ class AuthController extends GetxController {
     errorMessage.value = '';
 
     await Loader.withFlag(isLoading, () async {
-      final result = await signInWithFacebookUseCase(NoParams());
+      final result = await authRepository.signInWithFacebook();
 
       await result.fold((failure) async {
         if (failure is FacebookSignInFailure && failure.isCancelled) {

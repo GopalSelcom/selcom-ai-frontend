@@ -6,15 +6,15 @@ import '../../../../../core/localization/localization.dart';
 import '../../../../../core/routes/app_routes.dart';
 import '../../../../../core/services/app_settings_service.dart';
 import '../../../../../core/services/progress_indicator/loader.dart';
-import '../../../../../features/settings/domain/usecases/settings_usecase.dart';
+import '../../../../../features/settings/domain/repositories/settings_repository.dart';
 import '../../../../../shared/utils/app_dialogs.dart';
 
 class SettingsController extends GetxController {
-  final SettingsUseCase settingsUseCase;
+  final SettingsRepository settingsRepository;
   final AppSettingsService appSettingsService;
 
   SettingsController({
-    required this.settingsUseCase,
+    required this.settingsRepository,
     required this.appSettingsService,
   });
 
@@ -55,7 +55,7 @@ class SettingsController extends GetxController {
       return;
     }
 
-    final preferenceResult = await settingsUseCase.getRidePinPreference();
+    final preferenceResult = await settingsRepository.getRidePinPreference();
     preferenceResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (preference) {
@@ -79,7 +79,7 @@ class SettingsController extends GetxController {
     userEnabledRidePin.value = value;
 
     await Loader.withFlag(isSaving, () async {
-      final result = await settingsUseCase.updateRidePinPreference(
+      final result = await settingsRepository.updateRidePinPreference(
         enabled: value,
       );
       result.fold(

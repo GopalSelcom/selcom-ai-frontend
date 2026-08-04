@@ -6,14 +6,14 @@ import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/mid_ride_cancel_navigation.dart';
 import '../../../../shared/utils/ride_active_navigation.dart';
-import '../../domain/usecases/ride_usecase.dart';
+import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
 import 'ride_details_controller.dart';
 
 class MyRidesController extends GetxController {
-  final RideUseCase rideUseCase;
+  final RideRepository rideRepository;
 
-  MyRidesController({required this.rideUseCase});
+  MyRidesController({required this.rideRepository});
 
   final pastRides = <Ride>[].obs;
   final isLoading = true.obs;
@@ -34,7 +34,7 @@ class MyRidesController extends GetxController {
       _page.value = 1;
       hasMoreData.value = true;
       isLoading.value = isLoader ?? true;
-      final result = await rideUseCase.getRideHistory(
+      final result = await rideRepository.getRideHistory(
         page: _page.value,
         limit: _limit,
       );
@@ -66,7 +66,7 @@ class MyRidesController extends GetxController {
     if (rideId.isEmpty) return;
     isOpeningRide.value = true;
     try {
-      final result = await rideUseCase.getRideDetails(rideId);
+      final result = await rideRepository.getRideDetails(rideId);
       result.fold(
         (failure) => AppDialogs.showErrorDialog(message: failure.message),
         (freshRide) {
@@ -127,7 +127,7 @@ class MyRidesController extends GetxController {
     try {
       isLoadingMore.value = true;
       final nextPage = _page.value + 1;
-      final result = await rideUseCase.getRideHistory(
+      final result = await rideRepository.getRideHistory(
         page: nextPage,
         limit: _limit,
       );

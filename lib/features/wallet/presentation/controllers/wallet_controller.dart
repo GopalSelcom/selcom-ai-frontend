@@ -20,7 +20,6 @@ import '../../data/models/go_card_balance_response.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../../data/datasources/wallet_remote_data_source.dart';
-import '../../domain/usecases/email_wallet_statement_usecase.dart';
 import '../../domain/utils/wallet_statement_utils.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_format_utils.dart';
@@ -68,8 +67,6 @@ class WalletController extends GetxController {
     _instance = null;
   }
 
-  final EmailWalletStatementUseCase _emailWalletStatementUseCase =
-      sl<EmailWalletStatementUseCase>();
   final WalletRepository _walletRepository = sl<WalletRepository>();
 
   final RxBool isLoading = true.obs;
@@ -341,7 +338,7 @@ class WalletController extends GetxController {
       final (startDate, endDate) = defaultWalletStatementDateRange();
 
       try {
-        final result = await _emailWalletStatementUseCase(
+        final result = await _walletRepository.emailWalletStatement(
           email: email,
           startDate: startDate,
           endDate: endDate,

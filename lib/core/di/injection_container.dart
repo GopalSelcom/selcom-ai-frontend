@@ -22,7 +22,6 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/data/repositories/selcom_pesa_link_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/repositories/selcom_pesa_link_repository.dart';
-import '../../features/profile/domain/usecases/profile_usecase.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
 import '../../features/ride/data/datasources/ride_share_remote_datasource.dart';
@@ -30,27 +29,16 @@ import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/data/repositories/ride_share_repository_impl.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../features/ride/domain/repositories/ride_share_repository.dart';
-import '../../features/ride/domain/usecases/generate_share_link_use_case.dart';
-import '../../features/ride/domain/usecases/revoke_share_link_use_case.dart';
-import '../../features/ride/domain/usecases/ride_usecase.dart';
 import '../../features/ride/presentation/controllers/my_rides_controller.dart';
 import '../../features/ride_rating/data/datasources/ride_rating_remote_data_source.dart';
 import '../../features/ride_rating/data/repositories/ride_rating_repository_impl.dart';
 import '../../features/ride_rating/domain/repositories/ride_rating_repository.dart';
-import '../../features/ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
-import '../../features/ride_rating/domain/usecases/get_review_tags_usecase.dart';
-import '../../features/ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
-import '../../features/ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
 import '../../features/settings/data/datasources/settings_remote_data_source.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
-import '../../features/settings/domain/usecases/settings_usecase.dart';
 import '../../features/wallet/data/datasources/wallet_remote_data_source.dart';
 import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../../features/wallet/domain/repositories/wallet_repository.dart';
-import '../../features/wallet/domain/usecases/get_wallet_summary_usecase.dart';
-import '../../features/wallet/domain/usecases/email_wallet_statement_usecase.dart';
-import '../../features/wallet/domain/usecases/get_wallet_transactions_usecase.dart';
 import '../network/api_service.dart';
 import '../network/headers.dart';
 import '../network/network_connectivity_service.dart';
@@ -132,8 +120,6 @@ Future<void> init() async {
   sl.registerLazySingleton<RideShareRepository>(
     () => RideShareRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton(() => GenerateShareLinkUseCase(sl()));
-  sl.registerLazySingleton(() => RevokeShareLinkUseCase(sl()));
 
   // ── Profile Feature ──
   sl.registerLazySingleton<ProfileRemoteDataSource>(
@@ -155,21 +141,12 @@ Future<void> init() async {
     () => SettingsRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Use Cases
-  sl.registerLazySingleton(() => RideUseCase(sl()));
-  sl.registerLazySingleton(() => ProfileUseCase(sl()));
-  sl.registerLazySingleton(() => SettingsUseCase(sl()));
-  sl.registerLazySingleton(() => AppSettingsService(settingsUseCase: sl()));
+  sl.registerLazySingleton(
+    () => AppSettingsService(settingsRepository: sl()),
+  );
 
   // BLoCs / Controllers
-  sl.registerFactory(() => MyRidesController(rideUseCase: sl()));
-  sl.registerFactory(
-    () => ProfileController(
-      profileUseCase: sl(),
-      appSettingsService: sl(),
-      getWalletSummaryUseCase: sl(),
-    ),
-  );
+  sl.registerFactory(() => MyRidesController(rideRepository: sl()));
   sl.registerFactory(() => PaymentMethodsController());
 
   // ── Notification Feature ──
@@ -190,10 +167,6 @@ Future<void> init() async {
   sl.registerLazySingleton<RideRatingRepository>(
     () => RideRatingRepositoryImpl(remoteDataSource: sl()),
   );
-  sl.registerLazySingleton(() => GetLastCompletedRideUseCase(sl()));
-  sl.registerLazySingleton(() => GetReviewTagsUseCase(sl()));
-  sl.registerLazySingleton(() => SubmitRideRatingUseCase(sl()));
-  sl.registerLazySingleton(() => SkipRideRatingUseCase(sl()));
 
   // ── Wallet Feature (dummy local data until API) ──
   sl.registerLazySingleton<WalletPaymentRemoteDataSource>(
@@ -213,9 +186,14 @@ Future<void> init() async {
       selcomPesaTopupRemoteDataSource: sl(),
     ),
   );
-  sl.registerLazySingleton(() => GetWalletSummaryUseCase(sl()));
-  sl.registerLazySingleton(() => GetWalletTransactionsUseCase(sl()));
-  sl.registerLazySingleton(() => EmailWalletStatementUseCase(sl()));
+
+  sl.registerFactory(
+    () => ProfileController(
+      profileRepository: sl(),
+      appSettingsService: sl(),
+      walletRepository: sl(),
+    ),
+  );
 
   sl.registerLazySingleton<SavedCardsController>(
     () => SavedCardsController(walletRepository: sl()),

@@ -18,10 +18,7 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/fare_breakdown_display.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../../ride_rating/data/models/pending_review_response.dart';
-import '../../../ride_rating/domain/usecases/get_last_completed_ride_usecase.dart';
-import '../../../ride_rating/domain/usecases/get_review_tags_usecase.dart';
-import '../../../ride_rating/domain/usecases/skip_ride_rating_usecase.dart';
-import '../../../ride_rating/domain/usecases/submit_ride_rating_usecase.dart';
+import '../../../ride_rating/domain/repositories/ride_rating_repository.dart';
 import '../../../ride_rating/presentation/controllers/ride_rating_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../../data/models/receipt_response.dart';
@@ -467,10 +464,7 @@ class RideDetailsController extends GetxController {
     // Keep one shared rating controller instance across flows/screens.
     return Get.put<RideRatingController>(
       RideRatingController(
-        getLastCompletedRideUseCase: di.sl<GetLastCompletedRideUseCase>(),
-        getReviewTagsUseCase: di.sl<GetReviewTagsUseCase>(),
-        submitRideRatingUseCase: di.sl<SubmitRideRatingUseCase>(),
-        skipRideRatingUseCase: di.sl<SkipRideRatingUseCase>(),
+        rideRatingRepository: di.sl<RideRatingRepository>(),
         analyticsService: di.sl<AnalyticsService>(),
       ),
       permanent: true,

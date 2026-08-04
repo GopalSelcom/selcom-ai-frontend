@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 
 import '../../features/settings/data/models/settings_models.dart';
-import '../../features/settings/domain/usecases/settings_usecase.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
 
 class AppSettingsService {
-  AppSettingsService({required this.settingsUseCase});
+  AppSettingsService({required this.settingsRepository});
 
-  final SettingsUseCase settingsUseCase;
+  final SettingsRepository settingsRepository;
 
   final features = <String, bool>{}.obs;
   final isLoaded = false.obs;
@@ -68,7 +68,7 @@ class AppSettingsService {
   Future<void> preload({bool forceRefresh = false}) async {
     if (isLoaded.value && !forceRefresh) return;
 
-    final result = await settingsUseCase.getAppSettings();
+    final result = await settingsRepository.getAppSettings();
     result.fold(
       (_) {
         features.clear();

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../../../core/di/injection_container.dart';
-import '../../domain/usecases/get_wallet_transactions_usecase.dart';
+import '../../domain/repositories/wallet_repository.dart';
 import '../controllers/wallet_history_controller.dart';
 
 class WalletHistoryBinding extends Bindings {
@@ -9,7 +9,7 @@ class WalletHistoryBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<WalletHistoryController>(
       () => WalletHistoryController(
-        getWalletTransactionsUseCase: sl<GetWalletTransactionsUseCase>(),
+        walletRepository: sl<WalletRepository>(),
       ),
     );
   }

@@ -10,14 +10,6 @@ import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/datasources/firebase_auth_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/exchange_firebase_session_use_case.dart';
-import '../../domain/usecases/resend_phone_otp_use_case.dart';
-import '../../domain/usecases/send_phone_otp_use_case.dart';
-import '../../domain/usecases/sign_in_with_apple_use_case.dart';
-import '../../domain/usecases/sign_in_with_facebook_use_case.dart';
-import '../../domain/usecases/sign_in_with_google_use_case.dart';
-import '../../domain/usecases/set_name_use_case.dart';
-import '../../domain/usecases/verify_phone_otp_use_case.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/onboarding_controller.dart';
 
@@ -37,25 +29,9 @@ class AuthBinding extends Bindings {
       ),
     );
 
-    Get.lazyPut(() => ExchangeFirebaseSessionUseCase(Get.find()));
-    Get.lazyPut(() => SendPhoneOtpUseCase(Get.find()));
-    Get.lazyPut(() => ResendPhoneOtpUseCase(Get.find()));
-    Get.lazyPut(() => VerifyPhoneOtpUseCase(Get.find()));
-    Get.lazyPut(() => SetNameUseCase(Get.find()));
-    Get.lazyPut(() => SignInWithAppleUseCase(Get.find()));
-    Get.lazyPut(() => SignInWithFacebookUseCase(Get.find()));
-    Get.lazyPut(() => SignInWithGoogleUseCase(Get.find()));
-
     Get.lazyPut(
       () => AuthController(
-        sendPhoneOtpUseCase: Get.find(),
-        resendPhoneOtpUseCase: Get.find(),
-        verifyPhoneOtpUseCase: Get.find(),
-        setNameUseCase: Get.find(),
-        signInWithAppleUseCase: Get.find(),
-        signInWithGoogleUseCase: Get.find(),
-        exchangeFirebaseSessionUseCase: Get.find(),
-        signInWithFacebookUseCase: Get.find(),
+        authRepository: Get.find<AuthRepository>(),
         appRegionService: di.sl<AppRegionService>(),
       ),
     );

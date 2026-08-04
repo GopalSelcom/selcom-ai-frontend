@@ -9,17 +9,16 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../../domain/entities/wallet_transaction_filter.dart';
 import '../../domain/repositories/wallet_repository.dart';
-import '../../domain/usecases/get_wallet_transactions_usecase.dart';
 import '../models/wallet_transaction_item.dart';
 import '../utils/wallet_transaction_mapper.dart';
 import '../widgets/wallet_segmented_tabs.dart';
 
 class WalletHistoryController extends GetxController {
   WalletHistoryController({
-    required GetWalletTransactionsUseCase getWalletTransactionsUseCase,
-  }) : _getWalletTransactionsUseCase = getWalletTransactionsUseCase;
+    required WalletRepository walletRepository,
+  }) : _walletRepository = walletRepository;
 
-  final GetWalletTransactionsUseCase _getWalletTransactionsUseCase;
+  final WalletRepository _walletRepository;
 
   final SwiperController swiperController = SwiperController();
   final RxBool isLoading = true.obs;
@@ -65,7 +64,7 @@ class WalletHistoryController extends GetxController {
     final currency = ProfileWalletCache.currency.trim().isNotEmpty
         ? ProfileWalletCache.currency.trim()
         : CommonValues.currencyCode;
-    final transactions = await _getWalletTransactionsUseCase(
+    final transactions = await _walletRepository.getTransactions(
       filter: WalletTransactionFilter.all,
       currencyOverride: currency,
     );

@@ -6,7 +6,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../shared/utils/app_dialogs.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/profile_repository.dart';
-import '../../domain/usecases/profile_usecase.dart';
 
 /// Profile → Saved locations screen.
 ///
@@ -14,11 +13,9 @@ import '../../domain/usecases/profile_usecase.dart';
 /// Removing an item deletes it on the server — there is no unfavourite-only path.
 /// See `docs/SAVED-PLACES-FLOW.md`.
 class FavoriteLocationsController extends GetxController {
-  final ProfileUseCase profileUseCase;
   final ProfileRepository profileRepository;
 
   FavoriteLocationsController({
-    required this.profileUseCase,
     required this.profileRepository,
   });
 
@@ -33,7 +30,7 @@ class FavoriteLocationsController extends GetxController {
 
   Future<void> fetchSavedPlaces() async {
     isLoading.value = true;
-    final result = await profileUseCase.getSavedPlaces();
+    final result = await profileRepository.getSavedPlaces();
     result.fold(
       (failure) {
         AppDialogs.showErrorDialog(message: failure.message);

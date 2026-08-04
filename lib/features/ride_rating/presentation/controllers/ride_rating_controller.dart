@@ -12,25 +12,16 @@ import '../../../../shared/utils/app_dialogs.dart';
 import '../../../../shared/utils/currency_formatter.dart';
 import '../../../../shared/utils/vehicle_image_utils.dart';
 import '../../data/models/pending_review_response.dart';
-import '../../domain/usecases/get_last_completed_ride_usecase.dart';
-import '../../domain/usecases/get_review_tags_usecase.dart';
-import '../../domain/usecases/skip_ride_rating_usecase.dart';
-import '../../domain/usecases/submit_ride_rating_usecase.dart';
+import '../../domain/repositories/ride_rating_repository.dart';
 import '../widgets/ride_rating_bottom_sheet.dart';
 
 class RideRatingController extends GetxController {
   RideRatingController({
-    required this.getLastCompletedRideUseCase,
-    required this.getReviewTagsUseCase,
-    required this.submitRideRatingUseCase,
-    required this.skipRideRatingUseCase,
+    required this.rideRatingRepository,
     required this.analyticsService,
   });
 
-  final GetLastCompletedRideUseCase getLastCompletedRideUseCase;
-  final GetReviewTagsUseCase getReviewTagsUseCase;
-  final SubmitRideRatingUseCase submitRideRatingUseCase;
-  final SkipRideRatingUseCase skipRideRatingUseCase;
+  final RideRatingRepository rideRatingRepository;
   final AnalyticsService analyticsService;
 
   final Rxn<PendingReview> pendingReviewRide = Rxn<PendingReview>();
@@ -121,7 +112,7 @@ class RideRatingController extends GetxController {
   Future<void> _loadPendingReviewRide() async {
     isLoadingRide.value = true;
     try {
-      final result = await getLastCompletedRideUseCase();
+      final result = await rideRatingRepository.getLastCompletedRide();
       result.fold((failure) => _handleFailure(failure), (ride) {
         if (ride == null) {
           pendingReviewRide.value = null;
@@ -212,7 +203,7 @@ class RideRatingController extends GetxController {
 
     await Loader.withFlag(isSubmitting, () async {
       final rideId = ride.rideId?.trim() ?? '';
-      final result = await submitRideRatingUseCase(
+      final result = await rideRatingRepository.submitRideRating(
         SubmitRideRatingRequest(
           rideId: rideId,
           rating: selectedRating.value,
@@ -259,7 +250,9 @@ class RideRatingController extends GetxController {
 
     await Loader.withFlag(isSubmitting, () async {
       final rideId = ride.rideId?.trim() ?? '';
-      final result = await skipRideRatingUseCase(rideId: rideId);
+      final result = await rideRatingRepository.skipRideRating(
+        rideId: rideId,
+      );
 
       result.fold((failure) => _handleFailure(failure), (ok) async {
         if (!ok) {
@@ -299,7 +292,7 @@ class RideRatingController extends GetxController {
     availableTags.clear();
     isLoadingTags.value = true;
     _latestTagRequestRating = rating;
-    final result = await getReviewTagsUseCase(rating: rating);
+    final result = await rideRatingRepository.getReviewTags(rating: rating);
     if (_latestTagRequestRating != rating) {
       isLoadingTags.value = false;
       return;
