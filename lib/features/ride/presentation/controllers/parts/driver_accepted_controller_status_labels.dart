@@ -3,7 +3,13 @@ part of '../driver_accepted_controller.dart';
 /// Bottom-sheet and map chip copy derived from ride status (ETA, titles, ratings).
 ///
 /// Edit here for pickup / in-trip label rules and completion handoff copy.
-extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
+class DriverAcceptedStatusLabelsHelper {
+  DriverAcceptedStatusLabelsHelper(this.c);
+
+  /// Parent [DriverAcceptedController] — shared ride state and lifecycle.
+  final DriverAcceptedController c;
+
+  /// True when status means the driver is at pickup.
   bool _isDriverArrivedAtPickupStatus(String rawStatus) {
     final normalized = normalizeRideStatusString(rawStatus);
     return normalized == 'driver_arrived' ||
@@ -12,9 +18,10 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
         normalized.contains('driverarrived');
   }
 
+  /// Resolves bottom-sheet vehicle image; keeps prior asset when metadata is thin.
   void _syncBottomSheetVehicleImage(String? vehicleType) {
-    final previousAsset = bottomSheetVehicleImageAsset.value;
-    bottomSheetVehicleImageAsset
+    final previousAsset = c.bottomSheetVehicleImageAsset.value;
+    c.bottomSheetVehicleImageAsset
         .value = VehicleImageUtils.imageAssetForVehicleType(
       vehicleType,
       // Keep previously resolved vehicle image when an event payload
@@ -25,6 +32,7 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     );
   }
 
+  /// Builds `model - plate` line for the driver sheet header.
   void _applyUnifiedDriverVehicleLine({
     required String modelName,
     required String plate,
@@ -39,7 +47,7 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
         : TanzaniaLicensePlateFormatter.formatDisplay(rawRegistration);
     final line = [model, registration].where((e) => e.isNotEmpty).join(' - ');
     if (line.isNotEmpty) {
-      driverVehicleLine.value = line;
+      c.driverVehicleLine.value = line;
     }
   }
 
@@ -50,15 +58,16 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
   ) {
     final fromRoot = _socketAverageRatingLabel(payload.driverAvgRating);
     if (fromRoot != null) {
-      driverRating.value = fromRoot;
+      c.driverRating.value = fromRoot;
       return;
     }
     final snap = d?.rating;
     if (snap != null && snap > 0) {
-      driverRating.value = snap.toStringAsFixed(1);
+      c.driverRating.value = snap.toStringAsFixed(1);
     }
   }
 
+  /// Formats a positive average rating for the driver chip, or null.
   String? _socketAverageRatingLabel(num? raw) {
     if (raw == null) return null;
     final v = raw.toDouble();
@@ -70,9 +79,9 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
   void _applyBottomSheetStateForStatus(String rawStatus) {
     final normalizedStatus = normalizeRideStatusString(rawStatus);
     if (normalizedStatus.isEmpty) return;
-    currentRideStatus.value = normalizedStatus;
-    if (_isReachedStatusForSpeedHide(normalizedStatus)) {
-      assignedDriverSpeed.value = 0;
+    c.currentRideStatus.value = normalizedStatus;
+    if (c.mapHelper._isReachedStatusForSpeedHide(normalizedStatus)) {
+      c.assignedDriverSpeed.value = 0;
     }
 
     if (normalizedStatus == 'cancelled' ||
@@ -93,19 +102,19 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     // Only allow state to move backwards if we are currently in 'rideCompleted'.
     // This maintains the fix for the "sticky finish button" while preventing
     // accidental regressions from 'rideStarted' back to 'driverAssigned'.
-    final currentState = rideBottomSheetState.value;
+    final currentState = c.rideBottomSheetState.value;
     if (currentState == RideBottomSheetState.rideStarted &&
         nextState == RideBottomSheetState.driverAssigned) {
       return; // Block regression while trip is in progress
     }
 
-    rideBottomSheetState.value = nextState;
-    _syncSheetLayoutForCurrentStatus();
+    c.rideBottomSheetState.value = nextState;
+    c._syncSheetLayoutForCurrentStatus();
     if (_isDriverArrivedAtPickupStatus(normalizedStatus) ||
         nextState == RideBottomSheetState.rideStarted) {
       // Driver is free / trip started — no longer "finishing nearby".
-      if (isDriverFinishingNearby.value) {
-        isDriverFinishingNearby.value = false;
+      if (c.isDriverFinishingNearby.value) {
+        c.isDriverFinishingNearby.value = false;
       }
     }
     if (_isDriverArrivedAtPickupStatus(normalizedStatus)) {
@@ -120,23 +129,23 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
 
   /// Driver name for localized ride-status copy; falls back to generic "Driver".
   String get localizedDriverNameForCopy {
-    final name = driverName.value.trim();
+    final name = c.driverName.value.trim();
     return name.isNotEmpty ? name : AppStrings.driver.tr;
   }
 
   /// Pickup sheet + map chip copy when the driver is at pickup ([driver_arrived]).
   void _syncDriverArrivedPickupMessages() {
-    isDriverFinishingNearby.value = false;
-    assignedDriverSpeed.value = 0;
-    arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
-    etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
+    c.isDriverFinishingNearby.value = false;
+    c.assignedDriverSpeed.value = 0;
+    c.arrivalLabel.value = AppStrings.driverArrivedPickupPrimary.tr;
+    c.etaLabel.value = AppStrings.driverArrivedMapBadge.tr;
   }
 
   /// Second line on the driver-assigned pickup sheet (below the ETA row).
   ///
   /// Pickup progression: assigned → arriving → arrived (see [RidePickupStatusLabels]).
   String get driverPickupPhaseHeadline {
-    switch (currentRideStatus.value) {
+    switch (c.currentRideStatus.value) {
       case 'driver_arrived':
         return AppStrings.yourDriverHasArrived.tr;
       case 'driver_arriving':
@@ -151,34 +160,34 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
 
   /// Opens post-completion Ride Details once. Trusts realtime status over lagging HTTP.
   void _openCompletedRideDetailsScreen() {
-    if (_openedCompletedRideDetails) return;
-    if (_completionHandoffInProgress) {
+    if (c._openedCompletedRideDetails) return;
+    if (c._completionHandoffInProgress) {
       return;
     }
-    final normalizedCurrentStatus = currentRideStatus.value
+    final normalizedCurrentStatus = c.currentRideStatus.value
         .trim()
         .toLowerCase();
     if (normalizedCurrentStatus != 'completed' &&
         normalizedCurrentStatus != 'ride_completed') {
       return;
     }
-    if (rideId.isEmpty) return;
+    if (c.rideId.isEmpty) return;
 
-    _completionHandoffInProgress = true;
+    c._completionHandoffInProgress = true;
     unawaited(
       _presentCompletedRideDetailsScreen().whenComplete(() {
-        _completionHandoffInProgress = false;
+        c._completionHandoffInProgress = false;
       }),
     );
   }
 
   /// Fetches fresh details for the completed-ride screen.
   Future<void> _presentCompletedRideDetailsScreen() async {
-    if (_openedCompletedRideDetails) return;
-    if (rideId.isEmpty) return;
+    if (c._openedCompletedRideDetails) return;
+    if (c.rideId.isEmpty) return;
 
-    final result = await rideRepository.getRideDetails(rideId);
-    if (_openedCompletedRideDetails || _navigatedAway) return;
+    final result = await c.rideRepository.getRideDetails(c.rideId);
+    if (c._openedCompletedRideDetails || c._navigatedAway) return;
 
     final details = result.fold((_) => null, (r) => r);
     if (details == null) {
@@ -196,7 +205,7 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
         'Skip completion handoff; ride details status is $detailsStatus',
         tag: 'DriverAcceptedController',
       );
-      await _applyRideDetailsFromModel(details.toRideModel());
+      await c._applyRideDetailsFromModel(details.toRideModel());
       return;
     }
 
@@ -204,7 +213,7 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     details.status = 'ride_completed';
     details.showReviewUi = true;
 
-    _openedCompletedRideDetails = true;
+    c._openedCompletedRideDetails = true;
     if (Get.isRegistered<RideDetailsController>()) {
       Get.delete<RideDetailsController>();
     }
@@ -228,10 +237,11 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     });
   }
 
+  /// Sets pickup vs drop [routeTarget] fallback when polyline is still empty.
   void _applyRouteFallbackForStatus(String rawStatus) {
-    if (!_hasReceivedTrackingUpdate) return;
+    if (!c._hasReceivedTrackingUpdate) return;
     // Only apply fallback if we don't already have points.
-    if (routePoints.isNotEmpty) return;
+    if (c.routePoints.isNotEmpty) return;
 
     final status = rawStatus.trim();
     final canonicalStatus = status
@@ -257,18 +267,18 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     };
 
     if (pickupStatuses.contains(normalizedStatus)) {
-      _setPickupRouteFallback();
+      c.mapHelper._setPickupRouteFallback();
       return;
     }
 
     if (dropStatuses.contains(normalizedStatus)) {
-      _setDropRouteFallback();
+      c.mapHelper._setDropRouteFallback();
     }
   }
 
   /// In-trip sheet headline. Pickup-phase titles use [RidePickupStatusLabels] in `default`.
   String get rideProgressTitle {
-    switch (currentRideStatus.value) {
+    switch (c.currentRideStatus.value) {
       case 'ride_completed':
       case 'completed':
         return AppStrings.youHaveArrived.tr;
@@ -283,16 +293,16 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
           'driverName': localizedDriverNameForCopy,
         });
       default:
-        return RidePickupStatusLabels.titleFor(currentRideStatus.value);
+        return RidePickupStatusLabels.titleFor(c.currentRideStatus.value);
     }
   }
 
   /// In-trip / pickup supporting line (ETA-aware where applicable).
   String get rideProgressSubtitle {
-    final etaSeconds = currentEtaSeconds.value;
+    final etaSeconds = c.currentEtaSeconds.value;
     final etaMinutes = etaSeconds > 0 ? (etaSeconds / 60).ceil() : 0;
     final hasEta = etaMinutes > 0;
-    switch (currentRideStatus.value) {
+    switch (c.currentRideStatus.value) {
       case 'near_destination':
         return hasEta
             ? AppStrings.arrivedInMinutes.trParams({
@@ -329,8 +339,9 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
     }
   }
 
+  /// ETA minutes for in-trip badge (ceil of [currentEtaSeconds]).
   int get rideEtaMinutes {
-    final etaSeconds = currentEtaSeconds.value;
+    final etaSeconds = c.currentEtaSeconds.value;
     if (etaSeconds <= 0) return 0;
     return (etaSeconds / 60).ceil();
   }
@@ -346,28 +357,29 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
         s == 'en_route';
   }
 
+  /// Writes socket ETA seconds into map chip + pickup arrival labels.
   void _applySocketEtaSecondsToLabels(
     double etaSeconds, {
     required bool skipIfArrived,
   }) {
     if (skipIfArrived &&
-        normalizeRideStatusString(currentRideStatus.value) ==
+        normalizeRideStatusString(c.currentRideStatus.value) ==
             'driver_arrived') {
       return;
     }
     if (etaSeconds <= 0) return;
-    currentEtaSeconds.value = etaSeconds;
+    c.currentEtaSeconds.value = etaSeconds;
     final minutes = (etaSeconds / 60).ceil();
     // Keep ETA in state, but do not show the minutes chip while finishing nearby.
-    if (!isDriverFinishingNearby.value) {
-      etaLabel.value = AppStrings.minutesShortCount.trParams({
+    if (!c.isDriverFinishingNearby.value) {
+      c.etaLabel.value = AppStrings.minutesShortCount.trParams({
         'count': '$minutes',
       });
     }
-    final rideStatus = normalizeRideStatusString(currentRideStatus.value);
+    final rideStatus = normalizeRideStatusString(c.currentRideStatus.value);
     if (_isDriverHeadingToPickupForEta(rideStatus) &&
-        !isDriverFinishingNearby.value) {
-      arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+        !c.isDriverFinishingNearby.value) {
+      c.arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
     }
@@ -375,111 +387,119 @@ extension DriverAcceptedStatusLabelsMethods on DriverAcceptedController {
 
   /// Driver-assigned sheet first line — matches map chip math on [currentEtaSeconds].
   String get driverAssignedSheetArrivalEtaLine {
-    final st = normalizeRideStatusString(currentRideStatus.value);
+    final st = normalizeRideStatusString(c.currentRideStatus.value);
     if (st == 'driver_arrived') {
-      return arrivalLabel.value;
+      return c.arrivalLabel.value;
     }
-    if (isDriverFinishingNearby.value && _isDriverHeadingToPickupForEta(st)) {
+    if (c.isDriverFinishingNearby.value && _isDriverHeadingToPickupForEta(st)) {
       return AppStrings.driverFinishingNearbyTrip.tr;
     }
-    final secs = currentEtaSeconds.value;
+    final secs = c.currentEtaSeconds.value;
     if (secs > 0 && _isDriverHeadingToPickupForEta(st)) {
       final minutes = (secs / 60).ceil();
       return AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
     }
-    return arrivalLabel.value;
+    return c.arrivalLabel.value;
   }
 
   /// Map ETA chip — hidden while the chained driver is finishing another trip.
   bool get shouldShowMapEtaChip {
-    if (hasRideLoadError) return false;
-    if (isDriverFinishingNearby.value) return false;
-    final st = normalizeRideStatusString(currentRideStatus.value);
+    if (c.hasRideLoadError) return false;
+    if (c.isDriverFinishingNearby.value) return false;
+    final st = normalizeRideStatusString(c.currentRideStatus.value);
     if (st == 'driver_arrived') return true;
-    return currentEtaSeconds.value > 0 || etaLabel.value.trim().isNotEmpty;
+    return c.currentEtaSeconds.value > 0 || c.etaLabel.value.trim().isNotEmpty;
   }
 
+  /// In-trip sheet ETA badge visibility for started / in-progress / near dest.
   bool get shouldShowRideEtaBadge {
-    final status = currentRideStatus.value;
+    final status = c.currentRideStatus.value;
     if (rideEtaMinutes <= 0) return false;
     return status == 'ride_started' ||
         status == 'ride_in_progress' ||
         status == 'near_destination';
   }
 
+  /// Toggles chained "finishing nearby" copy and restores ETA when it ends.
   void _setDriverFinishingNearby(bool finishing) {
-    final wasFinishing = isDriverFinishingNearby.value;
-    isDriverFinishingNearby.value = finishing;
+    final wasFinishing = c.isDriverFinishingNearby.value;
+    c.isDriverFinishingNearby.value = finishing;
     if (finishing) {
       // Replaces "Driver will arrive in X min..." while the prior trip is active.
-      arrivalLabel.value = AppStrings.driverFinishingNearbyTrip.tr;
-      _lastDriverRotationSamplePosition = null;
-      _syncDriverHeadingFromActiveRoute(animate: true);
+      c.arrivalLabel.value = AppStrings.driverFinishingNearbyTrip.tr;
+      c._lastDriverRotationSamplePosition = null;
+      c.mapHelper._syncDriverHeadingFromActiveRoute(animate: true);
       return;
     }
     if (!wasFinishing) return;
-    _lastDriverRotationSamplePosition = null;
+    c._lastDriverRotationSamplePosition = null;
     _restorePickupArrivalLabelsAfterFinishingNearby();
   }
 
   /// When chaining ends (`driver_finishing_nearby` → false), always drop the
   /// finishing-trip copy. Prefer cached ETA minutes; otherwise show arriving.
   void _restorePickupArrivalLabelsAfterFinishingNearby() {
-    final st = normalizeRideStatusString(currentRideStatus.value);
+    final st = normalizeRideStatusString(c.currentRideStatus.value);
     if (!_isDriverHeadingToPickupForEta(st)) return;
 
-    final secs = currentEtaSeconds.value;
+    final secs = c.currentEtaSeconds.value;
     if (secs > 0) {
       final minutes = (secs / 60).ceil();
-      etaLabel.value = AppStrings.minutesShortCount.trParams({
+      c.etaLabel.value = AppStrings.minutesShortCount.trParams({
         'count': '$minutes',
       });
-      arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
+      c.arrivalLabel.value = AppStrings.driverWillArrivingInMinutes.trParams({
         'minutes': '$minutes',
       });
       return;
     }
 
     // No ETA cached yet — clear finishing text so the old arrival line can show.
-    etaLabel.value = AppStrings.arriving.tr;
-    arrivalLabel.value = AppStrings.driverIsArriving.tr;
+    c.etaLabel.value = AppStrings.arriving.tr;
+    c.arrivalLabel.value = AppStrings.driverIsArriving.tr;
   }
 
+  /// Vehicle model segment from [driverVehicleLine], or generic "Boda".
   String get rideVehicleLabel {
-    final value = driverVehicleLine.value.trim();
+    final value = c.driverVehicleLine.value.trim();
     if (value.isNotEmpty) return value.split('-').first.trim();
     return AppStrings.boda.tr;
   }
 
+  /// Formatted ride created-at for completed-state supporting copy.
   String get arrivalDateLabel {
-    final value = ride.value;
+    final value = c.ride.value;
     if (value == null) return '05th Mar 2026 . 08:08PM';
     return DateFormat('dd\'th\' MMM yyyy . hh:mma').format(value.createdAt);
   }
 
   /// Total Fare rows from `fare_breakdown.line_items` (API order).
   List<FareBreakdownDisplayRow> get fareLineRows {
-    final lineItems = ride.value?.fareBreakdown?.lineItems;
+    final lineItems = c.ride.value?.fareBreakdown?.lineItems;
     if (!FareBreakdownDisplay.hasLineItems(lineItems)) {
       return const [];
     }
     return FareBreakdownDisplay.rowsFromLineItems(lineItems!);
   }
 
+  /// True when fare breakdown has displayable line items.
   bool get hasFareLineItems => fareLineRows.isNotEmpty;
 
+  /// First comma-segment of an address for compact map/sheet titles.
   String _firstAddressLine(String address) {
     final trimmed = address.trim();
     if (trimmed.isEmpty) return AppStrings.unknownLocation.tr;
     return trimmed.split(',').first.trim();
   }
 
+  /// Whether current status is `near_destination`.
   bool isNearDestination() {
-    return currentRideStatus.value.toLowerCase() == 'near_destination';
+    return c.currentRideStatus.value.toLowerCase() == 'near_destination';
   }
 
+  /// Formats a fare amount with thousands separators.
   String priceFormatter(int? amount) {
     if (amount == null) return '0';
     return NumberFormat('#,###').format(amount);

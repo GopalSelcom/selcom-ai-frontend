@@ -3,7 +3,13 @@ part of '../home_controller.dart';
 /// Fare-estimate gate and navigation into vehicle selection / location selection.
 ///
 /// Edit here for booking entry points from chips, recents, and search.
-extension HomeBookingNavigationMethods on HomeController {
+class HomeBookingNavigationHelper {
+  HomeBookingNavigationHelper(this.c);
+
+  /// Parent [HomeController] — shared home state and lifecycle.
+  final HomeController c;
+
+  /// Runs fare estimate before navigating to booking; returns success or failure.
   Future<EstimateValidationOutcome> _validateEstimateBeforeBookingNavigation({
     required String pickupAddress,
     required double pickupLat,
@@ -26,7 +32,7 @@ extension HomeBookingNavigationMethods on HomeController {
         stops: stops,
       );
 
-      final result = await homeRepository.estimateFare(req);
+      final result = await c.homeRepository.estimateFare(req);
 
       return result.fold((failure) {
         final parsed = _parseEstimateFailure(failure.message);
@@ -45,6 +51,7 @@ extension HomeBookingNavigationMethods on HomeController {
     }
   }
 
+  /// Splits API failure text into optional error code + user message.
   ({String? errorCode, String message}) _parseEstimateFailure(
     String rawMessage,
   ) {
@@ -76,6 +83,7 @@ extension HomeBookingNavigationMethods on HomeController {
     return (errorCode: null, message: cleaned);
   }
 
+  /// Hides the fare loader then shows the estimate validation error dialog.
   Future<void> _showEstimateValidationErrorAfterLoaderDismiss({
     required String message,
     String? errorCode,
@@ -84,6 +92,7 @@ extension HomeBookingNavigationMethods on HomeController {
     _showEstimateValidationError(message, errorCode: errorCode);
   }
 
+  /// Shows a fare / route validation error dialog (title depends on [errorCode]).
   void _showEstimateValidationError(String message, {String? errorCode}) {
     AppDialogs.showErrorDialog(
       title: errorCode == 'VALID_PICKUP_DROP_TOO_CLOSE'
@@ -110,6 +119,7 @@ extension HomeBookingNavigationMethods on HomeController {
     );
   }
 
+  /// Surfaces a failed [EstimateValidationOutcome] after the loader dismisses.
   Future<void> presentEstimateValidationError(
     EstimateValidationOutcome outcome,
   ) async {
@@ -122,7 +132,7 @@ extension HomeBookingNavigationMethods on HomeController {
 
   /// Pickup = current map center; destination = saved place for [label] (Home / Office / Work / Other).
   Future<void> navigateToVehicleSelectionForSavedLabel(String label) async {
-    final place = getSavedPlaceByLabel(label);
+    final place = c.placesHelper.getSavedPlaceByLabel(label);
     if (place == null) {
       AppDialogs.showErrorDialog(
         title: AppStrings.addASavedPlace.tr,
@@ -159,7 +169,7 @@ extension HomeBookingNavigationMethods on HomeController {
       return;
     }
 
-    if (!hasLocationPermission.value) {
+    if (!c.hasLocationPermission.value) {
       await _openLocationSelectionWithDestination(
         destAddr: destAddr,
         destLat: dLat,
@@ -171,13 +181,13 @@ extension HomeBookingNavigationMethods on HomeController {
       return;
     }
 
-    await analyticsService.logEvent(
+    await c.analyticsService.logEvent(
       'home_saved_chip_vehicle_selection',
       parameters: {'label': label},
     );
 
-    final pickupAddr = activePickupAddress;
-    final pickupLL = activePickupLatLng;
+    final pickupAddr = c.mapHelper.activePickupAddress;
+    final pickupLL = c.mapHelper.activePickupLatLng;
     final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
@@ -243,7 +253,7 @@ extension HomeBookingNavigationMethods on HomeController {
       return;
     }
 
-    if (!hasLocationPermission.value) {
+    if (!c.hasLocationPermission.value) {
       await _openLocationSelectionWithDestination(
         destAddr: destAddr,
         destLat: dLat,
@@ -255,13 +265,13 @@ extension HomeBookingNavigationMethods on HomeController {
       return;
     }
 
-    await analyticsService.logEvent(
+    await c.analyticsService.logEvent(
       'home_saved_item_vehicle_selection',
       parameters: {'id': place.id},
     );
 
-    final pickupAddr = activePickupAddress;
-    final pickupLL = activePickupLatLng;
+    final pickupAddr = c.mapHelper.activePickupAddress;
+    final pickupLL = c.mapHelper.activePickupLatLng;
     final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
@@ -297,6 +307,7 @@ extension HomeBookingNavigationMethods on HomeController {
     );
   }
 
+  /// Opens location selection with a pre-filled destination (pickup cleared).
   Future<void> _openLocationSelectionWithDestination({
     required String destAddr,
     required double destLat,
@@ -309,7 +320,7 @@ extension HomeBookingNavigationMethods on HomeController {
     if (trimmed.isEmpty) return;
 
     if (analyticsEvent != null) {
-      await analyticsService.logEvent(
+      await c.analyticsService.logEvent(
         analyticsEvent,
         parameters: analyticsParams,
       );
@@ -358,18 +369,18 @@ extension HomeBookingNavigationMethods on HomeController {
     final destAddr = (loc.address ?? '').trim();
     if (destAddr.isEmpty) return;
 
-    if (!hasLocationPermission.value) {
+    if (!c.hasLocationPermission.value) {
       await openLocationSelectionForRecentDestination(loc);
       return;
     }
 
-    await analyticsService.logEvent(
+    await c.analyticsService.logEvent(
       'home_recent_item_vehicle_selection',
       parameters: {'address': destAddr},
     );
 
-    final pickupAddr = activePickupAddress;
-    final pickupLL = activePickupLatLng;
+    final pickupAddr = c.mapHelper.activePickupAddress;
+    final pickupLL = c.mapHelper.activePickupLatLng;
     final validation = await _validateEstimateBeforeBookingNavigation(
       pickupAddress: pickupAddr,
       pickupLat: pickupLL.latitude,
@@ -410,11 +421,11 @@ extension HomeBookingNavigationMethods on HomeController {
   /// Opens location flow with current [activePickupAddress] / [activePickupLatLng].
   /// Optional [preferredVehicle] is forwarded to booking → vehicle selection.
   Future<void> openLocationSelection({VehicleType? preferredVehicle}) async {
-    await analyticsService.logEvent('search_opened');
+    await c.analyticsService.logEvent('search_opened');
     final args = <String, dynamic>{
-      'pickup': activePickupAddress,
-      'pickupLat': activePickupLatLng.latitude,
-      'pickupLng': activePickupLatLng.longitude,
+      'pickup': c.mapHelper.activePickupAddress,
+      'pickupLat': c.mapHelper.activePickupLatLng.latitude,
+      'pickupLng': c.mapHelper.activePickupLatLng.longitude,
     };
     if (preferredVehicle != null) {
       if ((preferredVehicle.id ?? '').isNotEmpty) {
@@ -433,14 +444,17 @@ extension HomeBookingNavigationMethods on HomeController {
     Get.toNamed(AppRoutes.locationSelection, arguments: args);
   }
 
+  /// Opens location selection with a preferred vehicle type from the explore row.
   Future<void> openLocationSelectionWithPreferredVehicle(VehicleType vehicle) {
     return openLocationSelection(preferredVehicle: vehicle);
   }
 
+  /// Pops the location selection route.
   void closeLocationSelection() {
     Get.back();
   }
 
+  /// Validates the route then navigates to booking from location selection.
   Future<void> proceedToBookingFromLocationSelection({
     required String pickup,
     required List<String> destinations,
@@ -472,8 +486,8 @@ extension HomeBookingNavigationMethods on HomeController {
       return;
     }
 
-    if (isProceedingToBooking.value) return;
-    isProceedingToBooking.value = true;
+    if (c.isProceedingToBooking.value) return;
+    c.isProceedingToBooking.value = true;
 
     Map<String, dynamic>? bookingArguments;
     EstimateValidationOutcome? estimateValidationFailure;
@@ -484,14 +498,15 @@ extension HomeBookingNavigationMethods on HomeController {
 
         // Resolve pickup if missing
         if ((pLat == null || pLng == null) && pickup.trim().isNotEmpty) {
-          final resolvedPickup = await getLatLngFromAddress(pickup.trim());
+          final resolvedPickup =
+              await c.mapHelper.getLatLngFromAddress(pickup.trim());
           if (resolvedPickup != null) {
             pLat = resolvedPickup.latitude;
             pLng = resolvedPickup.longitude;
           }
         }
-        pLat ??= mapCenter.value.latitude;
-        pLng ??= mapCenter.value.longitude;
+        pLat ??= c.mapCenter.value.latitude;
+        pLng ??= c.mapCenter.value.longitude;
 
         final List<LocationEntity> resolvedDestinations = [];
         for (int i = 0; i < items.length; i++) {
@@ -506,7 +521,7 @@ extension HomeBookingNavigationMethods on HomeController {
           }
 
           if (dLat == null || dLng == null) {
-            final resolved = await getLatLngFromAddress(addr);
+            final resolved = await c.mapHelper.getLatLngFromAddress(addr);
             if (resolved != null) {
               dLat = resolved.latitude;
               dLng = resolved.longitude;
@@ -567,7 +582,7 @@ extension HomeBookingNavigationMethods on HomeController {
         };
       });
     } finally {
-      isProceedingToBooking.value = false;
+      c.isProceedingToBooking.value = false;
     }
 
     if (estimateValidationFailure != null) {
@@ -584,6 +599,7 @@ extension HomeBookingNavigationMethods on HomeController {
     Get.offNamed(AppRoutes.booking, arguments: bookingArguments);
   }
 
+  /// Explore-row vehicle image asset for [vehicleName].
   String vehicleExploreImageAsset(String vehicleName) {
     return VehicleImageUtils.imageAssetForVehicleType(vehicleName);
   }

@@ -1,22 +1,27 @@
 part of '../driver_accepted_controller.dart';
 
 /// Rider-driver comms and Live Activity: call, chat, dialer, lock-screen sync.
-extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
+class DriverAcceptedCommsLiveHelper {
+  DriverAcceptedCommsLiveHelper(this.c);
+
+  /// Parent [DriverAcceptedController] — shared ride state and lifecycle.
+  final DriverAcceptedController c;
+
   /// Places an in-app voice call to the assigned driver using the Agora
   /// calling package. Falls back to the system phone dialer when the package
   /// flow isn't available (no Agora App ID, ride id missing, etc.).
   Future<void> callDriver() async {
-    final id = rideId;
+    final id = c.rideId;
     if (id.isEmpty) {
       return;
     }
     RideDriverCallOptionsSheet.show(
       rideId: id,
-      peerDisplayName: driverName.value,
-      driverPhone: driverPhone.value,
-      peerAvatarUrl: driverAvatarUrl.value.trim().isEmpty
+      peerDisplayName: c.driverName.value,
+      driverPhone: c.driverPhone.value,
+      peerAvatarUrl: c.driverAvatarUrl.value.trim().isEmpty
           ? null
-          : driverAvatarUrl.value,
+          : c.driverAvatarUrl.value,
     );
   }
 
@@ -55,23 +60,25 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
     }
   }
 
+  /// Opens in-ride chat and clears the unread badge.
   void onChatTap() {
-    unreadCount.value = 0;
+    c.unreadCount.value = 0;
     Get.toNamed(
       AppRoutes.rideMessage,
       arguments: {
-        'rideId': rideId,
-        'driverName': driverName.value,
-        'driverPhone': driverPhone.value,
-        'driverSubtitle': plateDisplayFormatted.value,
+        'rideId': c.rideId,
+        'driverName': c.driverName.value,
+        'driverPhone': c.driverPhone.value,
+        'driverSubtitle': c.plateDisplayFormatted.value,
         'riderName': 'Rider', // Default placeholder
-        'initialStatus': _mapBottomSheetToRideStatus(
-          rideBottomSheetState.value,
+        'initialStatus': c.mapHelper._mapBottomSheetToRideStatus(
+          c.rideBottomSheetState.value,
         ).name,
       },
     );
   }
 
+  /// Starts or updates Live Activity from a status-update payload.
   Future<void> _syncLiveActivityFromStatusPayload(
     EventRiderStatusUpdateResponse payload,
   ) async {
@@ -81,7 +88,7 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
 
       // Terminal: tear down Lock Screen / Dynamic Island immediately.
       if (status.contains('CANCELLED') || status.contains('NO_DRIVER_FOUND')) {
-        await LiveActivityManager().endActivity(rideId);
+        await LiveActivityManager().endActivity(c.rideId);
         return;
       }
 
@@ -90,14 +97,15 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
       //   waiting for backend → APNs latency.
       // - APNs push-token updates remain for when the app is backgrounded/killed.
       // startActivity(..., updateIfExists: true) creates or updates ContentState.
-      final r = ride.value;
+      final r = c.ride.value;
       final driver = payload.driverSnapshot;
       final vehicle = payload.vehicleSnapshot;
       final plateFromPayload = (driver?.vehicleRegistrationNumber ?? '').trim();
       final rawPlate = plateFromPayload.isNotEmpty
           ? plateFromPayload
           : (r != null ? _rawPlateStringFromRide(r) : '');
-      final driverName = (driver?.name ?? r?.driverSnapshot?.name ?? '').trim();
+      final liveDriverName =
+          (driver?.name ?? r?.driverSnapshot?.name ?? '').trim();
       final vehicleName =
           '${vehicle?.displayName ?? vehicle?.vehicleName ?? vehicle?.vehicleType ?? r?.vehicleSnapshot?.vehicleType ?? ''} ${driver?.vehicleModel ?? r?.vehicleSnapshot?.vehicleModel ?? ''}'
               .trim();
@@ -106,13 +114,13 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
       final etaFromPayload = (payload.etaSeconds ?? 0).toDouble();
       final etaSeconds = etaFromPayload > 0
           ? etaFromPayload
-          : currentEtaSeconds.value;
+          : c.currentEtaSeconds.value;
 
       final normalizedForLive = normalizeRideStatusString(payload.status);
       await LiveActivityManager().startActivity(
-        orderId: rideId,
+        orderId: c.rideId,
         status: status,
-        driverName: driverName.isNotEmpty ? driverName : 'Driver Assigned',
+        driverName: liveDriverName.isNotEmpty ? liveDriverName : 'Driver Assigned',
         vehicleName: vehicleName,
         driverAvatarUrl: avatarUrl,
         plateNumber: TanzaniaLicensePlateFormatter.formatDisplay(rawPlate),
@@ -120,8 +128,8 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
             normalizedForLive == 'ride_completed' ||
             normalizedForLive == 'completed',
         etaSeconds: etaSeconds,
-        driverLatitude: driver?.lat ?? assignedDriverLocation.value?.latitude,
-        driverLongitude: driver?.lng ?? assignedDriverLocation.value?.longitude,
+        driverLatitude: driver?.lat ?? c.assignedDriverLocation.value?.latitude,
+        driverLongitude: driver?.lng ?? c.assignedDriverLocation.value?.longitude,
         updateIfExists: true,
       );
     } catch (e, stackTrace) {
@@ -139,9 +147,9 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
     TrackingUpdateSocketResponse payload,
   ) async {
     try {
-      if (!LiveActivityManager().isTracking(rideId)) return;
+      if (!LiveActivityManager().isTracking(c.rideId)) return;
 
-      final statusRaw = (payload.status ?? currentRideStatus.value)
+      final statusRaw = (payload.status ?? c.currentRideStatus.value)
           .toString()
           .trim();
       if (statusRaw.isEmpty) return;
@@ -156,11 +164,11 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
       final eta = (payload.eta ?? 0).toDouble();
       final normalizedForLive = normalizeRideStatusString(statusRaw);
       await LiveActivityManager().updateActivity(
-        orderId: rideId,
+        orderId: c.rideId,
         status: status,
-        etaSeconds: eta > 0 ? eta : currentEtaSeconds.value,
-        driverLatitude: assignedDriverLocation.value?.latitude,
-        driverLongitude: assignedDriverLocation.value?.longitude,
+        etaSeconds: eta > 0 ? eta : c.currentEtaSeconds.value,
+        driverLatitude: c.assignedDriverLocation.value?.latitude,
+        driverLongitude: c.assignedDriverLocation.value?.longitude,
         isCompleted:
             normalizedForLive == 'ride_completed' ||
             normalizedForLive == 'completed',
@@ -184,9 +192,10 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
     return '';
   }
 
+  /// Starts or refreshes Live Activity from HTTP ride details / bootstrap.
   Future<void> _syncLiveActivityFromDetails(RideModel r) async {
     try {
-      if (rideId.isEmpty) return;
+      if (c.rideId.isEmpty) return;
 
       // Create or refresh Live Activity from ride details (HTTP / bootstrap).
       // Uses updateIfExists so iOS ContentState stays aligned with the app.
@@ -200,7 +209,7 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
       final rawPlate = _rawPlateStringFromRide(r);
 
       await LiveActivityManager().startActivity(
-        orderId: rideId,
+        orderId: c.rideId,
         status: statusStr,
         driverName: r.driverSnapshot?.name ?? 'Driver Assigned',
         vehicleName:
@@ -209,9 +218,9 @@ extension DriverAcceptedCommsLiveMethods on DriverAcceptedController {
         driverAvatarUrl: r.driverSnapshot?.avatarUrl ?? '',
         plateNumber: TanzaniaLicensePlateFormatter.formatDisplay(rawPlate),
         isCompleted: r.status == RideStatus.rideCompleted,
-        etaSeconds: currentEtaSeconds.value,
-        driverLatitude: assignedDriverLocation.value?.latitude,
-        driverLongitude: assignedDriverLocation.value?.longitude,
+        etaSeconds: c.currentEtaSeconds.value,
+        driverLatitude: c.assignedDriverLocation.value?.latitude,
+        driverLongitude: c.assignedDriverLocation.value?.longitude,
         updateIfExists: true,
       );
     } catch (e, stackTrace) {

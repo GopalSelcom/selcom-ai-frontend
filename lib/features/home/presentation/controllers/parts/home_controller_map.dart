@@ -3,50 +3,58 @@ part of '../home_controller.dart';
 /// Home map: GPS permission, camera, reverse geocode, pickup pin / radius.
 ///
 /// Edit here for map/location behavior without touching booking or places lists.
-extension HomeMapMethods on HomeController {
+class HomeMapHelper {
+  HomeMapHelper(this.c);
+
+  /// Parent [HomeController] — shared home state and lifecycle.
+  final HomeController c;
+
+  /// Loads the blue pickup circle marker used on the home map.
   Future<void> _loadMapIcons() async {
-    pickupMarkerIcon.value = await MapMarkerUtils.createCustomCircleMarker(
+    c.pickupMarkerIcon.value = await MapMarkerUtils.createCustomCircleMarker(
       color: AppColors.mapPickupMarkerBlue,
       // Match the blue used in vehicle selection
       size: 60,
     );
   }
 
+  /// Recenter on device GPS; requests permission and may open settings.
   Future<void> recenterMap() async {
-    if (_isResolvingLocationPermission) return;
-    _isResolvingLocationPermission = true;
+    if (c._isResolvingLocationPermission) return;
+    c._isResolvingLocationPermission = true;
     try {
       // GPS tap: request permission if needed; settings dialog only here.
-      selectedPickupSavedPlaceId.value = HomeController._currentLocationPlaceId;
-      isSavedPlacesExpanded.value = false;
+      c.selectedPickupSavedPlaceId.value = HomeController._currentLocationPlaceId;
+      c.isSavedPlacesExpanded.value = false;
       await _getCurrentLocation(
         requestPermissionIfDenied: true,
         showLocationSettingsDialogIfBlocked: true,
       );
     } finally {
-      _isResolvingLocationPermission = false;
+      c._isResolvingLocationPermission = false;
     }
   }
 
+  /// True when the header pickup is still "current location" (follow GPS).
   bool get _isFollowingDeviceGps =>
-      selectedPickupSavedPlaceId.value == HomeController._currentLocationPlaceId;
+      c.selectedPickupSavedPlaceId.value == HomeController._currentLocationPlaceId;
 
   /// Keeps the GPS dot in the center of the map area above the bottom sheet.
   Future<void> _recenterCameraOnDeviceGps({
     bool animated = false,
     double? zoom,
   }) async {
-    final controller = _mapController;
-    final location = deviceGpsLocation.value;
+    final controller = c._mapController;
+    final location = c.deviceGpsLocation.value;
     if (controller == null || location == null || !_isFollowingDeviceGps) {
       return;
     }
-    if (!hasLocationPermission.value || activeRide.value != null) return;
+    if (!c.hasLocationPermission.value || c.activeRide.value != null) return;
 
     try {
-      final cameraZoom = zoom ?? _cachedMapZoom;
+      final cameraZoom = zoom ?? c._cachedMapZoom;
       if (zoom != null) {
-        _cachedMapZoom = zoom;
+        c._cachedMapZoom = zoom;
       }
       final update = CameraUpdate.newLatLngZoom(location, cameraZoom);
       if (animated) {
@@ -61,12 +69,13 @@ extension HomeMapMethods on HomeController {
 
   /// Smooth incremental pan while the sheet drags (avoids full recenter each frame).
   void _nudgeCameraForSheetDelta(double previousSize, double newSize) {
-    final controller = _mapController;
-    if (controller == null || deviceGpsLocation.value == null) return;
+    final controller = c._mapController;
+    if (controller == null || c.deviceGpsLocation.value == null) return;
     if (!_isFollowingDeviceGps) return;
-    if (!hasLocationPermission.value || activeRide.value != null) return;
+    if (!c.hasLocationPermission.value || c.activeRide.value != null) return;
 
-    final deltaPx = (newSize - previousSize) * _homeSheetScreenHeight;
+    final deltaPx =
+        (newSize - previousSize) * c.sheetHelper._homeSheetScreenHeight;
     if (deltaPx.abs() < 0.5) return;
 
     try {
@@ -79,17 +88,19 @@ extension HomeMapMethods on HomeController {
     _scheduleSheetCameraSettle();
   }
 
+  /// Debounces a full GPS recenter after sheet drag settles.
   void _scheduleSheetCameraSettle() {
-    _sheetCameraSettleTimer?.cancel();
-    _sheetCameraSettleTimer = Timer(const Duration(milliseconds: 150), () {
+    c._sheetCameraSettleTimer?.cancel();
+    c._sheetCameraSettleTimer = Timer(const Duration(milliseconds: 150), () {
       unawaited(_recenterCameraOnDeviceGps(animated: false));
     });
   }
 
+  /// Clears GPS state and shows the permission-denied address placeholder.
   void _applyLocationPermissionDenied() {
-    hasLocationPermission.value = false;
-    deviceGpsLocation.value = null;
-    currentMapAddress.value = AppStrings.locationPermissionDenied.tr;
+    c.hasLocationPermission.value = false;
+    c.deviceGpsLocation.value = null;
+    c.currentMapAddress.value = AppStrings.locationPermissionDenied.tr;
   }
 
   /// Returns true when location permission is granted and services are on.
@@ -107,9 +118,9 @@ extension HomeMapMethods on HomeController {
       final serviceEnabled = await LocationService.instance
           .checkLocationService(force: true);
       if (!serviceEnabled) {
-        hasLocationPermission.value = false;
-        deviceGpsLocation.value = null;
-        currentMapAddress.value = AppStrings.enableLocationService.tr;
+        c.hasLocationPermission.value = false;
+        c.deviceGpsLocation.value = null;
+        c.currentMapAddress.value = AppStrings.enableLocationService.tr;
         return false;
       }
     }
@@ -139,20 +150,20 @@ extension HomeMapMethods on HomeController {
       force: showLocationSettingsDialogIfBlocked,
     );
     if (!serviceEnabled) {
-      hasLocationPermission.value = false;
-      deviceGpsLocation.value = null;
-      currentMapAddress.value = AppStrings.enableLocationService.tr;
+      c.hasLocationPermission.value = false;
+      c.deviceGpsLocation.value = null;
+      c.currentMapAddress.value = AppStrings.enableLocationService.tr;
       return false;
     }
 
-    hasLocationPermission.value = true;
+    c.hasLocationPermission.value = true;
     return true;
   }
 
   /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
   Set<Circle> get nearbyPickupRadiusCircles {
-    final center = deviceGpsLocation.value;
-    if (center == null || !hasLocationPermission.value) return {};
+    final center = c.deviceGpsLocation.value;
+    if (center == null || !c.hasLocationPermission.value) return {};
     return {
       Circle(
         circleId: const CircleId('pickup_200m_radius'),
@@ -176,52 +187,59 @@ extension HomeMapMethods on HomeController {
         position: pos,
         anchor: const Offset(0.5, 1),
         infoWindow: InfoWindow(
-          title: savedPlaces.isEmpty
+          title: c.savedPlaces.isEmpty
               ? AppStrings.location.tr
               : AppStrings.pickup.tr,
           snippet: snippet.isEmpty ? AppStrings.selectedAddress.tr : snippet,
         ),
         icon:
-            pickupMarkerIcon.value ??
+            c.pickupMarkerIcon.value ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
       ),
     };
   }
 
+  /// Stores the map controller and animates to the current [mapCenter].
   void onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    isMapReady.value = true;
-    _cachedMapZoom = 16;
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(mapCenter.value, _cachedMapZoom),
+    c._mapController = controller;
+    c.isMapReady.value = true;
+    c._cachedMapZoom = 16;
+    c._mapController!.animateCamera(
+      CameraUpdate.newLatLngZoom(c.mapCenter.value, c._cachedMapZoom),
     );
   }
 
+  /// Caches zoom after the home map camera stops moving.
   void onHomeMapCameraIdle() {
-    final controller = _mapController;
+    final controller = c._mapController;
     if (controller == null) return;
     unawaited(
       controller.getZoomLevel().then((zoom) {
         if (zoom.isFinite && zoom > 0) {
-          _cachedMapZoom = zoom;
+          c._cachedMapZoom = zoom;
         }
       }),
     );
   }
 
+  /// Updates [mapCenter] while dragging; resets saved pickup to GPS when panned.
   void onCameraMove(CameraPosition position) {
-    if (!_ignoreSelectionReset &&
-        selectedPickupSavedPlaceId.value != HomeController._currentLocationPlaceId) {
-      selectedPickupSavedPlaceId.value = HomeController._currentLocationPlaceId;
+    if (!c._ignoreSelectionReset &&
+        c.selectedPickupSavedPlaceId.value !=
+            HomeController._currentLocationPlaceId) {
+      c.selectedPickupSavedPlaceId.value =
+          HomeController._currentLocationPlaceId;
     }
-    mapCenter.value = position.target;
+    c.mapCenter.value = position.target;
   }
 
+  /// Reverse-geocodes the map center after the camera settles.
   Future<void> onCameraIdle() async {
-    _ignoreSelectionReset = false;
+    c._ignoreSelectionReset = false;
     await _reverseGeocodeAtCenter();
   }
 
+  /// Fetches last-known then high-accuracy GPS and recenters when following.
   Future<void> _getCurrentLocation({
     bool requestPermissionIfDenied = false,
     bool showLocationSettingsDialogIfBlocked = false,
@@ -238,10 +256,10 @@ extension HomeMapMethods on HomeController {
       final lastPos = await Geolocator.getLastKnownPosition();
       if (lastPos != null) {
         final target = LatLng(lastPos.latitude, lastPos.longitude);
-        deviceGpsLocation.value = target;
-        mapCenter.value = target;
+        c.deviceGpsLocation.value = target;
+        c.mapCenter.value = target;
 
-        if (_mapController != null) {
+        if (c._mapController != null) {
           await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
         }
       }
@@ -254,10 +272,10 @@ extension HomeMapMethods on HomeController {
       ).timeout(const Duration(seconds: 20));
 
       final target = LatLng(position.latitude, position.longitude);
-      deviceGpsLocation.value = target;
-      mapCenter.value = target;
+      c.deviceGpsLocation.value = target;
+      c.mapCenter.value = target;
 
-      if (_mapController != null) {
+      if (c._mapController != null) {
         await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
       }
 
@@ -271,14 +289,15 @@ extension HomeMapMethods on HomeController {
     }
   }
 
+  /// Resolves [mapCenter] to a human-readable [currentMapAddress].
   Future<void> _reverseGeocodeAtCenter() async {
-    if (isResolvingAddress.value) return;
+    if (c.isResolvingAddress.value) return;
 
     try {
-      isResolvingAddress.value = true;
-      final target = mapCenter.value;
+      c.isResolvingAddress.value = true;
+      final target = c.mapCenter.value;
 
-      final result = await homeRepository
+      final result = await c.homeRepository
           .reverseGeocode(lat: target.latitude, lng: target.longitude)
           .timeout(const Duration(seconds: 10));
 
@@ -288,14 +307,14 @@ extension HomeMapMethods on HomeController {
             "📍 Reverse Geocode Failure: ${failure.message}",
             tag: 'HomeController',
           );
-          if (currentMapAddress.value == AppStrings.locating.tr) {
-            currentMapAddress.value = AppStrings.currentLocation.tr;
+          if (c.currentMapAddress.value == AppStrings.locating.tr) {
+            c.currentMapAddress.value = AppStrings.currentLocation.tr;
           }
         },
         (data) {
           if (data == null) {
-            if (currentMapAddress.value == AppStrings.locating.tr) {
-              currentMapAddress.value = AppStrings.currentLocation.tr;
+            if (c.currentMapAddress.value == AppStrings.locating.tr) {
+              c.currentMapAddress.value = AppStrings.currentLocation.tr;
             }
             return;
           }
@@ -310,11 +329,11 @@ extension HomeMapMethods on HomeController {
               "📍 Resolved Address: $formatted",
               tag: 'HomeController',
             );
-            currentMapAddress.value = formatted;
+            c.currentMapAddress.value = formatted;
           } else {
             AppLogger.d("📍 Resolved Address is EMPTY", tag: 'HomeController');
-            if (currentMapAddress.value == AppStrings.locating.tr) {
-              currentMapAddress.value = AppStrings.currentLocation.tr;
+            if (c.currentMapAddress.value == AppStrings.locating.tr) {
+              c.currentMapAddress.value = AppStrings.currentLocation.tr;
             }
           }
         },
@@ -322,43 +341,47 @@ extension HomeMapMethods on HomeController {
     } catch (e) {
       AppLogger.d("📍 Reverse Geocode Exception: $e", tag: 'HomeController');
     } finally {
-      isResolvingAddress.value = false;
+      c.isResolvingAddress.value = false;
     }
   }
 
+  /// Synthetic saved-place row for "Current location" in the address header.
   SavedPlace get currentLocationHeaderPlace => SavedPlace(
     id: HomeController._currentLocationPlaceId,
     label: AppStrings.currentLocation.tr,
     name: AppStrings.currentLocation.tr,
-    address: currentMapAddress.value,
-    lat: mapCenter.value.latitude,
-    lng: mapCenter.value.longitude,
+    address: c.currentMapAddress.value,
+    lat: c.mapCenter.value.latitude,
+    lng: c.mapCenter.value.longitude,
   );
 
+  /// Lat/lng from a [SavedPlace] (flat fields or GeoJSON coordinates).
   LatLng? _latLngFromSavedPlace(SavedPlace p) {
     if (p.lat != null && p.lng != null) return LatLng(p.lat!, p.lng!);
-    final c = p.location?.coordinates;
-    if (c != null && c.length >= 2) return LatLng(c[1], c[0]);
+    final coords = p.location?.coordinates;
+    if (coords != null && coords.length >= 2) return LatLng(coords[1], coords[0]);
     return null;
   }
 
+  /// Saved place currently selected as pickup, or null when using GPS.
   SavedPlace? get activePickupSavedPlace {
-    final id = selectedPickupSavedPlaceId.value;
+    final id = c.selectedPickupSavedPlaceId.value;
     if (id == null || id == HomeController._currentLocationPlaceId) return null;
-    if (savedPlaces.isEmpty) return null;
-    for (final p in savedPlaces) {
+    if (c.savedPlaces.isEmpty) return null;
+    for (final p in c.savedPlaces) {
       if (p.id == id) return p;
     }
     return null;
   }
 
+  /// Coordinates for booking / chips: saved pickup or live [mapCenter].
   LatLng get activePickupLatLng {
     final p = activePickupSavedPlace;
     if (p != null) {
       final ll = _latLngFromSavedPlace(p);
       if (ll != null) return ll;
     }
-    return mapCenter.value;
+    return c.mapCenter.value;
   }
 
   /// GPS / permission / geocode placeholders — not real addresses for text fields.
@@ -373,7 +396,7 @@ extension HomeMapMethods on HomeController {
 
   /// Short hint for location selection when GPS is off or denied (not shown in pickup field).
   String? get mapAddressSetupHint {
-    final t = currentMapAddress.value.trim();
+    final t = c.currentMapAddress.value.trim();
     if (t == AppStrings.enableLocationService.tr ||
         t == AppStrings.locationPermissionDenied.tr) {
       return t;
@@ -381,22 +404,24 @@ extension HomeMapMethods on HomeController {
     return null;
   }
 
+  /// Human-readable pickup address for booking (empty while still resolving GPS).
   String get activePickupAddress {
     final p = activePickupSavedPlace;
     if (p != null) {
       final a = (p.address ?? p.name ?? '').trim();
       if (a.isNotEmpty) return a;
     }
-    final live = currentMapAddress.value;
+    final live = c.currentMapAddress.value;
     if (isNonSelectableMapAddress(live)) return '';
     return live;
   }
 
+  /// Distance from device GPS to [lat]/[lng], formatted for list rows.
   String calculateDistanceKm(double? lat, double? lng) {
     // If coordinates are likely placeholders (0,0) or missing, don't show distance
     if ((lat == 0.0 && lng == 0.0) || lat == null || lng == null) return '';
 
-    final current = deviceGpsLocation.value;
+    final current = c.deviceGpsLocation.value;
     if (current == null) return '';
 
     final distanceMeters = Geolocator.distanceBetween(
@@ -410,6 +435,7 @@ extension HomeMapMethods on HomeController {
     return DistanceDisplay.formatKm(km);
   }
 
+  /// Geocodes [address]; failures resolve to `null` (legacy booking helper).
   Future<LatLng?> getLatLngFromAddress(String address) {
     return resolveAddressCoordinates(address);
   }
@@ -428,7 +454,7 @@ extension HomeMapMethods on HomeController {
       return null;
     }
 
-    final result = await homeRepository.getGeocode(address: trimmed);
+    final result = await c.homeRepository.getGeocode(address: trimmed);
     return result.fold(
       (failure) {
         onFailure?.call(failure.message);

@@ -1,55 +1,65 @@
 part of '../home_controller.dart';
 
 /// Draggable home bottom sheet: measure content, snaps, min/max/initial size.
-extension HomeSheetMethods on HomeController {
+class HomeSheetHelper {
+  HomeSheetHelper(this.c);
+
+  /// Parent [HomeController] — shared home state and lifecycle.
+  final HomeController c;
+
+  /// Clears measured content so the next layout pass re-drives sheet sizing.
   void invalidateHomeSheetMeasurement() {
-    measuredSheetContentHeightPx.value = null;
-    measuredSheetLayoutHeightPx.value = null;
+    c.measuredSheetContentHeightPx.value = null;
+    c.measuredSheetLayoutHeightPx.value = null;
   }
 
+  /// Records sheet content height from layout and syncs to the default snap.
   void reportHomeSheetContentHeight({
     required double contentHeightPx,
     required double layoutHeightPx,
   }) {
     // Shimmer layout must not drive sheet size; real content measures after load.
-    if (isLoadingHomeData.value) return;
+    if (c.isLoadingHomeData.value) return;
     if (contentHeightPx <= 0 || layoutHeightPx <= 0) return;
-    final previous = measuredSheetContentHeightPx.value;
+    final previous = c.measuredSheetContentHeightPx.value;
     if (previous != null && (previous - contentHeightPx).abs() < 1) return;
 
     final isFirstMeasure = previous == null;
-    measuredSheetContentHeightPx.value = contentHeightPx;
-    measuredSheetLayoutHeightPx.value = layoutHeightPx;
+    c.measuredSheetContentHeightPx.value = contentHeightPx;
+    c.measuredSheetLayoutHeightPx.value = layoutHeightPx;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       syncHomeSheetToDefault(animated: !isFirstMeasure);
     });
   }
 
+  /// Updates [sheetSize] and nudges the map camera for the drag delta.
   void updateHomeSheetSize(double size) {
-    final previousSize = sheetSize.value;
+    final previousSize = c.sheetSize.value;
     if ((size - previousSize).abs() < 0.0001) return;
-    sheetSize.value = size;
+    c.sheetSize.value = size;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _nudgeCameraForSheetDelta(previousSize, size);
+      c.mapHelper._nudgeCameraForSheetDelta(previousSize, size);
     });
   }
 
+  /// Listens to [homeSheetController] and mirrors size into reactive state.
   void _onHomeSheetChanged() {
-    if (_isClosed) return;
-    if (!homeSheetController.isAttached) return;
-    final size = homeSheetController.size;
+    if (c._isClosed) return;
+    if (!c.homeSheetController.isAttached) return;
+    final size = c.homeSheetController.size;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isClosed) return;
-      if (!homeSheetController.isAttached) return;
+      if (c._isClosed) return;
+      if (!c.homeSheetController.isAttached) return;
       // Avoid map/sheet relayout fighting with modal sheets (e.g. add favourite).
       if (Get.isDialogOpen ?? false) return;
       updateHomeSheetSize(size);
     });
   }
 
+  /// True when recent destinations should influence sheet default height.
   bool get hasRecentLocationsForSheet =>
-      !isLoadingHomeData.value && recentDestinations.isNotEmpty;
+      !c.isLoadingHomeData.value && c.recentDestinations.isNotEmpty;
 
   /// Smallest drag height: handle + search + chips only (recents/vehicles collapse).
   double get homeSheetMinSize {
@@ -61,25 +71,27 @@ extension HomeSheetMethods on HomeController {
     return fraction.clamp(HomeController.homeSheetCollapsedPeekMin, max - 0.02);
   }
 
+  /// Screen height used for measured-content fractions.
   double get _sheetLayoutScreenHeight =>
-      measuredSheetLayoutHeightPx.value ?? _homeSheetScreenHeight;
+      c.measuredSheetLayoutHeightPx.value ?? _homeSheetScreenHeight;
 
   /// Uncapped content height as a fraction of the screen (measured when available).
   double get homeSheetRawContentFraction {
-    final measured = measuredSheetContentHeightPx.value;
+    final measured = c.measuredSheetContentHeightPx.value;
     if (measured != null) {
       return measured / _sheetLayoutScreenHeight;
     }
     return _homeSheetContentHeight(
-          includeRecent: isLoadingHomeData.value
-              ? shouldShowRecentSection
+          includeRecent: c.isLoadingHomeData.value
+              ? c.placesHelper.shouldShowRecentSection
               : hasRecentLocationsForSheet,
         ) /
         _homeSheetScreenHeight;
   }
 
+  /// True after the sheet has reported a real content height.
   bool get homeSheetHasMeasuredContent =>
-      measuredSheetContentHeightPx.value != null;
+      c.measuredSheetContentHeightPx.value != null;
 
   /// True when content exceeds 90% — inner list scrolls; sheet max stays at 90%.
   bool get homeSheetNeedsInnerScroll =>
@@ -107,7 +119,8 @@ extension HomeSheetMethods on HomeController {
   bool get homeSheetShouldUseExpandedDefault =>
       hasRecentLocationsForSheet &&
       homeSheetHasMeasuredContent &&
-      homeSheetContentSizeFraction >= HomeController.homeSheetWithRecentDefaultSize - 0.02;
+      homeSheetContentSizeFraction >=
+          HomeController.homeSheetWithRecentDefaultSize - 0.02;
 
   /// Resting height: content-sized when small; 70% only after measure proves it fits.
   double get homeSheetInitialSize {
@@ -126,6 +139,7 @@ extension HomeSheetMethods on HomeController {
     );
   }
 
+  /// Snap points for the draggable sheet (min / optional 70% / max).
   List<double> get homeSheetSnapSizes {
     final max = homeSheetMaxChildSize;
     final snaps = <double>[homeSheetMinSize];
@@ -144,43 +158,48 @@ extension HomeSheetMethods on HomeController {
     return _dedupeAscendingSnapSizes(snaps);
   }
 
+  /// Whether snap-to points should be enabled (more than one size).
   bool get homeSheetShouldSnap => homeSheetSnapSizes.length > 1;
 
+  /// Jumps or animates the sheet to [homeSheetInitialSize] (or max if oversize).
   void syncHomeSheetToDefault({bool animated = false}) {
-    if (_isClosed) return;
+    if (c._isClosed) return;
     final max = homeSheetMaxChildSize;
     var target = homeSheetInitialSize;
-    if (homeSheetController.isAttached) {
-      final current = homeSheetController.size;
+    if (c.homeSheetController.isAttached) {
+      final current = c.homeSheetController.size;
       if (current > max) {
         target = max;
       }
     }
-    sheetSize.value = target;
-    if (!homeSheetController.isAttached) {
+    c.sheetSize.value = target;
+    if (!c.homeSheetController.isAttached) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isClosed) return;
+        if (c._isClosed) return;
         syncHomeSheetToDefault(animated: animated);
       });
       return;
     }
     if (animated) {
-      homeSheetController.animateTo(
+      c.homeSheetController.animateTo(
         target,
         duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
       );
     } else {
-      homeSheetController.jumpTo(target);
+      c.homeSheetController.jumpTo(target);
     }
   }
 
+  /// Logical screen height used for sheet fraction math.
   double get _homeSheetScreenHeight => 1.sh > 0 ? 1.sh : 812;
 
+  /// Estimated collapsed peek height (handle + search + chips).
   double _homeSheetCollapsedPeekHeight() {
     return 80.h + 68.h + 12.h + 16.h;
   }
 
+  /// Bottom safe-area padding contribution to estimated content height.
   double get _estimatedBottomPadding {
     final context = Get.context;
     if (context == null) return 16.h;
@@ -190,22 +209,23 @@ extension HomeSheetMethods on HomeController {
         : 16.h;
   }
 
+  /// Heuristic content height before the first real layout measure.
   double _homeSheetContentHeight({required bool includeRecent}) {
     double contentHeight = 78.h;
     contentHeight += 64.h;
 
-    if (includeRecent && shouldShowRecentSection) {
+    if (includeRecent && c.placesHelper.shouldShowRecentSection) {
       contentHeight += 28.h;
-      final count = isLoadingHomeData.value
+      final count = c.isLoadingHomeData.value
           ? 3
-          : recentDestinationsPreview.length;
+          : c.placesHelper.recentDestinationsPreview.length;
       contentHeight += count * 64.h;
       if (count > 1) {
         contentHeight += (count - 1) * 25.h;
       }
     }
 
-    if (shouldShowVehicleSection) {
+    if (c.placesHelper.shouldShowVehicleSection) {
       contentHeight += 12.h;
       contentHeight += 28.h;
       contentHeight += 72.h;
@@ -215,6 +235,7 @@ extension HomeSheetMethods on HomeController {
     return contentHeight;
   }
 
+  /// Sorts and merges nearby snap sizes so the sheet does not jitter.
   List<double> _dedupeAscendingSnapSizes(List<double> sizes) {
     final sorted = sizes.toList()..sort();
     final out = <double>[];

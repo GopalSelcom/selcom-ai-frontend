@@ -2,8 +2,13 @@ part of '../home_controller.dart';
 
 /// Helpers for LocationSelectionController: apply text / suggestion / saved / recent
 /// into the active pickup or destination segment.
-extension HomeLocationSelectionMethods on HomeController {
-  // Location selection screen orchestration helpers.
+class HomeLocationSelectionHelper {
+  HomeLocationSelectionHelper(this.c);
+
+  /// Parent [HomeController] — shared home state and lifecycle.
+  final HomeController c;
+
+  /// Writes free-text into the active pickup / destination / stop field.
   void applyLocationSelectionTextToSegment({
     required int activeSegmentIndex,
     required String text,
@@ -39,6 +44,7 @@ extension HomeLocationSelectionMethods on HomeController {
     }
   }
 
+  /// Applies an autocomplete [prediction] to the active segment and geocodes it.
   void applySuggestionToLocationSelection({
     required Prediction prediction,
     required int activeSegmentIndex,
@@ -61,7 +67,7 @@ extension HomeLocationSelectionMethods on HomeController {
       pickupController.selection = TextSelection.fromPosition(
         TextPosition(offset: pickupController.text.length),
       );
-      getLatLngFromAddress(description).then((latLng) {
+      c.mapHelper.getLatLngFromAddress(description).then((latLng) {
         if (latLng != null) {
           routePickupLat.value = latLng.latitude;
           routePickupLng.value = latLng.longitude;
@@ -80,7 +86,7 @@ extension HomeLocationSelectionMethods on HomeController {
       );
 
       // Async resolve coordinates to avoid faulty fallbacks later
-      getLatLngFromAddress(description).then((latLng) {
+      c.mapHelper.getLatLngFromAddress(description).then((latLng) {
         if (latLng != null) {
           routeDestinationLat.value = latLng.latitude;
           routeDestinationLng.value = latLng.longitude;
@@ -91,14 +97,14 @@ extension HomeLocationSelectionMethods on HomeController {
 
     final i = activeSegmentIndex - 2;
     if (i >= 0 && i < extraDestinationControllers.length) {
-      final c = extraDestinationControllers[i];
-      c.text = description;
-      c.selection = TextSelection.fromPosition(
-        TextPosition(offset: c.text.length),
+      final ctrl = extraDestinationControllers[i];
+      ctrl.text = description;
+      ctrl.selection = TextSelection.fromPosition(
+        TextPosition(offset: ctrl.text.length),
       );
 
       // Also resolve for extra stops if needed
-      getLatLngFromAddress(description).then((latLng) {
+      c.mapHelper.getLatLngFromAddress(description).then((latLng) {
         if (latLng != null && activeSegmentIndex == (i + 2)) {
           // We don't have reactive lat/lng list for extra stops yet in this controller state,
           // but we can at least resolve if we add them later.
@@ -107,6 +113,7 @@ extension HomeLocationSelectionMethods on HomeController {
     }
   }
 
+  /// Applies a [savedPlace] to the active segment; returns false if address empty.
   bool applySavedPlaceToLocationSelection({
     required SavedPlace savedPlace,
     required int activeSegmentIndex,
@@ -156,10 +163,11 @@ extension HomeLocationSelectionMethods on HomeController {
       }
     }
 
-    searchQuery.value = '';
+    c.searchQuery.value = '';
     return true;
   }
 
+  /// Applies a recent destination row to the active segment.
   void applyRecentDestinationToLocationSelection({
     required RecentDestination destination,
     required int activeSegmentIndex,
@@ -190,9 +198,10 @@ extension HomeLocationSelectionMethods on HomeController {
       routeDestinationLat.value = destination.lat;
       routeDestinationLng.value = destination.lng;
     }
-    searchQuery.value = '';
+    c.searchQuery.value = '';
   }
 
+  /// Applies a recent-search string to the active segment.
   void applyRecentSearchToLocationSelection({
     required String recentText,
     required int activeSegmentIndex,
@@ -219,6 +228,6 @@ extension HomeLocationSelectionMethods on HomeController {
       routeDestinationLng: routeDestinationLng,
       destinationPlaceId: destinationPlaceId,
     );
-    searchQuery.value = '';
+    c.searchQuery.value = '';
   }
 }

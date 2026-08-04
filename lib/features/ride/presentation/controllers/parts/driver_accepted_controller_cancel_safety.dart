@@ -3,25 +3,35 @@ part of '../driver_accepted_controller.dart';
 /// Cancel, no-show countdown, route deviation, and emergency / safety actions.
 ///
 /// Edit here for rider cancel flows and safety banners without touching map/socket.
-extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
+class DriverAcceptedCancelSafetyHelper {
+  DriverAcceptedCancelSafetyHelper(this.c);
+
+  /// Parent [DriverAcceptedController] — shared ride state and lifecycle.
+  final DriverAcceptedController c;
+
+  /// True when the in-trip map safety FAB should be visible.
   bool get shouldShowMapSafetyAction =>
-      rideBottomSheetState.value == RideBottomSheetState.rideStarted;
+      c.rideBottomSheetState.value == RideBottomSheetState.rideStarted;
 
   /// Hide cancel when backend says `can_cancel: false` (rider already in vehicle).
   bool get shouldShowRiderCancelButton {
-    final info = cancelInfo.value;
+    final info = c.cancelInfo.value;
     if (info == null) return true;
     return info.canCancel;
   }
 
-  bool get shouldShowNoShowBanner => noShowInfo.value != null;
+  /// Whether the no-show countdown banner has armed info.
+  bool get shouldShowNoShowBanner => c.noShowInfo.value != null;
 
-  String get noShowBannerTitle => noShowInfo.value?.title ?? '';
+  /// Primary no-show banner title from server copy.
+  String get noShowBannerTitle => c.noShowInfo.value?.title ?? '';
 
-  String get noShowBannerSubtitle => noShowInfo.value?.subtitle ?? '';
+  /// Secondary no-show banner subtitle from server copy.
+  String get noShowBannerSubtitle => c.noShowInfo.value?.subtitle ?? '';
 
+  /// Whether the off/on-route deviation banner should render.
   bool get shouldShowRouteDeviationBanner {
-    final info = routeDeviationInfo.value;
+    final info = c.routeDeviationInfo.value;
     if (info == null || !info.flagged) return false;
     if (!info.isOffRoute && !info.isOnRoute) return false;
     final cancel = info.cancellationRequest;
@@ -29,86 +39,103 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
         cancel != null && (cancel.isPending || cancel.isRejected);
     // Continue-to-trip / on-route close hides until a new transition re-arms.
     // Keep visible when a deviation-scoped cancel request is still open.
-    if (routeDeviationBannerDismissed.value && !hasOpenCancel) return false;
+    if (c.routeDeviationBannerDismissed.value && !hasOpenCancel) return false;
     return true;
   }
 
+  /// True while the latest deviation state is off-route.
   bool get isRouteDeviationOffRoute =>
-      routeDeviationInfo.value?.isOffRoute ?? false;
+      c.routeDeviationInfo.value?.isOffRoute ?? false;
 
+  /// On-route banners may dismiss unless a cancel request is still pending.
   bool get canDismissRouteDeviationBanner =>
-      routeDeviationInfo.value?.isOnRoute == true &&
-      !(routeDeviationInfo.value?.cancellationRequest?.isPending ?? false);
+      c.routeDeviationInfo.value?.isOnRoute == true &&
+      !(c.routeDeviationInfo.value?.cancellationRequest?.isPending ?? false);
 
+  /// Off-route "Request to cancel" is allowed when no pending cancel exists.
   bool get canRequestCancellationFromDeviation =>
-      routeDeviationInfo.value?.canRequestCancellation == true &&
-      !(requestToCancelInfo.value?.isPending ?? false);
+      c.routeDeviationInfo.value?.canRequestCancellation == true &&
+      !(c.requestToCancelInfo.value?.isPending ?? false);
 
+  /// Deviation-scoped cancellation request is awaiting support.
   bool get isDeviationCancellationPending =>
-      routeDeviationInfo.value?.cancellationRequest?.isPending == true;
+      c.routeDeviationInfo.value?.cancellationRequest?.isPending == true;
 
+  /// Deviation-scoped cancellation request was declined by support.
   bool get isDeviationCancellationRejected =>
-      routeDeviationInfo.value?.cancellationRequest?.isRejected == true;
+      c.routeDeviationInfo.value?.cancellationRequest?.isRejected == true;
 
+  /// Deviation banner title (API copy, or "back on route" fallback).
   String get routeDeviationBannerTitle {
-    final info = routeDeviationInfo.value;
+    final info = c.routeDeviationInfo.value;
     if (info == null) return '';
     if (info.title.isNotEmpty) return info.title;
     if (info.isOnRoute) return AppStrings.backOnRoute.tr;
     return '';
   }
 
+  /// Deviation banner supporting subtitle from server.
   String get routeDeviationBannerSubtitle =>
-      routeDeviationInfo.value?.subtitle ?? '';
+      c.routeDeviationInfo.value?.subtitle ?? '';
 
+  /// Human-readable off-route distance string for the banner.
   String get routeDeviationDistanceText =>
-      routeDeviationInfo.value?.distanceText.trim() ?? '';
+      c.routeDeviationInfo.value?.distanceText.trim() ?? '';
 
+  /// Ticket number for a deviation-scoped cancel request.
   String get deviationCancellationTicketNumber =>
-      routeDeviationInfo.value?.cancellationRequest?.ticketNumber ?? '';
+      c.routeDeviationInfo.value?.cancellationRequest?.ticketNumber ?? '';
 
+  /// Optional support note on a deviation-scoped cancel request.
   String get deviationCancellationNote {
-    final note = routeDeviationInfo.value?.cancellationRequest?.note?.trim();
+    final note = c.routeDeviationInfo.value?.cancellationRequest?.note?.trim();
     return note ?? '';
   }
 
+  /// Standalone Request-to-cancel banner (pending or rejected).
   bool get shouldShowRequestToCancelBanner {
-    final request = requestToCancelInfo.value;
+    final request = c.requestToCancelInfo.value;
     return request != null && (request.isPending || request.isRejected);
   }
 
+  /// Standalone Request-to-cancel is awaiting support decision.
   bool get isRequestToCancelPending =>
-      requestToCancelInfo.value?.isPending == true;
+      c.requestToCancelInfo.value?.isPending == true;
 
+  /// Standalone Request-to-cancel was declined by support.
   bool get isRequestToCancelRejected =>
-      requestToCancelInfo.value?.isRejected == true;
+      c.requestToCancelInfo.value?.isRejected == true;
 
+  /// Ticket number for the standalone Request-to-cancel lane.
   String get requestToCancelTicketNumber =>
-      requestToCancelInfo.value?.ticketNumber ?? '';
+      c.requestToCancelInfo.value?.ticketNumber ?? '';
 
+  /// Optional support note on the standalone Request-to-cancel.
   String get requestToCancelNote {
-    final note = requestToCancelInfo.value?.note?.trim();
+    final note = c.requestToCancelInfo.value?.note?.trim();
     return note ?? '';
   }
 
+  /// Rejected Request-to-cancel may open a new request sheet.
   bool get canRetryRequestToCancel => isRequestToCancelRejected;
 
   /// Called once from [DriverAcceptedScreen] after first frame.
   Future<void> loadEmergencyContactsOnceOnScreenOpen() async {
-    if (_emergencyContactsLoadedOnce) return;
-    _emergencyContactsLoadedOnce = true;
-    final result = await rideRepository.getEmergencyContacts();
+    if (c._emergencyContactsLoadedOnce) return;
+    c._emergencyContactsLoadedOnce = true;
+    final result = await c.rideRepository.getEmergencyContacts();
     result.fold(
       (f) => AppLogger.w(
         'emergency_contacts request failed: ${f.message}',
         tag: 'EmergencyContacts',
       ),
       (EmergencyContactsResponse res) {
-        emergencyContacts.assignAll(res.data.contacts);
+        c.emergencyContacts.assignAll(res.data.contacts);
       },
     );
   }
 
+  /// Icon for an emergency contact row by API contact `id`.
   IconData emergencyContactIconFor(String id) {
     switch (id) {
       case 'police':
@@ -120,6 +147,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
   }
 
+  /// Opens the system dialer for an emergency contact phone number.
   Future<void> dialEmergencyContact(EmergencyContactModel contact) async {
     final primary = contact.phone.trim();
     final secondary = contact.secondaryPhone?.trim() ?? '';
@@ -131,7 +159,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
       );
       return;
     }
-    await _launchSystemPhoneDialer(
+    await c.commsLiveHelper._launchSystemPhoneDialer(
       phone: phone,
       errorDialogTitle: contact.label.isEmpty
           ? AppStrings.call.tr
@@ -139,6 +167,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     );
   }
 
+  /// Shows ride-cancelled dialog then navigates home on confirm.
   void _showCancelDialogThenGoHome(String message) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AppDialogs.showErrorDialog(
@@ -149,41 +178,45 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     });
   }
 
+  /// Handles cancel signal from tracking when status stream already left.
   Future<void> _handleRideCancelledFromTracking() async {
     await _maybeNavigateMidRideDriverCancelled();
-    if (_navigatedAway) return;
-    _navigatedAway = true;
+    if (c._navigatedAway) return;
+    c._navigatedAway = true;
     _showCancelDialogThenGoHome(AppStrings.rideCancelled.tr);
   }
 
+  /// Mid-ride driver cancel → dedicated dialog when details include that block.
   Future<void> _maybeNavigateMidRideDriverCancelled([
     MidRideCancelModel? seed,
   ]) async {
-    if (_navigatedAway) return;
+    if (c._navigatedAway) return;
     final block = seed ?? await _loadMidRideCancelBlock();
     if (block == null) return;
-    _navigatedAway = true;
-    _skipRideRoomLeaveOnClose = true;
-    await showMidRideDriverCancelledDialog(rideId: rideId, cancel: block);
+    c._navigatedAway = true;
+    c._skipRideRoomLeaveOnClose = true;
+    await showMidRideDriverCancelledDialog(rideId: c.rideId, cancel: block);
   }
 
+  /// Fetches ride details and returns mid-ride cancel payload when present.
   Future<MidRideCancelModel?> _loadMidRideCancelBlock() async {
-    if (rideId.isEmpty) return null;
-    final result = await rideRepository.getRideDetails(rideId);
+    if (c.rideId.isEmpty) return null;
+    final result = await c.rideRepository.getRideDetails(c.rideId);
     return result.fold((_) => null, (r) {
       if (!r.isMidRideDriverCancel) return null;
       return r.toRideModel().midRideCancel;
     });
   }
 
+  /// Syncs cancel-info + no-show from a `ride:status_update` payload.
   void _syncCancelAndNoShowFromStatusPayload(
     EventRiderStatusUpdateResponse payload,
   ) {
     if (payload.cancelInfoFieldPresent) {
-      cancelInfo.value = payload.cancelInfo;
-      final current = ride.value;
+      c.cancelInfo.value = payload.cancelInfo;
+      final current = c.ride.value;
       if (current != null) {
-        ride.value = current.copyWith(
+        c.ride.value = current.copyWith(
           cancelInfo: payload.cancelInfo,
           clearCancelInfo: payload.cancelInfo == null,
         );
@@ -199,13 +232,14 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
   }
 
+  /// Syncs cancel-info + no-show from HTTP ride details.
   void _syncCancelAndNoShowFromRideModel(RideModel r) {
     if (r.cancelInfo != null) {
-      cancelInfo.value = r.cancelInfo;
+      c.cancelInfo.value = r.cancelInfo;
     }
     if (r.noShow != null) {
       // Prefer banner copy already armed from active/status payload.
-      _armNoShowInfo(r.noShow!.mergingDisplayFrom(noShowInfo.value));
+      _armNoShowInfo(r.noShow!.mergingDisplayFrom(c.noShowInfo.value));
       return;
     }
     final normalized = normalizeRideStatusString(
@@ -221,6 +255,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
   }
 
+  /// Applies route deviation (or cancel-only shell) from ride details.
   void _syncRouteDeviationFromRideModel(RideModel r) {
     final deviation = r.routeDeviation;
     if (deviation == null) return;
@@ -235,74 +270,80 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
   }
 
+  /// Deduped socket handler for live route-deviation events.
   void _applyRouteDeviationFromSocket(RideRouteDeviationSocketPayload payload) {
     final detectedIso = payload.deviation.detectedAt?.toIso8601String() ?? '';
-    final dedupeKey = '${payload.rideId ?? rideId}|$detectedIso';
-    if (detectedIso.isNotEmpty && _lastRouteDeviationDedupeKey == dedupeKey) {
+    final dedupeKey = '${payload.rideId ?? c.rideId}|$detectedIso';
+    if (detectedIso.isNotEmpty && c._lastRouteDeviationDedupeKey == dedupeKey) {
       return;
     }
     if (detectedIso.isNotEmpty) {
-      _lastRouteDeviationDedupeKey = dedupeKey;
+      c._lastRouteDeviationDedupeKey = dedupeKey;
     }
     _applyRouteDeviation(
-      payload.deviation.mergingFrom(routeDeviationInfo.value),
+      payload.deviation.mergingFrom(c.routeDeviationInfo.value),
     );
   }
 
+  /// Merges and stores route deviation; re-arms banner on off/on transitions.
   void _applyRouteDeviation(RideRouteDeviationModel info) {
-    final previous = routeDeviationInfo.value;
+    final previous = c.routeDeviationInfo.value;
     final merged = info.mergingFrom(previous);
     // New off-route event after a dismissed on-route banner should re-show.
     if (merged.isOffRoute && previous?.isOnRoute == true) {
-      routeDeviationBannerDismissed.value = false;
+      c.routeDeviationBannerDismissed.value = false;
     }
     if (merged.isOnRoute && previous?.isOffRoute == true) {
-      routeDeviationBannerDismissed.value = false;
+      c.routeDeviationBannerDismissed.value = false;
     }
-    routeDeviationInfo.value = merged;
+    c.routeDeviationInfo.value = merged;
     _clearRequestToCancelIfSameTicket(merged.cancellationRequest);
-    final current = ride.value;
+    final current = c.ride.value;
     if (current != null) {
-      ride.value = current.copyWith(routeDeviation: merged);
+      c.ride.value = current.copyWith(routeDeviation: merged);
     }
   }
 
+  /// Stores standalone Request-to-cancel and clears matching deviation ticket.
   void _applyRequestToCancelInfo(RideCancellationRequestModel request) {
-    requestToCancelInfo.value = request;
+    c.requestToCancelInfo.value = request;
     _clearDeviationCancellationIfSameTicket(request);
     // One pending request per ride — block deviation "Request to cancel".
-    final deviation = routeDeviationInfo.value;
+    final deviation = c.routeDeviationInfo.value;
     if (deviation != null && request.isPending) {
-      routeDeviationInfo.value = deviation.copyWith(
+      c.routeDeviationInfo.value = deviation.copyWith(
         canRequestCancellation: false,
       );
     }
   }
 
+  /// Clears standalone Request-to-cancel when the same ticket moves to deviation.
   void _clearRequestToCancelIfSameTicket(
     RideCancellationRequestModel? request,
   ) {
     if (request == null) return;
-    final existing = requestToCancelInfo.value;
+    final existing = c.requestToCancelInfo.value;
     if (existing == null) return;
     if (_sameCancellationTicket(existing, request)) {
-      requestToCancelInfo.value = null;
+      c.requestToCancelInfo.value = null;
     }
   }
 
+  /// Clears deviation cancel request when the same ticket is standalone.
   void _clearDeviationCancellationIfSameTicket(
     RideCancellationRequestModel request,
   ) {
-    final deviation = routeDeviationInfo.value;
+    final deviation = c.routeDeviationInfo.value;
     final existing = deviation?.cancellationRequest;
     if (deviation == null || existing == null) return;
     if (!_sameCancellationTicket(existing, request)) return;
-    routeDeviationInfo.value = deviation.copyWith(
+    c.routeDeviationInfo.value = deviation.copyWith(
       clearCancellationRequest: true,
       canRequestCancellation: request.isWithdrawn || request.isRejected,
     );
   }
 
+  /// Matches cancel tickets by id, else by ticket number.
   bool _sameCancellationTicket(
     RideCancellationRequestModel a,
     RideCancellationRequestModel b,
@@ -315,6 +356,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     return aNum.isNotEmpty && bNum.isNotEmpty && aNum == bNum;
   }
 
+  /// Applies socket cancel-request status updates to either cancel lane.
   void _applyCancellationRequestUpdate(
     RideCancellationRequestUpdatePayload payload,
   ) {
@@ -325,11 +367,11 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
       note: payload.note,
     );
 
-    final standalone = requestToCancelInfo.value;
+    final standalone = c.requestToCancelInfo.value;
     if (standalone != null &&
         (payload.ticketId.isEmpty ||
             _sameCancellationTicket(standalone, updatedRequest))) {
-      requestToCancelInfo.value = RideCancellationRequestModel(
+      c.requestToCancelInfo.value = RideCancellationRequestModel(
         ticketId: payload.ticketId.isNotEmpty
             ? payload.ticketId
             : standalone.ticketId,
@@ -340,17 +382,17 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
         requestedAt: standalone.requestedAt,
         note: payload.note,
       );
-      final deviation = routeDeviationInfo.value;
+      final deviation = c.routeDeviationInfo.value;
       if (deviation != null &&
           (updatedRequest.isRejected || updatedRequest.isWithdrawn)) {
-        routeDeviationInfo.value = deviation.copyWith(
+        c.routeDeviationInfo.value = deviation.copyWith(
           canRequestCancellation: true,
         );
       }
       return;
     }
 
-    final current = routeDeviationInfo.value;
+    final current = c.routeDeviationInfo.value;
     if (current == null) {
       if (updatedRequest.isPending || updatedRequest.isRejected) {
         _applyRequestToCancelInfo(
@@ -385,8 +427,9 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     );
   }
 
+  /// Hides the deviation banner until a new off/on-route transition.
   void dismissRouteDeviationBanner() {
-    routeDeviationBannerDismissed.value = true;
+    c.routeDeviationBannerDismissed.value = true;
   }
 
   /// Off-route "Continue to trip" — dismiss banner only; no info dialog.
@@ -424,8 +467,8 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
   bool _showExistingRequestToCancelStatus({
     bool allowRejectedRetry = false,
   }) {
-    final request = requestToCancelInfo.value ??
-        routeDeviationInfo.value?.cancellationRequest;
+    final request = c.requestToCancelInfo.value ??
+        c.routeDeviationInfo.value?.cancellationRequest;
     if (request == null) return false;
 
     final ticket = request.ticketNumber.trim();
@@ -465,14 +508,15 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     return false;
   }
 
+  /// Runs [RequestCancellationFlow] and stores the resulting ticket.
   Future<void> _openCancellationRequestSheet({
     required bool forDeviation,
   }) async {
     if (forDeviation && !canRequestCancellationFromDeviation) return;
     final hasPendingRequestToCancel =
-        requestToCancelInfo.value?.isPending ?? false;
+        c.requestToCancelInfo.value?.isPending ?? false;
     final hasPendingDeviation =
-        routeDeviationInfo.value?.cancellationRequest?.isPending ?? false;
+        c.routeDeviationInfo.value?.cancellationRequest?.isPending ?? false;
     if (!forDeviation &&
         (hasPendingRequestToCancel || hasPendingDeviation)) {
       _showExistingRequestToCancelStatus();
@@ -480,8 +524,8 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
 
     final data = await RequestCancellationFlow(
-      rideRepository: rideRepository,
-      rideId: rideId,
+      rideRepository: c.rideRepository,
+      rideId: c.rideId,
     ).run();
     if (data == null) return;
 
@@ -493,7 +537,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     );
 
     if (forDeviation) {
-      final current = routeDeviationInfo.value;
+      final current = c.routeDeviationInfo.value;
       if (current == null) return;
       _applyRouteDeviation(
         current.copyWith(
@@ -507,25 +551,28 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     _applyRequestToCancelInfo(request);
   }
 
+  /// Withdraws a pending deviation-scoped cancellation request.
   Future<void> withdrawDeviationCancellationRequest() {
     return _withdrawCancellationRequest(fromDeviation: true);
   }
 
+  /// Withdraws a pending standalone Request-to-cancel.
   Future<void> withdrawRequestToCancel() {
     return _withdrawCancellationRequest(fromDeviation: false);
   }
 
+  /// Calls withdraw API and updates the matching cancel-request lane.
   Future<void> _withdrawCancellationRequest({
     required bool fromDeviation,
   }) async {
     final ticketId = fromDeviation
-        ? (routeDeviationInfo.value?.cancellationRequest?.ticketId.trim() ?? '')
-        : (requestToCancelInfo.value?.ticketId.trim() ?? '');
+        ? (c.routeDeviationInfo.value?.cancellationRequest?.ticketId.trim() ?? '')
+        : (c.requestToCancelInfo.value?.ticketId.trim() ?? '');
     if (ticketId.isEmpty) return;
 
     Failure? failure;
     await Loader.run(() async {
-      final result = await rideRepository.withdrawCancellationRequest(ticketId);
+      final result = await c.rideRepository.withdrawCancellationRequest(ticketId);
       result.fold((f) => failure = f, (_) {});
     });
 
@@ -536,7 +583,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
             ? failure!.message
             : AppStrings.cancellationRequestAlreadyDecided.tr,
       );
-      await _fetchRideDetails();
+      await c._fetchRideDetails();
       return;
     }
 
@@ -551,7 +598,7 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
     }
 
     if (fromDeviation) {
-      final current = routeDeviationInfo.value;
+      final current = c.routeDeviationInfo.value;
       if (current == null) return;
       final prior = current.cancellationRequest;
       _applyRouteDeviation(
@@ -563,94 +610,98 @@ extension DriverAcceptedCancelSafetyMethods on DriverAcceptedController {
       return;
     }
 
-    final prior = requestToCancelInfo.value;
-    requestToCancelInfo.value = prior?.copyWith(status: 'withdrawn');
-    final deviation = routeDeviationInfo.value;
+    final prior = c.requestToCancelInfo.value;
+    c.requestToCancelInfo.value = prior?.copyWith(status: 'withdrawn');
+    final deviation = c.routeDeviationInfo.value;
     if (deviation != null) {
-      routeDeviationInfo.value = deviation.copyWith(
+      c.routeDeviationInfo.value = deviation.copyWith(
         canRequestCancellation: true,
       );
     }
   }
 
+  /// Arms no-show banner + countdown from [fireAt] (idempotent per fire time).
   void _armNoShowInfo(RideNoShowInfoModel info) {
     // Keep title/subtitle from active/socket when a later details refresh
     // only sends fire_at / fee without banner copy.
-    final merged = info.mergingDisplayFrom(noShowInfo.value);
-    noShowInfo.value = merged;
-    isNoShowExpiring.value = false;
+    final merged = info.mergingDisplayFrom(c.noShowInfo.value);
+    c.noShowInfo.value = merged;
+    c.isNoShowExpiring.value = false;
     final fireIso = merged.fireAt.toIso8601String();
-    if (_armedNoShowFireAtIso == fireIso && _noShowCountdown != null) {
-      noShowCountdownLabel.value = merged.formatRemainingMmSs();
-      final current = ride.value;
+    if (c._armedNoShowFireAtIso == fireIso && c._noShowCountdown != null) {
+      c.noShowCountdownLabel.value = merged.formatRemainingMmSs();
+      final current = c.ride.value;
       if (current != null) {
-        ride.value = current.copyWith(noShow: merged);
+        c.ride.value = current.copyWith(noShow: merged);
       }
       return;
     }
-    _armedNoShowFireAtIso = fireIso;
-    noShowCountdownLabel.value = merged.formatRemainingMmSs();
-    _noShowCountdown?.stop();
-    _noShowCountdown = PaymentCountdownTimer(
+    c._armedNoShowFireAtIso = fireIso;
+    c.noShowCountdownLabel.value = merged.formatRemainingMmSs();
+    c._noShowCountdown?.stop();
+    c._noShowCountdown = PaymentCountdownTimer(
       onTick: (remainingSeconds) {
         final mins = remainingSeconds ~/ 60;
         final secs = remainingSeconds % 60;
-        noShowCountdownLabel.value =
+        c.noShowCountdownLabel.value =
             '${mins.toString().padLeft(2, '0')}:'
             '${secs.toString().padLeft(2, '0')}';
       },
       onExpired: () {
         // Display-only — server cancels; show brief waiting state.
-        noShowCountdownLabel.value = '00:00';
-        isNoShowExpiring.value = true;
+        c.noShowCountdownLabel.value = '00:00';
+        c.isNoShowExpiring.value = true;
       },
     )..startUntil(merged.fireAt);
 
-    final current = ride.value;
+    final current = c.ride.value;
     if (current != null) {
-      ride.value = current.copyWith(noShow: merged);
+      c.ride.value = current.copyWith(noShow: merged);
     }
   }
 
+  /// Clears no-show banner state and stops the countdown timer.
   void _clearNoShowInfo() {
     _stopNoShowCountdown(clearInfo: true);
   }
 
+  /// Stops the no-show timer; optionally clears banner Rx fields.
   void _stopNoShowCountdown({bool clearInfo = false}) {
-    _noShowCountdown?.stop();
-    _noShowCountdown = null;
-    _armedNoShowFireAtIso = null;
-    isNoShowExpiring.value = false;
+    c._noShowCountdown?.stop();
+    c._noShowCountdown = null;
+    c._armedNoShowFireAtIso = null;
+    c.isNoShowExpiring.value = false;
     if (clearInfo) {
-      noShowInfo.value = null;
-      noShowCountdownLabel.value = '00:00';
-      final current = ride.value;
+      c.noShowInfo.value = null;
+      c.noShowCountdownLabel.value = '00:00';
+      final current = c.ride.value;
       if (current != null && current.noShow != null) {
-        ride.value = current.copyWith(clearNoShow: true);
+        c.ride.value = current.copyWith(clearNoShow: true);
       }
     }
   }
 
+  /// Rider cancel from driver-details sheet via shared [CancelRideFlow].
   Future<void> confirmCancelRide() {
     // Driver-details bottom sheet — shared [CancelRideFlow] (canonical implementation).
     return CancelRideFlow(
-      rideRepository: rideRepository,
-      rideId: rideId,
-      cancelInfo: cancelInfo.value,
+      rideRepository: c.rideRepository,
+      rideId: c.rideId,
+      cancelInfo: c.cancelInfo.value,
       onCancelApiStarted: () {
-        _isUserInitiatedCancellation = true;
-        _navigatedAway = true;
+        c._isUserInitiatedCancellation = true;
+        c._navigatedAway = true;
       },
       onCancelApiFailed: () {
-        _isUserInitiatedCancellation = false;
-        _navigatedAway = false;
+        c._isUserInitiatedCancellation = false;
+        c._navigatedAway = false;
       },
       onRideAlreadyFinalized: () {
         // Race with server no-show finalize — stay on screen and await socket.
-        _isUserInitiatedCancellation = false;
-        _navigatedAway = false;
-        isNoShowExpiring.value = true;
-        unawaited(_fetchRideDetails());
+        c._isUserInitiatedCancellation = false;
+        c._navigatedAway = false;
+        c.isNoShowExpiring.value = true;
+        unawaited(c._fetchRideDetails());
       },
     ).run();
   }

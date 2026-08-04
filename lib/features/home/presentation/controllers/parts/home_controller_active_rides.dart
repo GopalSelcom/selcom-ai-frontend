@@ -1,38 +1,47 @@
 part of '../home_controller.dart';
 
 /// Active-ride polling, stack expand/collapse, and open-ride navigation from Home.
-extension HomeActiveRidesMethods on HomeController {
-  int get additionalActiveRidesCount =>
-      activeRides.length > 1 ? activeRides.length - 1 : 0;
+class HomeActiveRidesHelper {
+  HomeActiveRidesHelper(this.c);
 
-  bool get hasMultipleActiveRides => activeRides.length > 1;
+  /// Parent [HomeController] — shared home state and lifecycle.
+  final HomeController c;
+
+  /// Count of extra active rides beyond the primary card (for the "+N" badge).
+  int get additionalActiveRidesCount =>
+      c.activeRides.length > 1 ? c.activeRides.length - 1 : 0;
+
+  /// True when more than one in-progress ride should be stacked on Home.
+  bool get hasMultipleActiveRides => c.activeRides.length > 1;
 
   /// Stops periodic active-ride polling (e.g. after session revoked on another device).
   void stopActiveRidePolling() {
-    _activeRidePollingTimer?.cancel();
-    _activeRidePollingTimer = null;
+    c._activeRidePollingTimer?.cancel();
+    c._activeRidePollingTimer = null;
   }
 
+  /// Fetches the latest active-ride list (throttled unless [force]).
   Future<void> refreshActiveRide({bool force = false}) async {
     if (SessionExpiryService.isHandling) return;
-    if (_isRefreshingActiveRide) return;
+    if (c._isRefreshingActiveRide) return;
     if (!force &&
-        _lastActiveRideRefreshAt != null &&
-        DateTime.now().difference(_lastActiveRideRefreshAt!) <
+        c._lastActiveRideRefreshAt != null &&
+        DateTime.now().difference(c._lastActiveRideRefreshAt!) <
             const Duration(seconds: 2)) {
       return;
     }
 
-    _isRefreshingActiveRide = true;
-    _lastActiveRideRefreshAt = DateTime.now();
-    final result = await homeRepository.getActiveRide();
+    c._isRefreshingActiveRide = true;
+    c._lastActiveRideRefreshAt = DateTime.now();
+    final result = await c.homeRepository.getActiveRide();
     result.fold((_) {}, _applyActiveRideResponse);
-    _isRefreshingActiveRide = false;
+    c._isRefreshingActiveRide = false;
   }
 
+  /// Starts a 1-minute periodic active-ride refresh.
   void _startActiveRidePolling() {
     stopActiveRidePolling();
-    _activeRidePollingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    c._activeRidePollingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (SessionExpiryService.isHandling) {
         stopActiveRidePolling();
         return;
@@ -41,52 +50,59 @@ extension HomeActiveRidesMethods on HomeController {
     });
   }
 
+  /// Applies the active-rides API payload to [activeRide] / [activeRides].
   void _applyActiveRideResponse(
     active_ride_api.ActiveRideResponseModel? activeRideResponse,
   ) {
     // API shape: `{ count, rides: [{ ride, socket_rooms }, ...] }` (legacy fields still supported).
     final rides = parseActiveRidesFromResponse(activeRideResponse?.data);
     if (rides.isEmpty) {
-      activeRide.value = null;
-      activeRides.clear();
-      isActiveRidesExpanded.value = false;
-      _socketService.leaveJoinedRideRoom();
+      c.activeRide.value = null;
+      c.activeRides.clear();
+      c.isActiveRidesExpanded.value = false;
+      c._socketService.leaveJoinedRideRoom();
       return;
     }
 
-    activeRides.assignAll(rides);
+    c.activeRides.assignAll(rides);
     final primaryRide = rides.first;
-    activeRide.value = primaryRide;
+    c.activeRide.value = primaryRide;
     if (!hasMultipleActiveRides) {
-      isActiveRidesExpanded.value = false;
+      c.isActiveRidesExpanded.value = false;
     }
     _syncLiveActivity(primaryRide);
   }
 
+  /// Whether the stacked active-rides UI can expand.
   bool get canExpandActiveRides => hasMultipleActiveRides;
 
+  /// Expands the multi-ride stack on Home.
   void expandActiveRidesStack() {
-    if (!canExpandActiveRides || isActiveRidesExpanded.value) return;
-    isActiveRidesExpanded.value = true;
+    if (!canExpandActiveRides || c.isActiveRidesExpanded.value) return;
+    c.isActiveRidesExpanded.value = true;
   }
 
+  /// Collapses the multi-ride stack on Home.
   void collapseActiveRidesStack() {
-    if (!isActiveRidesExpanded.value) return;
-    isActiveRidesExpanded.value = false;
+    if (!c.isActiveRidesExpanded.value) return;
+    c.isActiveRidesExpanded.value = false;
   }
 
+  /// Title line for an active-ride card (route summary or fallback).
   String activeRideRouteTitle(RideModel ride) {
     final route = _activeRideRouteSummary(ride);
     if (route.isNotEmpty) return route;
     return AppStrings.activeRide.tr;
   }
 
+  /// Remaining-time label for an active-ride card (empty when unknown).
   String activeRideRemainingLabel(RideModel ride) {
     final minutes = ride.durationMinutes;
     if (minutes <= 0) return '';
     return AppStrings.activeRideMinRemains.trParams({'minutes': '$minutes'});
   }
 
+  /// Short "pickup to destination" summary for card titles.
   String _activeRideRouteSummary(RideModel ride) {
     final pickup = _shortPlaceLabel(ride.pickup.address);
     final destination = _shortPlaceLabel(ride.destination.address);
@@ -98,13 +114,15 @@ extension HomeActiveRidesMethods on HomeController {
     return '$pickup to $destination';
   }
 
+  /// Vehicle image asset path for an active-ride card.
   String activeRideVehicleImageAsset(RideModel ride) {
     return ActiveRideVehicleImageResolver.resolveAsset(
       ride: ride,
-      vehicleTypeCatalog: vehicleTypes,
+      vehicleTypeCatalog: c.vehicleTypes,
     );
   }
 
+  /// First comma-separated segment of an address for compact UI.
   String _shortPlaceLabel(String address) {
     final trimmed = address.trim();
     if (trimmed.isEmpty) return '';
@@ -113,6 +131,7 @@ extension HomeActiveRidesMethods on HomeController {
     return first.isEmpty ? trimmed : first;
   }
 
+  /// Mirrors the primary active ride into the platform Live Activity.
   Future<void> _syncLiveActivity(RideModel ride) async {
     try {
       final status = ride.status.name;
@@ -146,14 +165,15 @@ extension HomeActiveRidesMethods on HomeController {
     }
   }
 
+  /// Opens the ongoing-ride screen for [ride] (or the primary active ride).
   Future<void> openActiveRide([RideModel? ride]) async {
     collapseActiveRidesStack();
-    final rideValue = ride ?? activeRide.value;
+    final rideValue = ride ?? c.activeRide.value;
     if (rideValue == null) return;
     final rideId = rideValue.id.trim();
     if (rideId.isEmpty) return;
 
-    final detailsResult = await homeRepository.getRideDetails(rideId);
+    final detailsResult = await c.homeRepository.getRideDetails(rideId);
     detailsResult.fold(
       (failure) => AppDialogs.showErrorDialog(message: failure.message),
       (freshRideDetails) async {
@@ -167,9 +187,7 @@ extension HomeActiveRidesMethods on HomeController {
         final detailsModel = freshRideDetails.toRideModel();
         // Active / status `no_show` includes title/subtitle; ride details often
         // only has fire_at/fee — merge so the pickup wait banner keeps its copy.
-        final mergedNoShow = detailsModel.noShow == null
-            ? null
-            : detailsModel.noShow!.mergingDisplayFrom(rideValue.noShow);
+        final mergedNoShow = detailsModel.noShow?.mergingDisplayFrom(rideValue.noShow);
         final freshRide = detailsModel.copyWith(
           cancelInfo: detailsModel.cancelInfo ?? rideValue.cancelInfo,
           noShow: mergedNoShow,
@@ -177,8 +195,8 @@ extension HomeActiveRidesMethods on HomeController {
           routeDeviation:
               detailsModel.routeDeviation ?? rideValue.routeDeviation,
         );
-        await _socketService.connect();
-        _socketService.switchRideRoom(rideId: freshId);
+        await c._socketService.connect();
+        c._socketService.switchRideRoom(rideId: freshId);
         // 🛰️ Sync Live Activity view when user taps "View Trip"
         LiveActivityManager().startActivity(
           orderId: freshRide.id,

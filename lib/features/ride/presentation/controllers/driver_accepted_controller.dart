@@ -72,13 +72,13 @@ import '../utils/request_cancellation_flow.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import 'ride_details_controller.dart';
 
-// ── Concern splits (same library via `part`; keep fields/lifecycle here) ──
-// map ............ markers, camera, route geometry, speed/ETA overlay
-// socket ......... ride-room realtime, status/tracking payloads
-// cancel_safety .. cancel, no-show, route deviation, emergency
-// status_labels .. sheet / progress / ETA copy from ride status
-// stops_destination mid-ride stops + drop changes + wallet holds
-// comms_live ..... call, chat, Live Activity sync
+// ── Concern splits (same library via `part`; helpers access private fields) ──
+// mapHelper ............ markers, camera, route geometry, speed/ETA overlay
+// socketHelper ......... ride-room realtime, status/tracking payloads
+// cancelSafetyHelper .. cancel, no-show, route deviation, emergency
+// statusLabelsHelper .. sheet / progress / ETA copy from ride status
+// stopsDestinationHelper mid-ride stops + drop changes + wallet holds
+// commsLiveHelper ..... call, chat, Live Activity sync
 part 'parts/driver_accepted_controller_map.dart';
 part 'parts/driver_accepted_controller_socket.dart';
 part 'parts/driver_accepted_controller_cancel_safety.dart';
@@ -89,6 +89,7 @@ part 'parts/driver_accepted_controller_comms_live.dart';
 /// Bottom sheet layout for pickup phase vs ride-started phase.
 enum RideBottomSheetState { driverAssigned, rideStarted }
 
+/// Ride statuses where the map speed chip should stay hidden.
 const _reachedStatusesForSpeedHide = {
   'driver_arrived',
   'driverarrived',
@@ -104,8 +105,9 @@ const _driverAtPickupProximityMeters = 75.0;
 
 /// SCR-11 — Driver accepted / ride in progress.
 ///
-/// Owns shared state and lifecycle. Behavior is split into `parts/` extensions
-/// so map, socket, cancel, labels, stops, and comms can change independently.
+/// Owns shared state and lifecycle. Behavior is split into `parts/` helper
+/// classes (same library) so map, socket, cancel, labels, stops, and comms
+/// can change independently.
 class DriverAcceptedController extends GetxController
     with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
   DriverAcceptedController({
@@ -113,45 +115,60 @@ class DriverAcceptedController extends GetxController
     required this.analyticsService,
   });
 
+  /// Ride HTTP API (details, cancel, stops, destination, emergency contacts).
   final RideRepository rideRepository;
 
+  /// Product analytics (screen views and ride-flow events).
   final AnalyticsService analyticsService;
 
   /// From `/go/settings` → `features.max_stops` (excludes final destination).
   int get maxIntermediateStops =>
       di.sl<AppSettingsService>().maxIntermediateStops;
 
+  /// Shared socket client for ride-room join/leave and realtime streams.
   final AppSocketService _socketService = AppSocketService();
 
+  /// Active ride id from navigation args (required for details + sockets).
   late final String rideId;
 
+  /// Pickup coordinates for map markers and proximity checks.
   late final LatLng pickupLatLng;
 
+  /// Final drop coordinates (may update mid-ride).
   late LatLng destinationLatLng;
 
+  /// Full pickup address string from nav args / ride details.
   late final String pickupAddress;
 
+  /// Full destination address string (may update mid-ride).
   late String destinationAddress;
 
+  /// Intermediate stop address lines shown in the trip summary (not final drop).
   final summaryIntermediateStops = <String>[].obs;
 
+  /// Full route places from nav: intermediates + final destination (last item).
   final routeDestinations = <LocationEntity>[].obs;
 
   /// Seeded from navigation args for rematch / finding-driver handoff.
   Map<String, dynamic>? _seedFareBreakdown;
 
+  /// Last known / animated assigned-driver position on the map.
   final Rxn<LatLng> assignedDriverLocation = Rxn<LatLng>();
 
+  /// Decoded polyline points for the active leg (pickup or drop).
   final routePoints = <LatLng>[].obs;
 
+  /// Active route leg target: `pick_up` or `drop` (drives fallbacks / headers).
   final routeTarget = 'pick_up'.obs;
 
+  /// True while the initial (or retry) GET ride-details request is in flight.
   final isLoadingRide = false.obs;
 
   /// User-facing message when ride details cannot be loaded (missing rideId or API failure).
   /// Drives the error sheet on [DriverAcceptedScreen]; never show placeholder driver data.
   final rideLoadError = RxnString();
 
+  /// Latest ride model from HTTP / prefetch (source of truth for sheet fields).
   final Rxn<RideModel> ride = Rxn<RideModel>();
 
   /// Cached `cancel_info` from socket / active rides — drives cancel dialog copy.
@@ -178,35 +195,49 @@ class DriverAcceptedController extends GetxController
   /// Clock hit zero; waiting for server-authoritative cancel (do not call cancel API).
   final isNoShowExpiring = false.obs;
 
+  /// Ticks [noShowCountdownLabel] until fire-at; null when banner inactive.
   PaymentCountdownTimer? _noShowCountdown;
 
+  /// ISO fire-at already armed — avoids restarting the countdown on duplicate syncs.
   String? _armedNoShowFireAtIso;
 
+  /// Assigned driver display name for sheet / call / chat.
   final driverName = ''.obs;
 
+  /// Driver phone for dialer / call options.
   final driverPhone = ''.obs;
 
+  /// Driver avatar URL (empty when unavailable).
   final driverAvatarUrl = ''.obs;
 
+  /// Formatted rating string for the sheet (e.g. `4.8` or `—`).
   final driverRating = ''.obs;
 
+  /// Combined vehicle + plate line shown under the driver name.
   final driverVehicleLine = ''.obs;
 
+  /// Bottom-sheet vehicle illustration asset path.
   final bottomSheetVehicleImageAsset = AppAssets.imgCab.obs;
 
   /// Formatted for UI, e.g. `T 123 ABC` (see [TanzaniaLicensePlateFormatter]).
   final plateDisplayFormatted = ''.obs;
 
+  /// Model / color subtitle under the plate line.
   final vehicleSubtitle = ''.obs;
 
+  /// Up to 4 PIN digits shown when [isPinRequired] is true.
   final otpDigits = <String>[].obs;
 
+  /// Whether the ride requires a PIN at pickup.
   final isPinRequired = true.obs;
 
+  /// Short ETA label for map chip / sheet (e.g. minutes count).
   final etaLabel = AppStrings.minutesShortCount.trParams({'count': '10'}).obs;
 
+  /// Latest ETA from socket/tracking in seconds (drives chip math).
   final currentEtaSeconds = 0.0.obs;
 
+  /// Longer arrival copy for the pickup-phase sheet.
   final arrivalLabel = AppStrings.driverWillArrivingInMinutes.trParams({
     'minutes': '1',
   }).obs;
@@ -216,52 +247,74 @@ class DriverAcceptedController extends GetxController
   /// driver marker along the drawn route until the flag clears.
   final isDriverFinishingNearby = false.obs;
 
+  /// Unread in-ride chat messages (badge on chat action).
   final unreadCount = 0.obs;
 
+  /// Which bottom-sheet layout is active: pickup vs ride-started.
   final rideBottomSheetState = RideBottomSheetState.driverAssigned.obs;
 
-  // Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
+  /// Normalized ride status from socket/API — use [normalizeRideStatusString] when writing.
   final currentRideStatus = 'driver_assigned'.obs;
 
+  /// Bitmap for the moving assigned-driver marker.
   final Rxn<BitmapDescriptor> assignedDriverMarkerIcon =
       Rxn<BitmapDescriptor>();
 
+  /// Pickup pin icon.
   final Rxn<BitmapDescriptor> pickupIcon = Rxn<BitmapDescriptor>();
 
+  /// Final drop pin icon.
   final Rxn<BitmapDescriptor> dropIcon = Rxn<BitmapDescriptor>();
 
+  /// Intermediate stop pin icons (letter markers when multi-stop).
   final stopIcons = <BitmapDescriptor>[].obs;
 
+  /// Cached red A/B/C… letter icons for multi-stop route pins.
   final Map<String, BitmapDescriptor> _redRouteLetterIcons = {};
 
+  /// Cached green letter icons (alternate style) for multi-stop pins.
   final Map<String, BitmapDescriptor> _greenRouteLetterIcons = {};
 
+  /// True after letter icon bitmaps have been generated once.
   bool _routeLetterIconsLoaded = false;
 
+  /// Bumps to cancel in-flight marker icon loads when a newer load starts.
   int _markerIconLoadToken = 0;
 
+  /// Screen-space point for the driver ETA chip overlay (null when hidden).
   final Rxn<Offset> assignedDriverEtaScreenPx = Rxn<Offset>();
 
+  /// Driver marker rotation in degrees.
   final assignedDriverHeading = 0.0.obs;
 
-  final assignedDriverSpeed = 0.0.obs; // m/s
+  /// Driver speed in m/s from tracking (map speed chip).
+  final assignedDriverSpeed = 0.0.obs;
+
+  /// Smoothed rider/driver position used for marker animation + ETA projection.
   final Rxn<LatLng> animatedRiderLocation = Rxn<LatLng>();
 
+  /// True after the first usable route geometry has been applied (stops auto-recenter).
   final RxBool isInitialRouteLoaded = false.obs;
 
+  /// Optional external hook when the GPS recenter control is pressed.
   VoidCallback? onRecenterPressed;
 
+  /// Native Google Map controller from [AppGoogleMap.onMapCreated].
   GoogleMapController? mapController;
 
+  /// Previous sample used to derive heading from movement when GPS bearing is weak.
   LatLng? _lastDriverRotationSamplePosition;
 
+  /// True after leaving SCR-11 (cancel, rematch, completion) — blocks late UI updates.
   bool _navigatedAway = false;
 
   /// Suppresses cancel dialog when the user completed [CancelRideFlow] (socket may also fire `cancelled`).
   bool _isUserInitiatedCancellation = false;
 
+  /// Throttles camera/bounds updates.
   DateTime? _lastCameraUpdate;
 
+  /// Ensures completed-ride details open only once.
   bool _openedCompletedRideDetails = false;
 
   /// Guards completion handoff so socket + tracking cannot start parallel fetches.
@@ -270,85 +323,414 @@ class DriverAcceptedController extends GetxController
   /// Coalesces concurrent getRideDetails calls (resume, handoff, stop-update poll).
   Future<void>? _rideDetailsFetchInFlight;
 
+  /// True after at least one tracking payload arrived (enables route fallbacks).
   bool _hasReceivedTrackingUpdate = false;
 
+  /// Socket connectivity stream.
   StreamSubscription<bool>? _connectionSub;
 
+  /// `ride:status_update` subscription.
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStatusSub;
 
+  /// Stop-progress status subscription.
   StreamSubscription<EventRiderStatusUpdateResponse>? _rideStopSub;
 
+  /// Driver location ticks subscription.
   StreamSubscription<DriverLocationSocketResponse>? _driverLocSub;
 
+  /// `ride:tracking_update` subscription.
   StreamSubscription<TrackingUpdateSocketResponse?>? _trackingSub;
 
+  /// In-ride chat message subscription.
   StreamSubscription<Map<String, dynamic>>? _chatSub;
 
+  /// Stops-updated success subscription.
   StreamSubscription<RideStopsUpdatedResponse>? _rideStopsUpdatedSub;
 
+  /// Stops-update failure subscription.
   StreamSubscription<RideStopsUpdateFailedResponse>? _rideStopsUpdateFailedSub;
 
+  /// Payment / wallet hold status subscription.
   StreamSubscription<PaymentStatusUpdateResponse>? _paymentStatusSub;
 
+  /// Fare settled (Book Any) subscription.
   StreamSubscription<RideFareSettledResponse>? _fareSettledSub;
 
+  /// Mid-ride driver cancelled subscription.
   StreamSubscription<RideDriverCancelledPayload>? _driverCancelledSub;
 
+  /// Route deviation subscription.
   StreamSubscription<RideRouteDeviationSocketPayload>? _routeDeviationSub;
 
+  /// Cancellation-request status updates subscription.
   StreamSubscription<RideCancellationRequestUpdatePayload>?
   _cancellationRequestUpdateSub;
 
+  /// When true, [onClose] skips leaving the ride room (e.g. mid-ride cancel handoff).
   bool _skipRideRoomLeaveOnClose = false;
 
   /// Set from nav args when My Rides / Home already pre-fetched this ride.
   bool _skipInitialRideDetailsFetch = false;
 
+  /// Prefetched [RideModel] from navigation (used when skipping initial fetch).
   RideModel? _prefetchedRide;
 
+  /// Guards re-entrant app-resume recovery.
   bool _isHandlingAppResume = false;
 
+  /// Ensures emergency contacts load at most once per screen open.
   bool _emergencyContactsLoadedOnce = false;
 
   /// API-driven rows for the safety sheet (label = title, primary `phone` for `tel:`).
   final emergencyContacts = <EmergencyContactModel>[].obs;
 
+  /// Current draggable sheet fraction (keeps map chrome above the sheet).
   final RxDouble sheetSize = 0.3.obs;
 
-  // Mid-Ride Stops State
+  // ── Mid-ride stops / destination ──
+
+  /// True while add-stops preview/confirm/payment/route recalculation is running.
   final isUpdatingStops = false.obs;
 
+  /// Idempotency key for stop-update API + local persistence across resume.
   final stopUpdateIdempotencyKey = ''.obs;
 
+  /// Last stops preview response (fare delta / geometry).
   final Rxn<StopUpdatePreviewModel> stopUpdatePreview =
       Rxn<StopUpdatePreviewModel>();
 
+  /// Last applied stops confirm response (pending payment / success).
   final Rxn<StopUpdateAppliedModel> stopUpdateApplied =
       Rxn<StopUpdateAppliedModel>();
 
-  final stopUpdateProgressStep =
-      0.obs; // 0: Idle, 1: Payment, 2: Route, 3: Success
+  /// Stop-update UI step: `0` idle, `1` payment, `2` route, `3` success.
+  final stopUpdateProgressStep = 0.obs;
+
+  /// Stops the rider selected in the editor (target list while confirming).
   final stopUpdateWorkingStops = <RideStopModel>[].obs;
 
+  /// True while destination (drop) update confirm/route flow is running.
   final RxBool isUpdatingDestination = false.obs;
 
+  /// True when the open stop-editor session is a drop-change (not add-stops).
   final RxBool isDestinationUpdateFlow = false.obs;
 
+  /// Last destination preview response.
   final Rxn<DestinationUpdatePreviewModel> destinationUpdatePreview =
       Rxn<DestinationUpdatePreviewModel>();
 
+  /// Applied destination payload waiting for editor pop / finalize.
   DestinationUpdateAppliedModel? _pendingDestinationAppliedAfterConfirm;
 
+  /// Applied stops payload waiting for editor pop / payment / finalize.
   StopUpdateAppliedModel? _pendingStopAppliedAfterConfirm;
 
+  /// Wallet validation id for stop-update payment hold.
   String? _pendingStopPaymentValidationId;
 
+  /// Payment direction for the pending stop hold (`debit` / `credit`).
   String? _pendingStopPaymentDirection;
 
+  /// Expected drop lat after destination confirm (poll success detection).
   double? _pendingDestinationTargetLat;
 
+  /// Expected drop lng after destination confirm (poll success detection).
   double? _pendingDestinationTargetLng;
 
+  /// Map markers, camera, route geometry, speed/ETA overlay.
+  late final DriverAcceptedMapHelper mapHelper;
+
+  /// Ride-room realtime: status, tracking, payment, rematch.
+  late final DriverAcceptedSocketHelper socketHelper;
+
+  /// Cancel, no-show, route deviation, emergency contacts.
+  late final DriverAcceptedCancelSafetyHelper cancelSafetyHelper;
+
+  /// Sheet / progress / ETA copy derived from ride status.
+  late final DriverAcceptedStatusLabelsHelper statusLabelsHelper;
+
+  /// Mid-ride stops + drop changes + wallet holds.
+  late final DriverAcceptedStopsDestinationHelper stopsDestinationHelper;
+
+  /// Call, chat, Live Activity sync.
+  late final DriverAcceptedCommsLiveHelper commsLiveHelper;
+
+  /// Builds concern helpers once before any bootstrap / socket work.
+  void _initHelpers() {
+    mapHelper = DriverAcceptedMapHelper(this);
+    socketHelper = DriverAcceptedSocketHelper(this);
+    cancelSafetyHelper = DriverAcceptedCancelSafetyHelper(this);
+    statusLabelsHelper = DriverAcceptedStatusLabelsHelper(this);
+    stopsDestinationHelper = DriverAcceptedStopsDestinationHelper(this);
+    commsLiveHelper = DriverAcceptedCommsLiveHelper(this);
+  }
+
+  // ── Public API delegates (screens / widgets / stop editor) ──
+
+  /// Formatted driver speed for the map chip (empty when hidden).
+  String get formattedSpeedLabel => mapHelper.formattedSpeedLabel;
+
+  /// Intermediate stops used for map letter pins.
+  List<RideStopModel> get mapIntermediateStops =>
+      mapHelper.mapIntermediateStops;
+
+  /// Route letter (A/B/C…) for intermediate stop [sequentialIndex].
+  String routeLetterForIntermediateIndex(int sequentialIndex) =>
+      mapHelper.routeLetterForIntermediateIndex(sequentialIndex);
+
+  /// Red letter pin bitmap for intermediate stop [sequentialIndex].
+  BitmapDescriptor redRouteLetterIconForSequentialIndex(int sequentialIndex) =>
+      mapHelper.redRouteLetterIconForSequentialIndex(sequentialIndex);
+
+  /// True when multi-stop letter markers should be used instead of a single drop pin.
+  bool get usesMultiStopRouteMarkers => mapHelper.usesMultiStopRouteMarkers;
+
+  /// Loads / refreshes the vehicle-type driver marker icon.
+  Future<void> loadDriverIcon({String? vehicleType}) =>
+      mapHelper.loadDriverIcon(vehicleType: vehicleType);
+
+  /// Called when [AppGoogleMap] is ready — stores controller and fits bounds.
+  void onMapCreated(GoogleMapController ctrl) => mapHelper.onMapCreated(ctrl);
+
+  /// Schedules a post-frame refresh of the driver ETA screen overlay.
+  void scheduleAssignedEtaOverlayRefresh() =>
+      mapHelper.scheduleAssignedEtaOverlayRefresh();
+
+  /// Projects driver lat/lng to screen pixels for the ETA chip.
+  Future<void> refreshAssignedDriverEtaOverlay() =>
+      mapHelper.refreshAssignedDriverEtaOverlay();
+
+  /// Recenter / fit camera to the active route (GPS button).
+  void recenterMap() => mapHelper.recenterMap();
+
+  /// One-line pickup label for the map route header.
+  String get mapRoutePickupLabel => mapHelper.mapRoutePickupLabel;
+
+  /// One-line drop label for the map route header.
+  String get mapRouteDestinationLabel => mapHelper.mapRouteDestinationLabel;
+
+  /// Short pickup title (first address line).
+  String get pickupTitle => mapHelper.pickupTitle;
+
+  /// Short destination title (first address line).
+  String get destinationTitle => mapHelper.destinationTitle;
+
+  /// Whether the map safety (shield) action should show.
+  bool get shouldShowMapSafetyAction =>
+      cancelSafetyHelper.shouldShowMapSafetyAction;
+
+  /// Whether the rider cancel button is allowed for the current ride state.
+  bool get shouldShowRiderCancelButton =>
+      cancelSafetyHelper.shouldShowRiderCancelButton;
+
+  /// Whether the pickup no-show wait banner is visible.
+  bool get shouldShowNoShowBanner => cancelSafetyHelper.shouldShowNoShowBanner;
+
+  /// Title copy for the no-show banner.
+  String get noShowBannerTitle => cancelSafetyHelper.noShowBannerTitle;
+
+  /// Subtitle copy for the no-show banner.
+  String get noShowBannerSubtitle => cancelSafetyHelper.noShowBannerSubtitle;
+
+  /// Whether the route-deviation banner should show.
+  bool get shouldShowRouteDeviationBanner =>
+      cancelSafetyHelper.shouldShowRouteDeviationBanner;
+
+  /// True when the rider is currently marked off-route.
+  bool get isRouteDeviationOffRoute =>
+      cancelSafetyHelper.isRouteDeviationOffRoute;
+
+  /// Whether the deviation banner may be dismissed by the rider.
+  bool get canDismissRouteDeviationBanner =>
+      cancelSafetyHelper.canDismissRouteDeviationBanner;
+
+  /// Whether "Request to cancel" is offered from the deviation banner.
+  bool get canRequestCancellationFromDeviation =>
+      cancelSafetyHelper.canRequestCancellationFromDeviation;
+
+  /// Deviation-scoped cancellation request is pending support review.
+  bool get isDeviationCancellationPending =>
+      cancelSafetyHelper.isDeviationCancellationPending;
+
+  /// Deviation-scoped cancellation request was rejected.
+  bool get isDeviationCancellationRejected =>
+      cancelSafetyHelper.isDeviationCancellationRejected;
+
+  /// Title for the route-deviation banner.
+  String get routeDeviationBannerTitle =>
+      cancelSafetyHelper.routeDeviationBannerTitle;
+
+  /// Subtitle for the route-deviation banner.
+  String get routeDeviationBannerSubtitle =>
+      cancelSafetyHelper.routeDeviationBannerSubtitle;
+
+  /// Human-readable off-route distance text.
+  String get routeDeviationDistanceText =>
+      cancelSafetyHelper.routeDeviationDistanceText;
+
+  /// Support ticket number for deviation cancellation (when present).
+  String get deviationCancellationTicketNumber =>
+      cancelSafetyHelper.deviationCancellationTicketNumber;
+
+  /// Note / status line for deviation cancellation.
+  String get deviationCancellationNote =>
+      cancelSafetyHelper.deviationCancellationNote;
+
+  /// Whether the standalone Request-to-cancel banner should show.
+  bool get shouldShowRequestToCancelBanner =>
+      cancelSafetyHelper.shouldShowRequestToCancelBanner;
+
+  /// Standalone cancel request is pending.
+  bool get isRequestToCancelPending =>
+      cancelSafetyHelper.isRequestToCancelPending;
+
+  /// Standalone cancel request was rejected.
+  bool get isRequestToCancelRejected =>
+      cancelSafetyHelper.isRequestToCancelRejected;
+
+  /// Ticket number for standalone Request to cancel.
+  String get requestToCancelTicketNumber =>
+      cancelSafetyHelper.requestToCancelTicketNumber;
+
+  /// Note / status line for standalone Request to cancel.
+  String get requestToCancelNote => cancelSafetyHelper.requestToCancelNote;
+
+  /// True when the rider may retry after a rejected cancel request.
+  bool get canRetryRequestToCancel =>
+      cancelSafetyHelper.canRetryRequestToCancel;
+
+  /// Loads emergency contacts once when the screen first opens.
+  Future<void> loadEmergencyContactsOnceOnScreenOpen() =>
+      cancelSafetyHelper.loadEmergencyContactsOnceOnScreenOpen();
+
+  /// Icon for an emergency contact row by API id.
+  IconData emergencyContactIconFor(String id) =>
+      cancelSafetyHelper.emergencyContactIconFor(id);
+
+  /// Opens the system dialer for an emergency contact.
+  Future<void> dialEmergencyContact(EmergencyContactModel contact) =>
+      cancelSafetyHelper.dialEmergencyContact(contact);
+
+  /// Dismisses the route-deviation banner for this session.
+  void dismissRouteDeviationBanner() =>
+      cancelSafetyHelper.dismissRouteDeviationBanner();
+
+  /// Off-route "Continue to trip" — dismiss banner only.
+  void continueToTripFromDeviation() =>
+      cancelSafetyHelper.continueToTripFromDeviation();
+
+  /// Opens standalone Request-to-cancel sheet ([forceRetry] skips rejected gate).
+  Future<void> openRequestToCancelSheet({bool forceRetry = false}) =>
+      cancelSafetyHelper.openRequestToCancelSheet(forceRetry: forceRetry);
+
+  /// Safety sheet entry — closes sheet then opens Request to cancel.
+  Future<void> openRequestToCancelFromSafetySheet() =>
+      cancelSafetyHelper.openRequestToCancelFromSafetySheet();
+
+  /// Opens deviation-scoped Request to cancel.
+  Future<void> openRequestCancellationSheet() =>
+      cancelSafetyHelper.openRequestCancellationSheet();
+
+  /// Withdraws a pending deviation cancellation request.
+  Future<void> withdrawDeviationCancellationRequest() =>
+      cancelSafetyHelper.withdrawDeviationCancellationRequest();
+
+  /// Withdraws a pending standalone Request to cancel.
+  Future<void> withdrawRequestToCancel() =>
+      cancelSafetyHelper.withdrawRequestToCancel();
+
+  /// Starts the rider cancel-ride confirmation flow.
+  Future<void> confirmCancelRide() => cancelSafetyHelper.confirmCancelRide();
+
+  /// Driver name for localized status copy (falls back to generic "Driver").
+  String get localizedDriverNameForCopy =>
+      statusLabelsHelper.localizedDriverNameForCopy;
+
+  /// Pickup-phase headline under the ETA row (assigned / arriving / arrived).
+  String get driverPickupPhaseHeadline =>
+      statusLabelsHelper.driverPickupPhaseHeadline;
+
+  /// In-trip (or pickup) progress title for the bottom sheet.
+  String get rideProgressTitle => statusLabelsHelper.rideProgressTitle;
+
+  /// Supporting progress line (ETA-aware where applicable).
+  String get rideProgressSubtitle => statusLabelsHelper.rideProgressSubtitle;
+
+  /// Whole minutes derived from [currentEtaSeconds].
+  int get rideEtaMinutes => statusLabelsHelper.rideEtaMinutes;
+
+  /// Driver-assigned sheet first ETA line (matches map chip math).
+  String get driverAssignedSheetArrivalEtaLine =>
+      statusLabelsHelper.driverAssignedSheetArrivalEtaLine;
+
+  /// Whether the map ETA chip should be visible.
+  bool get shouldShowMapEtaChip => statusLabelsHelper.shouldShowMapEtaChip;
+
+  /// Whether the sheet ETA badge should be visible.
+  bool get shouldShowRideEtaBadge => statusLabelsHelper.shouldShowRideEtaBadge;
+
+  /// Vehicle label string for sheet copy.
+  String get rideVehicleLabel => statusLabelsHelper.rideVehicleLabel;
+
+  /// Formatted arrival / created date line when applicable.
+  String get arrivalDateLabel => statusLabelsHelper.arrivalDateLabel;
+
+  /// Fare breakdown rows for Total Fare UI.
+  List<FareBreakdownDisplayRow> get fareLineRows =>
+      statusLabelsHelper.fareLineRows;
+
+  /// True when [fareLineRows] is non-empty.
+  bool get hasFareLineItems => statusLabelsHelper.hasFareLineItems;
+
+  /// True when status is near destination (hides add-stop / change-drop).
+  bool isNearDestination() => statusLabelsHelper.isNearDestination();
+
+  /// Formats a fare amount for display (thousands separators).
+  String priceFormatter(int? amount) =>
+      statusLabelsHelper.priceFormatter(amount);
+
+  /// Opens the stop editor to add / edit intermediate stops.
+  void onEditStops() => stopsDestinationHelper.onEditStops();
+
+  /// Previews fare/route for a new stops list (wallet guard included).
+  Future<void> previewStopsUpdate(List<RideStopModel> stops) =>
+      stopsDestinationHelper.previewStopsUpdate(stops);
+
+  /// Confirms stops update; returns false on failure / insufficient wallet.
+  Future<bool> applyStopsUpdate(List<RideStopModel> stops) =>
+      stopsDestinationHelper.applyStopsUpdate(stops);
+
+  /// Continues stop-update after the editor pops on confirm success.
+  Future<void> onStopEditorClosedAfterConfirm() =>
+      stopsDestinationHelper.onStopEditorClosedAfterConfirm();
+
+  /// Opens the change-drop flow (location picker → preview → confirm).
+  Future<void> onChangeDropLocation() =>
+      stopsDestinationHelper.onChangeDropLocation();
+
+  /// Picks a new drop via location selection; returns raw map payload or null.
+  Future<Map<String, dynamic>?> pickNewDropLocation() =>
+      stopsDestinationHelper.pickNewDropLocation();
+
+  /// Previews fare/route for a destination change.
+  Future<void> previewDropLocationUpdate(Map<String, dynamic> destination) =>
+      stopsDestinationHelper.previewDropLocationUpdate(destination);
+
+  /// Confirms destination change; returns false on failure.
+  Future<bool> applyDropLocationUpdate(Map<String, dynamic> destination) =>
+      stopsDestinationHelper.applyDropLocationUpdate(destination);
+
+  /// Continues drop-update after the editor pops on confirm success.
+  Future<void> onChangeDropLocationEditorClosedAfterConfirm() =>
+      stopsDestinationHelper.onChangeDropLocationEditorClosedAfterConfirm();
+
+  /// Opens call options (in-app / dialer) for the assigned driver.
+  Future<void> callDriver() => commsLiveHelper.callDriver();
+
+  /// Opens in-ride chat and clears the unread badge.
+  void onChatTap() => commsLiveHelper.onChatTap();
+
+  /// Updates [sheetSize] safely (defers if called during build).
   void updateSheetSize(double size) {
     if ((size - sheetSize.value).abs() < 0.0001) return;
     // DraggableScrollableSheet can notify during build (extent replace).
@@ -365,6 +747,7 @@ class DriverAcceptedController extends GetxController
     });
   }
 
+  /// Minimum sheet fraction for the current ride status.
   double _targetSheetFractionForStatus(String status) {
     if (status == 'near_destination') {
       return 0.35;
@@ -375,6 +758,7 @@ class DriverAcceptedController extends GetxController
     return 0.3;
   }
 
+  /// Animates the draggable sheet and [sheetSize] when status changes layout.
   void _syncSheetLayoutForCurrentStatus() {
     final target = _targetSheetFractionForStatus(currentRideStatus.value);
     // Keep map chrome in sync before the draggable listener catches up.
@@ -397,17 +781,21 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Draggable bottom-sheet controller (size listener keeps map chrome in sync).
   final DraggableScrollableController sheetController =
       DraggableScrollableController();
 
+  /// True while the map is actively tracking / animating the driver marker.
   final RxBool isTrackingRider = false.obs;
 
+  /// Key to [AppGoogleMapState] for projection helpers (ETA overlay).
   final GlobalKey<AppGoogleMapState> mapWidgetKey =
       GlobalKey<AppGoogleMapState>();
 
   @override
   void onInit() {
     super.onInit();
+    _initHelpers();
     sheetController.addListener(() {
       updateSheetSize(sheetController.size);
     });
@@ -420,9 +808,9 @@ class DriverAcceptedController extends GetxController
       final kind = TrackingRouteGeometryUtils.classifyFromPoints(points);
       if (kind == TrackingRouteGeometryKind.path) {
         recenterMap();
-        _markInitialRouteReady();
+        mapHelper._markInitialRouteReady();
       } else if (kind == TrackingRouteGeometryKind.repeatedLocation) {
-        _markInitialRouteReady();
+        mapHelper._markInitialRouteReady();
       }
     });
     ever(currentRideStatus, (_) => _syncSheetLayoutForCurrentStatus());
@@ -434,6 +822,7 @@ class DriverAcceptedController extends GetxController
     analyticsService.logEvent('driver_assigned_screen_viewed');
   }
 
+  /// Restores a persisted stop-update idempotency key after process death.
   Future<void> _loadPersistedIdempotencyKey() async {
     final key = await StorageService().read(
       '${StorageKeys.stopsIdempotencyPrefix}$rideId',
@@ -443,6 +832,7 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Persists [key] so stop-update can resume after app restart.
   Future<void> _saveIdempotencyKey(String key) async {
     await StorageService().write(
       '${StorageKeys.stopsIdempotencyPrefix}$rideId',
@@ -450,6 +840,7 @@ class DriverAcceptedController extends GetxController
     );
   }
 
+  /// Clears persisted stop-update key and local working preview state.
   Future<void> _clearIdempotencyKey() async {
     await StorageService().delete(
       '${StorageKeys.stopsIdempotencyPrefix}$rideId',
@@ -458,8 +849,9 @@ class DriverAcceptedController extends GetxController
     stopUpdatePreview.value = null;
   }
 
+  /// Loads markers, applies ride details (or prefetch), then joins the ride room.
   Future<void> _bootstrap() async {
-    await _loadMarkerIcons();
+    await mapHelper._loadMarkerIcons();
     if (_skipInitialRideDetailsFetch && _prefetchedRide != null) {
       // Reuse pre-fetched ride from navigation instead of GET /rides/:id on open.
       if (_navigatedAway) return;
@@ -472,8 +864,8 @@ class DriverAcceptedController extends GetxController
     } else {
       await _fetchRideDetails();
     }
-    _handleStopUpdateRecovery();
-    await _initRideRoomSocket();
+    socketHelper._handleStopUpdateRecovery();
+    await socketHelper._initRideRoomSocket();
   }
 
   /// Stops ride fallback polling when the session is invalidated.
@@ -486,7 +878,7 @@ class DriverAcceptedController extends GetxController
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
-    _stopNoShowCountdown();
+    cancelSafetyHelper._stopNoShowCountdown();
     _connectionSub?.cancel();
     _rideStatusSub?.cancel();
     _rideStopSub?.cancel();
@@ -509,9 +901,10 @@ class DriverAcceptedController extends GetxController
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    _recoverRealtimeStateOnResume();
+    socketHelper._recoverRealtimeStateOnResume();
   }
 
+  /// Parses navigation args into ride id, places, fare seed, and prefetch flags.
   void _parseArgs() {
     final raw = Get.arguments;
     final args = raw is Map
@@ -583,13 +976,14 @@ class DriverAcceptedController extends GetxController
     }
     routePoints.clear();
     routeTarget.value = 'pick_up';
-    _hydrateSocketSeedPayloads(args);
-    _refreshMapRouteHeader();
+    socketHelper._hydrateSocketSeedPayloads(args);
+    mapHelper._refreshMapRouteHeader();
     _skipInitialRideDetailsFetch =
         skipInitialRideDetailsFetchFromNavigationArgs(args);
     _prefetchedRide = prefetchedRideFromNavigationArgs(args);
   }
 
+  /// Fetches ride details with in-flight coalescing; surfaces [rideLoadError] on failure.
   Future<void> _fetchRideDetails() async {
     // Missing rideId is not recoverable via retry — surface error and keep fields empty.
     if (rideId.isEmpty) {
@@ -611,6 +1005,7 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Single GET `/rides/:id` attempt used by [_fetchRideDetails].
   Future<void> _fetchRideDetailsOnce() async {
     if (_navigatedAway) return;
     isLoadingRide.value = true;
@@ -641,6 +1036,7 @@ class DriverAcceptedController extends GetxController
     // Removed automatic _fitRouteBounds here to prevent unwanted zoom-out during navigation.
   }
 
+  /// Applies a [RideModel] to UI state; may rematch or open mid-ride cancel.
   Future<void> _applyRideDetailsFromModel(RideModel r) async {
     if (_navigatedAway) return;
 
@@ -655,28 +1051,30 @@ class DriverAcceptedController extends GetxController
         return;
       }
       ride.value = r;
-      _navigateBackToFindingDriverAfterChainBroken();
+      socketHelper._navigateBackToFindingDriverAfterChainBroken();
       return;
     }
 
     if (rideNeedsMidRideCancelScreen(r)) {
       final block = r.midRideCancel;
       if (block != null) {
-        await _maybeNavigateMidRideDriverCancelled(block);
+        await cancelSafetyHelper._maybeNavigateMidRideDriverCancelled(block);
         return;
       }
     }
     rideLoadError.value = null;
     ride.value = r;
     _applyRide(r);
-    _syncCancelAndNoShowFromRideModel(r);
-    _syncRouteDeviationFromRideModel(r);
-    _syncDestinationFromRide(r);
+    cancelSafetyHelper._syncCancelAndNoShowFromRideModel(r);
+    cancelSafetyHelper._syncRouteDeviationFromRideModel(r);
+    mapHelper._syncDestinationFromRide(r);
     // HTTP details can show completion before/without a matching socket tick;
     // keep bottom-sheet state and completion navigation in sync with the model.
-    _applyBottomSheetStateForStatus(rideStatusToApiValue(r.status));
-    _syncLiveActivityFromDetails(r);
-    await _loadMarkerIcons();
+    statusLabelsHelper._applyBottomSheetStateForStatus(
+      rideStatusToApiValue(r.status),
+    );
+    commsLiveHelper._syncLiveActivityFromDetails(r);
+    await mapHelper._loadMarkerIcons();
 
     // Debug logging for the "Stuck" state issues
     if (isUpdatingStops.value) {
@@ -717,7 +1115,7 @@ class DriverAcceptedController extends GetxController
         isDestinationUpdateFlow.value = false;
         _pendingDestinationTargetLat = null;
         _pendingDestinationTargetLng = null;
-        unawaited(_ensureRideRealtimeAfterLocationUpdate());
+        unawaited(socketHelper._ensureRideRealtimeAfterLocationUpdate());
       }
     }
   }
@@ -725,6 +1123,7 @@ class DriverAcceptedController extends GetxController
   /// Retry is only offered when navigation supplied a [rideId].
   bool get canRetryRideLoad => rideId.isNotEmpty;
 
+  /// True when the error sheet has a non-empty [rideLoadError].
   bool get hasRideLoadError {
     final err = rideLoadError.value;
     return err != null && err.trim().isNotEmpty;
@@ -740,6 +1139,7 @@ class DriverAcceptedController extends GetxController
     }
   }
 
+  /// Sets [rideLoadError] and clears driver fields so no stale content shows.
   void _setRideLoadFailure(String message) {
     if (_navigatedAway) return;
     rideLoadError.value = message;
@@ -762,12 +1162,13 @@ class DriverAcceptedController extends GetxController
     isTrackingRider.value = false;
   }
 
+  /// Maps driver / vehicle / PIN fields from [r] onto sheet observables.
   void _applyRide(RideModel r) {
     isPinRequired.value = r.pinRequired;
     final d = r.driverSnapshot;
     final v = r.vehicleSnapshot;
     String plateForVehicleLine = '';
-    _syncBottomSheetVehicleImage(d?.vehicleType);
+    statusLabelsHelper._syncBottomSheetVehicleImage(d?.vehicleType);
     if ((d?.vehicleType ?? '').isNotEmpty) {
       loadDriverIcon(vehicleType: d?.vehicleType);
     }
@@ -831,12 +1232,13 @@ class DriverAcceptedController extends GetxController
           '${v.vehicleMake} ${v.vehicleModel}, ${v.vehicleColor}'.trim();
     }
 
-    _applyUnifiedDriverVehicleLine(
+    statusLabelsHelper._applyUnifiedDriverVehicleLine(
       modelName: (d?.vehicleModel ?? '').trim(),
       plate: plateForVehicleLine,
       fallbackModel: (v?.vehicleModel ?? '').trim(),
     );
   }
 
+  /// GetBuilder id for the map route header (pickup / drop one-line bar).
   static const String mapRouteHeaderId = 'map_route_header';
 }

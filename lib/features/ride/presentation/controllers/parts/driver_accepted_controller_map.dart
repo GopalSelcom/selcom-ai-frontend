@@ -4,11 +4,17 @@ part of '../driver_accepted_controller.dart';
 ///
 /// Edit here for map chrome / polyline / driver marker behavior without touching
 /// cancel, payment, or socket subscription wiring.
-extension DriverAcceptedMapMethods on DriverAcceptedController {
+class DriverAcceptedMapHelper {
+  DriverAcceptedMapHelper(this.c);
+
+  /// Parent [DriverAcceptedController] — shared ride state and lifecycle.
+  final DriverAcceptedController c;
+
+  /// Statuses where the driver speed chip should stay hidden.
   bool _isReachedStatusForSpeedHide(String rawStatus) {
     final normalized = normalizeRideStatusString(rawStatus);
     if (_reachedStatusesForSpeedHide.contains(normalized)) return true;
-    if (_isDriverArrivedAtPickupStatus(rawStatus)) return true;
+    if (c.statusLabelsHelper._isDriverArrivedAtPickupStatus(rawStatus)) return true;
     if (normalized.contains('near_destination') ||
         normalized.contains('neardestination')) {
       return true;
@@ -18,15 +24,17 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
         normalized.contains('ride_completed');
   }
 
+  /// True when driver is within pickup proximity during assigned phase.
   bool _isDriverAtPickupProximity(LatLng? driverPosition) {
-    if (rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
+    if (c.rideBottomSheetState.value != RideBottomSheetState.driverAssigned) {
       return false;
     }
     if (driverPosition == null) return false;
-    return _calculateDistanceInMeters(driverPosition, pickupLatLng) <=
+    return _calculateDistanceInMeters(driverPosition, c.pickupLatLng) <=
         _driverAtPickupProximityMeters;
   }
 
+  /// Whether speed overlay should hide for status, proximity, or near-zero speed.
   bool _shouldHideDriverSpeedFor({
     required String status,
     required LatLng? driverPosition,
@@ -37,32 +45,36 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     return speedMps <= 0.5;
   }
 
+  /// Reactive wrapper so Obx rebuilds when status/speed/position change.
   bool get _shouldHideDriverSpeedLabel {
     // Read reactive deps so Obx rebuilds on status, speed, and driver position.
-    final status = currentRideStatus.value;
-    final driverPosition = assignedDriverLocation.value;
-    rideBottomSheetState.value;
+    final status = c.currentRideStatus.value;
+    final driverPosition = c.assignedDriverLocation.value;
+    c.rideBottomSheetState.value;
     return _shouldHideDriverSpeedFor(
       status: status,
       driverPosition: driverPosition,
-      speedMps: assignedDriverSpeed.value,
+      speedMps: c.assignedDriverSpeed.value,
     );
   }
 
+  /// Formatted km/h label for the map speed chip (empty when hidden).
   String get formattedSpeedLabel {
     if (_shouldHideDriverSpeedLabel) return '';
-    final speedKmh = (assignedDriverSpeed.value * 3.6).round();
+    final speedKmh = (c.assignedDriverSpeed.value * 3.6).round();
     return speedKmh > 0 ? '$speedKmh km/h' : '';
   }
 
+  /// Intermediate stops for map pins (ride.stops preferred, else destinations).
   List<RideStopModel> get mapIntermediateStops {
     final fromRide = _intermediateStopsFromRideStops();
     if (fromRide.isNotEmpty) return fromRide;
     return _intermediateStopsFromRouteDestinations();
   }
 
+  /// Intermediate stops derived from ride.stops, excluding pickup/drop.
   List<RideStopModel> _intermediateStopsFromRideStops() {
-    final stops = ride.value?.stops ?? const <RideStopModel>[];
+    final stops = c.ride.value?.stops ?? const <RideStopModel>[];
     if (stops.isEmpty) return const [];
 
     final filtered = stops
@@ -72,17 +84,17 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
                 stopLat: stop.lat,
                 stopLng: stop.lng,
                 stopAddress: stop.address,
-                destinationLat: destinationLatLng.latitude,
-                destinationLng: destinationLatLng.longitude,
-                destinationAddress: destinationAddress,
+                destinationLat: c.destinationLatLng.latitude,
+                destinationLng: c.destinationLatLng.longitude,
+                destinationAddress: c.destinationAddress,
               ) &&
               !MapRouteMarkerUtils.stopMatchesPickup(
                 stopLat: stop.lat,
                 stopLng: stop.lng,
                 stopAddress: stop.address,
-                pickupLat: pickupLatLng.latitude,
-                pickupLng: pickupLatLng.longitude,
-                pickupAddress: pickupAddress,
+                pickupLat: c.pickupLatLng.latitude,
+                pickupLng: c.pickupLatLng.longitude,
+                pickupAddress: c.pickupAddress,
               ),
         )
         .toList();
@@ -102,11 +114,12 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     );
   }
 
+  /// Intermediate stops from multi-destination list (all but final drop).
   List<RideStopModel> _intermediateStopsFromRouteDestinations() {
-    if (routeDestinations.length <= 1) return const [];
+    if (c.routeDestinations.length <= 1) return const [];
 
-    final candidates = routeDestinations
-        .take(routeDestinations.length - 1)
+    final candidates = c.routeDestinations
+        .take(c.routeDestinations.length - 1)
         .toList()
         .asMap()
         .entries
@@ -125,17 +138,17 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
                 stopLat: stop.lat,
                 stopLng: stop.lng,
                 stopAddress: stop.address,
-                destinationLat: destinationLatLng.latitude,
-                destinationLng: destinationLatLng.longitude,
-                destinationAddress: destinationAddress,
+                destinationLat: c.destinationLatLng.latitude,
+                destinationLng: c.destinationLatLng.longitude,
+                destinationAddress: c.destinationAddress,
               ) &&
               !MapRouteMarkerUtils.stopMatchesPickup(
                 stopLat: stop.lat,
                 stopLng: stop.lng,
                 stopAddress: stop.address,
-                pickupLat: pickupLatLng.latitude,
-                pickupLng: pickupLatLng.longitude,
-                pickupAddress: pickupAddress,
+                pickupLat: c.pickupLatLng.latitude,
+                pickupLng: c.pickupLatLng.longitude,
+                pickupAddress: c.pickupAddress,
               ),
         )
         .toList();
@@ -148,70 +161,75 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     );
   }
 
+  /// Route letter for intermediate stop at [sequentialIndex] (0-based).
   String routeLetterForIntermediateIndex(int sequentialIndex) =>
       MapRouteMarkerUtils.letterAt(sequentialIndex + 1);
 
+  /// Cached red letter pin for an intermediate stop, or drop icon fallback.
   BitmapDescriptor redRouteLetterIconForSequentialIndex(int sequentialIndex) {
     final letter = routeLetterForIntermediateIndex(sequentialIndex);
     return RouteMapMarkerIcons.cached(
           letter: letter,
           color: RoutePinLetterStyle.intermediateColor(sequentialIndex),
         ) ??
-        dropIcon.value ??
+        c.dropIcon.value ??
         BitmapDescriptor.defaultMarker;
   }
 
+  /// Whether multi-stop letter pins should be used instead of P/D.
   bool get usesMultiStopRouteMarkers {
     return MapRouteMarkerUtils.usesMultiStopMarkers(
-      isMultiStopFlag: ride.value?.isMultiStop ?? routeDestinations.length > 1,
+      isMultiStopFlag: c.ride.value?.isMultiStop ?? c.routeDestinations.length > 1,
       intermediateStopCount: mapIntermediateStops.length,
     );
   }
 
+  /// Prefetches letter-pin bitmaps into controller caches once.
   Future<void> _ensureRouteLetterIcons() async {
-    if (_routeLetterIconsLoaded) return;
+    if (c._routeLetterIconsLoaded) return;
 
     await RouteMapMarkerIcons.ensureLetterPinCache();
     for (int i = 0; i < MapRouteMarkerUtils.routeLetters.length - 1; i++) {
       final letter = MapRouteMarkerUtils.letterAt(i + 1);
-      _redRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
+      c._redRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
         letter: letter,
         color: RoutePinLetterStyle.intermediateColor(i),
       )!;
     }
     for (int i = 1; i < MapRouteMarkerUtils.routeLetters.length; i++) {
       final letter = MapRouteMarkerUtils.routeLetters[i];
-      _greenRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
+      c._greenRouteLetterIcons[letter] = RouteMapMarkerIcons.cached(
         letter: letter,
         color: RoutePinLetterStyle.destinationColor,
       )!;
     }
 
-    _routeLetterIconsLoaded = true;
+    c._routeLetterIconsLoaded = true;
   }
 
+  /// Loads pickup/drop/stop marker icons for single- or multi-stop rides.
   Future<void> _loadMarkerIcons() async {
-    final loadToken = ++_markerIconLoadToken;
+    final loadToken = ++c._markerIconLoadToken;
     await _ensureRouteLetterIcons();
-    if (loadToken != _markerIconLoadToken) return;
+    if (loadToken != c._markerIconLoadToken) return;
 
     final bool isMulti = usesMultiStopRouteMarkers;
 
     if (!isMulti) {
-      pickupIcon.value = await RouteMapMarkerIcons.pin(
+      c.pickupIcon.value = await RouteMapMarkerIcons.pin(
         letter: 'P',
         color: RoutePinLetterStyle.pickupColor,
       );
-      dropIcon.value = await RouteMapMarkerIcons.pin(
+      c.dropIcon.value = await RouteMapMarkerIcons.pin(
         letter: 'D',
         color: RoutePinLetterStyle.destinationColor,
       );
-      stopIcons.clear();
+      c.stopIcons.clear();
       return;
     }
 
     final intermediateCount = mapIntermediateStops.length;
-    pickupIcon.value = await RouteMapMarkerIcons.pin(
+    c.pickupIcon.value = await RouteMapMarkerIcons.pin(
       letter: RoutePinLetterStyle.pickupLetter(
         intermediateStopCount: intermediateCount,
       ),
@@ -223,69 +241,73 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
         intermediateStopCount: intermediateCount,
       ),
     );
-    dropIcon.value = _greenRouteLetterIcons[destLetter];
+    c.dropIcon.value = c._greenRouteLetterIcons[destLetter];
 
     final icons = List<BitmapDescriptor>.generate(
       intermediateCount,
-      (i) => _redRouteLetterIcons[MapRouteMarkerUtils.letterAt(i + 1)]!,
+      (i) => c._redRouteLetterIcons[MapRouteMarkerUtils.letterAt(i + 1)]!,
     );
-    stopIcons.assignAll(icons);
+    c.stopIcons.assignAll(icons);
   }
 
   /// Updates [routeTarget] only — polylines come from `ride:tracking_update`
   /// `route_geometry` via [TrackingRouteGeometryUtils.shouldDrawPolyline].
   void _setDropRouteFallback() {
-    routeTarget.value = 'drop_off';
+    c.routeTarget.value = 'drop_off';
   }
 
+  /// Sets [routeTarget] to pick_up when polyline is still empty.
   void _setPickupRouteFallback() {
-    routeTarget.value = 'pick_up';
+    c.routeTarget.value = 'pick_up';
   }
 
+  /// Clears drawn route until the next tracking geometry arrives.
   void _clearRouteAwaitingTrackingUpdate() {
-    if (routePoints.isEmpty) return;
-    routePoints.clear();
-    isInitialRouteLoaded.value = false;
+    if (c.routePoints.isEmpty) return;
+    c.routePoints.clear();
+    c.isInitialRouteLoaded.value = false;
   }
 
+  /// Marks that initial route readiness is satisfied (even if empty).
   void _markInitialRouteReady() {
-    if (!isInitialRouteLoaded.value) {
-      isInitialRouteLoaded.value = true;
+    if (!c.isInitialRouteLoaded.value) {
+      c.isInitialRouteLoaded.value = true;
     }
   }
 
   // Future<void> _loadMarkerIcon() async {
   //   try {
   //     await rootBundle.load(AppAssets.gariPlus);
-  //     assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
+  //     c.assignedDriverMarkerIcon.value = await BitmapDescriptor.asset(
   //       const ImageConfiguration(size: Size(36, 36)),
   //       AppAssets.gariPlus,
   //     );
   //   } catch (_) {}
   // }
 
+  /// Syncs destination LatLng/address and summary intermediate stop labels.
   void _syncDestinationFromRide(RideModel? r) {
     if (r == null) return;
     final d = r.destination;
     if (d.lat != 0 && d.lng != 0) {
-      destinationLatLng = LatLng(d.lat, d.lng);
+      c.destinationLatLng = LatLng(d.lat, d.lng);
     }
     final addr = d.address.trim();
-    if (addr.isNotEmpty && addr != destinationAddress) {
-      destinationAddress = addr;
+    if (addr.isNotEmpty && addr != c.destinationAddress) {
+      c.destinationAddress = addr;
       _refreshMapRouteHeader();
     }
     final stops = r.stops;
     if (stops.isEmpty) {
-      summaryIntermediateStops.clear();
+      c.summaryIntermediateStops.clear();
       return;
     }
     final intermediates = mapIntermediateStops;
     if (intermediates.isEmpty) {
-      summaryIntermediateStops.clear();
+      c.summaryIntermediateStops.clear();
       return;
     }
-    summaryIntermediateStops.assignAll(
+    c.summaryIntermediateStops.assignAll(
       intermediates
           .map((s) => s.address.trim())
           .where((e) => e.isNotEmpty)
@@ -293,12 +315,13 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     );
   }
 
+  /// Loads the assigned-driver vehicle marker SVG for [vehicleType].
   Future<void> loadDriverIcon({String? vehicleType}) async {
     try {
       final assetPath = MapVehicleMarkerUtils.markerAssetForVehicleType(
         vehicleType,
       );
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+      c.assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
         assetPath,
         MapVehicleMarkerUtils.defaultMarkerWidth,
       );
@@ -309,76 +332,81 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
         error: e,
         stackTrace: stackTrace,
       );
-      assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
+      c.assignedDriverMarkerIcon.value = await MapMarkerUtils.getSvgMarker(
         AppAssets.mapMarkerCab,
         MapVehicleMarkerUtils.defaultMarkerWidth,
       );
     }
   }
 
-  void onMapCreated(GoogleMapController c) {
-    mapController = c;
+  /// Stores the Google Map controller and fits bounds / ETA overlay.
+  void onMapCreated(GoogleMapController ctrl) {
+    c.mapController = ctrl;
     _fitRouteBounds();
     scheduleAssignedEtaOverlayRefresh();
   }
 
+  /// Schedules a microtask refresh of the driver ETA screen overlay.
   void scheduleAssignedEtaOverlayRefresh() {
     Future.microtask(refreshAssignedDriverEtaOverlay);
   }
 
+  /// Projects driver position to screen pixels for the floating ETA chip.
   Future<void> refreshAssignedDriverEtaOverlay() async {
-    final ctrl = mapController;
-    final pos = animatedRiderLocation.value ?? assignedDriverLocation.value;
+    final ctrl = c.mapController;
+    final pos = c.animatedRiderLocation.value ?? c.assignedDriverLocation.value;
     if (ctrl == null || pos == null) {
-      assignedDriverEtaScreenPx.value = null;
+      c.assignedDriverEtaScreenPx.value = null;
       return;
     }
     final px = await AppMapService.screenOffsetFor(ctrl, pos);
-    assignedDriverEtaScreenPx.value = px;
+    c.assignedDriverEtaScreenPx.value = px;
   }
 
+  /// Recenter via callback if set, else force-fit route bounds.
   void recenterMap() {
-    if (onRecenterPressed != null) {
-      onRecenterPressed!();
+    if (c.onRecenterPressed != null) {
+      c.onRecenterPressed!();
     } else {
       _fitRouteBounds(force: true);
     }
   }
 
+  /// Animates camera to cover driver + pickup/drop (and stops) with throttle.
   Future<void> _fitRouteBounds({bool force = false}) async {
-    final ctrl = mapController;
+    final ctrl = c.mapController;
     if (ctrl == null) return;
 
     // Throttling: prevent rapid animations unless forced (e.g. by recenter button)
     // At most one update every 5 seconds to avoid flickering on every socket event.
     final now = DateTime.now();
     if (!force &&
-        _lastCameraUpdate != null &&
-        now.difference(_lastCameraUpdate!) < const Duration(seconds: 5)) {
+        c._lastCameraUpdate != null &&
+        now.difference(c._lastCameraUpdate!) < const Duration(seconds: 5)) {
       return;
     }
 
     final points = <LatLng>[];
-    final assigned = assignedDriverLocation.value;
+    final assigned = c.assignedDriverLocation.value;
 
     // "Show driver to pickup only" when in driverAssigned status
-    if (rideBottomSheetState.value == RideBottomSheetState.driverAssigned) {
+    if (c.rideBottomSheetState.value == RideBottomSheetState.driverAssigned) {
       if (assigned != null) points.add(assigned);
-      points.add(pickupLatLng);
+      points.add(c.pickupLatLng);
     } else {
       // Focusing on segment: Pickup/Current -> Destination
       if (assigned != null) points.add(assigned);
-      points.add(destinationLatLng);
+      points.add(c.destinationLatLng);
 
       // Also include all stops for multi-stop rides to show the whole route
-      final stops = ride.value?.stops ?? [];
+      final stops = c.ride.value?.stops ?? [];
       for (final s in stops) {
         points.add(LatLng(s.lat, s.lng));
       }
     }
 
-    if (routePoints.isNotEmpty) {
-      points.addAll(routePoints);
+    if (c.routePoints.isNotEmpty) {
+      points.addAll(c.routePoints);
     }
 
     // Sanity Filter: Remove (0,0) and extreme outliers relative to the driver.
@@ -396,7 +424,7 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     }
 
     if (points.isEmpty) return;
-    _lastCameraUpdate = now;
+    c._lastCameraUpdate = now;
 
     double minLat = points.first.latitude;
     double maxLat = points.first.latitude;
@@ -448,9 +476,9 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     required double previousRotation,
     double speedMps = 0,
   }) {
-    if (isDriverFinishingNearby.value && routePoints.length >= 2) {
+    if (c.isDriverFinishingNearby.value && c.routePoints.length >= 2) {
       final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
-        routePoints,
+        c.routePoints,
         currentPosition,
       );
       if (routeBearing != null) {
@@ -467,23 +495,24 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     );
   }
 
+  /// Points marker rotation along the active polyline while finishing nearby.
   void _syncDriverHeadingFromActiveRoute({bool animate = false}) {
-    if (!isDriverFinishingNearby.value || routePoints.length < 2) return;
+    if (!c.isDriverFinishingNearby.value || c.routePoints.length < 2) return;
 
     final driverPos =
-        assignedDriverLocation.value ??
-        mapWidgetKey.currentState?.currentAnimatedPosition;
+        c.assignedDriverLocation.value ??
+        c.mapWidgetKey.currentState?.currentAnimatedPosition;
     if (driverPos == null) return;
 
     final routeBearing = TrackingRouteGeometryUtils.bearingAlongRouteAt(
-      routePoints,
+      c.routePoints,
       driverPos,
     );
     if (routeBearing == null) return;
 
-    assignedDriverHeading.value = routeBearing;
+    c.assignedDriverHeading.value = routeBearing;
     if (animate) {
-      mapWidgetKey.currentState?.updateRiderPosition(
+      c.mapWidgetKey.currentState?.updateRiderPosition(
         driverPos,
         rotation: routeBearing,
         duration: const Duration(milliseconds: 800),
@@ -493,21 +522,21 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
 
   /// Applies `route_geometry` from tracking/status payloads without re-fitting on duplicates.
   void _applyRouteGeometryFromPayload({
-    required String routeTarget,
+    required String nextRouteTarget,
     required List<List<double>>? coordinates,
     required bool fitCameraOnChange,
   }) {
-    if (routeTarget != 'pick_up' && routeTarget != 'drop_off') return;
+    if (nextRouteTarget != 'pick_up' && nextRouteTarget != 'drop_off') return;
 
-    this.routeTarget.value = routeTarget;
-    if (!_hasReceivedTrackingUpdate) return;
+    c.routeTarget.value = nextRouteTarget;
+    if (!c._hasReceivedTrackingUpdate) return;
 
     final kind = TrackingRouteGeometryUtils.classify(coordinates);
     switch (kind) {
       case TrackingRouteGeometryKind.empty:
         // Wait for the next tracking payload with path geometry — never draw
         // a straight pickup→destination fallback line.
-        if (routePoints.isEmpty) {
+        if (c.routePoints.isEmpty) {
           _markInitialRouteReady();
         }
         return;
@@ -516,12 +545,12 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
         final nextPoints = TrackingRouteGeometryUtils.pointsForMap(coordinates);
         _markInitialRouteReady();
         if (TrackingRouteGeometryUtils.routesEquivalent(
-          routePoints,
+          c.routePoints,
           nextPoints,
         )) {
           return;
         }
-        routePoints.assignAll(nextPoints);
+        c.routePoints.assignAll(nextPoints);
         if (fitCameraOnChange &&
             kind == TrackingRouteGeometryKind.path &&
             nextPoints.length >= 2) {
@@ -543,14 +572,16 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
             math.cos(_degreesToRadians(p2.latitude)) *
             math.sin(dLng / 2) *
             math.sin(dLng / 2);
-    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    return earthRadius * c;
+    final double haversine = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * haversine;
   }
 
+  /// Converts degrees to radians.
   double _degreesToRadians(double degrees) {
     return degrees * math.pi / 180;
   }
 
+  /// Normalizes route_target strings to `pick_up` / `drop_off` (or empty).
   String _normalizeRouteTarget(String? target) {
     final t = (target ?? '').trim().toLowerCase();
     if (t == 'pickup' || t == 'pick_up') return 'pick_up';
@@ -560,6 +591,7 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     return '';
   }
 
+  /// Maps bottom-sheet state to [RideStatus] for chat/comms arguments.
   RideStatus _mapBottomSheetToRideStatus(RideBottomSheetState state) {
     switch (state) {
       case RideBottomSheetState.driverAssigned:
@@ -569,25 +601,30 @@ extension DriverAcceptedMapMethods on DriverAcceptedController {
     }
   }
 
+  /// Compact pickup label for the map route header.
   String get mapRoutePickupLabel {
-    if (pickupAddress.trim().isEmpty) {
+    if (c.pickupAddress.trim().isEmpty) {
       return AppStrings.currentLocation.tr;
     }
-    final line = compactAddressLine(pickupAddress);
+    final line = compactAddressLine(c.pickupAddress);
     return line.isEmpty ? AppStrings.currentLocation.tr : line;
   }
 
+  /// Compact destination label for the map route header.
   String get mapRouteDestinationLabel {
-    if (destinationAddress.trim().isEmpty) {
+    if (c.destinationAddress.trim().isEmpty) {
       return AppStrings.destination.tr;
     }
-    final line = compactAddressLine(destinationAddress);
+    final line = compactAddressLine(c.destinationAddress);
     return line.isEmpty ? AppStrings.destination.tr : line;
   }
 
-  void _refreshMapRouteHeader() => update([DriverAcceptedController.mapRouteHeaderId]);
+  /// Rebuilds the map route header GetBuilder region.
+  void _refreshMapRouteHeader() => c.update([DriverAcceptedController.mapRouteHeaderId]);
 
-  String get pickupTitle => _firstAddressLine(pickupAddress);
+  /// First address line for the pickup pin/title.
+  String get pickupTitle => c.statusLabelsHelper._firstAddressLine(c.pickupAddress);
 
-  String get destinationTitle => _firstAddressLine(destinationAddress);
+  /// First address line for the destination pin/title.
+  String get destinationTitle => c.statusLabelsHelper._firstAddressLine(c.destinationAddress);
 }
