@@ -1,6 +1,7 @@
 class AppStrings {
   const AppStrings._();
 
+  static const String codeNotExist = 'code_not_exist';
   static const String accountUnlinkedSuccessfully =
       'account_unlinked_successfully';
   static const String add = 'add';
