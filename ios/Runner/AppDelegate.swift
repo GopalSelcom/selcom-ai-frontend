@@ -90,11 +90,32 @@ import FBSDKCoreKit
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
+    // Diagnose Facebook native SSO handoff: success requires a return to
+    // fb{APP_ID}://authorize. Log scheme/host/path only — never query/token.
+    let scheme = url.scheme ?? ""
+    let host = url.host ?? ""
+    let path = url.path
+    if scheme.hasPrefix("fb") {
+      NSLog(
+        "[FB_LOGIN_NATIVE] openURL scheme=%@ host=%@ path=%@",
+        scheme,
+        host,
+        path
+      )
+    }
+
     let handled = ApplicationDelegate.shared.application(
       app,
       open: url,
       options: options
     )
+    if scheme.hasPrefix("fb") {
+      NSLog(
+        "[FB_LOGIN_NATIVE] facebookSDK handled=%@ source=%@",
+        handled ? "true" : "false",
+        String(describing: options[.sourceApplication] ?? "nil")
+      )
+    }
     return handled || super.application(app, open: url, options: options)
   }
 
