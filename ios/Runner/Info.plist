@@ -108,6 +108,10 @@
         </string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Selcom Go uses this to keep Sign in with Facebook working reliably
+            when the Facebook app is installed on your device.
+        </string>
 	<key>NSVoIPUsageDescription</key>
 	<string>Selcom Go uses VoIP notifications to show incoming ride calls when the app is in
             background.
