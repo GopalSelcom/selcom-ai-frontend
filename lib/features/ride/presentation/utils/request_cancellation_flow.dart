@@ -28,17 +28,15 @@ class _CancellationRequestDraft {
   final String description;
 }
 
-/// Support-reviewed cancellation request (route deviation). Never calls PUT cancel.
+/// Support-reviewed cancellation request. Never calls PUT cancel.
 class RequestCancellationFlow {
   RequestCancellationFlow({
     required this.rideRepository,
     required this.rideId,
-    this.preselectedReason = 'route_deviation',
   });
 
   final RideRepository rideRepository;
   final String rideId;
-  final String preselectedReason;
 
   /// Opens reason + optional description sheet; returns created ticket data or null.
   Future<RideCancellationRequestResponseData?> run() async {
@@ -68,23 +66,15 @@ class RequestCancellationFlow {
       return null;
     }
 
-    final selected = reasons.any((r) => r.value == preselectedReason)
-        ? preselectedReason
-        : reasons.first.value;
-    final selectedLabel = reasons
-        .firstWhere(
-          (r) => r.value == selected,
-          orElse: () => reasons.first,
-        )
-        .label;
-
+    // Default to the first reason returned by the API.
+    final selected = reasons.first;
     final draft =
         await AppDialogs.showStandardBottomSheet<_CancellationRequestDraft>(
           barrierDismissible: true,
           sheet: _RequestCancellationSheet(
             reasons: reasons,
-            initialReason: selected,
-            initialReasonLabel: selectedLabel,
+            initialReason: selected.value,
+            initialReasonLabel: selected.label,
           ),
         );
 

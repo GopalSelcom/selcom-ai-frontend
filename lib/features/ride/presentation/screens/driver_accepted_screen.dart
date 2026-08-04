@@ -22,6 +22,7 @@ import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
 import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
+import '../widgets/request_to_cancel_banner.dart';
 import '../widgets/route_deviation_banner.dart';
 
 /// SCR-11 — Driver accepted (heading to pickup). See `.agent/context/frontend/SCREENS.md`.
@@ -364,10 +365,10 @@ class DriverAcceptedScreen extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           _safetyOptionTile(
-            title: AppStrings.havingTrouble.tr,
+            title: AppStrings.requestToCancel.tr,
             icon: Icons.report_problem_outlined,
             onTap: () {
-              unawaited(c.openHavingTroubleFromSafetySheet());
+              unawaited(c.openRequestToCancelFromSafetySheet());
             },
           ),
           Obx(() {
@@ -1407,6 +1408,15 @@ class DriverAcceptedScreen extends StatelessWidget {
             child: RouteDeviationBanner(controller: c),
           );
         }),
+        Obx(() {
+          if (!c.shouldShowRequestToCancelBanner) {
+            return const SizedBox.shrink();
+          }
+          return Padding(
+            padding: EdgeInsets.only(bottom: 14.h),
+            child: RequestToCancelBanner(controller: c),
+          );
+        }),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1522,8 +1532,8 @@ class DriverAcceptedScreen extends StatelessWidget {
         SizedBox(height: 12.h),
         Center(
           child: AppCupertinoTextButton.primaryUnderlinedLink(
-            label: AppStrings.havingTrouble.tr,
-            onPressed: c.openHavingTroubleCancellationSheet,
+            label: AppStrings.requestToCancel.tr,
+            onPressed: c.openRequestToCancelSheet,
             alignment: Alignment.center,
           ),
         ),

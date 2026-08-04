@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/api_service.dart';
+import '../../../../core/network/certificate_pinning.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
@@ -28,6 +29,10 @@ class SplashController extends GetxController {
   }
 
   Future<void> _navigateAfterSplash() async {
+    // Fetch SPKI pin and attach pinned HttpClient to Dio before API traffic.
+    await CertificatePinning.instance.init();
+    ApiService().applyCertificatePinning();
+
     unawaited(sl<AppSettingsService>().preload());
     await Future.delayed(const Duration(milliseconds: 2500));
 

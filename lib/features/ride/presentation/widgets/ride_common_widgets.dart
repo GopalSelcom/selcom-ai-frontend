@@ -465,7 +465,7 @@ class NeedHelpRow extends StatelessWidget {
         SizedBox(width: 8.w),
         AppCupertinoTextButton.inlineHelpLink(
           label: AppStrings.needHelp.tr,
-          onPressed: () => Get.toNamed(AppRoutes.contactUs),
+          onPressed: () => Get.toNamed(AppRoutes.contactSupport),
         ),
         if (showDownloadSlip) ...[
           SizedBox(width: 20.w),

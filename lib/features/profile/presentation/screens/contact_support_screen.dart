@@ -10,11 +10,11 @@ import '../../../../shared/widgets/app_animated_reveal.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/app_profile_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
-import '../controllers/contact_us_controller.dart';
-import '../widgets/contact_us_screen_shimmer.dart';
+import '../controllers/contact_support_controller.dart';
+import '../widgets/contact_support_screen_shimmer.dart';
 
-class ContactUsScreen extends GetView<ContactUsController> {
-  const ContactUsScreen({super.key});
+class ContactSupportScreen extends GetView<ContactSupportController> {
+  const ContactSupportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppProfileHeader(title: AppStrings.contactUs.tr),
+          AppProfileHeader(title: AppStrings.contactSupport.tr),
 
           SizedBox(height: 16.h),
 
@@ -37,7 +37,7 @@ class ContactUsScreen extends GetView<ContactUsController> {
               if (controller.isLoading.value && controller.subjects.isEmpty) {
                 return Align(
                   alignment: Alignment.topCenter,
-                  child: ContactUsScreenShimmer.formContent(),
+                  child: ContactSupportScreenShimmer.formContent(),
                 );
               }
 

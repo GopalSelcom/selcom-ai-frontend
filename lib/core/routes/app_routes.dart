@@ -18,10 +18,10 @@ import '../../features/home/presentation/screens/location_selection_screen.dart'
 import '../../features/home/presentation/bindings/select_saved_location_binding.dart';
 import '../../features/home/presentation/screens/select_saved_location_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
-import '../../features/profile/presentation/bindings/contact_us_binding.dart';
+import '../../features/profile/presentation/bindings/contact_support_binding.dart';
 import '../../features/profile/presentation/bindings/favorite_locations_binding.dart';
 import '../../features/profile/presentation/bindings/profile_binding.dart';
-import '../../features/profile/presentation/screens/contact_us_screen.dart';
+import '../../features/profile/presentation/screens/contact_support_screen.dart';
 import '../../features/profile/presentation/screens/favorite_locations_screen.dart';
 import '../../features/profile/presentation/screens/payment_methods_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -68,7 +68,7 @@ class AppRoutes {
 
   /// SCR-11 — driver accepted (heading to pickup).
   static const String driverAccepted = '/driver-accepted';
-  static const String contactUs = '/contact-us';
+  static const String contactSupport = '/contact-support';
   static const String promotions = '/promotions';
   static const String favoriteLocations = '/favorite-locations';
   static const String notifications = '/notifications';
@@ -147,9 +147,9 @@ class AppRoutes {
       binding: DriverAcceptedBinding(),
     ),
     GetPage(
-      name: contactUs,
-      page: () => const ContactUsScreen(),
-      binding: ContactUsBinding(),
+      name: contactSupport,
+      page: () => const ContactSupportScreen(),
+      binding: ContactSupportBinding(),
     ),
     GetPage(
       name: promotions,

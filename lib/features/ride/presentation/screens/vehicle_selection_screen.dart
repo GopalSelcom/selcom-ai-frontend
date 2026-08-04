@@ -565,14 +565,14 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         ),
                         SizedBox(width: 4.w),
                         SvgPictureAsset(
-                          AppAssets.icPaymentPerson,
+                          AppAssets.icPaymentPeople,
                           width: 12.w,
                           height: 12.w,
                           color: AppColors.textBody,
                         ),
                         SizedBox(width: 4.w),
                         Text(
-                          '${item.maxPassengers ?? 1}',
+                          controller.vehicleSeatLabel(item),
                           style: AppTextStyles.homeCaption.copyWith(
                             height: 20 / 12,
                           ),
@@ -730,11 +730,18 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
 
   Widget _vehicleFarePrice(FareEstimateItem item) {
     if (item.isBookAnyOption) {
-      return Text(
-        controller.vehicleFareDisplay(item),
-        style: AppTextStyles.homeTitle.copyWith(
-          fontSize: 16.sp,
-          letterSpacing: -0.4,
+      return ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 118.w),
+        child: Text(
+          controller.vehicleFareDisplay(item),
+          textAlign: TextAlign.right,
+          maxLines: 2,
+          softWrap: true,
+          style: AppTextStyles.homeTitle.copyWith(
+            fontSize: 14.sp,
+            height: 1.15,
+            letterSpacing: -0.4,
+          ),
         ),
       );
     }

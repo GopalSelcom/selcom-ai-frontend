@@ -355,13 +355,13 @@ class ProfileScreen extends GetView<ProfileController> {
             ),
             MenuItemWidget(
               icon: Iconsax.card,
-              title: "Saved Cards",
+              title: AppStrings.savedCards.tr,
               onTap: controller.openPaymentMethods,
             ),
             MenuItemWidget(
               icon: Iconsax.message_question,
-              title: AppStrings.help.tr,
-              onTap: controller.openContactUs,
+              title: AppStrings.contactSupport.tr,
+              onTap: controller.openContactSupport,
             ),
             if (controller.showSafetyOption.value)
               MenuItemWidget(
@@ -369,7 +369,6 @@ class ProfileScreen extends GetView<ProfileController> {
                 title: AppStrings.safety.tr,
                 onTap: controller.openSafety,
               ),
-
             MenuItemWidget(
               icon: Iconsax.shield_tick,
               title: AppStrings.privacyPolicy.tr,

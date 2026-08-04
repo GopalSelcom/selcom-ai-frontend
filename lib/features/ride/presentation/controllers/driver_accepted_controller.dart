@@ -163,8 +163,11 @@ class DriverAcceptedController extends GetxController
   /// Cached `route_deviation` — null hides the deviation banner.
   final routeDeviationInfo = Rxn<RideRouteDeviationModel>();
 
-  /// Rider dismissed the muted "back on route" banner for this incident.
+  /// Rider dismissed the muted "back on route" / continue-to-trip banner.
   final routeDeviationBannerDismissed = false.obs;
+
+  /// Standalone in-trip Request to cancel (separate from route-deviation cancel).
+  final requestToCancelInfo = Rxn<RideCancellationRequestModel>();
 
   /// De-dupe key for socket `ride:route_deviation` (`ride_id` + `detected_at`).
   String? _lastRouteDeviationDedupeKey;

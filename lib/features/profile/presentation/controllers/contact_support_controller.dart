@@ -9,11 +9,11 @@ import '../../../../shared/widgets/app_reason_picker_bottom_sheet.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
 import '../../domain/repositories/profile_repository.dart';
 
-class ContactUsController extends GetxController {
+class ContactSupportController extends GetxController {
   final ProfileRepository profileRepository;
   final RideRepository rideRepository;
 
-  ContactUsController({
+  ContactSupportController({
     required this.profileRepository,
     required this.rideRepository,
   });

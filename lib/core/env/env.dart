@@ -64,4 +64,12 @@ abstract class Env {
     defaultValue: 'spd.selcommobile.com',
   )
   static final String selcomPesaDeepLinkHost = _Env.selcomPesaDeepLinkHost;
+
+  // Dynamic SSL Certificate Pinning
+  @EnviedField(
+    varName: 'CERTIFICATE_PINNING_URL',
+    obfuscate: true,
+    defaultValue: '',
+  )
+  static final String certificatePinningUrl = _Env.certificatePinningUrl;
 }

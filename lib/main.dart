@@ -11,27 +11,28 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'core/services/deeplink/deeplink_manager.dart';
-import 'firebase_options.dart';
+import 'package:screenshot/screenshot.dart';
+
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
+import 'core/data/models/notification_model.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
+import 'core/routes/app_routes.dart';
 import 'core/services/agora_calling_bootstrap.dart';
+import 'core/services/analytics_service.dart';
+import 'core/services/deeplink/deeplink_manager.dart';
+import 'core/services/error_reporting/error_reporter.dart';
+import 'core/services/live_activity/android_order_tracking_manager.dart';
+import 'core/services/live_activity/live_activity_manager.dart';
+import 'core/services/notification_service.dart';
 import 'core/services/session_auth_service.dart';
 import 'core/services/storage_service.dart';
-import 'core/services/analytics_service.dart';
-import 'core/services/notification_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
 import 'core/theme/app_theme.dart';
-import 'core/routes/app_routes.dart';
-import 'core/services/live_activity/live_activity_manager.dart';
-import 'core/services/live_activity/android_order_tracking_manager.dart';
-import 'core/data/models/notification_model.dart';
-import 'core/services/error_reporting/error_reporter.dart';
-import 'package:screenshot/screenshot.dart';
+import 'firebase_options.dart';
 
 /// **Change this for local runs** (`dev` | `staging` | `prod`).
 ///
@@ -39,6 +40,11 @@ import 'package:screenshot/screenshot.dart';
 /// Release CI can still pass `--dart-define=ENV=prod` (overrides when set).
 /// const Environment kAppEnvironment = Environment.prod;
 const Environment kAppEnvironment = Environment.prod;
+
+/// VAPT builds skip SSL pinning so proxy tools (Charles/Burp) can inspect traffic.
+///
+/// Set to `false` for production / hardening builds that enforce dynamic pinning.
+bool isVAPTBuild = false;
 
 void _registerKillCallLogSink() {
   // AgoraCallLogger matches AppLogger: debug-only by default.
