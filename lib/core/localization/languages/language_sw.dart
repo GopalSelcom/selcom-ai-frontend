@@ -183,7 +183,7 @@ class LanguageSw extends Languages {
     'saved_cards': 'Kadi zilizohifadhiwa',
     'seat': 'Kiti',
     'seats': 'Viti',
-    'get_started': 'Anza',
+    'get_started': 'Twende',
     'home_label': 'Nyumbani',
     'havent_got_the_confirmation_code_yet': 'Bado hujapata msimbo wa uthibitisho? ',
     'got_it': 'Nimeelewa',
