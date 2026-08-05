@@ -20,6 +20,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/localization/delegate.dart';
 import 'core/localization/getx_languages_translations.dart';
 import 'core/localization/localization.dart';
+import 'core/routes/app_route_observer.dart';
 import 'core/routes/app_routes.dart';
 import 'core/services/agora_calling_bootstrap.dart';
 import 'core/services/analytics_service.dart';
@@ -312,6 +313,7 @@ class _MyAppState extends State<MyApp> {
             translations: GetxLanguagesTranslations(),
             initialRoute: AppRoutes.splash,
             getPages: AppRoutes.pages,
+            navigatorObservers: [appRouteObserver],
           ),
         );
       },

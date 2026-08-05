@@ -13,6 +13,9 @@ class AppMapService {
 
   static String? _cachedBrandMapStyle;
 
+  /// Sync read of a previously loaded brand style (null until [loadBrandMapStyle]).
+  static String? get cachedBrandMapStyle => _cachedBrandMapStyle;
+
   /// Pale yellow road network + light blue water (see [assets/json/map_style.json]).
   static Future<String?> loadBrandMapStyle() async {
     final cached = _cachedBrandMapStyle;

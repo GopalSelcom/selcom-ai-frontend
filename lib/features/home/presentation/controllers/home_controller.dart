@@ -19,6 +19,7 @@ import '../../../../core/domain/entities/location_entity.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/services/app_map_service.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/live_activity/live_activity_manager.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -177,6 +178,17 @@ class HomeController extends GetxController with WidgetsBindingObserver {
 
   /// True once [onMapCreated] has run.
   final isMapReady = false.obs;
+
+  /// Gates embedding the native GoogleMap. Opens synchronously in [onInit]
+  /// so Home never sticks on the gray placeholder waiting for permissions.
+  final homeMapSurfaceReady = false.obs;
+
+  /// Bumped on every forced remount so [_HomeMapHost] can use a fresh [ValueKey]
+  /// (AndroidViews under a long ride stack often stay blank if the key is reused).
+  final homeMapMountGeneration = 0.obs;
+
+  /// Until this time, sheet-drag camera nudges are skipped so map create can settle.
+  DateTime? _suppressSheetCameraNudgesUntil;
 
   /// True while reverse geocode for the map center is in flight.
   final isResolvingAddress = false.obs;
@@ -856,25 +868,19 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     homeSheetController.addListener(sheetHelper._onHomeSheetChanged);
     WidgetsBinding.instance.addObserver(this);
     analyticsService.logEvent('home_screen_viewed');
-    mapHelper._loadMapIcons();
-    _initSequentialPermissions();
+    // Open the map gate immediately — do not wait on permissions/lists or the
+    // first build shows only the gray placeholder (broken after ride → home).
+    homeMapSurfaceReady.value = true;
+    // Warm map style cache before the platform view mounts (avoids a style
+    // setState rebuild right after GoogleMap create).
+    unawaited(AppMapService.loadBrandMapStyle());
+    // Defer GPS/permission dialogs until after the first frames.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bootstrapHomeMapSurface());
+    });
     activeRidesHelper._startActiveRidePolling();
-    _loadHomeData().whenComplete(() async {
-      // Product rule: call pending-review API only once when app session
-      // first opens Home, not on subsequent returns to Home.
-      if (_didCheckPendingReviewOnHomeLaunch) {
-        return;
-      }
-      _didCheckPendingReviewOnHomeLaunch = true;
-      try {
-        await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
-      } catch (e, stackTrace) {
-        AppLogger.e(
-          'Pending review prompt failed: $e',
-          tag: 'HomeController',
-          stackTrace: stackTrace,
-        );
-      }
+    _loadHomeData().whenComplete(() {
+      unawaited(_maybeOpenPendingRatingAfterHomeSettle());
     });
 
     // 300ms debounce with 2-char threshold for location autocomplete.
@@ -886,6 +892,58 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         suggestions.clear();
       }
     }, time: const Duration(milliseconds: 300));
+  }
+
+  /// Opens pending-review only after map create has had time to settle.
+  Future<void> _maybeOpenPendingRatingAfterHomeSettle() async {
+    // Product rule: call pending-review API only once when app session
+    // first opens Home, not on subsequent returns to Home.
+    if (_didCheckPendingReviewOnHomeLaunch) return;
+    _didCheckPendingReviewOnHomeLaunch = true;
+    try {
+      // Wait until the native map reports ready (or give up after a timeout so
+      // rating is not blocked forever if the map fails to mount).
+      final readyDeadline = DateTime.now().add(const Duration(seconds: 20));
+      while (!isMapReady.value &&
+          !_isClosed &&
+          DateTime.now().isBefore(readyDeadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      if (_isClosed || SessionExpiryService.isHandling) return;
+
+      // Extra calm window after map create — longer than the map "quiet"
+      // period so rating does not overlap circle/padding unfreeze.
+      await Future<void>.delayed(const Duration(milliseconds: 2800));
+      if (_isClosed || SessionExpiryService.isHandling) return;
+
+      await rideRatingController.tryOpenRatingSheetAfterHomeLoad();
+    } catch (e, stackTrace) {
+      AppLogger.e(
+        'Pending review prompt failed: $e',
+        tag: 'HomeController',
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  /// Runs permissions/GPS after first paint. Map gate is already open in [onInit].
+  Future<void> _bootstrapHomeMapSurface() async {
+    if (!_isClosed && !homeMapSurfaceReady.value) {
+      homeMapSurfaceReady.value = true;
+    }
+
+    try {
+      await _initSequentialPermissions().timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {},
+      );
+    } catch (_) {
+      // Map already visible; GPS/permission can settle afterward.
+    } finally {
+      if (!_isClosed) {
+        unawaited(mapHelper._loadMapIcons());
+      }
+    }
   }
 
   /// Runs notification permissions then requests location.
@@ -927,7 +985,8 @@ class HomeController extends GetxController with WidgetsBindingObserver {
         homeRepository.getProfile(),
       ]);
 
-      // Handle Vehicle Types
+      // Apply all results synchronously before clearing the loading flag so the
+      // UI transitions shimmer → content in one frame instead of five.
       results[0].fold(
         (_) => null,
         (types) => vehicleTypes.assignAll(types as List<VehicleType>),
@@ -967,24 +1026,35 @@ class HomeController extends GetxController with WidgetsBindingObserver {
     } finally {
       hasCompletedInitialHomeLoad = true;
       if (!SessionExpiryService.isHandling) {
-        isLoadingHomeData.value = false;
+        // Invalidate before flipping loading so the first non-loading rebuild
+        // measures real content (not the shimmer layout).
         invalidateHomeSheetMeasurement();
+        isLoadingHomeData.value = false;
       }
     }
   }
 
-  /// Called when Home becomes the active route — refresh active rides.
+  /// Called when Home becomes the active route — refresh active rides + map.
   void onHomeVisible() {
     if (SessionExpiryService.isHandling) return;
-    // HomeScreen can stay mounted under ongoing-ride routes; only release the
-    // ride room when Home is actually the active route.
-    if (Get.currentRoute != AppRoutes.home) return;
-    // Release ride socket room when user is on Home (one room at a time).
-    _socketService.leaveJoinedRideRoom();
+
+    // Map first — never gate remount on [Get.currentRoute]. After
+    // [Get.offAllNamed] the route name can lag RouteAware [didPush], which
+    // previously skipped ensure and left the gray placeholder forever.
+    final isReturnToHome = !_skipNextVisibleRefresh;
+    _ensureHomeMapSurfaceReady(forceRemount: isReturnToHome);
+
     if (_skipNextVisibleRefresh) {
       _skipNextVisibleRefresh = false;
       return;
     }
+
+    // HomeScreen can stay mounted under ongoing-ride routes; only release the
+    // ride room / refresh when Home is actually the active route.
+    if (Get.currentRoute != AppRoutes.home) return;
+    // Release ride socket room when user is on Home (one room at a time).
+    _socketService.leaveJoinedRideRoom();
+
     if (isLoadingHomeData.value || _loadHomeDataInFlight != null) return;
     if (_activeRideRefreshQueued) return;
     _activeRideRefreshQueued = true;
@@ -992,6 +1062,45 @@ class HomeController extends GetxController with WidgetsBindingObserver {
       _activeRideRefreshQueued = false;
       await refreshActiveRide();
     });
+  }
+
+  /// Opens (or remounts) the home GoogleMap surface.
+  void _ensureHomeMapSurfaceReady({bool forceRemount = false}) {
+    if (_isClosed) return;
+
+    if (forceRemount) {
+      // Always pulse on return — AndroidView under a long ride stack is
+      // frequently invalid even when we still hold a controller reference.
+      homeMapMountGeneration.value++;
+      homeMapSurfaceReady.value = false;
+      isMapReady.value = false;
+      _mapController = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isClosed) return;
+        homeMapSurfaceReady.value = true;
+      });
+      return;
+    }
+
+    if (!homeMapSurfaceReady.value) {
+      homeMapSurfaceReady.value = true;
+    }
+  }
+
+  /// Safety for [_HomeMapHost]: open the gate if a race left it closed.
+  void ensureHomeMapSurfaceOpen() {
+    if (_isClosed) return;
+    if (!homeMapSurfaceReady.value) {
+      homeMapSurfaceReady.value = true;
+    }
+  }
+
+  /// Clears native map handles when the platform view is disposed.
+  void onHomeMapDisposed() {
+    _mapController = null;
+    if (isMapReady.value) {
+      isMapReady.value = false;
+    }
   }
 
   /// Clears active-ride UI/state when the session is no longer valid.

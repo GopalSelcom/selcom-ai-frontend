@@ -38,6 +38,13 @@ class HomeSheetHelper {
     final previousSize = c.sheetSize.value;
     if ((size - previousSize).abs() < 0.0001) return;
     c.sheetSize.value = size;
+    // Skip camera nudges until the map exists — otherwise we queue work that
+    // collides with platform-view creation on first load.
+    if (!c.isMapReady.value || c.activeRide.value != null) return;
+    final suppressUntil = c._suppressSheetCameraNudgesUntil;
+    if (suppressUntil != null && DateTime.now().isBefore(suppressUntil)) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       c.mapHelper._nudgeCameraForSheetDelta(previousSize, size);
     });
@@ -53,6 +60,7 @@ class HomeSheetHelper {
       if (!c.homeSheetController.isAttached) return;
       // Avoid map/sheet relayout fighting with modal sheets (e.g. add favourite).
       if (Get.isDialogOpen ?? false) return;
+      if (Get.isBottomSheetOpen ?? false) return;
       updateHomeSheetSize(size);
     });
   }

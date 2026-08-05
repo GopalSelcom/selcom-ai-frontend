@@ -28,9 +28,14 @@ class HomeBinding extends Bindings {
       fenix: true,
     );
 
-
-
-    // Controller
+    // Controller — replace closed/stale instances so Home map gate re-bootstraps
+    // after ride-complete [Get.offAllNamed] (fenix alone can reuse a dead ctrl).
+    if (Get.isRegistered<HomeController>()) {
+      final existing = Get.find<HomeController>();
+      if (existing.isClosed) {
+        Get.delete<HomeController>(force: true);
+      }
+    }
     Get.lazyPut<HomeController>(
       () => HomeController(
         homeRepository: Get.find(),

@@ -138,6 +138,7 @@ class AppGoogleMapState extends State<AppGoogleMap>
   bool _isProgrammaticMove = false;
   bool _isUserInteracting = false;
   String? _resolvedMapStyle;
+  late MapType _mapType;
   Worker? _mapTypeWorker;
   late final AppMapTypeService _mapTypeService;
 
@@ -146,7 +147,16 @@ class AppGoogleMapState extends State<AppGoogleMap>
     super.initState();
     isTrackingRider = widget.trackRider;
     _mapTypeService = di.sl<AppMapTypeService>();
-    _mapTypeWorker = ever(_mapTypeService.mapType, (_) {
+    _mapType = _mapTypeService.mapType.value;
+    // Prefer cached style so the first GoogleMap build already has it — avoids
+    // a post-create setState that re-pushes every overlay via platform channels.
+    if (_mapType == MapType.normal) {
+      _resolvedMapStyle =
+          widget.style ?? AppMapService.cachedBrandMapStyle;
+    }
+    _mapTypeWorker = ever(_mapTypeService.mapType, (MapType type) {
+      if (!mounted || type == _mapType) return;
+      setState(() => _mapType = type);
       unawaited(_loadMapStyle());
     });
     unawaited(_loadMapStyle());
@@ -329,10 +339,11 @@ class AppGoogleMapState extends State<AppGoogleMap>
   Future<void> _loadMapStyle() async {
     // Brand JSON applies only to normal map; hybrid/satellite use native tiles.
     final style = await AppMapService.resolveMapStyle(
-      mapType: _mapTypeService.mapType.value,
+      mapType: _mapType,
       overrideStyle: widget.style,
     );
     if (!mounted) return;
+    if (_resolvedMapStyle == style) return;
     setState(() => _resolvedMapStyle = style);
   }
 
@@ -376,73 +387,73 @@ class AppGoogleMapState extends State<AppGoogleMap>
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final mapType = _mapTypeService.mapType.value;
-      final layerToggle = _layerToggle();
+    // Do not wrap [GoogleMap] in Obx — parent rebuilds + mapType reads were
+    // re-pushing markers/circles/polylines through platform channels every time.
+    final layerToggle = _layerToggle();
+    final mapType = _mapType;
 
-      return Stack(
-        children: [
-          Listener(
-            onPointerDown: (_) {
-              _isUserInteracting = true;
-              widget.onUserInteraction?.call();
+    return Stack(
+      children: [
+        Listener(
+          onPointerDown: (_) {
+            _isUserInteracting = true;
+            widget.onUserInteraction?.call();
+          },
+          onPointerUp: (_) => _isUserInteracting = false,
+          onPointerCancel: (_) => _isUserInteracting = false,
+          child: GoogleMap(
+            initialCameraPosition: widget.initialCameraPosition,
+            onMapCreated: (controller) {
+              _controller = controller;
+              widget.onMapCreated(controller);
+              if (isTrackingRider) _moveToRider();
             },
-            onPointerUp: (_) => _isUserInteracting = false,
-            onPointerCancel: (_) => _isUserInteracting = false,
-            child: GoogleMap(
-              initialCameraPosition: widget.initialCameraPosition,
-              onMapCreated: (controller) {
-                _controller = controller;
-                widget.onMapCreated(controller);
-                if (isTrackingRider) _moveToRider();
-              },
-              markers: getAnimatedMarkers(widget.markers),
-              polylines: widget.polylines,
-              circles: widget.circles,
-              polygons: widget.polygons,
-              heatmaps: widget.heatmaps,
-              tileOverlays: widget.tileOverlays,
-              padding: widget.padding,
-              cameraTargetBounds: widget.cameraTargetBounds,
-              myLocationEnabled: widget.myLocationEnabled,
-              myLocationButtonEnabled: widget.myLocationButtonEnabled,
-              zoomControlsEnabled: widget.zoomControlsEnabled,
-              mapToolbarEnabled: widget.mapToolbarEnabled,
-              compassEnabled: widget.compassEnabled,
-              mapType: mapType,
-              trafficEnabled: widget.trafficEnabled,
-              buildingsEnabled: widget.buildingsEnabled,
-              indoorViewEnabled: widget.indoorViewEnabled,
-              liteModeEnabled: widget.liteModeEnabled,
-              minMaxZoomPreference: widget.minMaxZoomPreference,
-              gestureRecognizers:
-                  widget.gestureRecognizers ??
-                  <Factory<OneSequenceGestureRecognizer>>{},
-              onCameraMove: widget.onCameraMove,
-              onCameraIdle: () {
-                _isProgrammaticMove = false;
-                widget.onCameraIdle?.call();
-              },
-              onCameraMoveStarted: () {
-                if (_isUserInteracting && !_isProgrammaticMove) {
-                  setState(() {
-                    isTrackingRider = false;
-                  });
-                  widget.onTrackingChanged?.call(false);
-                  widget.onUserInteraction?.call();
-                }
-                widget.onCameraMoveStarted?.call();
-              },
-              onTap: widget.onTap,
-              onLongPress: widget.onLongPress,
-              mapId: widget.mapId,
-              // Custom style is incompatible with hybrid/satellite map types.
-              style: mapType == MapType.normal ? _resolvedMapStyle : null,
-            ),
+            markers: getAnimatedMarkers(widget.markers),
+            polylines: widget.polylines,
+            circles: widget.circles,
+            polygons: widget.polygons,
+            heatmaps: widget.heatmaps,
+            tileOverlays: widget.tileOverlays,
+            padding: widget.padding,
+            cameraTargetBounds: widget.cameraTargetBounds,
+            myLocationEnabled: widget.myLocationEnabled,
+            myLocationButtonEnabled: widget.myLocationButtonEnabled,
+            zoomControlsEnabled: widget.zoomControlsEnabled,
+            mapToolbarEnabled: widget.mapToolbarEnabled,
+            compassEnabled: widget.compassEnabled,
+            mapType: mapType,
+            trafficEnabled: widget.trafficEnabled,
+            buildingsEnabled: widget.buildingsEnabled,
+            indoorViewEnabled: widget.indoorViewEnabled,
+            liteModeEnabled: widget.liteModeEnabled,
+            minMaxZoomPreference: widget.minMaxZoomPreference,
+            gestureRecognizers:
+                widget.gestureRecognizers ??
+                <Factory<OneSequenceGestureRecognizer>>{},
+            onCameraMove: widget.onCameraMove,
+            onCameraIdle: () {
+              _isProgrammaticMove = false;
+              widget.onCameraIdle?.call();
+            },
+            onCameraMoveStarted: () {
+              if (_isUserInteracting && !_isProgrammaticMove) {
+                setState(() {
+                  isTrackingRider = false;
+                });
+                widget.onTrackingChanged?.call(false);
+                widget.onUserInteraction?.call();
+              }
+              widget.onCameraMoveStarted?.call();
+            },
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+            mapId: widget.mapId,
+            // Custom style is incompatible with hybrid/satellite map types.
+            style: mapType == MapType.normal ? _resolvedMapStyle : null,
           ),
-          if (layerToggle != null) layerToggle,
-        ],
-      );
-    });
+        ),
+        if (layerToggle != null) layerToggle,
+      ],
+    );
   }
 }

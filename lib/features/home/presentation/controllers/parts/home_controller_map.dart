@@ -161,10 +161,29 @@ class HomeMapHelper {
   }
 
   /// 200 m radius around [deviceGpsLocation] (true GPS), not map drag position.
+  LatLng? _cachedRadiusCenter;
+  Set<Circle> _cachedRadiusCircles = const {};
+
   Set<Circle> get nearbyPickupRadiusCircles {
     final center = c.deviceGpsLocation.value;
-    if (center == null || !c.hasLocationPermission.value) return {};
-    return {
+    if (center == null || !c.hasLocationPermission.value) {
+      _cachedRadiusCenter = null;
+      _cachedRadiusCircles = const {};
+      return _cachedRadiusCircles;
+    }
+    final cached = _cachedRadiusCenter;
+    // Ignore sub-~25 m GPS jitter so we do not re-push circles to the platform.
+    if (cached != null) {
+      final meters = Geolocator.distanceBetween(
+        cached.latitude,
+        cached.longitude,
+        center.latitude,
+        center.longitude,
+      );
+      if (meters < 25) return _cachedRadiusCircles;
+    }
+    _cachedRadiusCenter = center;
+    _cachedRadiusCircles = {
       Circle(
         circleId: const CircleId('pickup_200m_radius'),
         center: center,
@@ -174,6 +193,7 @@ class HomeMapHelper {
         strokeWidth: 2,
       ),
     };
+    return _cachedRadiusCircles;
   }
 
   /// Pin for the pickup implied by the header dropdown ([activePickupLatLng]).
@@ -199,13 +219,23 @@ class HomeMapHelper {
     };
   }
 
-  /// Stores the map controller and animates to the current [mapCenter].
+  /// Debounces [getZoomLevel] platform calls (idle fires often during tile load).
+  DateTime? _lastZoomReadAt;
+
+  /// Stores the map controller and snaps to the current [mapCenter].
   void onMapCreated(GoogleMapController controller) {
     c._mapController = controller;
     c.isMapReady.value = true;
     c._cachedMapZoom = 16;
-    c._mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(c.mapCenter.value, c._cachedMapZoom),
+    // Keep sheet drag from nudging the camera during the quiet window.
+    c._suppressSheetCameraNudgesUntil =
+        DateTime.now().add(const Duration(milliseconds: 3000));
+    // Instant move on create — animateCamera here often stacks with GPS
+    // recenter and sheet padding updates on the same frames.
+    unawaited(
+      controller.moveCamera(
+        CameraUpdate.newLatLngZoom(c.mapCenter.value, c._cachedMapZoom),
+      ),
     );
   }
 
@@ -213,6 +243,19 @@ class HomeMapHelper {
   void onHomeMapCameraIdle() {
     final controller = c._mapController;
     if (controller == null) return;
+    // Skip during settle — tile load triggers many idles; each getZoomLevel
+    // is a platform round-trip that shows up as raster/SceneDisplayLag.
+    final suppressUntil = c._suppressSheetCameraNudgesUntil;
+    if (suppressUntil != null && DateTime.now().isBefore(suppressUntil)) {
+      return;
+    }
+    final now = DateTime.now();
+    final last = _lastZoomReadAt;
+    if (last != null &&
+        now.difference(last) < const Duration(milliseconds: 500)) {
+      return;
+    }
+    _lastZoomReadAt = now;
     unawaited(
       controller.getZoomLevel().then((zoom) {
         if (zoom.isFinite && zoom > 0) {
@@ -252,15 +295,18 @@ class HomeMapHelper {
       );
       if (!granted) return;
 
-      // ── Step 1: Try Last Known Position (Quick) ──
+      LatLng? lastKnownTarget;
+
+      // ── Step 1: Try Last Known Position (Quick, no camera animation) ──
       final lastPos = await Geolocator.getLastKnownPosition();
       if (lastPos != null) {
-        final target = LatLng(lastPos.latitude, lastPos.longitude);
-        c.deviceGpsLocation.value = target;
-        c.mapCenter.value = target;
+        lastKnownTarget = LatLng(lastPos.latitude, lastPos.longitude);
+        c.deviceGpsLocation.value = lastKnownTarget;
+        c.mapCenter.value = lastKnownTarget;
 
         if (c._mapController != null) {
-          await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
+          // Instant move — avoid competing animations with the accurate fix.
+          await _recenterCameraOnDeviceGps(animated: false, zoom: 16);
         }
       }
 
@@ -272,11 +318,34 @@ class HomeMapHelper {
       ).timeout(const Duration(seconds: 20));
 
       final target = LatLng(position.latitude, position.longitude);
+      final movedMeters = lastKnownTarget == null
+          ? double.infinity
+          : Geolocator.distanceBetween(
+              lastKnownTarget.latitude,
+              lastKnownTarget.longitude,
+              target.latitude,
+              target.longitude,
+            );
+
+      // Skip a second camera storm when the accurate fix is essentially
+      // the same spot (common on warm GPS). Still refresh coords for distance.
+      const significantMoveMeters = 40.0;
+      if (movedMeters < significantMoveMeters) {
+        c.deviceGpsLocation.value = target;
+        c.mapCenter.value = target;
+        await _reverseGeocodeAtCenter();
+        return;
+      }
+
       c.deviceGpsLocation.value = target;
       c.mapCenter.value = target;
 
       if (c._mapController != null) {
-        await _recenterCameraOnDeviceGps(animated: true, zoom: 16);
+        // Prefer instant move during bootstrap settle; animate only on GPS tap.
+        await _recenterCameraOnDeviceGps(
+          animated: showLocationSettingsDialogIfBlocked,
+          zoom: 16,
+        );
       }
 
       // Final attempt to geocode the fresh position.

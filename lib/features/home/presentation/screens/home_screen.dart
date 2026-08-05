@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +10,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/responses/rides/vehicle_types_response.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/routes/app_route_observer.dart';
 import '../../../../core/services/app_map_type_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -36,165 +39,144 @@ class HomeScreen extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    controller.onHomeVisible();
     final screenHeight = MediaQuery.sizeOf(context).height;
     final mapTypeService = di.sl<AppMapTypeService>();
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _showExitDialog(context);
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
-        resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            // 1. Map Layer (Static Image from Figma)
-            Positioned.fill(
-              child: Obx(() {
+    return _HomeRouteVisibility(
+      onVisible: controller.onHomeVisible,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          _showExitDialog(context);
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.pageBackground,
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            children: [
+              // 1. Map — deferred mount; sheet padding updates are throttled and
+              // kept out of the GetX Obx that also tracks GPS/permission.
+              Positioned.fill(
+                child: _HomeMapHost(
+                  screenHeight: screenHeight,
+                  controller: controller,
+                ),
+              ),
+
+              // 2. Top Header (Address + Profile)
+              Obx(
+                () => AppMapTopHeader(
+                  top: MediaQuery.of(context).padding.top + 10.h,
+                  addressWidget: _buildModernAddressBox(),
+                  onProfileTap: controller.openProfile,
+                  profileImageUrl: controller.profileImageUrl.value.isEmpty
+                      ? null
+                      : controller.profileImageUrl.value,
+                  isLoading: controller.isLoadingHomeData.value,
+                  isExpanded: controller.isSavedPlacesExpanded.value,
+                ),
+              ),
+
+              // 3. GPS button — lifts with the draggable bottom sheet / active ride card.
+              Obx(() {
+                if (controller.isLoadingHomeData.value ||
+                    controller.isActiveRidesExpanded.value) {
+                  return const SizedBox.shrink();
+                }
                 final activeRide = controller.activeRide.value;
-                final showsMoreBadge = controller.hasMultipleActiveRides;
-                final activeRideFootprint = activeRide == null
-                    ? 0.0
-                    : HomeActiveRideCard.footprintAboveSheet(
-                        showsMoreBadge: showsMoreBadge,
+                final sheetBottom = screenHeight * controller.sheetSize.value;
+                final bottomOffset = activeRide == null
+                    ? sheetBottom + 12.h
+                    : HomeActiveRideCard.gpsButtonBottom(
+                        sheetBottomFromScreenBottom: sheetBottom,
                       );
-                return AppGoogleMap(
-                  // Layer toggle is stacked above GPS in this screen's overlay.
-                  layerTogglePlacement: AppMapLayerTogglePlacement.none,
-                  initialCameraPosition: CameraPosition(
-                    target: controller.mapCenter.value,
-                    zoom: 16,
+                return Positioned(
+                  bottom: bottomOffset,
+                  right: 20.w,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Satellite toggle shares session state via AppMapTypeService.
+                      Obx(
+                        () => AppMapLayerButton(
+                          isSatelliteView: mapTypeService.isSatelliteView,
+                          onPressed: mapTypeService.toggleMapType,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      AppMapGpsButton(
+                        onPressed: () => controller.recenterMap(),
+                      ),
+                    ],
                   ),
-                  // Keep map focal content above the draggable sheet peek area.
-                  padding: EdgeInsets.only(
-                    bottom:
-                        screenHeight * controller.sheetSize.value +
-                        activeRideFootprint,
-                  ),
-                  myLocationEnabled: controller.hasLocationPermission.value,
-                  circles: controller.nearbyPickupRadiusCircles,
-                  // markers: controller.selectedPickupMarkers,
-                  onMapCreated: controller.onMapCreated,
-                  onCameraIdle: controller.onHomeMapCameraIdle,
                 );
               }),
-            ),
+              _buildFigmaDraggableSheet(context),
+              Obx(() {
+                if (controller.isLoadingHomeData.value) {
+                  return const SizedBox.shrink();
+                }
+                final activeRide = controller.activeRide.value;
+                if (activeRide == null) return const SizedBox.shrink();
 
-            // 2. Top Header (Address + Profile)
-            Obx(
-              () => AppMapTopHeader(
-                top: MediaQuery.of(context).padding.top + 10.h,
-                addressWidget: _buildModernAddressBox(),
-                onProfileTap: controller.openProfile,
-                profileImageUrl: controller.profileImageUrl.value.isEmpty
-                    ? null
-                    : controller.profileImageUrl.value,
-                isLoading: controller.isLoadingHomeData.value,
-                isExpanded: controller.isSavedPlacesExpanded.value,
-              ),
-            ),
+                final rides = controller.activeRides.toList(growable: false);
+                final sheetBottom = screenHeight * controller.sheetSize.value;
+                final cardBottom =
+                    sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
 
-            // 3. GPS button — lifts with the draggable bottom sheet / active ride card.
-            Obx(() {
-              if (controller.isLoadingHomeData.value ||
-                  controller.isActiveRidesExpanded.value) {
-                return const SizedBox.shrink();
-              }
-              final activeRide = controller.activeRide.value;
-              final sheetBottom = screenHeight * controller.sheetSize.value;
-              final bottomOffset = activeRide == null
-                  ? sheetBottom + 12.h
-                  : HomeActiveRideCard.gpsButtonBottom(
-                      sheetBottomFromScreenBottom: sheetBottom,
-                    );
-              return Positioned(
-                bottom: bottomOffset,
-                right: 20.w,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Satellite toggle shares session state via AppMapTypeService.
-                    Obx(
-                      () => AppMapLayerButton(
-                        isSatelliteView: mapTypeService.isSatelliteView,
-                        onPressed: mapTypeService.toggleMapType,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    AppMapGpsButton(
-                      onPressed: () => controller.recenterMap(),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            _buildFigmaDraggableSheet(context),
-            Obx(() {
-              if (controller.isLoadingHomeData.value) {
-                return const SizedBox.shrink();
-              }
-              final activeRide = controller.activeRide.value;
-              if (activeRide == null) return const SizedBox.shrink();
-
-              final rides = controller.activeRides.toList(growable: false);
-              final sheetBottom = screenHeight * controller.sheetSize.value;
-              final cardBottom =
-                  sheetBottom + HomeActiveRideCard.gapAboveSheet.h;
-
-              if (!controller.hasMultipleActiveRides) {
-                return Positioned(
-                  left: 16.w,
-                  right: 16.w,
-                  bottom: cardBottom,
-                  child: HomeActiveRideCard(
-                    vehicleAssetPath: controller.activeRideVehicleImageAsset(
-                      activeRide,
-                    ),
-                    routeTitle: controller.activeRideRouteTitle(activeRide),
-                    remainingLabel: controller.activeRideRemainingLabel(
-                      activeRide,
-                    ),
-                    additionalRidesCount: 0,
-                    onViewRide: controller.openActiveRide,
-                  ),
-                );
-              }
-
-              final isExpanded = controller.isActiveRidesExpanded.value;
-
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned.fill(
-                    child: HomeActiveRidesBlurBarrier(
-                      isExpanded: isExpanded,
-                      onClose: controller.collapseActiveRidesStack,
-                    ),
-                  ),
-                  Positioned(
+                if (!controller.hasMultipleActiveRides) {
+                  return Positioned(
                     left: 16.w,
                     right: 16.w,
                     bottom: cardBottom,
-                    child: HomeActiveRidesPanel(
-                      isExpanded: isExpanded,
-                      rides: rides,
-                      additionalRidesCount:
-                          controller.additionalActiveRidesCount,
-                      onExpand: controller.expandActiveRidesStack,
-                      onCollapse: controller.collapseActiveRidesStack,
-                      vehicleAssetPathFor:
-                          controller.activeRideVehicleImageAsset,
-                      routeTitleFor: controller.activeRideRouteTitle,
-                      remainingLabelFor: controller.activeRideRemainingLabel,
+                    child: HomeActiveRideCard(
+                      vehicleAssetPath: controller.activeRideVehicleImageAsset(
+                        activeRide,
+                      ),
+                      routeTitle: controller.activeRideRouteTitle(activeRide),
+                      remainingLabel: controller.activeRideRemainingLabel(
+                        activeRide,
+                      ),
+                      additionalRidesCount: 0,
                       onViewRide: controller.openActiveRide,
                     ),
-                  ),
-                ],
-              );
-            }),
-          ],
+                  );
+                }
+
+                final isExpanded = controller.isActiveRidesExpanded.value;
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: HomeActiveRidesBlurBarrier(
+                        isExpanded: isExpanded,
+                        onClose: controller.collapseActiveRidesStack,
+                      ),
+                    ),
+                    Positioned(
+                      left: 16.w,
+                      right: 16.w,
+                      bottom: cardBottom,
+                      child: HomeActiveRidesPanel(
+                        isExpanded: isExpanded,
+                        rides: rides,
+                        additionalRidesCount:
+                            controller.additionalActiveRidesCount,
+                        onExpand: controller.expandActiveRidesStack,
+                        onCollapse: controller.collapseActiveRidesStack,
+                        vehicleAssetPathFor:
+                            controller.activeRideVehicleImageAsset,
+                        routeTitleFor: controller.activeRideRouteTitle,
+                        remainingLabelFor: controller.activeRideRemainingLabel,
+                        onViewRide: controller.openActiveRide,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -288,25 +270,32 @@ class HomeScreen extends GetView<HomeController> {
 
   Widget _buildFigmaDraggableSheet(BuildContext context) {
     return Obx(() {
-      controller.recentDestinations.length;
-      controller.vehicleTypes.length;
-      controller.savedPlaces.length;
-      controller.isLoadingHomeData.value;
-      controller.measuredSheetContentHeightPx.value;
+      final isLoading = controller.isLoadingHomeData.value;
+
+      // While bootstrapping, only subscribe to the loading flag so parallel
+      // list assignAlls do not rebuild the sheet (and measure) repeatedly.
+      if (!isLoading) {
+        controller.recentDestinations.length;
+        controller.vehicleTypes.length;
+        controller.savedPlaces.length;
+        controller.measuredSheetContentHeightPx.value;
+      }
 
       final minSize = controller.homeSheetMinSize;
       final initialSize = controller.homeSheetInitialSize;
       final maxSize = controller.homeSheetMaxChildSize;
       final snapSizes = controller.homeSheetSnapSizes;
       final scrollPhysics = controller.homeSheetScrollPhysics;
-      final contentSignature = Object.hash(
-        controller.isLoadingHomeData.value,
-        controller.recentDestinations.length,
-        controller.vehicleTypes.length,
-        controller.savedPlaces.length,
-        controller.shouldShowRecentSection,
-        controller.shouldShowVehicleSection,
-      );
+      final contentSignature = isLoading
+          ? Object.hash(true, 0)
+          : Object.hash(
+              false,
+              controller.recentDestinations.length,
+              controller.vehicleTypes.length,
+              controller.savedPlaces.length,
+              controller.shouldShowRecentSection,
+              controller.shouldShowVehicleSection,
+            );
 
       return AppDraggableBottomSheet(
         controller: controller.homeSheetController,
@@ -316,7 +305,6 @@ class HomeScreen extends GetView<HomeController> {
         snap: controller.homeSheetShouldSnap,
         snapSizes: snapSizes,
         childBuilder: (scrollController) {
-          final isLoading = controller.isLoadingHomeData.value;
           final children = isLoading
               ? HomeSheetLoadingContent.buildChildren(
                   horizontalPadding: _sheetHorizontalPadding,
@@ -617,6 +605,297 @@ class HomeScreen extends GetView<HomeController> {
       },
     );
   }
+}
+
+/// Hosts the home [AppGoogleMap] with:
+/// - deferred platform-view mount (lets chrome paint first)
+/// - sheet padding driven by [DraggableScrollableController] (throttled),
+///   not by an Obx on [HomeController.sheetSize]
+class _HomeMapHost extends StatefulWidget {
+  const _HomeMapHost({
+    required this.screenHeight,
+    required this.controller,
+  });
+
+  final double screenHeight;
+  final HomeController controller;
+
+  static const LatLng _defaultMapTarget = LatLng(-6.7924, 39.2083);
+
+  @override
+  State<_HomeMapHost> createState() => _HomeMapHostState();
+}
+
+class _HomeMapHostState extends State<_HomeMapHost> {
+  static const Duration _paddingThrottle = Duration(milliseconds: 120);
+  /// Circles / padding stay off longer so tile load is not stacked with overlays.
+  static const Duration _circlesDelay = Duration(milliseconds: 2500);
+  static const Duration _paddingFreezeAfterMount = Duration(milliseconds: 2800);
+
+  bool _mapAllowed = false;
+  bool _circlesAllowed = false;
+  bool _hasPermission = false;
+  double _activeRideFootprint = 0;
+  Set<Circle> _circles = const {};
+  double _sheetFraction = HomeController.homeSheetCollapsedPeekMin;
+  Timer? _paddingThrottleTimer;
+  Timer? _circlesTimer;
+  Timer? _paddingFreezeTimer;
+  DateTime? _paddingFrozenUntil;
+  double? _pendingSheetFraction;
+  final List<Worker> _workers = <Worker>[];
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.controller;
+    _sheetFraction = c.sheetSize.value;
+    _hasPermission = c.hasLocationPermission.value;
+    _activeRideFootprint = _footprintFor(c);
+    c.homeSheetController.addListener(_onSheetChanged);
+
+    if (c.homeMapSurfaceReady.value) {
+      _allowMap();
+    } else {
+      // Safety: if RouteAware/bootstrap race left the gate closed, open next frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (widget.controller.homeMapSurfaceReady.value) {
+          _allowMap();
+        } else {
+          widget.controller.ensureHomeMapSurfaceOpen();
+        }
+      });
+    }
+    _workers.add(
+      ever(c.homeMapSurfaceReady, (ready) {
+        if (!mounted) return;
+        if (ready == true) {
+          if (_mapAllowed) {
+            // Remount after ride return / dead platform view.
+            setState(() {
+              _mapAllowed = false;
+              _circlesAllowed = false;
+              _hasPermission = false;
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _allowMap();
+            });
+          } else {
+            _allowMap();
+          }
+        } else if (_mapAllowed) {
+          setState(() {
+            _mapAllowed = false;
+            _circlesAllowed = false;
+            _hasPermission = false;
+          });
+        }
+      }),
+    );
+    _workers.add(
+      ever(c.hasLocationPermission, (granted) {
+        if (!mounted || granted == _hasPermission) return;
+        // Avoid toggling myLocation during settle (reconfigures platform map).
+        if (_isPaddingFrozen) {
+          _hasPermission = granted;
+          return;
+        }
+        setState(() {
+          _hasPermission = granted;
+          if (_circlesAllowed) {
+            _circles = c.nearbyPickupRadiusCircles;
+          }
+        });
+      }),
+    );
+    _workers.add(
+      ever(c.deviceGpsLocation, (_) {
+        if (!mounted || !_circlesAllowed) return;
+        final next = c.nearbyPickupRadiusCircles;
+        if (identical(next, _circles)) return;
+        setState(() => _circles = next);
+      }),
+    );
+    _workers.add(
+      ever(c.activeRide, (_) {
+        if (!mounted) return;
+        final next = _footprintFor(c);
+        if ((next - _activeRideFootprint).abs() < 0.5) return;
+        if (_isPaddingFrozen) {
+          _activeRideFootprint = next;
+          return;
+        }
+        setState(() => _activeRideFootprint = next);
+      }),
+    );
+    _workers.add(
+      ever(c.activeRides, (_) {
+        if (!mounted) return;
+        final next = _footprintFor(c);
+        if ((next - _activeRideFootprint).abs() < 0.5) return;
+        if (_isPaddingFrozen) {
+          _activeRideFootprint = next;
+          return;
+        }
+        setState(() => _activeRideFootprint = next);
+      }),
+    );
+  }
+
+  bool get _isPaddingFrozen {
+    final until = _paddingFrozenUntil;
+    return until != null && DateTime.now().isBefore(until);
+  }
+
+  double _footprintFor(HomeController c) {
+    final activeRide = c.activeRide.value;
+    if (activeRide == null) return 0;
+    return HomeActiveRideCard.footprintAboveSheet(
+      showsMoreBadge: c.hasMultipleActiveRides,
+    );
+  }
+
+  void _allowMap() {
+    if (!mounted || _mapAllowed) return;
+    final sheet = widget.controller.homeSheetController;
+    setState(() {
+      _mapAllowed = true;
+      if (sheet.isAttached) {
+        _sheetFraction = sheet.size;
+      }
+      // Keep myLocation off during quiet window — enabling it at create
+      // reconfigures the platform map while tiles are still loading.
+      _hasPermission = false;
+    });
+    _paddingFrozenUntil = DateTime.now().add(_paddingFreezeAfterMount);
+    _paddingFreezeTimer?.cancel();
+    _paddingFreezeTimer = Timer(_paddingFreezeAfterMount, () {
+      if (!mounted) return;
+      // One padding + location sync after quiet period.
+      final attached = widget.controller.homeSheetController;
+      final nextFraction = attached.isAttached
+          ? attached.size
+          : widget.controller.sheetSize.value;
+      setState(() {
+        _sheetFraction = nextFraction;
+        _activeRideFootprint = _footprintFor(widget.controller);
+        _hasPermission = widget.controller.hasLocationPermission.value;
+        if (_circlesAllowed) {
+          _circles = widget.controller.nearbyPickupRadiusCircles;
+        }
+      });
+    });
+    _circlesTimer?.cancel();
+    _circlesTimer = Timer(_circlesDelay, () {
+      if (!mounted) return;
+      setState(() {
+        _circlesAllowed = true;
+        _circles = widget.controller.nearbyPickupRadiusCircles;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _paddingThrottleTimer?.cancel();
+    _circlesTimer?.cancel();
+    _paddingFreezeTimer?.cancel();
+    for (final w in _workers) {
+      w.dispose();
+    }
+    widget.controller.homeSheetController.removeListener(_onSheetChanged);
+    super.dispose();
+  }
+
+  void _onSheetChanged() {
+    final sheet = widget.controller.homeSheetController;
+    if (!sheet.isAttached) return;
+    if (Get.isDialogOpen ?? false) return;
+    if (Get.isBottomSheetOpen ?? false) return;
+    final next = sheet.size;
+    if ((next - _sheetFraction).abs() < 0.005) return;
+    _pendingSheetFraction = next;
+    if (_isPaddingFrozen) return;
+    if (_paddingThrottleTimer?.isActive ?? false) return;
+    _paddingThrottleTimer = Timer(_paddingThrottle, _flushPadding);
+  }
+
+  void _flushPadding() {
+    final next = _pendingSheetFraction;
+    _pendingSheetFraction = null;
+    if (next == null || !mounted) return;
+    if ((next - _sheetFraction).abs() < 0.005) return;
+    if (_isPaddingFrozen) return;
+    setState(() => _sheetFraction = next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_mapAllowed) {
+      return const ColoredBox(color: AppColors.skeletonBase);
+    }
+
+    return RepaintBoundary(
+      child: AppGoogleMap(
+        key: ValueKey(
+          'home_google_map_${widget.controller.homeMapMountGeneration.value}',
+        ),
+        layerTogglePlacement: AppMapLayerTogglePlacement.none,
+        initialCameraPosition: const CameraPosition(
+          target: _HomeMapHost._defaultMapTarget,
+          zoom: 16,
+        ),
+        padding: EdgeInsets.only(
+          bottom: widget.screenHeight * _sheetFraction + _activeRideFootprint,
+        ),
+        myLocationEnabled: _hasPermission,
+        indoorViewEnabled: false,
+        circles: _circlesAllowed ? _circles : const <Circle>{},
+        onMapCreated: widget.controller.onMapCreated,
+        onMapDisposed: widget.controller.onHomeMapDisposed,
+        onCameraIdle: widget.controller.onHomeMapCameraIdle,
+      ),
+    );
+  }
+}
+
+/// Reports Home visibility via [RouteAware] instead of calling from [build].
+class _HomeRouteVisibility extends StatefulWidget {
+  const _HomeRouteVisibility({required this.onVisible, required this.child});
+
+  final VoidCallback onVisible;
+  final Widget child;
+
+  @override
+  State<_HomeRouteVisibility> createState() => _HomeRouteVisibilityState();
+}
+
+class _HomeRouteVisibilityState extends State<_HomeRouteVisibility>
+    with RouteAware {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() => widget.onVisible();
+
+  @override
+  void didPopNext() => widget.onVisible();
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Measures real content height and reports it so the sheet max matches layout.
