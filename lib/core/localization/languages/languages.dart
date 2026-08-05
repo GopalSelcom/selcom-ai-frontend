@@ -243,7 +243,6 @@ abstract class Languages {
   String get notification;
   String get notifications;
   String get ok;
-  String get orderLabelWithId;
   String get unauthorized;
   String get openSettings;
   String get callNotificationPermissionMsg;

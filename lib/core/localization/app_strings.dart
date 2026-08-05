@@ -316,7 +316,6 @@ class AppStrings {
   static const String notification = 'notification';
   static const String notifications = 'notifications';
   static const String ok = 'ok';
-  static const String orderLabelWithId = 'order_label_with_id';
   static const String unauthorized = 'unauthorized';
   static const String openSettings = 'open_settings';
   static const String callNotificationPermissionMsg =

@@ -246,7 +246,6 @@ class LanguageSw extends Languages {
     'notification': 'Arifa',
     'notifications': 'Arifa',
     'ok': 'Sawa',
-    'order_label_with_id': 'Agizo: @orderId',
     'open_settings': 'Fungua mipangilio',
     'call_notification_permission_msg':
         'Ruhusa ya arifa inahitajika kupokea simu za dereva. Tafadhali iwashe katika mipangilio ya programu.',
@@ -1450,9 +1449,6 @@ class LanguageSw extends Languages {
 
   @override
   String get ok => values['ok'] ?? '';
-
-  @override
-  String get orderLabelWithId => values['order_label_with_id'] ?? '';
 
   @override
   String get openSettings => values['open_settings'] ?? '';

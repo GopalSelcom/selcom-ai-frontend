@@ -241,7 +241,6 @@ class LanguageEn extends Languages {
     'notification': 'Notification',
     'notifications': 'Notifications',
     'ok': 'OK',
-    'order_label_with_id': 'Order: @orderId',
     'open_settings': 'Open settings',
     'call_notification_permission_msg':
         'Notification permission is required to receive incoming driver calls. Please enable it in the app settings.',
@@ -1445,9 +1444,6 @@ class LanguageEn extends Languages {
 
   @override
   String get ok => values['ok'] ?? '';
-
-  @override
-  String get orderLabelWithId => values['order_label_with_id'] ?? '';
 
   @override
   String get openSettings => values['open_settings'] ?? '';

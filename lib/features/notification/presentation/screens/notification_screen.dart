@@ -214,32 +214,6 @@ class NotificationScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  SizedBox(height: 4.h),
-
-                  SizedBox(height: 8.h),
-
-                  if ((notification.orderId ?? '').isNotEmpty)
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.bgSoftCircle,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Text(
-                        AppStrings.orderLabelWithId.trParams({
-                          'orderId': notification.orderId ?? '',
-                        }),
-                        style: AppTextStyles.homeCaption.copyWith(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textHeading,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -336,9 +310,7 @@ class NotificationScreen extends StatelessWidget {
 
       if (diff.inMinutes < 60) {
         final mins = diff.inMinutes < 1 ? 1 : diff.inMinutes;
-        return AppStrings.minutesAgo.trParams({
-          'count': mins.toString(),
-        });
+        return AppStrings.minutesAgo.trParams({'count': mins.toString()});
       }
       if (diff.inHours < 24) {
         return AppStrings.hoursAgo.trParams({'count': diff.inHours.toString()});
