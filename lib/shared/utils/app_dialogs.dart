@@ -21,6 +21,16 @@ import '../widgets/app_standard_bottom_sheet.dart';
 class AppDialogs {
   static bool _isErrorDialogVisible = false;
 
+  /// True while a dialog is mid-open (keyboard close → route push).
+  /// Blocks rapid multi-taps from stacking duplicate dialogs; clears once the
+  /// route is pushed so intentional sequential/nested dialogs still work.
+  static bool _isOpeningDialog = false;
+
+  /// True while a bottom sheet is mid-open (keyboard close → route push).
+  /// Blocks rapid multi-taps from stacking duplicate sheets; clears once the
+  /// route is pushed so intentional nested sheets still work.
+  static bool _isOpeningBottomSheet = false;
+
   /// Utility to ensure keyboard is closed before showing dialogs/bottom sheets
   static Future<void> ensureKeyboardClosed() async {
     final context = Get.context;
@@ -39,27 +49,50 @@ class AppDialogs {
   }
 
   /// Standard animated popup function.
+  ///
+  /// Ignores concurrent open calls while a dialog is still presenting (multi-tap
+  /// guard). Sequential dialogs after dismiss (and nested opens after the route
+  /// has been pushed) still work.
   static Future<T?> showAnimatedDialog<T>({
     required Widget child,
     bool barrierDismissible = true,
     Color? barrierColor,
     bool useRootNavigator = false,
   }) async {
-    await ensureKeyboardClosed();
-    return showGeneralDialog<T>(
-      context: Get.context!,
-      useRootNavigator: useRootNavigator,
-      barrierDismissible: barrierDismissible,
-      barrierLabel: "AnimatedBlurDialog",
-      barrierColor: barrierColor ?? AppColors.overlayBlack12,
-      transitionDuration: AppModalBlurTokens.duration,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return child;
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
-        return AppModalBlurTransition(animation: animation, child: childWidget);
-      },
-    );
+    if (_isOpeningDialog) return null;
+    _isOpeningDialog = true;
+
+    var didPushRoute = false;
+    try {
+      await ensureKeyboardClosed();
+      final context = Get.context;
+      if (context == null || !context.mounted) return null;
+
+      // Capture the Future without awaiting yet so we can clear the open-guard
+      // as soon as the route is pushed (allows intentional sequential/nested dialogs).
+      final future = showGeneralDialog<T>(
+        context: context,
+        useRootNavigator: useRootNavigator,
+        barrierDismissible: barrierDismissible,
+        barrierLabel: "AnimatedBlurDialog",
+        barrierColor: barrierColor ?? AppColors.overlayBlack12,
+        transitionDuration: AppModalBlurTokens.duration,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return child;
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, childWidget) {
+          return AppModalBlurTransition(animation: animation, child: childWidget);
+        },
+      );
+
+      didPushRoute = true;
+      _isOpeningDialog = false;
+      return await future;
+    } finally {
+      if (!didPushRoute) {
+        _isOpeningDialog = false;
+      }
+    }
   }
 
   /// Ride cancel flow modal (title, optional subtitle, custom body/actions).
@@ -92,84 +125,106 @@ class AppDialogs {
 
   /// Low-level bottom sheet overlay (blur + slide). Prefer [showStandardBottomSheet]
   /// for shared title/subtitle/content sheets.
+  ///
+  /// Ignores concurrent open calls while a sheet is still presenting (multi-tap
+  /// guard). Nested sheets are allowed after the first route has been pushed.
   static Future<T?> showAnimatedBottomSheet<T>({
     required Widget child,
     bool barrierDismissible = true,
     bool enableDrag = true,
   }) async {
-    await ensureKeyboardClosed();
-    bool hapticTriggered = false;
+    if (_isOpeningBottomSheet) return null;
+    _isOpeningBottomSheet = true;
 
-    return showGeneralDialog<T>(
-      context: Get.context!,
-      barrierDismissible: barrierDismissible,
-      barrierLabel: 'BottomSheet',
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const SizedBox.shrink(),
-      transitionBuilder: (context, animation, secondaryAnimation, _) {
-        final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: const Cubic(0.15, 0.85, 0.2, 1.0),
-        );
+    var didPushRoute = false;
+    try {
+      await ensureKeyboardClosed();
+      final context = Get.context;
+      if (context == null || !context.mounted) return null;
 
-        // Trigger light haptic impact at the start of entrance
-        if (!hapticTriggered && animation.value > 0.05) {
-          hapticTriggered = true;
-          HapticFeedback.lightImpact();
-        }
+      bool hapticTriggered = false;
 
-        return Stack(
-          children: [
-            // Background blur barrier
-            GestureDetector(
-              onTap: barrierDismissible ? () => _dismissActiveDialog() : null,
-              child: AnimatedBuilder(
-                animation: curvedAnimation,
-                builder: (context, _) {
-                  final blurValue = 6.0 * curvedAnimation.value;
-                  final opacityValue = 0.25 * curvedAnimation.value;
+      // Capture the Future without awaiting yet so we can clear the open-guard
+      // as soon as the route is pushed (allows intentional nested sheets).
+      final future = showGeneralDialog<T>(
+        context: context,
+        barrierDismissible: barrierDismissible,
+        barrierLabel: 'BottomSheet',
+        barrierColor: Colors.transparent,
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const SizedBox.shrink(),
+        transitionBuilder: (context, animation, secondaryAnimation, _) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: const Cubic(0.15, 0.85, 0.2, 1.0),
+          );
 
-                  return BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: blurValue,
-                      sigmaY: blurValue,
-                    ),
-                    child: Container(
-                      color: Colors.black.withValues(alpha: opacityValue),
-                    ),
-                  );
-                },
+          // Trigger light haptic impact at the start of entrance
+          if (!hapticTriggered && animation.value > 0.05) {
+            hapticTriggered = true;
+            HapticFeedback.lightImpact();
+          }
+
+          return Stack(
+            children: [
+              // Background blur barrier
+              GestureDetector(
+                onTap: barrierDismissible ? () => _dismissActiveDialog() : null,
+                child: AnimatedBuilder(
+                  animation: curvedAnimation,
+                  builder: (context, _) {
+                    final blurValue = 6.0 * curvedAnimation.value;
+                    final opacityValue = 0.25 * curvedAnimation.value;
+
+                    return BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: blurValue,
+                        sigmaY: blurValue,
+                      ),
+                      child: Container(
+                        color: Colors.black.withValues(alpha: opacityValue),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
 
-            // Bottom sheet content
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 1.0),
-                  end: Offset.zero,
-                ).animate(curvedAnimation),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: _DragToDismissWrapper(
-                      enableDrag: enableDrag,
-                      child: child,
+              // Bottom sheet content
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, 1.0),
+                    end: Offset.zero,
+                  ).animate(curvedAnimation),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: _DragToDismissWrapper(
+                        enableDrag: enableDrag,
+                        child: child,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
-    );
+            ],
+          );
+        },
+      );
+
+      didPushRoute = true;
+      _isOpeningBottomSheet = false;
+      return await future;
+    } finally {
+      if (!didPushRoute) {
+        _isOpeningBottomSheet = false;
+      }
+    }
   }
 
   /// Single entry point for app bottom sheets (blur, slide, safe area).
