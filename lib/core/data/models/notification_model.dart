@@ -199,6 +199,7 @@ class FCMNotificationData {
   final String? title;
   final String? body;
   final String? type;
+  final String? url;
   final String? driverName;
   final String? vehicleName;
   final String? plateNumber;
@@ -214,6 +215,7 @@ class FCMNotificationData {
     this.title,
     this.body,
     this.type,
+    this.url,
     this.driverName,
     this.vehicleName,
     this.plateNumber,
@@ -238,6 +240,7 @@ class FCMNotificationData {
       title: json['title']?.toString(),
       body: json['body']?.toString(),
       type: json['type']?.toString(),
+      url: json['url']?.toString(),
       driverName: json['driver_name']?.toString() ?? json['driverName']?.toString(),
       vehicleName: json['vehicle_name']?.toString() ?? json['vehicleName']?.toString(),
       plateNumber: json['plate_number']?.toString() ?? json['plateNumber']?.toString(),
@@ -255,6 +258,7 @@ class FCMNotificationData {
         if (title != null) 'title': title,
         if (body != null) 'body': body,
         if (type != null) 'type': type,
+        if (url != null) 'url': url,
         if (driverName != null) 'driver_name': driverName,
         if (vehicleName != null) 'vehicle_name': vehicleName,
         if (plateNumber != null) 'plate_number': plateNumber,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/di/injection_container.dart';
@@ -7,6 +8,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../../core/network/certificate_pinning.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/app_settings_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
@@ -50,13 +52,20 @@ class SplashController extends GetxController {
       if (isClosed || _isSessionAlreadyInvalidated()) return;
 
       if (AuthController.userNeedsPhone(userJson)) {
+        NotificationService().clearPendingNavigation();
         Get.offAllNamed(AppRoutes.phone);
       } else {
         Get.offAllNamed(AppRoutes.home);
+        // Push taps queued during splash must run *after* Home replaces the
+        // stack — otherwise splash offAllNamed would wipe the destination.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(NotificationService().flushPendingNavigationIfAny());
+        });
       }
       return;
     }
 
+    NotificationService().clearPendingNavigation();
     Get.offAllNamed(AppRoutes.onboarding);
   }
 }

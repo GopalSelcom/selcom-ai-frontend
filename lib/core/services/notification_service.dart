@@ -8,18 +8,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../features/ride/domain/repositories/ride_repository.dart';
-import '../../shared/utils/app_dialogs.dart';
-import '../../shared/utils/mid_ride_cancel_navigation.dart';
-import '../../shared/utils/ride_active_navigation.dart';
+import '../../shared/utils/push_notification_navigation.dart';
 import '../data/models/notification_model.dart';
-import '../di/injection_container.dart';
-import '../localization/app_strings.dart';
+import '../routes/app_routes.dart';
 import '../utils/app_logger.dart';
 import 'call_permission_prompt_service.dart';
 import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
-import 'progress_indicator/loader.dart';
 import 'storage_service.dart';
 
 class NotificationService {
@@ -313,7 +308,8 @@ class NotificationService {
         id: message.notification?.hashCode ?? message.messageId.hashCode,
         title: title,
         body: body,
-        payload: jsonEncode(data.toJson()),
+        // Preserve full FCM data (type, ride_id, url) for tap routing.
+        payload: jsonEncode(Map<String, dynamic>.from(message.data)),
       );
     } else if (!isDataOnly && Platform.isIOS) {
       _logI(
@@ -367,16 +363,47 @@ class NotificationService {
       unawaited(_handleNotificationNavigationRaw(raw));
       return;
     }
+    // Keep latest tap; flushed after splash → Home (see SplashController).
     _pendingNavigationRaw = raw;
+    _logD(
+      'Push nav queued until past splash/auth '
+      '(route=${Get.currentRoute})',
+    );
   }
 
+  /// True when the main navigator exists and splash/auth bootstrap is done.
+  ///
+  /// Navigating during splash is unsafe: ~2.5s later splash runs
+  /// [Get.offAllNamed](home) and wipes the push destination (looks like a crash).
   bool _isNavigationReady() {
-    return Get.key.currentState != null;
+    if (Get.key.currentState == null) return false;
+    final route = Get.currentRoute;
+    const blocked = <String>{
+      AppRoutes.splash,
+      AppRoutes.onboarding,
+      AppRoutes.login,
+      AppRoutes.loginSupport,
+      AppRoutes.phone,
+      AppRoutes.otp,
+      AppRoutes.profileLoading,
+    };
+    return !blocked.contains(route);
+  }
+
+  /// Drops a queued push tap (e.g. user landed on onboarding, not Home).
+  void clearPendingNavigation() {
+    _pendingNavigationRaw = null;
   }
 
   Future<void> flushPendingNavigationIfAny() async {
     final raw = _pendingNavigationRaw;
-    if (raw == null || !_isNavigationReady()) return;
+    if (raw == null) return;
+    if (!_isNavigationReady()) {
+      _logD(
+        'flushPendingNavigation skipped — still on ${Get.currentRoute}',
+      );
+      return;
+    }
     _pendingNavigationRaw = null;
     await _handleNotificationNavigationRaw(raw);
   }
@@ -384,58 +411,79 @@ class NotificationService {
   Future<void> _handleNotificationNavigationRaw(
     Map<String, dynamic> raw,
   ) async {
-    final rideId = raw['ride_id']?.toString() ?? raw['rideId']?.toString();
-
-    if (rideId == null || rideId.isEmpty) {
-      _logW("No ride_id found in notification data");
-      return;
-    }
-
     try {
-      _logI("Navigating to ride $rideId from notification");
-
-      Loader.instance.show();
-      try {
-        final rideRepo = sl<RideRepository>();
-        final result = await rideRepo.getRideDetails(rideId);
-
-        result.fold(
-          (failure) {
-            _logE("Error fetching ride details: ${failure.message}");
-            AppDialogs.showErrorDialog(
-              message: AppStrings.unableToOpenRideDetails.tr,
-            );
-          },
-          (rideDetails) {
-            final ride = rideDetails.toRideModel();
-            if (rideNeedsMidRideCancelScreen(ride)) {
-              final block = ride.midRideCancel;
-              if (block != null) {
-                showMidRideDriverCancelledDialog(
-                  rideId: ride.id,
-                  cancel: block,
-                );
-                return;
-              }
-            }
-            // Notification handler already fetched ride details before routing.
-            navigateToOngoingRide(
-              ride,
-              skipInitialRideDetailsFetch: true,
-            );
-          },
-        );
-      } finally {
-        Loader.instance.hide();
-      }
+      await PushNotificationNavigation.handle(raw);
     } catch (e, stackTrace) {
-      Loader.instance.hide();
       ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
       _logE("Exception in _handleNotificationNavigationRaw: $e");
     }
   }
 
   int _idCounter = 0;
+
+  /// Shows a tray notification from the **FCM background isolate** for
+  /// data-only pushes (title/body in `data`, no `notification` block).
+  /// Without this, Android may deliver the message but show nothing to tap.
+  static Future<void> showFromBackgroundMessage(RemoteMessage message) async {
+    if (message.notification != null) {
+      // System already shows the FCM notification banner.
+      return;
+    }
+
+    final type = (message.data['type'] ?? '').toString().toUpperCase().trim();
+    // Backend GPS/ETA sticky updates (`LIVE_TRACKING`) — do not create a second tray item.
+    if (type == 'LIVE_TRACKING') {
+      return;
+    }
+
+    final title = (message.data['title'] ?? '').toString().trim();
+    final body = (message.data['body'] ?? '').toString().trim();
+    if (title.isEmpty && body.isEmpty) return;
+
+    final plugin = FlutterLocalNotificationsPlugin();
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings();
+    await plugin.initialize(
+      const InitializationSettings(android: androidInit, iOS: iosInit),
+    );
+
+    const channel = AndroidNotificationChannel(
+      _defaultChannelId,
+      'High Importance Notifications',
+      description: 'This channel is used for important notifications.',
+      importance: Importance.max,
+    );
+    await plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(channel);
+
+    final id = message.messageId?.hashCode ??
+        DateTime.now().millisecondsSinceEpoch.remainder(100000);
+    await plugin.show(
+      id,
+      title.isEmpty ? 'Selcom Go' : title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _defaultChannelId,
+          'High Importance Notifications',
+          channelDescription:
+              'This channel is used for important notifications.',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: jsonEncode(Map<String, dynamic>.from(message.data)),
+    );
+  }
 
   Future<void> showLocalNotification({
     int? id,
@@ -447,7 +495,8 @@ class NotificationService {
     final finalId = id ?? _idCounter;
     _logD(
       'showLocalNotification — id=$finalId title="$title" body="$body" '
-      'hasPayload=${payload != null && payload.isNotEmpty}',
+      'hasPayload=${payload != null && payload.isNotEmpty}'
+      'payload=$payload',
     );
 
     // 1. System Notification (Always triggered for the Notification Drawer/History)

@@ -33,6 +33,7 @@ import 'core/services/session_auth_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/voip_callkit_bridge_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_logger.dart';
 import 'firebase_options.dart';
 
 /// **Change this for local runs** (`dev` | `staging` | `prod`).
@@ -84,6 +85,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 
   final type = (message.data['type'] ?? '').toString().toLowerCase().trim();
+  AppLogger.d("message ${message.data}", tag: "show notification message");
   final resolvedType = PushTypes.typeFromData(message.data) ?? '';
   AgoraCallLogger.kill(
     'FCM_BG',
@@ -114,6 +116,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 
   final data = FCMNotificationData.fromJson(message.data);
+
+  // Data-only pushes: show a local tray notification so the user can tap
+  // and open the app (FCM will not show a banner without a notification block).
+  try {
+    await NotificationService.showFromBackgroundMessage(message);
+  } catch (e, st) {
+    AppLogger.e(
+      'Background local notification failed: $e',
+      tag: 'show notification message',
+      stackTrace: st,
+    );
+  }
 
   // 🚗 Refresh Sticky Notification if this is a ride update
   if (data.rideId != null && data.status != null) {
