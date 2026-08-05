@@ -358,6 +358,9 @@ class NotificationService {
     }
   }
 
+  /// Routes a notification tap through [PushNotificationNavigation], or queues
+  /// it until after splash/auth so `Get.offAllNamed(home)` cannot wipe the
+  /// destination (see [flushPendingNavigationIfAny] / SplashController).
   void _queueOrHandleNavigationRaw(Map<String, dynamic> raw) {
     if (_isNavigationReady()) {
       unawaited(_handleNotificationNavigationRaw(raw));
@@ -395,6 +398,8 @@ class NotificationService {
     _pendingNavigationRaw = null;
   }
 
+  /// Runs a previously queued push tap once the user is past splash/auth
+  /// (typically right after Home is shown).
   Future<void> flushPendingNavigationIfAny() async {
     final raw = _pendingNavigationRaw;
     if (raw == null) return;

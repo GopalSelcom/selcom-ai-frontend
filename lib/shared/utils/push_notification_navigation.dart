@@ -18,8 +18,29 @@ import 'mid_ride_cancel_navigation.dart';
 import 'ride_active_navigation.dart';
 import 'ride_status_normalizer.dart';
 
-/// Push tap routing for notification `type` codes:
-/// 500 RIDE_STATUS, 501 CHAT, 502 REVIEW, 503 PAYMENT, 504 MARKETING.
+/// Central router for **notification taps** (FCM `onMessageOpenedApp`,
+/// `getInitialMessage`, and local-notification payload clicks).
+///
+/// Full matrix: `docs/flows/PUSH-NOTIFICATION-NAVIGATION.md`.
+///
+/// ## Product types (`data.type`)
+/// | Code | Alias        | Destination summary |
+/// |------|--------------|---------------------|
+/// | 500  | RIDE_STATUS  | Ongoing ride **or** ride details (same as My Rides card) |
+/// | 501  | CHAT         | Chat only in pickup phase; after `ride_started` → ongoing/details |
+/// | 502  | REVIEW       | Ride details (no rating bottom sheet) |
+/// | 503  | PAYMENT      | Wallet if no `ride_id`; else ride details |
+/// | 504  | MARKETING    | In-app route `/…`, external http(s), or home |
+///
+/// ## Non-routing
+/// - `LIVE_TRACKING` — backend GPS/ETA for Android sticky order-tracking;
+///   never opens a screen from this router.
+///
+/// ## Safety
+/// - Callers should queue taps during splash/auth
+///   ([NotificationService._queueOrHandleNavigationRaw]) so splash
+///   `Get.offAllNamed(home)` does not wipe the destination.
+/// - Dedupe only after a **successful** open; in-flight taps are coalesced.
 abstract final class PushNotificationNavigation {
   static const int rideStatus = 500;
   static const int chat = 501;
@@ -29,12 +50,18 @@ abstract final class PushNotificationNavigation {
 
   static const String _logTag = 'PushNav';
 
+  /// True while a tap is fetching ride details / starting navigation.
   static bool _isHandling = false;
+
+  /// Timestamp of the last **successful** open (for short-window dedupe).
   static DateTime? _lastHandledAt;
   static String? _lastHandledKey;
+
+  /// Latest tap received while [_isHandling]; processed in `finally`.
   static Map<String, dynamic>? _coalescedRaw;
 
   /// Resolves numeric type from FCM data (`type`: `500` or `RIDE_STATUS`).
+  /// Returns null for unknown / non-product types (e.g. `LIVE_TRACKING`).
   static int? parseType(Map<String, dynamic> raw) {
     final rawType = raw['type']?.toString().trim();
     if (rawType == null || rawType.isEmpty) return null;
@@ -76,7 +103,11 @@ abstract final class PushNotificationNavigation {
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  /// Handles a push / local-notification tap payload.
+  /// Handles a push / local-notification tap payload (`message.data` map).
+  ///
+  /// Returns quickly for `LIVE_TRACKING`. Unknown types fall through to Home.
+  /// Returns `opened == true` paths update the dedupe key so FCM + local
+  /// duplicate taps within ~2s do not double-navigate.
   static Future<void> handle(Map<String, dynamic> raw) async {
     final type = parseType(raw);
     final rideId = _rideId(raw);
@@ -84,7 +115,7 @@ abstract final class PushNotificationNavigation {
     final dedupeKey = '${type ?? 'none'}|${rideId ?? ''}|${url ?? ''}';
     final rawType = raw['type']?.toString().trim() ?? '';
 
-    // Ignore silent tracking updates (not user-tappable routing types).
+    // GPS/ETA sticky updates only — not a user product notification (500–504).
     if (rawType.toUpperCase() == 'LIVE_TRACKING') {
       AppLogger.d('Push nav skip LIVE_TRACKING update', tag: _logTag);
       return;
@@ -100,7 +131,8 @@ abstract final class PushNotificationNavigation {
       return;
     }
 
-    // Only skip if we *successfully* opened the same destination moments ago.
+    // FCM opened-app + local notification click often fire together.
+    // Only skip after a successful open of the same destination.
     final now = DateTime.now();
     final lastAt = _lastHandledAt;
     if (lastAt != null &&
@@ -122,7 +154,8 @@ abstract final class PushNotificationNavigation {
 
     var opened = false;
     try {
-      // Legacy fallback only when `type` key is absent (not for LIVE_TRACKING etc.).
+      // Legacy: missing `type` but has ride_id → treat as RIDE_STATUS (500).
+      // Do not apply when type is present but unknown (e.g. LIVE_TRACKING).
       final resolvedType = type ??
           ((rawType.isEmpty && rideId != null) ? rideStatus : null);
 
@@ -158,8 +191,8 @@ abstract final class PushNotificationNavigation {
     }
   }
 
-  /// Same rules as My Rides history card tap:
-  /// ongoing → live tracking; otherwise → ride details.
+  /// Type **500** — same rules as My Rides history card tap:
+  /// ongoing → live tracking; terminal → ride details.
   static Future<bool> _openRideStatus(String? rideId) async {
     if (rideId == null) {
       AppLogger.w('RIDE_STATUS missing ride_id — opening home', tag: _logTag);
@@ -174,9 +207,9 @@ abstract final class PushNotificationNavigation {
     return _openOngoingOrRideDetails(details, source: 'RIDE_STATUS');
   }
 
-  /// Chat UI exists only in the pickup-phase sheet (before ride start).
-  /// After [ride_started] (or later), match My Rides: ongoing → live tracking,
-  /// otherwise → ride details — do not open the chat screen.
+  /// Type **501** — open chat only while the in-app chat button is shown
+  /// (pickup phase: assigned / arriving / arrived via [isDriverPickupEnRouteStatus]).
+  /// After [ride_started] (or later): ongoing ride or ride details — never chat.
   static Future<bool> _openChat(String? rideId) async {
     if (rideId == null) {
       AppLogger.w('CHAT missing ride_id — opening home', tag: _logTag);
@@ -225,6 +258,8 @@ abstract final class PushNotificationNavigation {
     return true;
   }
 
+  /// Shared destination used by 500 / 501 (post-pickup) / 502:
+  /// mid-ride cancel dialog → else ongoing live UI → else [RideDetailsScreen].
   static Future<bool> _openOngoingOrRideDetails(
     RideDetailsRide details, {
     required String source,
@@ -269,6 +304,8 @@ abstract final class PushNotificationNavigation {
     return true;
   }
 
+  /// Type **502** — open ride details (rating lives on that screen).
+  /// Does **not** present the rating bottom sheet.
   static Future<bool> _openReview(String? rideId) async {
     if (rideId == null) {
       AppLogger.w('REVIEW missing ride_id — opening home', tag: _logTag);
@@ -280,12 +317,13 @@ abstract final class PushNotificationNavigation {
       return _openHome();
     }
 
-    // Do not open the rating bottom sheet — ride details embeds the review UI.
+    // Prefer ride details over openRatingForRide bottom sheet.
     return _openOngoingOrRideDetails(details, source: 'REVIEW');
   }
 
+  /// Type **503** — `ride_id` optional: null/empty → Wallet; else ride details.
   static Future<bool> _openPayment(String? rideId) async {
-    // Table: ride_id may be null → wallet; with ride_id → ride payment detail.
+    // Product table: ride_id may be null → wallet; with ride_id → ride payment detail.
     if (rideId == null || rideId.isEmpty) {
       AppLogger.i('PAYMENT without ride_id — opening wallet', tag: _logTag);
       unawaited(Get.toNamed(AppRoutes.wallet));
@@ -314,6 +352,7 @@ abstract final class PushNotificationNavigation {
     return true;
   }
 
+  /// Type **504** — in-app named route (`/…`), external http(s), else Home.
   static Future<bool> _openMarketing(String? url) async {
     final trimmed = url?.trim() ?? '';
     if (trimmed.isEmpty) {

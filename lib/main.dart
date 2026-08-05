@@ -117,8 +117,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final data = FCMNotificationData.fromJson(message.data);
 
-  // Data-only pushes: show a local tray notification so the user can tap
-  // and open the app (FCM will not show a banner without a notification block).
+  // Data-only FCM (no notification block): show a tappable local tray item
+  // for product types. LIVE_TRACKING is skipped inside showFromBackgroundMessage
+  // so sticky order-tracking is not duplicated.
   try {
     await NotificationService.showFromBackgroundMessage(message);
   } catch (e, st) {
@@ -129,7 +130,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     );
   }
 
-  // 🚗 Refresh Sticky Notification if this is a ride update
+  // Android sticky ongoing-ride notification (order_tracking_channel).
+  // Often driven by LIVE_TRACKING (and other payloads with ride_id + status).
   if (data.rideId != null && data.status != null) {
     await AndroidOrderTrackingManager().show(
       orderId: data.rideId!,
