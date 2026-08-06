@@ -173,7 +173,7 @@ class WalletPaymentRemoteDataSourceImpl
         method: ApiMethod.post,
         body: {
           Params.transid: trimmedTransid,
-          Params.payment_method: trimmedPaymentMethod,
+          Params.paymentMethod: trimmedPaymentMethod,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),
@@ -307,7 +307,7 @@ class WalletPaymentRemoteDataSourceImpl
         method: ApiMethod.post,
         body: {
           Params.amount: amount,
-          Params.send_amount:0,
+          Params.sendAmount:0,
           Params.newCard: newCard,
         },
         errorPresentationType: ErrorPresentationType.none,
@@ -345,7 +345,7 @@ class WalletPaymentRemoteDataSourceImpl
         method: ApiMethod.post,
         body: {
           Params.transid: transId,
-          Params.card_token: cardToken,
+          Params.cardToken: cardToken,
         },
         errorPresentationType: ErrorPresentationType.none,
       ),

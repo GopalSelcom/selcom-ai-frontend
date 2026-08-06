@@ -32,8 +32,9 @@ class CallPermissionPromptService {
 
     if (!await waitUntilUiReady()) return;
 
-    final fullScreenGranted = await AgoraCalling.isFullScreenIntentGranted();
-    /*if (!fullScreenGranted) {
+    await AgoraCalling.isFullScreenIntentGranted();
+    /*final fullScreenGranted = await AgoraCalling.isFullScreenIntentGranted();
+     if (!fullScreenGranted) {
       await _showPermissionDialog(
         message: AppStrings.callFullScreenPermissionMsg.tr,
         forCallFullScreen: true,

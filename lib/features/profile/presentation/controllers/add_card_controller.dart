@@ -438,13 +438,13 @@ class AddCardController extends GetxController {
       htmlCode += "<input type=\"hidden\" name=\"$key\" value=\"$value\" />\n";
     });
     htmlCode +=
-        "<input type=\"hidden\" name=\"${Params.CARD_NUMBER}\" value=\"$cardNumber\" />\n";
+        "<input type=\"hidden\" name=\"${Params.cardNumber}\" value=\"$cardNumber\" />\n";
     htmlCode +=
-        "<input type=\"hidden\" name=\"${Params.CARD_TYPE}\" value=\"$cardType\" />\n";
+        "<input type=\"hidden\" name=\"${Params.cardType}\" value=\"$cardType\" />\n";
     htmlCode +=
-        "<input type=\"hidden\" name=\"${Params.CARD_EXPIRY_DATE}\" value=\"$expiryMonth-$expiryYear\"/>\n";
+        "<input type=\"hidden\" name=\"${Params.cardExpiryDate}\" value=\"$expiryMonth-$expiryYear\"/>\n";
     htmlCode +=
-        "<input type=\"hidden\" name=\"${Params.CARD_CVN}\" value=\"$cvv\" />\n";
+        "<input type=\"hidden\" name=\"${Params.cardCvn}\" value=\"$cvv\" />\n";
     htmlCode += r'''
               </form>
             </body>

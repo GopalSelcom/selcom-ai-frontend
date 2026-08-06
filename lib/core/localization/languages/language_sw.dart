@@ -2650,7 +2650,6 @@ class LanguageSw extends Languages {
   String get yourDriver => values['your_driver'] ?? '';
 
   @override
-  // TODO: implement savedLocations
   String get savedLocations => values['saved_locations'] ?? '';
 
   @override

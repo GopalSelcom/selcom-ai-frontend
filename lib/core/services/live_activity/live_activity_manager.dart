@@ -246,8 +246,9 @@ class LiveActivityManager {
       if (driverName.isNotEmpty) _cacheDriverName[orderId] = driverName;
       if (vehicleName.isNotEmpty) _cacheVehicleName[orderId] = vehicleName;
       if (plateNumber.isNotEmpty) _cachePlateNumber[orderId] = plateNumber;
-      if (driverAvatarUrl.isNotEmpty)
+      if (driverAvatarUrl.isNotEmpty) {
         _cacheDriverAvatarUrl[orderId] = driverAvatarUrl;
+      }
       if (etaSeconds > 0) _cacheEtaSeconds[orderId] = etaSeconds;
 
       if (_isIOS && existingId != null && existingId != 'android') {
@@ -289,10 +290,12 @@ class LiveActivityManager {
       }
 
       if (_isIOS) {
-        if (!await _liveActivitiesPlugin.areActivitiesEnabled())
+        if (!await _liveActivitiesPlugin.areActivitiesEnabled()) {
           return "disabled";
-        if (_iosActivityCount >= _maxConcurrentIOSActivities)
+        }
+        if (_iosActivityCount >= _maxConcurrentIOSActivities) {
           return "limit_reached";
+        }
 
         final activityModel = <String, dynamic>{
           'status': status,

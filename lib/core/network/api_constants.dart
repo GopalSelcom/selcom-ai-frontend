@@ -60,12 +60,12 @@ class Params {
   static const String currency = "currency";
   static const String orderId = "order_id";
   static const String transId = "transid";
-  static String CARD_NUMBER = "card_number";
-  static String CARD_TYPE = "card_type";
-  static String CARD_CVN = "card_cvn";
-  static String CARD_EXPIRY_DATE = "card_expiry_date";
-  static String app_referal_code = "app_referal_code";
-  static String refreshToken = "refresh_token";
+  static const String cardNumber = "card_number";
+  static const String cardType = "card_type";
+  static const String cardCvn = "card_cvn";
+  static const String cardExpiryDate = "card_expiry_date";
+  static const String appReferalCode = "app_referal_code";
+  static const String refreshToken = "refresh_token";
 
   // ── Additional Request Params ──
   static const String reason = "reason";
@@ -89,33 +89,27 @@ class Params {
   static const String flareEstimate = "fare_estimate";
   static const String enabled = "enabled";
 
-
   ///error reported
   static const String errorKey = "error_key";
   static const String customMessage = "custom_message";
   static const String exception = "exception";
-  static const String stack_trace = "stack_trace";
+  static const String stackTrace = "stack_trace";
   static const String timestamp = "timestamp";
   static const String device = "device";
   static const String app = "app";
-  static const String app_name = "app_name";
+  static const String appName = "app_name";
   static const String user = "user";
   static const String state = "state";
-  static const String extra_data = "extra_data";
+  static const String extraData = "extra_data";
   static const String logs = "logs";
 
-
-
   static const String transid = "transid";
-  static const String payment_method = "payment_method";
+  static const String paymentMethod = "payment_method";
 
-
-
-  static const String send_amount = "send_amount";
+  static const String sendAmount = "send_amount";
   static const String newCard = "newCard";
-  static const String card_token = "card_token";
+  static const String cardToken = "card_token";
   static const String cardBin = "cardBin";
-
 
   static const String fname = "fname";
   static const String lname = "lname";
@@ -129,19 +123,6 @@ class Params {
   static const String shortCode = "short_code";
   static const String otp = "otp";
   static const String token = "token";
-  // static const String address = "address";
-
-
-
-
-
-
-
-
-
-  // static get flareEstimate => null;
-
-  // static get code => 'code';
 }
 
 /// Standard HTTP status/result codes for API response handling.

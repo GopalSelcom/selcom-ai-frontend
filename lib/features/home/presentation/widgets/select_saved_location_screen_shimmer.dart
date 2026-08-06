@@ -37,7 +37,7 @@ abstract final class SelectSavedLocationScreenShimmer {
   static Widget locationTile({bool showFavorite = false}) {
     const iconSize = 20.0;
     const iconPadding = 8.0;
-    final circleSize = (iconPadding * 2) + iconSize;
+    const circleSize = (iconPadding * 2) + iconSize;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),

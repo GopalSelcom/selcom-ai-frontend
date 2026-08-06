@@ -193,8 +193,13 @@ class AppSocketService {
     } on TimeoutException {
       _errorController.add('Socket connection timed out');
       rethrow;
-    }catch(e){
-      print("error $e");
+    } catch (e, stackTrace) {
+      AppLogger.e(
+        'Socket ensureConnected failed',
+        tag: 'AppSocketService',
+        error: e,
+        stackTrace: stackTrace,
+      );
     } finally {
       await sub.cancel();
     }

@@ -247,15 +247,15 @@ class ErrorReporter {
           if (report.customMessage != null)
             Params.customMessage: report.customMessage,
           Params.exception: report.exception,
-          Params.stack_trace: report.stackTrace,
+          Params.stackTrace: report.stackTrace,
           Params.timestamp: report.timestamp.toIso8601String(),
           Params.device: jsonEncode(report.deviceInfo),
           Params.app: jsonEncode(report.appInfo),
-          Params.app_name: "selcom_go",
+          Params.appName: "selcom_go",
           Params.user: jsonEncode(report.userContext),
           Params.state: jsonEncode(report.appState),
           if (report.extraData != null)
-            Params.extra_data: jsonEncode(report.extraData),
+            Params.extraData: jsonEncode(report.extraData),
           Params.logs: report.logs.join("\n"),
         },
         multipartFiles:

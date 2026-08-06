@@ -17,10 +17,7 @@ import 'app_text_field.dart';
 
 /// Save-as-favourite picker body for [AppDialogs.showStandardBottomSheet].
 class AddFavoriteLocationSheet extends StatelessWidget {
-  const AddFavoriteLocationSheet({
-    super.key,
-    required this.controllerTag,
-  });
+  const AddFavoriteLocationSheet({super.key, required this.controllerTag});
 
   final String controllerTag;
 
@@ -82,7 +79,8 @@ class AddFavoriteLocationSheet extends StatelessWidget {
         ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 16.h;
     final bodyPadding = 16.h + 8.h;
-    final available = screenH - headerH - safeBottom - bottomChrome - bodyPadding;
+    final available =
+        screenH - headerH - safeBottom - bottomChrome - bodyPadding;
     return (available / screenH).clamp(0.35, 0.72);
   }
 
@@ -93,9 +91,7 @@ class AddFavoriteLocationSheet extends StatelessWidget {
 }
 
 class _AddFavoriteLocationSheetBody extends StatefulWidget {
-  const _AddFavoriteLocationSheetBody({
-    required this.controller,
-  });
+  const _AddFavoriteLocationSheetBody({required this.controller});
 
   final AddFavoriteLocationController controller;
 
@@ -115,14 +111,11 @@ class _AddFavoriteLocationSheetBodyState
   @override
   void initState() {
     super.initState();
-    _canSaveWorker = everAll(
-      [
-        controller.selectedLabel,
-        controller.customLabelText,
-        controller.hasUserSelectedLabel,
-      ],
-      (_) => _onCanSaveChanged(),
-    );
+    _canSaveWorker = everAll([
+      controller.selectedLabel,
+      controller.customLabelText,
+      controller.hasUserSelectedLabel,
+    ], (_) => _onCanSaveChanged());
   }
 
   @override
@@ -167,13 +160,14 @@ class _AddFavoriteLocationSheetBodyState
         ? (GetPlatform.isIOS ? 0.0 : 8.h)
         : 16.h;
     final bodyPadding = 16.h + 8.h;
-    final viewportMaxHeight = (screenH -
-            AddFavoriteLocationSheet._standardSheetHeaderHeight(context) -
-            safeBottom -
-            bottomChrome -
-            bodyPadding -
-            keyboard)
-        .clamp(180.0, screenH * 0.65);
+    final viewportMaxHeight =
+        (screenH -
+                AddFavoriteLocationSheet._standardSheetHeaderHeight(context) -
+                safeBottom -
+                bottomChrome -
+                bodyPadding -
+                keyboard)
+            .clamp(180.0, screenH * 0.65);
 
     return Obx(() {
       controller.savedPlaces.length;
@@ -259,7 +253,7 @@ class _AddFavoriteLocationSheetBodyState
                           onPressed: controller.saveSelected,
                         ),
                       )
-                    : SizedBox(width: double.infinity, height: 0),
+                    : const SizedBox(width: double.infinity, height: 0),
               ),
             ],
           ),
@@ -288,7 +282,8 @@ class _AddFavoriteLocationSheetBodyState
     if (entry is AddFavoriteExtraChip) {
       final title = SavedPlacesOrdering.effectiveLabel(entry.place);
       final display =
-          title.capitalizeFirst ?? (title.isEmpty ? AppStrings.saved.tr : title);
+          title.capitalizeFirst ??
+          (title.isEmpty ? AppStrings.saved.tr : title);
       return AppSavedPlaceChip(
         label: display,
         iconAsset: AppAssets.icOtherChip,
@@ -366,7 +361,8 @@ class _AddFavoriteCustomLabelField extends StatefulWidget {
       _AddFavoriteCustomLabelFieldState();
 }
 
-class _AddFavoriteCustomLabelFieldState extends State<_AddFavoriteCustomLabelField> {
+class _AddFavoriteCustomLabelFieldState
+    extends State<_AddFavoriteCustomLabelField> {
   late final TextEditingController _controller;
 
   @override

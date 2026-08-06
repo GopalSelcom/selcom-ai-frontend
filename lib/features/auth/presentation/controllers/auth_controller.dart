@@ -20,6 +20,7 @@ import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/services/session_expiry_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/voip_callkit_bridge_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../shared/data/countries_phone_data.dart';
 import '../../../../shared/utils/phone_national_rules.dart';
 import '../../domain/entities/social_auth_user.dart';
@@ -308,8 +309,13 @@ class AuthController extends GetxController {
       return user.isVerify != 1 ||
           user.mobileNumber == null ||
           user.mobileNumber == 0;
-    } catch (e,strace) {
-      print("this is exceptopn-->$e-->$strace");
+    } catch (e, stackTrace) {
+      AppLogger.e(
+        'Failed to parse stored user for phone check',
+        tag: 'AuthController',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return true;
     }
   }

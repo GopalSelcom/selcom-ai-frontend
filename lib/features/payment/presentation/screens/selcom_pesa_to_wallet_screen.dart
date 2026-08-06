@@ -70,7 +70,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                           AppStrings.paymentMethodsTitle.tr,
                           style: AppTextStyles.homeSubtitle,
                         ),
-                        if (paymentController.canLinkAnother && paymentController.linkedAccountsList.isNotEmpty)
+                        if (paymentController.canLinkAnother &&
+                            paymentController.linkedAccountsList.isNotEmpty)
                           GestureDetector(
                             onTap: paymentController.linkSelcomPesa,
                             behavior: HitTestBehavior.opaque,
@@ -96,7 +97,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                     _actionOption(
                       title: AppStrings.selcomPesaOtherTitle.tr,
                       subtitle: AppStrings.selcomPesaOtherSubtitle.tr,
-                      onTap: () => unawaited(SelcomPesaAnotherNumberBottomSheet.show()),
+                      onTap: () =>
+                          unawaited(SelcomPesaAnotherNumberBottomSheet.show()),
                     ),
                   ],
                 );
@@ -108,7 +110,9 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
     );
   }
 
-  Widget _linkedAccountsHorizontalList(PaymentMethodsController paymentController) {
+  Widget _linkedAccountsHorizontalList(
+    PaymentMethodsController paymentController,
+  ) {
     if (paymentController.isLoadingLinkedAccount.value) {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -135,10 +139,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
         children: [
           for (var i = 0; i < accounts.length; i++) ...[
             if (i > 0) SizedBox(width: 12.w),
-            _selcomCard(
-              paymentController,
-              account: accounts[i],
-            ),
+            _selcomCard(paymentController, account: accounts[i]),
           ],
         ],
       ),
@@ -150,7 +151,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
     Account? account,
   }) {
     final linked = account != null;
-    final isSelected = linked && paymentMethodsController.isLinkedAccountSelected(account);
+    final isSelected =
+        linked && paymentMethodsController.isLinkedAccountSelected(account);
 
     return Container(
       width: 280.w,
@@ -158,7 +160,9 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         border: Border.all(
-          color: isSelected ? AppColors.successBadge : AppColors.borderWalletCard,
+          color: isSelected
+              ? AppColors.successBadge
+              : AppColors.borderWalletCard,
           width: isSelected ? 1.5 : 0.8,
         ),
         borderRadius: BorderRadius.circular(16.r),
@@ -212,7 +216,10 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
                 ),
                 if (account.isDefault ?? false) ...[
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.successBadge,
                       borderRadius: BorderRadius.circular(4.r),
@@ -254,7 +261,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
             ),
           ],
         ),
-        SizedBox(height: 10.0.sp,),
+        SizedBox(height: 10.0.sp),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -272,10 +279,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
               ),
             ),
             Obx(() {
-              final loading =
-                  paymentMethodsController.isLinkedAccountBalanceLoading(
-                account,
-              );
+              final loading = paymentMethodsController
+                  .isLinkedAccountBalanceLoading(account);
               return GestureDetector(
                 onTap: loading
                     ? null
@@ -345,9 +350,7 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
         ),
         Text(
           AppStrings.linkAccount.tr,
-          style: AppTextStyles.homeSubtitle.copyWith(
-            color: AppColors.brandRed,
-          ),
+          style: AppTextStyles.homeSubtitle.copyWith(color: AppColors.brandRed),
         ),
       ],
     );
@@ -358,11 +361,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
       padding: EdgeInsets.symmetric(vertical: 24.h),
       child: Row(
         children: [
-          Expanded(
-            child: Divider(
-              color: AppColors.borderWalletCard,
-              thickness: 1,
-            ),
+          const Expanded(
+            child: Divider(color: AppColors.borderWalletCard, thickness: 1),
           ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -375,11 +375,8 @@ class _SelcomPesaToWalletScreenState extends State<SelcomPesaToWalletScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: Divider(
-              color: AppColors.borderWalletCard,
-              thickness: 1,
-            ),
+          const Expanded(
+            child: Divider(color: AppColors.borderWalletCard, thickness: 1),
           ),
         ],
       ),
