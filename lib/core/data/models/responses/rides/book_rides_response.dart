@@ -587,9 +587,6 @@ class BookRideFareBreakdown {
   };
 }
 
-/// Alias kept for existing typed references.
-typedef FareBreakdown = BookRideFareBreakdown;
-
 class BookRidePickup {
   BookRideLocation? location;
   double? lat;
