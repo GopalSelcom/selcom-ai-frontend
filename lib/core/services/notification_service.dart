@@ -15,6 +15,7 @@ import '../utils/app_logger.dart';
 import 'call_permission_prompt_service.dart';
 import 'error_reporting/error_reporter.dart';
 import 'live_activity/android_order_tracking_manager.dart';
+import 'local_notification_tap_dispatcher.dart';
 import 'storage_service.dart';
 
 class NotificationService {
@@ -109,8 +110,9 @@ class NotificationService {
 
     await _localNotifications.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
+      onDidReceiveNotificationResponse: LocalNotificationTapDispatcher.dispatch,
     );
+    LocalNotificationTapDispatcher.register(_onDidReceiveNotificationResponse);
 
     // 3. Create Android Notification Channel
     if (Platform.isAndroid) {
@@ -191,24 +193,15 @@ class NotificationService {
         return;
       }
       // Plugin keeps returning the last launch payload on later icon opens.
+      // Only skip when we already handled this exact payload from a prior tap.
       if (await _wasNavPayloadAlreadyHandled(raw)) {
         _logD(
           'Local launch skipped (stale — open from icon, not a new notification tap)',
         );
         return;
       }
-      // Android + singleTask: without an FCM initial message, local launch
-      // details are usually a replay of an older tap — not a fresh icon-open.
-      // Real FCM tray taps (type 500–504 with notification block) use
-      // getInitialMessage above. Mark handled so the replay stops.
-      if (Platform.isAndroid) {
-        _logD(
-          'Android local launch ignored without FCM initial '
-          '(avoids ride-details on icon open)',
-        );
-        await _rememberHandledNavPayload(raw);
-        return;
-      }
+      // Real local-tray tap while terminated (e.g. foreground FCM mirrored to
+      // local on Android — wallet top-up type 503 with empty ride_id).
       _logI('LOCAL launch from notification tap — queueing navigation');
       await _rememberHandledNavPayload(raw);
       _queueOrHandleNavigationRaw(raw);
@@ -219,6 +212,9 @@ class NotificationService {
   }
 
   /// Stable fingerprint for a notification data map (used to ignore stale launches).
+  ///
+  /// Prefix `v2` invalidates older marks (including ones saved when a launch was
+  /// incorrectly skipped without navigating).
   String _navPayloadFingerprint(Map<String, dynamic> raw) {
     final type = (raw['type'] ?? '').toString();
     final rideId =
@@ -227,7 +223,7 @@ class NotificationService {
     final phase = (raw['phase'] ?? '').toString();
     final title = (raw['title'] ?? '').toString();
     final body = (raw['body'] ?? '').toString();
-    return '$type|$rideId|$status|$phase|$title|$body';
+    return 'v2|$type|$rideId|$status|$phase|$title|$body';
   }
 
   Future<bool> _wasNavPayloadAlreadyHandled(Map<String, dynamic> raw) async {
@@ -427,7 +423,7 @@ class NotificationService {
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
-    _logD("Local notification clicked: ${response.payload}");
+    _logI('Local notification clicked: ${response.payload}');
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
@@ -441,6 +437,8 @@ class NotificationService {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logE("Error decoding notification payload: $e");
       }
+    } else {
+      _logW('Local notification clicked with empty payload');
     }
   }
 
@@ -594,6 +592,22 @@ class NotificationService {
       'hasPayload=${payload != null && payload.isNotEmpty}'
       'payload=$payload',
     );
+
+    // Re-bind tap routing before each product banner. Sticky order-tracking
+    // may have re-initialized the plugin without a tap handler.
+    LocalNotificationTapDispatcher.register(_onDidReceiveNotificationResponse);
+    try {
+      await _localNotifications.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          iOS: DarwinInitializationSettings(),
+        ),
+        onDidReceiveNotificationResponse: LocalNotificationTapDispatcher.dispatch,
+      );
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      _logW('Failed to re-bind local notification tap handler: $e');
+    }
 
     // 1. System Notification (Always triggered for the Notification Drawer/History)
     try {

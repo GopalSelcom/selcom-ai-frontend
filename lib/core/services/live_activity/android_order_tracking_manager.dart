@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../theme/app_colors.dart';
 import '../../utils/app_logger.dart';
+import '../local_notification_tap_dispatcher.dart';
 import '../storage_service.dart';
 
 class AndroidOrderTrackingManager {
@@ -63,7 +64,12 @@ class AndroidOrderTrackingManager {
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
-    await _plugin.initialize(initializationSettings);
+    await _plugin.initialize(
+      initializationSettings,
+      // Must forward taps — re-init without a handler clears product routing
+      // (wallet top-up / type 503 local banners never open on click).
+      onDidReceiveNotificationResponse: LocalNotificationTapDispatcher.dispatch,
+    );
     _isPluginInitialized = true;
     AppLogger.d(
       'AndroidOrderTrackingManager: Plugin Initialized',

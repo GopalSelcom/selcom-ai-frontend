@@ -51,7 +51,7 @@ These apply **before** type-specific routing.
 
 | App state when user taps | What happens |
 |---|---|
-| **Cold start** (killed) → splash | FCM tray tap → `getInitialMessage` queued; after Home, splash flushes. Android ignores stale **local** launch-details when there is no FCM initial (prevents icon-open re-nav). |
+| **Cold start** (killed) → splash | FCM tray tap → `getInitialMessage`; local-tray tap → launch-details. Both are deduped by payload fingerprint so icon reopen does not re-navigate. |
 | **Cold start** → onboarding / phone / OTP | Pending nav is **cleared** (user must finish auth) |
 | **Background** (process alive) | `onMessageOpenedApp` → navigate if route is ready |
 | **Foreground** | System may not show tray; in-app handling is separate from this tap router |
