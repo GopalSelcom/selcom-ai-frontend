@@ -1,25 +1,18 @@
 import 'package:get/get.dart';
 
-import '../../data/datasources/ride_remote_data_source.dart';
-import '../../data/repositories/ride_repository_impl.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../controllers/finding_driver_controller.dart';
 
 class FindingDriverBinding extends Bindings {
   @override
   void dependencies() {
-    if (!Get.isRegistered<RideRepository>()) {
-      Get.lazyPut<RideRemoteDataSource>(() => RideRemoteDataSourceImpl());
-      Get.lazyPut<RideRepository>(
-        () => RideRepositoryImpl(remoteDataSource: Get.find()),
-      );
-    }
     // Always recreate so a new active ride never reuses a stale rideId/socket session.
     if (Get.isRegistered<FindingDriverController>()) {
       Get.delete<FindingDriverController>(force: true);
     }
     Get.put<FindingDriverController>(
-      FindingDriverController(rideRepository: Get.find()),
+      FindingDriverController(rideRepository: sl<RideRepository>()),
     );
   }
 }

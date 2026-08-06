@@ -23,10 +23,16 @@ import '../../features/profile/data/repositories/selcom_pesa_link_repository_imp
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/repositories/selcom_pesa_link_repository.dart';
 import '../../features/profile/presentation/controllers/profile_controller.dart';
+import '../../features/home/data/datasources/home_remote_data_source.dart';
+import '../../features/home/data/repositories/home_repository_impl.dart';
+import '../../features/home/domain/repositories/home_repository.dart';
+import '../../features/ride/data/datasources/ride_chat_socket_data_source.dart';
 import '../../features/ride/data/datasources/ride_remote_data_source.dart';
 import '../../features/ride/data/datasources/ride_share_remote_datasource.dart';
+import '../../features/ride/data/repositories/ride_chat_repository_impl.dart';
 import '../../features/ride/data/repositories/ride_repository_impl.dart';
 import '../../features/ride/data/repositories/ride_share_repository_impl.dart';
+import '../../features/ride/domain/repositories/ride_chat_repository.dart';
 import '../../features/ride/domain/repositories/ride_repository.dart';
 import '../../features/ride/domain/repositories/ride_share_repository.dart';
 import '../../features/ride/presentation/controllers/my_rides_controller.dart';
@@ -119,6 +125,24 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<RideShareRepository>(
     () => RideShareRepositoryImpl(remoteDataSource: sl()),
+  );
+  // Factory: chat socket DS closes listeners on screen dispose; fresh per open.
+  sl.registerFactory(
+    () => RideChatSocketDataSource(socket: sl()),
+  );
+  sl.registerFactory<RideChatRepository>(
+    () => RideChatRepositoryImpl(
+      socketDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // ── Home Feature ──
+  sl.registerLazySingleton<HomeRemoteDataSource>(
+    () => HomeRemoteDataSourceImpl(),
+  );
+  sl.registerLazySingleton<HomeRepository>(
+    () => HomeRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ── Profile Feature ──

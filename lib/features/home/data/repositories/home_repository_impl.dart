@@ -28,7 +28,7 @@ class HomeRepositoryImpl implements HomeRepository {
 
   /// Session cache for `GET go/vehicles/types` — the catalog rarely changes,
   /// but Home load and every vehicle-selection estimate refresh ask for it.
-  /// Static because bindings may create multiple repository instances.
+  /// Static so the cache survives even if a new repository instance is created.
   /// Empty results and failures are not cached, so the next call retries.
   static List<VehicleType>? _vehicleTypesCache;
 

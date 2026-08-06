@@ -114,7 +114,7 @@ class VehicleSelectionController extends GetxController {
   DateTime? _initialFareEstimateAt;
   static const _initialFareEstimateMaxAge = Duration(seconds: 30);
   final _vehicleTypes = <VehicleType>[];
-  AppSocketService get _socketService => Get.find<AppSocketService>();
+  AppSocketService get _socketService => di.sl<AppSocketService>();
   StreamSubscription<List<Driver>>? _nearbyDriversSub;
   StreamSubscription<String>? _nearbyDriversErrorSub;
   StreamSubscription<bool>? _nearbyDriversConnectionSub;

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/rider_status_update_response.dart';
 import '../../../../core/data/models/responses/nearbyRiders/response/tracking_update_socket_response.dart';
 import '../../../../core/data/models/ride_model.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/error_reporting/error_reporter.dart';
 import '../../../../core/services/nearby_drivers_socket_service.dart';
@@ -166,7 +167,7 @@ class RideMessageController extends GetxController {
       }
     });
 
-    final socket = Get.find<AppSocketService>();
+    final socket = sl<AppSocketService>();
     _connectionSub = socket.connectionStream.listen((ok) {
       isSocketConnected.value = ok;
     });

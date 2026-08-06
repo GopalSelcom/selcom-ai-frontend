@@ -12,6 +12,11 @@ import '../../../../shared/widgets/web_view_screen.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class OnboardingController extends GetxController {
+  OnboardingController({required AuthRepository authRepository})
+    : _authRepository = authRepository;
+
+  final AuthRepository _authRepository;
+
   final currentIndex = 0.obs;
 
   late final PageController pageController;
@@ -80,7 +85,7 @@ class OnboardingController extends GetxController {
   /// Merges API `title`, `subtitle`, and `background_image_url` per slide; on error or
   /// empty response, [slides] stays [_staticSlides].
   Future<void> _loadOnboardingBannersFromApi() async {
-    final result = await Get.find<AuthRepository>().getOnboardingBanners();
+    final result = await _authRepository.getOnboardingBanners();
     result.fold(
       (_) {
         bannerFetchSettled.value = true;
