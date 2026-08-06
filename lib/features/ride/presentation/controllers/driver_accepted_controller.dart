@@ -747,8 +747,8 @@ class DriverAcceptedController extends GetxController
     });
   }
 
-  /// Minimum sheet fraction for the current ride status.
-  double _targetSheetFractionForStatus(String status) {
+  /// Minimum sheet fraction for a ride status (single source of truth for UI).
+  double sheetMinFractionForStatus(String status) {
     if (status == 'near_destination') {
       return 0.35;
     }
@@ -758,9 +758,23 @@ class DriverAcceptedController extends GetxController
     return 0.3;
   }
 
+  /// Collapses the draggable sheet to the status-based minimum.
+  void minimizeSheet() {
+    if (!sheetController.isAttached) return;
+    final targetMin = sheetMinFractionForStatus(currentRideStatus.value);
+    Future.microtask(() {
+      if (!sheetController.isAttached) return;
+      sheetController.animateTo(
+        targetMin,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   /// Animates the draggable sheet and [sheetSize] when status changes layout.
   void _syncSheetLayoutForCurrentStatus() {
-    final target = _targetSheetFractionForStatus(currentRideStatus.value);
+    final target = sheetMinFractionForStatus(currentRideStatus.value);
     // Keep map chrome in sync before the draggable listener catches up.
     updateSheetSize(target);
     if (sheetController.isAttached) {

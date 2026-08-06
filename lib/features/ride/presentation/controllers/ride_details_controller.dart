@@ -83,6 +83,10 @@ class RideDetailsController extends GetxController {
     }
   }
 
+  void openContactSupport() {
+    Get.toNamed(AppRoutes.contactSupport);
+  }
+
   Future<void> onSkipRating() async {
     await ratingController.onSkipTap();
     exitOrPop();

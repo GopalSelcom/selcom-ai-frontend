@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/data/models/ride_model.dart';
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
@@ -439,10 +438,12 @@ class FareBreakdownRowsList extends StatelessWidget {
 class NeedHelpRow extends StatelessWidget {
   const NeedHelpRow({
     super.key,
+    required this.onNeedHelp,
     this.showDownloadSlip = false,
     this.onDownloadTap,
   });
 
+  final VoidCallback onNeedHelp;
   final bool showDownloadSlip;
   final VoidCallback? onDownloadTap;
 
@@ -465,7 +466,7 @@ class NeedHelpRow extends StatelessWidget {
         SizedBox(width: 8.w),
         AppCupertinoTextButton.inlineHelpLink(
           label: AppStrings.needHelp.tr,
-          onPressed: () => Get.toNamed(AppRoutes.contactSupport),
+          onPressed: onNeedHelp,
         ),
         if (showDownloadSlip) ...[
           SizedBox(width: 20.w),

@@ -29,7 +29,6 @@ import '../widgets/route_deviation_banner.dart';
 class DriverAcceptedScreen extends StatelessWidget {
   const DriverAcceptedScreen({super.key});
 
-  static const double _sheetMin = 0.3;
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
 
@@ -51,16 +50,6 @@ class DriverAcceptedScreen extends StatelessWidget {
     return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
   }
 
-  static double _baseMinSheetSizeForStatus(String status) {
-    if (status == 'near_destination') {
-      return 0.35;
-    }
-    if (status == 'ride_in_progress' || status == 'ride_started') {
-      return 0.40;
-    }
-    return _sheetMin;
-  }
-
   /// Keeps map chrome above the sheet when status raises the sheet minimum
   /// before [DraggableScrollableController] reports the new size.
   static double _resolvedSheetSizeForActionRow(
@@ -69,31 +58,10 @@ class DriverAcceptedScreen extends StatelessWidget {
   ) {
     final minSize = _sheetSizeWithNavInset(
       context,
-      _baseMinSheetSizeForStatus(c.currentRideStatus.value),
+      c.sheetMinFractionForStatus(c.currentRideStatus.value),
     );
     final liveSize = c.sheetSize.value;
     return liveSize < minSize ? minSize : liveSize;
-  }
-
-  void _minimizeSheet(DriverAcceptedController c) {
-    if (c.sheetController.isAttached) {
-      final status = c.currentRideStatus.value;
-      final double targetMin;
-      if (status == 'near_destination') {
-        targetMin = 0.35;
-      } else if (status == 'ride_in_progress' || status == 'ride_started') {
-        targetMin = 0.40;
-      } else {
-        targetMin = _sheetMin;
-      }
-      Future.microtask(() {
-        c.sheetController.animateTo(
-          targetMin,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      });
-    }
   }
 
   @override
@@ -187,7 +155,7 @@ class DriverAcceptedScreen extends StatelessWidget {
               final state = c.rideBottomSheetState.value;
               final status = c.currentRideStatus.value;
               final double maxSheetSize;
-              final baseMin = _baseMinSheetSizeForStatus(status);
+              final baseMin = c.sheetMinFractionForStatus(status);
               final baseInitial = baseMin;
 
               final initialSize = _sheetSizeWithNavInset(context, baseInitial);
@@ -266,7 +234,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       icon: Icons.gps_fixed,
                       onTap: () {
                         c.mapWidgetKey.currentState?.retrack();
-                        _minimizeSheet(c);
+                        c.minimizeSheet();
                       },
                       color: AppColors.primary,
                     ),
@@ -448,14 +416,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       // Use a stable padding instead of tracking the sheet's pixel-by-pixel size.
       // This prevents the "!_dirty" assertion error and keeps the map stable.
       final status = c.currentRideStatus.value;
-      final double currentMin;
-      if (status == 'near_destination') {
-        currentMin = 0.35;
-      } else if (status == 'ride_in_progress' || status == 'ride_started') {
-        currentMin = 0.40;
-      } else {
-        currentMin = _sheetMin;
-      }
+      final currentMin = c.sheetMinFractionForStatus(status);
       final stableBottomPad = screenHeight * currentMin;
 
       final pickup = c.pickupLatLng;
@@ -566,7 +527,7 @@ class DriverAcceptedScreen extends StatelessWidget {
             },
             onCameraMove: (_) => c.scheduleAssignedEtaOverlayRefresh(),
             onCameraIdle: c.scheduleAssignedEtaOverlayRefresh,
-            onUserInteraction: () => _minimizeSheet(c),
+            onUserInteraction: () => c.minimizeSheet(),
             trackRider: c.isTrackingRider.value,
             onTrackingChanged: (tracking) => c.isTrackingRider.value = tracking,
             markers: markers,
