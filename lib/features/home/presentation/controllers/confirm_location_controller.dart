@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -167,6 +168,13 @@ class ConfirmLocationController extends GetxController {
   VoidCallback? _noteListener;
   int _cameraSyncGeneration = 0;
 
+  /// Blocks reverse-geocode during open / programmatic camera sync so entering
+  /// the screen does not hit the places API; only a real pin move enables it.
+  bool _allowReverseGeocode = false;
+
+  /// Next [onCameraIdle] only re-baselines the pin (no API) after map sync.
+  bool _pendingBaselineIdle = false;
+
   LatLng get initialLatLng => _initialLatLng;
 
   bool get hasMovedFromInitial =>
@@ -279,6 +287,8 @@ class ConfirmLocationController extends GetxController {
     isResolvingAddress.value = false;
     isSubmitting.value = false;
     mapController = null;
+    _allowReverseGeocode = false;
+    _pendingBaselineIdle = false;
     _cameraSyncGeneration++;
   }
 
@@ -292,9 +302,25 @@ class ConfirmLocationController extends GetxController {
   Future<void> onMapCreated(GoogleMapController controller) async {
     mapController = controller;
     final generation = _cameraSyncGeneration;
+    _allowReverseGeocode = false;
+    _pendingBaselineIdle = false;
     await _syncCameraToInitial(generation: generation);
     if (!isClosed && generation == _cameraSyncGeneration) {
+      // Re-baseline after programmatic move so sync/padding drift is not a
+      // "pin change". The next idle only commits that baseline (no API).
+      _initialLatLng = selectedLatLng.value;
+      _pendingBaselineIdle = true;
       isMapReady.value = true;
+      // If the map never fires idle after sync, still unlock pin-move geocode.
+      unawaited(
+        Future<void>.delayed(const Duration(milliseconds: 500), () {
+          if (isClosed || generation != _cameraSyncGeneration) return;
+          if (!_pendingBaselineIdle) return;
+          _initialLatLng = selectedLatLng.value;
+          _pendingBaselineIdle = false;
+          _allowReverseGeocode = true;
+        }),
+      );
     }
   }
 
@@ -365,6 +391,16 @@ class ConfirmLocationController extends GetxController {
   }
 
   Future<void> onCameraIdle() async {
+    // First idle after open / sync: keep route address, do not reverse-geocode.
+    if (_pendingBaselineIdle) {
+      _initialLatLng = selectedLatLng.value;
+      _pendingBaselineIdle = false;
+      _allowReverseGeocode = true;
+      return;
+    }
+
+    // Enter / map sync must not call reverse-geocode; address comes from args.
+    if (!_allowReverseGeocode || !isMapReady.value) return;
     if (!hasMovedFromInitial) return;
 
     final lat = selectedLatLng.value.latitude;
