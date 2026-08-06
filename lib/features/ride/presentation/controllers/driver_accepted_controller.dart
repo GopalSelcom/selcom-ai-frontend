@@ -69,6 +69,7 @@ import '../screens/ride_details_screen.dart';
 import '../utils/cancel_ride_flow.dart';
 import '../utils/request_cancellation_flow.dart';
 import '../utils/ride_draggable_sheet_mixin.dart';
+import '../utils/ride_navigation_coords.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import 'ride_details_controller.dart';
 
@@ -377,6 +378,9 @@ class DriverAcceptedController extends GetxController
 
   /// Set from nav args when My Rides / Home already pre-fetched this ride.
   bool _skipInitialRideDetailsFetch = false;
+
+  /// True when pickup/destination coords were missing or invalid in nav args.
+  bool _navArgsInvalid = false;
 
   /// Prefetched [RideModel] from navigation (used when skipping initial fetch).
   RideModel? _prefetchedRide;
@@ -829,6 +833,11 @@ class DriverAcceptedController extends GetxController
 
   /// Loads markers, applies ride details (or prefetch), then joins the ride room.
   Future<void> _bootstrap() async {
+    // Do not fetch sockets/API with invented map pins — surface load error instead.
+    if (_navArgsInvalid) {
+      _setRideLoadFailure(AppStrings.missingRideInformation.tr);
+      return;
+    }
     await mapHelper._loadMarkerIcons();
     if (_skipInitialRideDetailsFetch && _prefetchedRide != null) {
       // Reuse pre-fetched ride from navigation instead of GET /rides/:id on open.
@@ -890,12 +899,10 @@ class DriverAcceptedController extends GetxController
         : <String, dynamic>{};
     // Prefer toString — socket/nav args may not always be a Dart [String].
     rideId = args['rideId']?.toString().trim() ?? '';
-    final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
-    final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-    final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
-    final dlng = (args['destinationLng'] as num?)?.toDouble() ?? (plng + 0.014);
-    pickupLatLng = LatLng(plat, plng);
-    destinationLatLng = LatLng(dlat, dlng);
+    final plat = RideNavigationCoords.read(args, 'pickupLat');
+    final plng = RideNavigationCoords.read(args, 'pickupLng');
+    var dlat = RideNavigationCoords.read(args, 'destinationLat');
+    var dlng = RideNavigationCoords.read(args, 'destinationLng');
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
     final List<dynamic>? ds = args['destinations'];
@@ -929,11 +936,12 @@ class DriverAcceptedController extends GetxController
         if (locs.isNotEmpty) {
           routeDestinations.assignAll(locs);
           final finalDestination = locs.last;
-          if (finalDestination.lat != 0 && finalDestination.lng != 0) {
-            destinationLatLng = LatLng(
-              finalDestination.lat,
-              finalDestination.lng,
-            );
+          if (RideNavigationCoords.isValidLatLng(
+            finalDestination.lat,
+            finalDestination.lng,
+          )) {
+            dlat = finalDestination.lat;
+            dlng = finalDestination.lng;
           }
           if (finalDestination.address.trim().isNotEmpty) {
             destinationAddress = finalDestination.address.trim();
@@ -946,8 +954,33 @@ class DriverAcceptedController extends GetxController
                 .toList(),
           );
         }
-      } catch (_) {}
+      } catch (e, stackTrace) {
+        AppLogger.e(
+          'Failed to parse destinations from navigation args',
+          tag: 'DriverAcceptedController',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     }
+
+    // Prefer fail over inventing Dar es Salaam (or offset) when nav args omit coords.
+    final pickup = RideNavigationCoords.toLatLng(plat, plng);
+    final destination = RideNavigationCoords.toLatLng(dlat, dlng);
+    if (pickup == null || destination == null) {
+      _navArgsInvalid = true;
+      // Placeholder only so late fields are initialized; UI shows load error.
+      pickupLatLng = pickup ?? const LatLng(0, 0);
+      destinationLatLng = destination ?? const LatLng(0, 0);
+      AppLogger.w(
+        'Missing or invalid pickup/destination coords in navigation args',
+        tag: 'DriverAcceptedController',
+      );
+    } else {
+      pickupLatLng = pickup;
+      destinationLatLng = destination;
+    }
+
     final rawFareBreakdown = args['fareBreakdown'];
     if (rawFareBreakdown is Map) {
       _seedFareBreakdown = Map<String, dynamic>.from(rawFareBreakdown);

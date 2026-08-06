@@ -17,6 +17,7 @@ import '../../../../core/services/app_settings_service.dart';
 import '../../../../core/services/progress_indicator/loader.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/widgets/payment_dialog_header_section.dart';
 import '../../../../core/widgets/svg_picture_asset.dart';
 import '../../../../shared/utils/active_rides_parser.dart';
@@ -26,6 +27,7 @@ import '../../../../shared/utils/favorite_location_chip_catalog.dart';
 import '../../../../shared/utils/saved_place_confirmation_copy.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../ride/domain/repositories/ride_repository.dart';
+import '../../../ride/presentation/utils/ride_navigation_coords.dart';
 import '../../../ride/presentation/widgets/booking_for_someone_else_flow_bottom_sheet.dart';
 import '../../domain/repositories/home_repository.dart';
 import 'home_controller.dart';
@@ -221,15 +223,32 @@ class ConfirmLocationController extends GetxController {
         showPreviousPointMarker: showPreviousPointMarker,
         showRouteCircles: showRouteCircles,
       );
-      final lat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
-      final lng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-      _setLocation(
-        lat: lat,
-        lng: lng,
-        initialAddress:
-            (args['pickupAddress'] as String?)?.trim() ??
-            'Selected pickup point',
-      );
+      // Do not invent Dar es Salaam when pickupLat/Lng are missing from nav args.
+      final lat = RideNavigationCoords.read(args, 'pickupLat');
+      final lng = RideNavigationCoords.read(args, 'pickupLng');
+      if (RideNavigationCoords.isValidLatLng(lat, lng)) {
+        _setLocation(
+          lat: lat!,
+          lng: lng!,
+          initialAddress:
+              (args['pickupAddress'] as String?)?.trim() ??
+              'Selected pickup point',
+        );
+      } else {
+        // Pin screen can still open on the live map center; rider can move the pin.
+        final center = homeController.mapCenter.value;
+        AppLogger.w(
+          'Missing or invalid pickup coords; falling back to map center',
+          tag: 'ConfirmLocationController',
+        );
+        _setLocation(
+          lat: center.latitude,
+          lng: center.longitude,
+          initialAddress:
+              (args['pickupAddress'] as String?)?.trim() ??
+              'Selected pickup point',
+        );
+      }
       return;
     }
 

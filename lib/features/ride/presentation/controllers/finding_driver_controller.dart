@@ -38,6 +38,7 @@ import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../utils/cancel_ride_flow.dart';
 import '../utils/ride_draggable_sheet_mixin.dart';
+import '../utils/ride_navigation_coords.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
 class FindingDriverController extends GetxController
@@ -167,6 +168,9 @@ class FindingDriverController extends GetxController
   /// Uses the same searching title/description as a normal match (no special copy).
   bool _chainBrokenReSearch = false;
   bool _skipInitialRideDetailsFetch = false;
+
+  /// True when pickup/destination coords were missing or invalid in nav args.
+  bool _navArgsInvalid = false;
   RideModel? _prefetchedRide;
 
   /// When false, hide search countdown/progress (driver matched or later).
@@ -361,6 +365,16 @@ class FindingDriverController extends GetxController
       onExpired: () => unawaited(_autoCancelRide()),
     );
     _parseArgs();
+    // Missing/invalid coords: fail clearly (no Dar defaults) and skip search sockets.
+    if (_navArgsInvalid) {
+      Future.microtask(() {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.missingRideInformation.tr,
+          onConfirm: goToHome,
+        );
+      });
+      return;
+    }
     if (_chainBrokenReSearch) {
       _applyChainBrokenReSearchState();
     }
@@ -555,12 +569,10 @@ class FindingDriverController extends GetxController
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
     rideId = args['rideId']?.toString().trim() ?? '';
-    final plat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
-    final plng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-    final dlat = (args['destinationLat'] as num?)?.toDouble() ?? (plat - 0.018);
-    final dlng = (args['destinationLng'] as num?)?.toDouble() ?? (plng + 0.014);
-    pickupLatLng = LatLng(plat, plng);
-    destinationLatLng = LatLng(dlat, dlng);
+    final plat = RideNavigationCoords.read(args, 'pickupLat');
+    final plng = RideNavigationCoords.read(args, 'pickupLng');
+    var dlat = RideNavigationCoords.read(args, 'destinationLat');
+    var dlng = RideNavigationCoords.read(args, 'destinationLng');
     pickupAddress = (args['pickupAddress'] as String?)?.trim() ?? '';
     destinationAddress = (args['destinationAddress'] as String?)?.trim() ?? '';
     requestedVehicleType = args['vehicleType'] as String?;
@@ -584,19 +596,50 @@ class FindingDriverController extends GetxController
             .toList();
 
         destinations.assignAll(locs);
+        if (locs.isNotEmpty) {
+          final finalDestination = locs.last;
+          if (RideNavigationCoords.isValidLatLng(
+            finalDestination.lat,
+            finalDestination.lng,
+          )) {
+            dlat = finalDestination.lat;
+            dlng = finalDestination.lng;
+          }
+          if (finalDestination.address.trim().isNotEmpty) {
+            destinationAddress = finalDestination.address.trim();
+          }
+        }
         if (locs.length > 1) {
           // All except the last one (which is the main destination) are intermediate stops
           intermediateStops.assignAll(
             locs.take(locs.length - 1).map((e) => e.address).toList(),
           );
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         AppLogger.e(
           'Error parsing destinations',
           tag: 'FindingDriverController',
           error: e,
+          stackTrace: stackTrace,
         );
       }
+    }
+
+    // Prefer fail over inventing Dar es Salaam (or offset) when nav args omit coords.
+    final pickup = RideNavigationCoords.toLatLng(plat, plng);
+    final destination = RideNavigationCoords.toLatLng(dlat, dlng);
+    if (pickup == null || destination == null) {
+      _navArgsInvalid = true;
+      // Placeholder only so late fields are initialized; dialog sends user home.
+      pickupLatLng = pickup ?? const LatLng(0, 0);
+      destinationLatLng = destination ?? const LatLng(0, 0);
+      AppLogger.w(
+        'Missing or invalid pickup/destination coords in navigation args',
+        tag: 'FindingDriverController',
+      );
+    } else {
+      pickupLatLng = pickup;
+      destinationLatLng = destination;
     }
 
     final rawFareBreakdown = args['fareBreakdown'];

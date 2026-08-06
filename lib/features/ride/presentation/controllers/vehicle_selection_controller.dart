@@ -48,6 +48,7 @@ import '../../../payment/presentation/widgets/add_money_to_wallet_bottom_sheet.d
 import '../../../promotions/presentation/promo_code_route_args.dart';
 import '../../../wallet/data/models/go_card_balance_response.dart';
 import '../../domain/repositories/ride_repository.dart';
+import '../utils/ride_navigation_coords.dart';
 
 enum BookingMode { self, other }
 
@@ -104,6 +105,9 @@ class VehicleSelectionController extends GetxController {
   late LocationEntity destinationEntity;
   final destinations = <LocationEntity>[].obs;
 
+  /// True when pickup/destination coords were missing or invalid in nav args.
+  bool _navArgsInvalid = false;
+
   String? _preferredVehicleTypeId;
   String? _preferredVehicleName;
   bool _forceRefreshActiveRides = false;
@@ -142,6 +146,17 @@ class VehicleSelectionController extends GetxController {
   void onInit() {
     super.onInit();
     _parseArguments();
+    // Missing/invalid coords: fail clearly (no Dar defaults) and skip fare load.
+    if (_navArgsInvalid) {
+      isLoadingEstimates.value = false;
+      Future.microtask(() {
+        AppDialogs.showErrorDialog(
+          message: AppStrings.missingRideInformation.tr,
+          onConfirm: () => Get.back(),
+        );
+      });
+      return;
+    }
     loadLocationIcons();
     _initNearbyDriversSocket();
     _loadAll();
@@ -196,27 +211,90 @@ class VehicleSelectionController extends GetxController {
     }
 
     final pickupAddr = (args['pickup'] as String?)?.trim() ?? '';
-    final pLat = (args['pickupLat'] as num?)?.toDouble() ?? -6.7924;
-    final pLng = (args['pickupLng'] as num?)?.toDouble() ?? 39.2083;
-    pickupEntity = LocationEntity(lat: pLat, lng: pLng, address: pickupAddr);
+    final pLat = RideNavigationCoords.read(args, 'pickupLat');
+    final pLng = RideNavigationCoords.read(args, 'pickupLng');
+
+    double? dLat;
+    double? dLng;
+    String destAddr = '';
 
     final List<dynamic>? ds = args['destinations'];
     if (ds != null && ds.isNotEmpty) {
-      destinations.assignAll(ds.cast<LocationEntity>());
-      destinationEntity = destinations.last;
+      try {
+        final locs = <LocationEntity>[];
+        for (final e in ds) {
+          if (e is LocationEntity) {
+            locs.add(e);
+          } else if (e is Map) {
+            final m = Map<String, dynamic>.from(e);
+            locs.add(
+              LocationEntity(
+                lat: (m['lat'] as num?)?.toDouble() ?? 0.0,
+                lng: (m['lng'] as num?)?.toDouble() ?? 0.0,
+                address: (m['address'] as String?)?.trim() ?? '',
+              ),
+            );
+          }
+        }
+        destinations.assignAll(locs);
+        if (locs.isNotEmpty) {
+          destinationEntity = locs.last;
+          dLat = destinationEntity.lat;
+          dLng = destinationEntity.lng;
+          destAddr = destinationEntity.address;
+        }
+      } catch (e, stackTrace) {
+        AppLogger.e(
+          'Failed to parse destinations from navigation args',
+          tag: 'VehicleSelection',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     } else {
       // Legacy support
-      final destAddr = (args['destination'] as String?)?.trim() ?? '';
-      final dLat =
-          (args['destinationLat'] as num?)?.toDouble() ?? (pLat - 0.018);
-      final dLng =
-          (args['destinationLng'] as num?)?.toDouble() ?? (pLng + 0.014);
+      destAddr = (args['destination'] as String?)?.trim() ?? '';
+      dLat = RideNavigationCoords.read(args, 'destinationLat');
+      dLng = RideNavigationCoords.read(args, 'destinationLng');
+    }
+
+    // Prefer fail over inventing Dar es Salaam (or offset) when nav args omit coords.
+    final pickupOk = RideNavigationCoords.isValidLatLng(pLat, pLng);
+    final destOk = RideNavigationCoords.isValidLatLng(dLat, dLng);
+    if (!pickupOk || !destOk) {
+      _navArgsInvalid = true;
+      // Placeholder entities so late fields are initialized; dialog pops the screen.
+      pickupEntity = LocationEntity(
+        lat: pLat ?? 0,
+        lng: pLng ?? 0,
+        address: pickupAddr,
+      );
       destinationEntity = LocationEntity(
-        lat: dLat,
-        lng: dLng,
+        lat: dLat ?? 0,
+        lng: dLng ?? 0,
         address: destAddr,
       );
-      destinations.assignAll([destinationEntity]);
+      if (destinations.isEmpty) {
+        destinations.assignAll([destinationEntity]);
+      }
+      AppLogger.w(
+        'Missing or invalid pickup/destination coords in navigation args',
+        tag: 'VehicleSelection',
+      );
+    } else {
+      pickupEntity = LocationEntity(
+        lat: pLat!,
+        lng: pLng!,
+        address: pickupAddr,
+      );
+      if (destinations.isEmpty) {
+        destinationEntity = LocationEntity(
+          lat: dLat!,
+          lng: dLng!,
+          address: destAddr,
+        );
+        destinations.assignAll([destinationEntity]);
+      }
     }
 
     AppLogger.d(
