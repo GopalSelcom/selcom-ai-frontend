@@ -20,6 +20,7 @@ import '../../../../shared/widgets/app_primary_button.dart';
 import '../../../../shared/widgets/vehicle_type_image.dart';
 import '../controllers/driver_accepted_controller.dart';
 import '../controllers/ride_share_controller.dart';
+import '../utils/ride_sheet_layout.dart';
 import '../widgets/driver_accepted_screen_shimmer.dart';
 import '../widgets/ride_common_widgets.dart';
 import '../widgets/request_to_cancel_banner.dart';
@@ -32,31 +33,13 @@ class DriverAcceptedScreen extends StatelessWidget {
   static const double _sheetMaxDriverAssigned = 0.52;
   static const double _sheetMaxRideStarted = 0.68;
 
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final p = mq.padding.bottom;
-    final v = mq.viewPadding.bottom;
-    return p > v ? p : v;
-  }
-
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = _systemBottomInsetPx(context);
-    final h = MediaQuery.sizeOf(context).height;
-    if (inset <= 0 || h <= 0) return base;
-    return base + (inset / h) * 0.55;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
-
   /// Keeps map chrome above the sheet when status raises the sheet minimum
   /// before [DraggableScrollableController] reports the new size.
   static double _resolvedSheetSizeForActionRow(
     BuildContext context,
     DriverAcceptedController c,
   ) {
-    final minSize = _sheetSizeWithNavInset(
+    final minSize = RideSheetLayout.sizeWithNavInset(
       context,
       c.sheetMinFractionForStatus(c.currentRideStatus.value),
     );
@@ -158,8 +141,8 @@ class DriverAcceptedScreen extends StatelessWidget {
               final baseMin = c.sheetMinFractionForStatus(status);
               final baseInitial = baseMin;
 
-              final initialSize = _sheetSizeWithNavInset(context, baseInitial);
-              final minSize = _sheetSizeWithNavInset(context, baseMin);
+              final initialSize = RideSheetLayout.sizeWithNavInset(context, baseInitial);
+              final minSize = RideSheetLayout.sizeWithNavInset(context, baseMin);
 
               switch (state) {
                 case RideBottomSheetState.driverAssigned:
@@ -175,7 +158,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                 reserveSystemBottomInset: true,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: _sheetSizeWithNavInset(context, maxSheetSize),
+                maxChildSize: RideSheetLayout.sizeWithNavInset(context, maxSheetSize),
                 childBuilder: (scrollController) =>
                     _bottomSheet(c, scrollController),
               );
@@ -609,7 +592,7 @@ class DriverAcceptedScreen extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, _scrollBottomPad(context)),
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, RideSheetLayout.scrollBottomPad(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -818,7 +801,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
+                      bottom: 16.h + RideSheetLayout.scrollBottomPad(context),
                     ),
                     child: DriverAcceptedScreenShimmer.rideStartedSheetBody(
                       showChangeDropLink: true,
@@ -868,7 +851,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                     clipBehavior: Clip.hardEdge,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
+                      bottom: 16.h + RideSheetLayout.scrollBottomPad(context),
                     ),
                     child: _rideProgressBody(c, showChangeDropLink: true),
                   ),
@@ -908,7 +891,7 @@ class DriverAcceptedScreen extends StatelessWidget {
                       parent: ClampingScrollPhysics(),
                     ),
                     padding: EdgeInsets.only(
-                      bottom: 16.h + _scrollBottomPad(context),
+                      bottom: 16.h + RideSheetLayout.scrollBottomPad(context),
                     ),
                     child: _driverAssignedSheet(c),
                   ),

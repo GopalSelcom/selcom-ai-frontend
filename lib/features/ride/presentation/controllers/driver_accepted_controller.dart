@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -69,6 +68,7 @@ import '../../domain/repositories/ride_repository.dart';
 import '../screens/ride_details_screen.dart';
 import '../utils/cancel_ride_flow.dart';
 import '../utils/request_cancellation_flow.dart';
+import '../utils/ride_draggable_sheet_mixin.dart';
 import '../widgets/ride_driver_call_options_sheet.dart';
 import 'ride_details_controller.dart';
 
@@ -109,11 +109,17 @@ const _driverAtPickupProximityMeters = 75.0;
 /// classes (same library) so map, socket, cancel, labels, stops, and comms
 /// can change independently.
 class DriverAcceptedController extends GetxController
-    with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with
+        GetSingleTickerProviderStateMixin,
+        WidgetsBindingObserver,
+        RideDraggableSheetMixin {
   DriverAcceptedController({
     required this.rideRepository,
     required this.analyticsService,
   });
+
+  @override
+  double get initialSheetSize => 0.3;
 
   /// Ride HTTP API (details, cancel, stops, destination, emergency contacts).
   final RideRepository rideRepository;
@@ -383,9 +389,6 @@ class DriverAcceptedController extends GetxController
 
   /// API-driven rows for the safety sheet (label = title, primary `phone` for `tel:`).
   final emergencyContacts = <EmergencyContactModel>[].obs;
-
-  /// Current draggable sheet fraction (keeps map chrome above the sheet).
-  final RxDouble sheetSize = 0.3.obs;
 
   // ── Mid-ride stops / destination ──
 
@@ -730,23 +733,6 @@ class DriverAcceptedController extends GetxController
   /// Opens in-ride chat and clears the unread badge.
   void onChatTap() => commsLiveHelper.onChatTap();
 
-  /// Updates [sheetSize] safely (defers if called during build).
-  void updateSheetSize(double size) {
-    if ((size - sheetSize.value).abs() < 0.0001) return;
-    // DraggableScrollableSheet can notify during build (extent replace).
-    // Defer Rx writes so Obx is not marked dirty mid-build.
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle ||
-        phase == SchedulerPhase.postFrameCallbacks) {
-      sheetSize.value = size;
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if ((size - sheetSize.value).abs() < 0.0001) return;
-      sheetSize.value = size;
-    });
-  }
-
   /// Minimum sheet fraction for a ride status (single source of truth for UI).
   double sheetMinFractionForStatus(String status) {
     if (status == 'near_destination') {
@@ -760,16 +746,7 @@ class DriverAcceptedController extends GetxController
 
   /// Collapses the draggable sheet to the status-based minimum.
   void minimizeSheet() {
-    if (!sheetController.isAttached) return;
-    final targetMin = sheetMinFractionForStatus(currentRideStatus.value);
-    Future.microtask(() {
-      if (!sheetController.isAttached) return;
-      sheetController.animateTo(
-        targetMin,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    });
+    animateSheetTo(sheetMinFractionForStatus(currentRideStatus.value));
   }
 
   /// Animates the draggable sheet and [sheetSize] when status changes layout.
@@ -779,14 +756,7 @@ class DriverAcceptedController extends GetxController
     updateSheetSize(target);
     if (sheetController.isAttached) {
       if ((sheetController.size - target).abs() > 0.01) {
-        Future.microtask(() {
-          if (!sheetController.isAttached) return;
-          sheetController.animateTo(
-            target,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        });
+        animateSheetTo(target);
       }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!sheetController.isAttached) return;
@@ -794,10 +764,6 @@ class DriverAcceptedController extends GetxController
       });
     }
   }
-
-  /// Draggable bottom-sheet controller (size listener keeps map chrome in sync).
-  final DraggableScrollableController sheetController =
-      DraggableScrollableController();
 
   /// True while the map is actively tracking / animating the driver marker.
   final RxBool isTrackingRider = false.obs;
@@ -810,9 +776,7 @@ class DriverAcceptedController extends GetxController
   void onInit() {
     super.onInit();
     _initHelpers();
-    sheetController.addListener(() {
-      updateSheetSize(sheetController.size);
-    });
+    bindSheetSizeListener();
     WidgetsBinding.instance.addObserver(this);
     _parseArgs();
     _bootstrap();

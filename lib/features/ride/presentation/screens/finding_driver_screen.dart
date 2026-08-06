@@ -13,6 +13,7 @@ import '../../../../shared/utils/map_route_marker_utils.dart';
 import '../../../../shared/widgets/app_map_route_one_line_bar.dart';
 import '../../../../shared/widgets/app_primary_button.dart';
 import '../controllers/finding_driver_controller.dart';
+import '../utils/ride_sheet_layout.dart';
 
 class FindingDriverScreen extends StatefulWidget {
   const FindingDriverScreen({super.key});
@@ -24,30 +25,6 @@ class FindingDriverScreen extends StatefulWidget {
 class _FindingDriverScreenState extends State<FindingDriverScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-
-  static const double _sheetInitial = 0.38;
-  static const double _sheetMin = 0.28;
-  static const double _sheetMaxCompact = 0.44;
-  static const double _sheetMaxSearching = 0.38;
-
-  static double _systemBottomInsetPx(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final p = mq.padding.bottom;
-    final v = mq.viewPadding.bottom;
-    return p > v ? p : v;
-  }
-
-  /// Slightly taller min/initial when nav bar present — avoids clipping cancel.
-  static double _sheetSizeWithNavInset(BuildContext context, double base) {
-    final inset = _systemBottomInsetPx(context);
-    final h = MediaQuery.sizeOf(context).height;
-    if (inset <= 0 || h <= 0) return base;
-    return base + (inset / h) * 0.55;
-  }
-
-  static double _scrollBottomPad(BuildContext context) {
-    return _systemBottomInsetPx(context) > 0 ? 2.h : 0;
-  }
 
   @override
   void initState() {
@@ -68,10 +45,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   Widget build(BuildContext context) {
     final c = Get.find<FindingDriverController>();
     final topPad = MediaQuery.paddingOf(context).top;
-    final sheetController = DraggableScrollableController();
-    sheetController.addListener(() {
-      c.updateSheetSize(sheetController.size);
-    });
+    final sheetController = c.sheetController;
 
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -81,7 +55,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           AnimatedBuilder(
             animation: _pulseController,
             builder: (context, child) {
-              return _buildMap(context, c, sheetController);
+              return _buildMap(context, c);
             },
           ),
           Positioned(
@@ -117,14 +91,22 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
             return AppDraggableBottomSheet(
               controller: sheetController,
               reserveSystemBottomInset: true,
-              initialChildSize: _sheetSizeWithNavInset(context, _sheetInitial),
-              minChildSize: _sheetSizeWithNavInset(context, _sheetMin),
-              maxChildSize: _sheetSizeWithNavInset(
+              initialChildSize: RideSheetLayout.sizeWithNavInset(
                 context,
-                isSearching ? _sheetMaxSearching : _sheetMaxCompact,
+                c.sheetInitialFraction,
+              ),
+              minChildSize: RideSheetLayout.sizeWithNavInset(
+                context,
+                c.sheetMinFraction,
+              ),
+              maxChildSize: RideSheetLayout.sizeWithNavInset(
+                context,
+                isSearching
+                    ? c.sheetMaxSearchingFraction
+                    : c.sheetMaxCompactFraction,
               ),
               childBuilder: (scrollController) =>
-                  _bottomSheet(c, scrollController, sheetController),
+                  _bottomSheet(c, scrollController),
             );
           }),
         ],
@@ -135,7 +117,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   Widget _buildMap(
     BuildContext context,
     FindingDriverController c,
-    DraggableScrollableController sheetController,
   ) {
     final topPad = MediaQuery.paddingOf(context).top;
     return Obx(() {
@@ -269,15 +250,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
         onGpsPressed: c.recenterMap,
         trackRider: true,
         onRiderPositionUpdate: (pos) => c.animatedRiderLocation.value = pos,
-        onUserInteraction: () {
-          if (sheetController.isAttached && sheetController.size > _sheetMin) {
-            sheetController.animateTo(
-              _sheetInitial,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        },
+        onUserInteraction: c.onMapUserInteraction,
         polylines: AppMapRoutePolyline.set(
           polylineId: 'active_route',
           points: routePoints,
@@ -290,7 +263,6 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
   Widget _bottomSheet(
     FindingDriverController c,
     ScrollController scrollController,
-    DraggableScrollableController sheetController,
   ) {
     return SingleChildScrollView(
       controller: scrollController,
@@ -299,7 +271,12 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
       physics: const AlwaysScrollableScrollPhysics(
         parent: ClampingScrollPhysics(),
       ),
-      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, _scrollBottomPad(context)),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        10.h,
+        20.w,
+        RideSheetLayout.scrollBottomPad(context),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -384,13 +361,7 @@ class _FindingDriverScreenState extends State<FindingDriverScreen>
           Obx(() {
             if (c.isRideCancelled.value) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (sheetController.isAttached && sheetController.size > 0.35) {
-                  sheetController.animateTo(
-                    0.35,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
+                c.snapSheetForCancelledState();
               });
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10.w),

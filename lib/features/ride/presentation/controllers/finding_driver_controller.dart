@@ -37,13 +37,24 @@ import '../../../../shared/utils/tracking_route_geometry_utils.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
 import '../../domain/repositories/ride_repository.dart';
 import '../utils/cancel_ride_flow.dart';
+import '../utils/ride_draggable_sheet_mixin.dart';
 
 /// SCR-10 — finding driver: search UI only; on assignment navigates to [AppRoutes.driverAccepted].
-class FindingDriverController extends GetxController {
+class FindingDriverController extends GetxController
+    with RideDraggableSheetMixin {
   FindingDriverController({required this.rideRepository});
 
   final RideRepository rideRepository;
   final AppSocketService _socketService = AppSocketService();
+
+  @override
+  double get initialSheetSize => 0.42;
+
+  /// Draggable sheet fractions for [FindingDriverScreen].
+  double get sheetInitialFraction => 0.38;
+  double get sheetMinFraction => 0.28;
+  double get sheetMaxCompactFraction => 0.44;
+  double get sheetMaxSearchingFraction => 0.38;
 
   /// Total search window in seconds (from API `cancel_time` ms, else default 9 min).
   late final int _searchTimeoutSeconds;
@@ -111,7 +122,6 @@ class FindingDriverController extends GetxController {
   final isRideCancelled = false.obs;
 
   final currentEtaSeconds = 0.0.obs;
-  final sheetSize = 0.42.obs;
   final Rxn<EventRiderStatusUpdateResponse> latestRideStatusPayload =
       Rxn<EventRiderStatusUpdateResponse>();
 
@@ -292,12 +302,24 @@ class FindingDriverController extends GetxController {
     }
   }
 
-  void updateSheetSize(double size) {
-    sheetSize.value = size;
-  }
-
   void goToHome() {
     Get.offAllNamed(AppRoutes.home);
+  }
+
+  /// Collapses an expanded sheet toward the default searching height.
+  void onMapUserInteraction() {
+    if (!sheetController.isAttached) return;
+    if (sheetController.size > sheetMinFraction) {
+      animateSheetTo(sheetInitialFraction);
+    }
+  }
+
+  /// Keeps the cancelled-state sheet from staying too tall.
+  void snapSheetForCancelledState() {
+    if (!sheetController.isAttached) return;
+    if (sheetController.size > 0.35) {
+      animateSheetTo(0.35);
+    }
   }
 
   void _showCancelDialogThenGoHome(String message) {
@@ -333,6 +355,7 @@ class FindingDriverController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    bindSheetSizeListener();
     _searchCountdown = PaymentCountdownTimer(
       onTick: (remaining) => remainingSeconds.value = remaining,
       onExpired: () => unawaited(_autoCancelRide()),
