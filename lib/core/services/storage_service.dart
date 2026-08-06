@@ -17,6 +17,10 @@ class StorageKeys {
   static const String signupCompleted = 'signup_completed';
   static const String appleAuthProfilePrefix = 'apple_auth_profile_';
   static const String stopsIdempotencyPrefix = 'stops_idem_';
+
+  /// Last cold-start notification launch fingerprint (avoids stale local-notification
+  /// re-navigation on later icon opens — see flutter_local_notifications #2143).
+  static const String lastHandledPushLaunchKey = 'last_handled_push_launch_key';
 }
 
 /// App-wide key/value persistence backed by Hive (app sandbox).

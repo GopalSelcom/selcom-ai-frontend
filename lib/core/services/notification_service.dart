@@ -112,31 +112,6 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
     );
 
-    // Handle app launch from a local notification tap (background/terminated).
-    final launchDetails = await _localNotifications
-        .getNotificationAppLaunchDetails();
-    if (launchDetails?.didNotificationLaunchApp ?? false) {
-      final payload = launchDetails?.notificationResponse?.payload;
-      if (payload != null && payload.isNotEmpty) {
-        try {
-          final rawData = Map<String, dynamic>.from(jsonDecode(payload));
-          _queueOrHandleNavigationRaw(rawData);
-        } catch (e, stackTrace) {
-          ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
-          _logE("Error decoding launched notification payload: $e");
-        }
-      }
-    }
-
-    // Request permissions for iOS immediately
-    if (Platform.isIOS) {
-      await _localNotifications
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
-    }
-
     // 3. Create Android Notification Channel
     if (Platform.isAndroid) {
       await _createAndroidNotificationChannel();
@@ -144,6 +119,11 @@ class NotificationService {
 
     // 4. iOS Foreground Notification Options
     if (Platform.isIOS) {
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
       await _fcm.setForegroundNotificationPresentationOptions(
         alert: false,
         badge: true,
@@ -151,23 +131,116 @@ class NotificationService {
       );
     }
 
-    // 5. Listeners
+    // 5. Listeners (background→foreground taps)
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
-    // Initial message if app was terminated
-    RemoteMessage? initialMessage = await _fcm.getInitialMessage();
-    if (initialMessage != null) {
-      _logRemoteMessage('INITIAL (terminated launch)', initialMessage);
-      _onMessageOpenedApp(initialMessage);
-    } else {
-      _logD('No initial FCM message (app was not opened from a notification)');
-    }
+    // Cold start: prefer FCM initial message (real tray tap while killed).
+    // Local launch-details is a fallback for data-only → local tray taps, but
+    // must be deduped — the plugin can keep returning the same payload on later
+    // icon opens (does not consume launch details).
+    await _consumeColdStartNotificationLaunch();
 
     _isInitialized = true;
     _logI(
       'Notification Service Initialized — '
       'tokenPresent=${(_deviceToken ?? '').isNotEmpty}',
+    );
+  }
+
+  /// Handles terminated-state notification taps exactly once per payload.
+  Future<void> _consumeColdStartNotificationLaunch() async {
+    final initialMessage = await _fcm.getInitialMessage();
+    if (initialMessage != null) {
+      final raw = Map<String, dynamic>.from(initialMessage.data);
+      if (_isLiveTrackingPayload(raw)) {
+        _logD('INITIAL FCM skipped LIVE_TRACKING (no navigation)');
+        await _rememberHandledNavPayload(raw);
+        return;
+      }
+      if (await _wasNavPayloadAlreadyHandled(raw)) {
+        _logD(
+          'INITIAL FCM skipped (stale — already handled, not a new tap)',
+        );
+        return;
+      }
+      _logRemoteMessage('INITIAL (terminated launch)', initialMessage);
+      await _rememberHandledNavPayload(raw);
+      _queueOrHandleNavigationRaw(raw);
+      return;
+    }
+
+    final launchDetails = await _localNotifications
+        .getNotificationAppLaunchDetails();
+    if (!(launchDetails?.didNotificationLaunchApp ?? false)) {
+      _logD('No initial FCM / local notification launch');
+      return;
+    }
+
+    final payload = launchDetails?.notificationResponse?.payload;
+    if (payload == null || payload.isEmpty) {
+      _logD('Local notification launch has empty payload — ignore');
+      return;
+    }
+
+    try {
+      final raw = Map<String, dynamic>.from(jsonDecode(payload));
+      if (_isLiveTrackingPayload(raw)) {
+        _logD('Local launch skipped LIVE_TRACKING (no navigation)');
+        await _rememberHandledNavPayload(raw);
+        return;
+      }
+      // Plugin keeps returning the last launch payload on later icon opens.
+      if (await _wasNavPayloadAlreadyHandled(raw)) {
+        _logD(
+          'Local launch skipped (stale — open from icon, not a new notification tap)',
+        );
+        return;
+      }
+      // Android + singleTask: without an FCM initial message, local launch
+      // details are usually a replay of an older tap — not a fresh icon-open.
+      // Real FCM tray taps (type 500–504 with notification block) use
+      // getInitialMessage above. Mark handled so the replay stops.
+      if (Platform.isAndroid) {
+        _logD(
+          'Android local launch ignored without FCM initial '
+          '(avoids ride-details on icon open)',
+        );
+        await _rememberHandledNavPayload(raw);
+        return;
+      }
+      _logI('LOCAL launch from notification tap — queueing navigation');
+      await _rememberHandledNavPayload(raw);
+      _queueOrHandleNavigationRaw(raw);
+    } catch (e, stackTrace) {
+      ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
+      _logE("Error decoding launched notification payload: $e");
+    }
+  }
+
+  /// Stable fingerprint for a notification data map (used to ignore stale launches).
+  String _navPayloadFingerprint(Map<String, dynamic> raw) {
+    final type = (raw['type'] ?? '').toString();
+    final rideId =
+        (raw['ride_id'] ?? raw['rideId'] ?? raw['order_id'] ?? '').toString();
+    final status = (raw['status'] ?? '').toString();
+    final phase = (raw['phase'] ?? '').toString();
+    final title = (raw['title'] ?? '').toString();
+    final body = (raw['body'] ?? '').toString();
+    return '$type|$rideId|$status|$phase|$title|$body';
+  }
+
+  Future<bool> _wasNavPayloadAlreadyHandled(Map<String, dynamic> raw) async {
+    final last = await StorageService().read(
+      StorageKeys.lastHandledPushLaunchKey,
+    );
+    return last != null && last == _navPayloadFingerprint(raw);
+  }
+
+  Future<void> _rememberHandledNavPayload(Map<String, dynamic> raw) async {
+    await StorageService().write(
+      StorageKeys.lastHandledPushLaunchKey,
+      _navPayloadFingerprint(raw),
     );
   }
 
@@ -342,7 +415,15 @@ class NotificationService {
 
   void _onMessageOpenedApp(RemoteMessage message) {
     _logRemoteMessage('OPENED_APP', message);
-    _queueOrHandleNavigationRaw(Map<String, dynamic>.from(message.data));
+    final raw = Map<String, dynamic>.from(message.data);
+    // Sticky GPS/ETA pushes must not route (no ride-details fetch on reopen).
+    if (_isLiveTrackingPayload(raw)) {
+      _logD('OPENED_APP skipped LIVE_TRACKING (no navigation)');
+      return;
+    }
+    // Remember so a later icon open does not re-use stale launch-details.
+    unawaited(_rememberHandledNavPayload(raw));
+    _queueOrHandleNavigationRaw(raw);
   }
 
   void _onDidReceiveNotificationResponse(NotificationResponse response) {
@@ -350,12 +431,22 @@ class NotificationService {
     if (response.payload != null) {
       try {
         final Map<String, dynamic> rawData = jsonDecode(response.payload!);
+        if (_isLiveTrackingPayload(rawData)) {
+          _logD('Local tap skipped LIVE_TRACKING (no navigation)');
+          return;
+        }
+        unawaited(_rememberHandledNavPayload(rawData));
         _queueOrHandleNavigationRaw(rawData);
       } catch (e, stackTrace) {
         ErrorReporter.instance.report(error: e, stackTrace: stackTrace);
         _logE("Error decoding notification payload: $e");
       }
     }
+  }
+
+  static bool _isLiveTrackingPayload(Map<String, dynamic> raw) {
+    final type = (raw['type'] ?? '').toString().trim().toUpperCase();
+    return type == 'LIVE_TRACKING';
   }
 
   /// Routes a notification tap through [PushNotificationNavigation], or queues

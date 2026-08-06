@@ -29,12 +29,12 @@ import 'ride_status_normalizer.dart';
 /// | 500  | RIDE_STATUS  | Ongoing ride **or** ride details (same as My Rides card) |
 /// | 501  | CHAT         | Chat only in pickup phase; after `ride_started` → ongoing/details |
 /// | 502  | REVIEW       | Ride details (no rating bottom sheet) |
-/// | 503  | PAYMENT      | Wallet if no `ride_id`; else ride details |
+/// | 503  | PAYMENT      | Wallet if no ride; else ongoing **or** ride details (same as 500) |
 /// | 504  | MARKETING    | In-app route `/…`, external http(s), or home |
 ///
 /// ## Non-routing
 /// - `LIVE_TRACKING` — backend GPS/ETA for Android sticky order-tracking;
-///   never opens a screen from this router.
+///   never opens a screen / never fetches ride details from this router.
 ///
 /// ## Safety
 /// - Callers should queue taps during splash/auth
@@ -91,7 +91,16 @@ abstract final class PushNotificationNavigation {
         raw['rideId']?.toString() ??
         raw['order_id']?.toString();
     final trimmed = id?.trim() ?? '';
-    return trimmed.isEmpty ? null : trimmed;
+    if (trimmed.isEmpty) return null;
+    switch (trimmed.toLowerCase()) {
+      case 'null':
+      case 'undefined':
+      case 'nil':
+      case 'none':
+        return null;
+      default:
+        return trimmed;
+    }
   }
 
   static String? _url(Map<String, dynamic> raw) {
@@ -116,6 +125,7 @@ abstract final class PushNotificationNavigation {
     final rawType = raw['type']?.toString().trim() ?? '';
 
     // GPS/ETA sticky updates only — not a user product notification (500–504).
+    // Never navigate or call ride-details (avoids fetch on app reopen / sticky).
     if (rawType.toUpperCase() == 'LIVE_TRACKING') {
       AppLogger.d('Push nav skip LIVE_TRACKING update', tag: _logTag);
       return;
@@ -156,8 +166,8 @@ abstract final class PushNotificationNavigation {
     try {
       // Legacy: missing `type` but has ride_id → treat as RIDE_STATUS (500).
       // Do not apply when type is present but unknown (e.g. LIVE_TRACKING).
-      final resolvedType = type ??
-          ((rawType.isEmpty && rideId != null) ? rideStatus : null);
+      final resolvedType =
+          type ?? ((rawType.isEmpty && rideId != null) ? rideStatus : null);
 
       switch (resolvedType) {
         case rideStatus:
@@ -231,8 +241,7 @@ abstract final class PushNotificationNavigation {
     }
 
     final driver = details.driverSnapshot;
-    final plate =
-        (driver?.vehicleRegistrationNumber ?? '').trim().isNotEmpty
+    final plate = (driver?.vehicleRegistrationNumber ?? '').trim().isNotEmpty
         ? driver!.vehicleRegistrationNumber!.trim()
         : (details.vehicleSnapshot?.vehicleName ??
                   details.vehicleSnapshot?.displayName ??
@@ -258,7 +267,7 @@ abstract final class PushNotificationNavigation {
     return true;
   }
 
-  /// Shared destination used by 500 / 501 (post-pickup) / 502:
+  /// Shared destination used by 500 / 501 (post-pickup) / 502 / 503:
   /// mid-ride cancel dialog → else ongoing live UI → else [RideDetailsScreen].
   static Future<bool> _openOngoingOrRideDetails(
     RideDetailsRide details, {
@@ -321,34 +330,29 @@ abstract final class PushNotificationNavigation {
     return _openOngoingOrRideDetails(details, source: 'REVIEW');
   }
 
-  /// Type **503** — `ride_id` optional: null/empty → Wallet; else ride details.
+  /// Type **503** — `ride_id` optional:
+  /// - missing / empty / fetch fails → Wallet
+  /// - with ride → same as type 500 (ongoing live UI, else ride details)
   static Future<bool> _openPayment(String? rideId) async {
-    // Product table: ride_id may be null → wallet; with ride_id → ride payment detail.
     if (rideId == null || rideId.isEmpty) {
       AppLogger.i('PAYMENT without ride_id — opening wallet', tag: _logTag);
-      unawaited(Get.toNamed(AppRoutes.wallet));
-      return true;
+      return _openWallet();
     }
 
     final details = await _fetchRideDetails(rideId);
     if (details == null) {
-      return _openHome();
+      AppLogger.w(
+        'PAYMENT ride $rideId unavailable — opening wallet',
+        tag: _logTag,
+      );
+      return _openWallet();
     }
 
-    RideDetailsController.ensureBound(
-      ride: details,
-      openedFromCompletionFlow: false,
-      refreshOnInit: false,
-    );
-    unawaited(
-      Get.to(
-        () => RideDetailsScreen(
-          ride: details,
-          openedFromCompletionFlow: false,
-          refreshOnInit: false,
-        ),
-      ),
-    );
+    return _openOngoingOrRideDetails(details, source: 'PAYMENT');
+  }
+
+  static Future<bool> _openWallet() async {
+    unawaited(Get.toNamed(AppRoutes.wallet));
     return true;
   }
 

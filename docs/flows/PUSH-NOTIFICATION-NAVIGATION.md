@@ -51,7 +51,7 @@ These apply **before** type-specific routing.
 
 | App state when user taps | What happens |
 |---|---|
-| **Cold start** (killed) → splash | Tap is **queued**; after login → Home, splash flushes pending nav |
+| **Cold start** (killed) → splash | FCM tray tap → `getInitialMessage` queued; after Home, splash flushes. Android ignores stale **local** launch-details when there is no FCM initial (prevents icon-open re-nav). |
 | **Cold start** → onboarding / phone / OTP | Pending nav is **cleared** (user must finish auth) |
 | **Background** (process alive) | `onMessageOpenedApp` → navigate if route is ready |
 | **Foreground** | System may not show tray; in-app handling is separate from this tap router |
@@ -66,7 +66,7 @@ These apply **before** type-specific routing.
 
 ## 3. Shared ride destination rules
 
-Used by **500**, **501** (after pickup), and **502**.
+Used by **500**, **501** (after pickup), **502**, and **503** (when `ride_id` resolves).
 
 Flow after `GET go/rides/:id`:
 
@@ -159,11 +159,15 @@ Does **not** open the rating bottom sheet. Rating lives on **Ride details**.
 
 **Keys:** `ride_id` optional.
 
+Same ongoing-vs-details rules as **500** when a ride exists (e.g. “Funds Reserved” during an active trip → **ongoing ride**).
+
 | Scenario | Destination |
 |---|---|
 | No `ride_id` (null / empty) | **Wallet** |
-| With `ride_id`, fetch OK | **Ride details** (payment info on that screen) |
-| With `ride_id`, fetch fails | Home |
+| With `ride_id`, fetch fails / ride unavailable | **Wallet** |
+| With `ride_id`, mid-ride cancel block | Mid-ride cancel dialog |
+| With `ride_id`, ongoing status | **Ongoing ride** (live tracking) |
+| With `ride_id`, terminal status | **Ride details** |
 
 ---
 
@@ -216,7 +220,7 @@ In-flight handle? → coalesce latest
    │    │    │    │    │     │
    │    │    │    │    │     └─► Home
    │    │    │    │    └─► URL / home
-   │    │    │    └─► wallet or ride details
+   │    │    │    └─► wallet (no ride) or ongoing/details
    │    │    └─► ongoing or ride details (no rating sheet)
    │    └─► pickup? chat : ongoing/details
    └─► ongoing or ride details
